@@ -3,6 +3,7 @@
   "project": "HMS Cloudflare",
   "phase": "BUILD",
   "runtime_status": "READY_TO_RESUME",
+  "resume_authorized": true,
   "active_task": null,
   "last_completed_task": "CF-I02",
   "last_completed_head": "24a1e68a8df8fd7251586415619045f287e2c95a",
@@ -14,7 +15,7 @@
     "type": "RUNTIME_END_AFTER_TASK_PASS"
   },
   "external_review": {
-    "required": true,
+    "required": false,
     "last_audited_head": "24a1e68a8df8fd7251586415619045f287e2c95a",
     "last_verdict": "PASS_WITH_GOVERNANCE_OBSERVATIONS"
   },
