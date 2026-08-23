@@ -9,7 +9,7 @@
   "last_completed_task": "CF-I04-INDEPENDENT-CRITIC-REWORK",
   "last_completed_head": "32b5070dbd80b4b4d3667fe45573f8851cb60a7c",
   "next_action": "CF_I04_AUTONOMOUS_REWORK_FROM_EXTERNAL_CRITIC",
-  "stop_reason": "External Independent Critic returned routine technical REWORK for lifecycle concurrency/atomicity and required acceptance evidence. No Human Gate exists. Under PM-AUTONOMY-001 Codex is authorized to consume the persisted review, repair autonomously, run adversarial D1/API/browser/full validation, publish a new immutable artifact, and stop only at the next Independent Critic boundary or another legitimate stop condition.",
+  "stop_reason": "External Independent Critic returned routine technical REWORK for lifecycle concurrency/atomicity and required acceptance evidence. No Human Gate exists. Under PM-AUTONOMY-001 Codex is authorized to consume the persisted review and repair autonomously. CF-UX-PARITY-001 is now binding: Cloudflare migration requires technical frontend adaptation, not product redesign; CF-I04 rework and all later increments must preserve the accepted source HMS UX/UI journeys unless a material departure is explicitly classified and approved as a Human Gate.",
   "event": {
     "seq": 25,
     "id": "CF-I04@CRITIC-REWORK-1",
