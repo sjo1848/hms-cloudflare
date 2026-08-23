@@ -1,17 +1,19 @@
 Act as Runtime Orchestrator for this repository. Do not rely on conversational history.
 
-First synchronize and reconstruct current state from AGENTS.md, .orchestration/STATE.md and .orchestration/STATUS.json. Reconcile any stale or contradictory persisted state before substantive implementation.
+First reconstruct current state from AGENTS.md, .orchestration/STATE.md and .orchestration/STATUS.json. Reconcile any stale or contradictory persisted state before substantive implementation.
+
+If HMS_HOST_GIT_BRIDGE=1, the trusted host launcher already synchronized canonical main and selected the bounded runtime branch. In that mode, do not perform Git write or Git network mutation commands (including fetch, pull, switch, checkout, add, commit, merge, rebase, reset, branch/ref mutation or push). Read-only Git inspection is allowed. The host launcher owns immutable commit creation and branch publication after a successful Codex exit.
 
 Determine the exact next authorized action from canonical evidence. If the next bounded increment is already authorized by accepted design and no Human Gate is required, but its Task Contract does not yet exist, create that Task Contract before implementation.
 
 Before substantive execution, set runtime_status=RUNNING, resume_authorized=false and persist the active task in .orchestration/STATUS.json.
 
-Then continue autonomously through the Project Method loop: Specialist -> immutable artifact/evidence -> Independent Critic -> bounded REWORK if required -> fresh Critic -> Integration Review where applicable -> persist state/evidence -> derive the next authorized task.
+Then continue autonomously through the implementation/rework portion of the Project Method. For substantive work, stop at the immutable-artifact boundary so the host can publish it and ChatGPT can perform the independent Critic. Do not self-PASS substantive work and do not invoke @codex review.
 
-Do not ask for routine human confirmation. Stop only at a legitimate Human Gate, material unrecoverable blocker, unavoidable Human Action/Input, Product Acceptance boundary, or runtime/session end.
+Do not ask for routine human confirmation. Stop only at a legitimate Human Gate, material unrecoverable blocker, unavoidable Human Action/Input, Product Acceptance boundary, external independent-review boundary, or runtime/session end.
 
-Before every exit, update both .orchestration/STATE.md and .orchestration/STATUS.json with the exact terminal/resumable state, current/last task, head SHA, next action, stop reason, event sequence and external-review signal.
+Before every exit, update both .orchestration/STATE.md and .orchestration/STATUS.json with the exact terminal/resumable state, current/last task, next action, stop reason, event sequence and external-review signal. Do not invent a committed head SHA before the host bridge creates it.
 
-For ordinary runtime/session end with authorized routine work remaining and no blocking external review, persist runtime_status=READY_TO_RESUME, resume_authorized=true and external_review.required=false so the local dispatcher may continue automatically. For Human Gates, blockers, Human Action/Input, Product Acceptance or blocking external review, persist resume_authorized=false.
+When substantive changes are ready for immutable publication and independent review, persist resume_authorized=false and external_review.required=true, with next_action indicating host publication / ChatGPT independent review.
 
-Publish the repository state when the runtime has the required channel/permission.
+For an ordinary runtime/session end with authorized routine work remaining and no blocking external review, persist runtime_status=READY_TO_RESUME, resume_authorized=true and external_review.required=false so the local dispatcher may continue automatically. For Human Gates, blockers, Human Action/Input, Product Acceptance or blocking external review, persist resume_authorized=false.
