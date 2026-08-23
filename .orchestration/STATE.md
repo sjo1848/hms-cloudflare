@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I02 PASS / RUNTIME AUTOMATION CHANGE UNDER INDEPENDENT REVIEW`
+Phase Status: `CF-I02 PASS / RUNTIME AUTOMATION PASS / CF-I03 READY_TO_RESUME`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -38,7 +38,7 @@ Conversation history is supporting context only and is never the sole source of 
 ### CF-DATA-001 — APPROVED OPTION B
 
 - one control-plane D1 for Access identity mappings, hotels, memberships/roles and routing metadata;
-- one operational D1 per hotel for hotel-scoped operational data.
+- one operational D1 per hotel for hotel-scoped operational data;
 - target remains `$0/month / Cloudflare Free`;
 - no paid Cloudflare plan, paid D1 transition or material recurring-cost increase may be activated without a separate Human Gate;
 - critical atomic workflows stay inside the relevant hotel operational D1.
@@ -77,35 +77,26 @@ Conversation history is supporting context only and is never the sole source of 
 - Critic evidence: `.orchestration/reviews/CF-I02-critic.md`.
 - No deployment, remote D1 mutation or paid service activation.
 
-## RUNTIME AUTOMATION — CF-RUNTIME-AUTOMATION-001
+### Runtime automation — CF-RUNTIME-AUTOMATION-001
 
-Status: `READY_FOR_INDEPENDENT_CRITIC` on PR #2 / branch `chore/runtime-handoff-automation`.
-
-Purpose: remove routine Human copy/paste handoff between ChatGPT and Codex while preserving Project Method gates.
-
-Proposed mechanism:
-- `.orchestration/STATUS.json` is the machine-readable signal;
-- `resume_authorized` explicitly controls whether local unattended resume is allowed;
-- ordinary `READY_TO_RESUME` may continue automatically only when no blocking external review/Gate/blocker exists;
-- a systemd user timer polls approximately every two minutes without invoking Codex;
-- `scripts/hms-runtime-watch.sh` launches Codex only for an explicitly authorized `origin/main` event;
-- local dispatch is protected by dirty-worktree fail-close, `flock`, event idempotence, 30-minute failure cooldown and max two attempts per event;
-- systemd installer is user-scoped and does not enable lingering automatically.
-
-Contract: `.orchestration/contracts/CF-RUNTIME-AUTOMATION-001.md`.
-Documentation: `docs/runtime-automation.md`.
-
-This automation is controller-authored and MUST NOT self-approve. It must receive a fresh independent Critic PASS before merge and before local installation.
+- Status: `PASS / INTEGRATED`.
+- Independently reviewed final PR head: `400ca30e40362dda28e5b81fcdd8f169d971caf0` with no fresh Codex findings.
+- PR #2 merged to main at `08af1ffda02447e53924345d900fa5f91c266765`.
+- User-scoped systemd dispatcher installed locally.
+- Controlled fail-close probe passed: service started, observed canonical `resume_authorized=false`, and exited without launching Codex.
+- Polling alone does not invoke Codex.
+- No linger was enabled.
+- Safety model includes dirty-worktree fail-close, `flock`, strict STATUS schema checks, explicit gate/blocker keys, stale-main revalidation, monotonic observed event sequencing/status fingerprinting, bounded retry/cooldown, and no bypass of Human Gate/blocker/external review.
 
 ## NEXT PRODUCT INCREMENT
 
 ### CF-I03
 
-Status: `PLANNED / NOT STARTED ON AUTOMATION BRANCH`.
+Status: `READY_TO_RESUME`.
 
 Accepted design scope: bookings, availability and room-night overlap protection.
 
-CF-I03 product implementation is not authorized on PR #2. After automation review/integration and controlled local dispatcher installation, the runtime may derive/create the formal CF-I03 Task Contract from accepted design and continue according to Project Method.
+Next routine runtime action is authorized to derive/create the formal CF-I03 Task Contract from accepted design and execute CF-I03 according to Project Method. No deploy, remote D1 mutation, paid transition or Product Acceptance decision is implied by this authorization.
 
 ## PENDING HUMAN GATES
 
@@ -115,23 +106,26 @@ Any paid Cloudflare transition remains a separate Human Gate.
 
 ## PENDING HUMAN ACTIONS / INPUTS
 
-None for product scope.
-
-After independent PASS and merge of PR #2, local installation requires running `npm run runtime:install` once on the Debian workstation. That is a local setup action, not a product/risk decision.
+None.
 
 ## BLOCKERS
 
-Product CF-I03 is intentionally not executed on the automation branch.
-
-Runtime automation integration is blocked only on independent Critic PASS for `CF-RUNTIME-AUTOMATION-001`.
+None.
 
 ## NEXT AUTHORIZED ACTION
 
-Run a fresh logically independent Critic over the current PR #2 head against `.orchestration/contracts/CF-RUNTIME-AUTOMATION-001.md`.
+Local runtime dispatcher may resume Codex for the new CF-I03 event.
 
-- On `REWORK`: repair within contract and require a fresh Critic.
-- On `PASS`: merge/integrate through normal Git path, reconcile `main` state/status, then install the user timer locally with `npm run runtime:install` and execute a controlled dispatch test.
-- Do not implement CF-I03 on PR #2.
+Codex must:
+- create/derive the formal CF-I03 Task Contract from accepted design;
+- implement only the accepted CF-I03 scope;
+- preserve the room-night overlap invariant and tenant boundaries;
+- run required tests/evidence;
+- obtain an independent Critic for the substantive output;
+- perform bounded routine REWORK autonomously;
+- persist exact orchestration state before runtime/session end.
+
+Stop and set `resume_authorized=false` only for a legitimate Human Gate, material blocker, unavoidable Human Action/Input, Product Acceptance boundary, or blocking external-review boundary.
 
 ## STOP CONDITION
 
