@@ -4,21 +4,21 @@
   "phase": "BUILD",
   "runtime_status": "READY_TO_RESUME",
   "resume_authorized": false,
-  "active_task": "CF-I03",
+  "active_task": "CF-I03-INTEGRATION",
   "work_branch": "runtime/cf-i03-rework-6",
-  "last_completed_task": "CF-I03-REWORK-4-IMPLEMENTATION",
+  "last_completed_task": "CF-I03-INDEPENDENT-CRITIC-PASS",
   "last_completed_head": "65ed1e5710a20af97d183f04364b5aa7b605a74a",
-  "next_action": "CHATGPT_INDEPENDENT_REVIEW_CF_I03_REWORK_4_ARTIFACT",
-  "stop_reason": "Fresh bounded CF-I03 repair and complete local D1/API/browser validation are complete; immutable artifact is published and Independent Critic is the next boundary.",
+  "next_action": "CLEAN_INTEGRATION_OF_ACCEPTED_CF_I03_INTO_CURRENT_MAIN",
+  "stop_reason": "Independent Critic PASS at exact CF-I03 implementation artifact. Integrate the accepted product changes into current main without carrying stale runtime-state conflicts, then reconcile state and derive CF-I04. Do not merge stale PR #4 as-is.",
   "event": {
-    "seq": 17,
-    "id": "CF-I03@REWORK-4-PUBLISHED",
-    "type": "IMMUTABLE_ARTIFACT_PUBLISHED"
+    "seq": 18,
+    "id": "CF-I03@CRITIC-PASS",
+    "type": "INDEPENDENT_REVIEW_PASS"
   },
   "external_review": {
-    "required": true,
-    "last_audited_head": "86f4028df45d9d4b977b378d6f89d3c0b9bf35ed",
-    "last_verdict": "REWORK_P1_PATCH_CONCURRENCY_AND_REQUIRED_TEST_EVIDENCE"
+    "required": false,
+    "last_audited_head": "65ed1e5710a20af97d183f04364b5aa7b605a74a",
+    "last_verdict": "PASS"
   },
   "human_gate": null,
   "blocker": null,
