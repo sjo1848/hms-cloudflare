@@ -103,7 +103,7 @@ Authorized runtime rework branch: `runtime/cf-i03-rework-6`.
 Task Contract: `.orchestration/contracts/CF-I03.md` on the work branch.
 
 Accepted implementation artifact: `65ed1e5710a20af97d183f04364b5aa7b605a74a` on `runtime/cf-i03-rework-6`.
-Clean integration artifact: `f6f3d230348ca22834704a063eec728d27235e6a` on `integration/cf-i03-clean`, based on current `main`.
+Clean integration artifact: `f6f3d230348ca22834704a063eec728d27235e6a` on `integration/cf-i03-clean`, fast-forward integrated into current `main` at `a720966f25fe10dbe5b43ab258e0f6014c93cca8`.
 
 Independent Critic record: `.orchestration/reviews/CF-I03-REWORK-4-CRITIC.md`.
 Critic verdict: `PASS`.
@@ -141,7 +141,7 @@ None.
 
 ## BLOCKERS
 
-None. CF-I03 has a fresh Independent Critic PASS; only clean integration remains.
+None. CF-I03 has a fresh Independent Critic PASS and its clean integration is published; the next boundary is Independent Critic review of the integrated head.
 
 ## NEXT AUTHORIZED ACTION
 

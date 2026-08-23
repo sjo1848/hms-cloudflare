@@ -5,15 +5,15 @@
   "runtime_status": "READY_TO_RESUME",
   "resume_authorized": false,
   "active_task": "CF-I03-INTEGRATION",
-  "work_branch": "integration/cf-i03-clean",
+  "work_branch": "main",
   "last_completed_task": "CF-I03-INTEGRATION-VALIDATED",
-  "last_completed_head": "f6f3d230348ca22834704a063eec728d27235e6a",
+  "last_completed_head": "a720966f25fe10dbe5b43ab258e0f6014c93cca8",
   "next_action": "CHATGPT_INDEPENDENT_REVIEW_CF_I03_CLEAN_INTEGRATION",
   "stop_reason": "Clean CF-I03 integration candidate validated and published from current main; stop at the Independent Critic boundary before deriving CF-I04.",
   "event": {
-    "seq": 20,
-    "id": "CF-I03@INTEGRATION-VALIDATED",
-    "type": "INTEGRATION_VALIDATED"
+    "seq": 21,
+    "id": "CF-I03@MAIN-INTEGRATED",
+    "type": "MAIN_INTEGRATED"
   },
   "external_review": {
     "required": true,
