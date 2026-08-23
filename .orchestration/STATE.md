@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `DESIGN`  
-Phase Status: `ACTIVE — INDEPENDENT DESIGN REVIEW NEXT`
+Phase Status: `ACTIVE — CF-DESIGN-REVIEW-001 READY`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -21,6 +21,7 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
   - `HMS-CLOUDFLARE — Migration Design Package v0.1`
   - `HMS-CLOUDFLARE — Codex Runtime Bootstrap`
   - `REFERENCE — PROJECT-METHOD-TRANSFER-PACK-v0.1`
+- Portable integrated Design Package: `docs/migration-design-package.md`
 - Runtime decision record: `.orchestration/decisions/CF-DATA-001.md`
 - Source parity artifact: `docs/source-contract-inventory.md`
 
@@ -104,11 +105,14 @@ Operational constraint:
 
 ### CF-DESIGN-REVIEW-001
 
-Status: `READY`
+Status: `READY`  
+Contract: `.orchestration/contracts/CF-DESIGN-REVIEW-001.md`  
+Review artifact target: `.orchestration/reviews/CF-DESIGN-REVIEW-001.md`  
+Design artifact: `docs/migration-design-package.md`
 
 Objective: independently review the integrated Migration Design Package after CF-DATA-001 Option B, including tenant topology, auth adaptation, D1 semantic translation, room-night overlap design, implementation increments, Decision Latitude, acceptance surfaces and Free-tier cost boundary.
 
-Required outcome: `PASS`, `REWORK`, `CONTRACT_DEFECT`, or legitimate `HUMAN_GATE`.
+Required outcome: `PASS`, `REWORK`, `CONTRACT_DEFECT`, `TECHNICAL_BLOCKED`, or legitimate `HUMAN_GATE`.
 
 The Critic must not rely on the Design Package author's reasoning context and must explicitly test for silent security/cost degradation and internal contradictions.
 
@@ -146,11 +150,10 @@ No Human Gate currently blocks DESIGN.
 ## NEXT AUTHORIZED ACTION
 
 Codex, as Runtime Orchestrator:
-1. read this state and `.orchestration/decisions/CF-DATA-001.md`;
-2. reconcile any remaining stale gate/bootstrap wording in repository governance artifacts;
-3. instantiate/run `CF-DESIGN-REVIEW-001` as an Independent Critic against the integrated Design Package and canonical evidence;
-4. on `REWORK`, repair autonomously inside approved DESIGN scope and use a fresh independent Critic;
-5. on `PASS`, close DESIGN, create/activate the `CF-I01` Task Contract and continue automatically.
+1. read this state, `.orchestration/decisions/CF-DATA-001.md`, `docs/migration-design-package.md` and the active Task Contract;
+2. execute `CF-DESIGN-REVIEW-001` using a logically independent Critic;
+3. on `REWORK`, repair autonomously inside approved DESIGN scope and use a fresh independent Critic;
+4. on `PASS`, close DESIGN, create/activate the `CF-I01` Task Contract and continue automatically.
 
 Do not ask for routine human confirmation after PASS.
 
