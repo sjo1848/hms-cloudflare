@@ -13,6 +13,8 @@ type BookingRow = {
   notes: string | null; created_at: string; updated_at: string;
 };
 
+type BookingUpdateResult = { meta: { changes: number } };
+
 const ROLE_CAPABILITIES: Record<string, ReadonlySet<string>> = {
   admin: new Set(["bookings.read", "bookings.write", "rooms.search"]),
   ops: new Set(["bookings.read", "bookings.write", "rooms.search"]),
@@ -41,6 +43,10 @@ function totalCents(priceCents: number, stayNights: number): number {
   const total = priceCents * stayNights;
   if (!Number.isSafeInteger(total)) throw ApiError.badRequest("booking total exceeds the supported integer range");
   return total;
+}
+
+export function assertBookingUpdateApplied(result: BookingUpdateResult): void {
+  if (result.meta.changes !== 1) throw ApiError.conflict("Booking became unavailable during update");
 }
 
 function view(row: BookingRow, hotelId: string) {
@@ -146,7 +152,7 @@ export function createBookingRoutes(): BookingApp {
       const priceCents = await validateBookingReferences(database, guestId, roomId, id, range.start, range.end);
       const total = totalCents(priceCents, claimNights.length); const now = new Date().toISOString();
       try {
-        await database.batch([
+        const results = await database.batch([
           database.prepare(`UPDATE bookings SET guest_id = ?2, room_id = ?3, check_in = ?4, check_out = ?5, total_cents = ?6, notes = ?7, updated_at = ?8
             WHERE id = ?1 AND status = 'CONFIRMED' AND EXISTS (SELECT 1 FROM guests WHERE id = ?2) AND EXISTS (SELECT 1 FROM rooms WHERE id = ?3 AND status = 'AVAILABLE')
             AND NOT EXISTS (SELECT 1 FROM room_holds WHERE room_id = ?3 AND start_date < ?5 AND end_date > ?4)`).bind(id, guestId, roomId, range.start, range.end, total, notes, now),
@@ -158,6 +164,7 @@ export function createBookingRoutes(): BookingApp {
             )`).bind(id, roomId, range.start, range.end),
           ...claimStatements(database, id, roomId, claimNights, range.start, range.end),
         ]);
+        assertBookingUpdateApplied(results[0]);
       } catch { throw ApiError.conflict("Room is unavailable for one or more nights"); }
     }
     const row = await findBooking(database, id); if (!row) throw ApiError.notFound("Booking not found"); return context.json(view(row, context.get("membership").hotelId));
