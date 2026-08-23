@@ -1,6 +1,6 @@
 import type { Membership } from "./auth/membership";
 
-export type OperationalDatabase = Pick<D1Database, "prepare">;
+export type OperationalDatabase = Pick<D1Database, "prepare" | "batch">;
 
 export class OperationalRoutingError extends Error {
   public constructor(message = "Operational database binding unavailable") {
