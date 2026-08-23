@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I02 PASS / RUNTIME AUTOMATION PASS / CF-I03 RECOVERED TO BRANCH / RUNTIME GIT HANDOFF BLOCKED`
+Phase Status: `CF-I02 PASS / RUNTIME GIT HANDOFF REPAIR PASS+MERGED / LOCAL CONTROLLED PROBE REQUIRED / CF-I03 REWORK`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -43,63 +43,73 @@ Conversation history is supporting context only and is never the sole source of 
 - no paid Cloudflare plan, paid D1 transition or material recurring-cost increase may be activated without a separate Human Gate;
 - critical atomic workflows stay inside the relevant hotel operational D1.
 
+### Independent review policy
+
+- Codex quota is reserved for implementation/rework.
+- ChatGPT is the external Independent Critic through GitHub.
+- Routine `@codex review` is not used unless the Human explicitly changes this policy.
+
 ## VALIDATED RESULTS
 
-### Bootstrap
+### Bootstrap / source contract / design
 
-- `CF-BOOTSTRAP-REVIEW-001`: `REWORK → repaired → fresh independent PASS`.
-- Bootstrap PR #1 integrated.
-
-### Source contract inventory
-
-- `CF-SOURCE-CONTRACT-001`: `PASS`.
-- Router/OpenAPI/artifact operations: `51 / 51 / 51`.
-- Evidence: `docs/source-contract-inventory.md` and `.orchestration/reviews/CF-SOURCE-CONTRACT-001-critic.md`.
-
-### Design
-
-- `CF-DESIGN-REVIEW-001`: `PASS`.
-- DESIGN exit closed before product BUILD.
+- `CF-BOOTSTRAP-REVIEW-001`: PASS after bounded rework.
+- `CF-SOURCE-CONTRACT-001`: PASS; router/OpenAPI/artifact operations `51 / 51 / 51`.
+- `CF-DESIGN-REVIEW-001`: PASS.
 
 ### CF-I01
 
 - Status: `PASS`.
-- Rework: `1` bounded cycle.
+- Rework: 1 bounded cycle.
 - Fresh Critic PASS at repaired artifact `27515d85d9db0677c4946746fa86374252bff4f5`.
-- Evidence: `.orchestration/reviews/CF-I01-critic.md`.
 
 ### CF-I02
 
 - Status: `PASS`.
-- Final implementation artifact after bounded UI rework: `bb3a136526c900522394f223206600f543e99e23`.
+- Final implementation artifact: `bb3a136526c900522394f223206600f543e99e23`.
 - State/evidence commit on main: `24a1e68a8df8fd7251586415619045f287e2c95a`.
 - Evidence: 13 tests PASS, typecheck PASS, web build PASS, generated-type check PASS, API/web Wrangler dry-run PASS, diff check PASS.
-- Critic evidence: `.orchestration/reviews/CF-I02-critic.md`.
-- No deployment, remote D1 mutation or paid service activation.
 
 ### Runtime automation — CF-RUNTIME-AUTOMATION-001
 
-- Status: `PASS / INTEGRATED`, but runtime Git handoff now has a technical blocker discovered by the first real autonomous product run.
-- Independently reviewed final PR head: `400ca30e40362dda28e5b81fcdd8f169d971caf0` with no fresh Codex findings.
-- PR #2 merged to main at `08af1ffda02447e53924345d900fa5f91c266765`.
-- User-scoped systemd dispatcher installed locally.
-- Controlled fail-close probe passed.
-- First real automatic dispatch passed the `GitHub → systemd → dispatcher → Codex` path and launched CF-I03 without Human relay.
-- Codex implemented and locally validated CF-I03, but `codex exec --sandbox workspace-write` could not write `.git/FETCH_HEAD` or `.git/index.lock`, so it could not create the immutable artifact commit or publish it.
-- The launcher then correctly refused automatic push because the worktree was dirty.
-- Subsequent timer runs correctly failed closed on the dirty worktree.
-- The recovered CF-I03 workspace was manually checkpointed once to branch `cf-i03-recovery` at `c1bd966` solely to preserve the artifact; this is a recovery action, not acceptance.
+- Status: `PASS / INTEGRATED`.
+- PR #2 merged at `08af1ffda02447e53924345d900fa5f91c266765`.
+- systemd user dispatcher installed locally.
+- Initial fail-close probe passed.
+- First real dispatch proved `GitHub → systemd → dispatcher → Codex` works without Human relay.
+- Incident found: Codex `workspace-write` could edit workspace but not `.git`, so it could not commit/push CF-I03.
+- Recovered CF-I03 workspace was checkpointed once to `cf-i03-recovery@c1bd966` solely to preserve the artifact.
 
-## NEXT PRODUCT INCREMENT
+### Runtime Git handoff repair — CF-RUNTIME-GIT-HANDOFF-002
 
-### CF-I03
+- Status: `PASS / INTEGRATED`.
+- PR #5 exact reviewed head: `f3f1565f15b69fb2b9a0046fc4ca0d72b31fdd28`.
+- ChatGPT Independent Critic verdict: PASS after one controller-found rework concerning non-idempotent commit/push recovery.
+- PR #5 merged to main at `a2f8a7eb760834b7868368ebe9c793a0fc2f188b`.
+- Codex remains in `--sandbox workspace-write`.
+- Host launcher now owns bounded `runtime/...` branch creation/resume, immutable commit creation and push.
+- Runtime event ownership/base/artifact claims support recovery after commit/push interruption without rerunning Codex when identity remains exact.
+- No host auto-commit to `main`; no auto-merge path.
+- ChatGPT watcher now derives/inspects runtime branches so the Human is not required to relay branch publication.
 
-Status: `RECOVERED_ARTIFACT / REQUIRES INDEPENDENT CRITIC`.
+## CF-I03
 
-Accepted design scope: bookings, availability and room-night overlap protection.
+Status: `REWORK REQUIRED / PR #4 OPEN / NOT MERGEABLE BY METHOD YET`.
 
-Recovered implementation branch: `cf-i03-recovery` at `c1bd966`.
-The recovered artifact is not PASS and must not be merged until it receives an independent Critic and bounded rework if needed.
+Clean product branch: `cf-i03-bookings@834e4a2aa3ec37aac036dc0273b15e6abf5c7d81`.
+PR: #4.
+
+The already-triggered Codex review returned 8 material findings before review policy changed:
+- P1 optional blank notes break valid creation;
+- P1 hold/booking exclusion is not atomic in both mutation directions;
+- P1 booking UI does not use date-scoped availability;
+- P1 generic PATCH can revive a cancelled booking;
+- P2 booking detail/edit UI missing;
+- P2 derived total can exceed JS safe integer range;
+- P2 unavailable room operational status is not rejected;
+- P2 booking list query is unbounded.
+
+No further Codex review should be triggered. After the local runtime probe succeeds, these findings are the authorized bounded CF-I03 rework input for Codex; ChatGPT will perform the fresh Critic on the resulting immutable runtime branch.
 
 ## PENDING HUMAN GATES
 
@@ -107,28 +117,38 @@ None.
 
 Any paid Cloudflare transition remains a separate Human Gate.
 
-## PENDING HUMAN ACTIONS / INPUTS
+## PENDING HUMAN ACTION
 
-None.
+### Local runtime update + controlled probe
 
-The one-time manual recovery commit/push has already been completed. Do not require further Human relay for routine Git/Codex coordination.
+The runtime repair is merged but the installed workstation copy must pull `main` before it can be trusted.
+
+Required local action:
+
+```bash
+cd /home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare
+git switch main
+git pull --ff-only
+systemctl --user start hms-codex-dispatch.service
+journalctl --user -u hms-codex-dispatch.service -n 30 --no-pager
+```
+
+Expected result: canonical status is `HUMAN_ACTION_REQUIRED` with `resume_authorized=false`, therefore the controlled probe must start the service and exit without launching Codex.
+
+This is a local operational action, not a Human Gate.
 
 ## BLOCKERS
 
-### Runtime Git handoff blocker
-
-`codex exec --sandbox workspace-write` can modify the project workspace but cannot reliably write Git metadata. The current launcher therefore cannot depend on Codex itself creating commits/branches inside the sandbox.
-
-Required repair: keep Codex sandboxed for implementation, but move immutable Git publication responsibilities to the trusted host-side launcher or an equivalent bounded repository channel. The repaired handoff must preserve fail-close behavior, exact reviewed artifact identity, branch isolation, and Human Gate/blocker semantics.
+No product-risk blocker. Unattended execution remains deliberately disabled until the local controlled probe confirms the merged host-Git bridge is active on the workstation.
 
 ## NEXT AUTHORIZED ACTION
 
-Two bounded tracks are authorized:
-
-1. Open the recovered CF-I03 artifact as a PR and request a fresh independent Critic against `.orchestration/contracts/CF-I03.md`. On REWORK, repair within the contract and require a fresh Critic. Do not merge until PASS.
-2. Repair the runtime Git handoff in a separate automation PR so future autonomous runs can produce immutable commits/branches without granting unrestricted Codex access to `.git`. Require independent Critic before integration.
-
-Do not resume unattended product execution until the runtime Git handoff repair is integrated and locally re-probed.
+1. Human performs the local pull + controlled fail-close probe above.
+2. On successful probe, ChatGPT reconciles canonical state and authorizes a new CF-I03 rework event on a bounded runtime branch.
+3. systemd launches Codex automatically for implementation/rework only.
+4. Host bridge commits/pushes the immutable runtime branch.
+5. ChatGPT detects that branch and performs the fresh Independent Critic without `@codex review`.
+6. Routine REWORK continues autonomously until PASS or a legitimate stop condition.
 
 ## STOP CONDITION
 
@@ -137,16 +157,17 @@ Stop only for:
 - material unrecoverable blocker;
 - unavoidable Human Action/Input;
 - Product Acceptance boundary;
+- external Independent Critic boundary;
 - runtime/session end with exact resumable state persisted.
 
 ## ORCHESTRATION RULES
 
 - Human = Product/Risk Authority.
-- Codex = Runtime Orchestrator / repository execution.
-- ChatGPT = External Project Controller / Method Custodian / audit and Human Gate interface.
+- Codex = Runtime Orchestrator / implementation and bounded rework.
+- ChatGPT = External Project Controller / Method Custodian / Independent Critic / Human Gate interface.
 - Every substantive task requires a Task Contract.
-- Every substantive output requires independent Critic review.
+- Every substantive output requires an independent ChatGPT Critic.
 - Routine REWORK is autonomous.
 - Retry exhaustion triggers diagnosis, not automatic escalation.
-- Do not use the human as a routine message bus.
+- Do not use the Human as a routine message bus.
 - Preserve `Requirement → Expected Surface → Acceptance → Evidence` for material requirements.
