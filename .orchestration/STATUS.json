@@ -2,18 +2,18 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "BUILD",
-  "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": true,
+  "runtime_status": "HUMAN_ACTION_REQUIRED",
+  "resume_authorized": false,
   "active_task": "CF-I03",
   "work_branch": "runtime/cf-i03-rework-6",
   "last_completed_task": "CF-RUNTIME-GIT-HANDOFF-002",
   "last_completed_head": "a2f8a7eb760834b7868368ebe9c793a0fc2f188b",
-  "next_action": "REWORK_CF_I03_CRITIC_FINDINGS_CYCLE_2",
-  "stop_reason": "ChatGPT Independent Critic reviewed the published CF-I03 runtime artifact and found material invariant defects requiring bounded rework on the exact same runtime branch.",
+  "next_action": "OPEN_VISIBLE_CODEX_SESSION_FOR_CF_I03_REWORK_CYCLE_2",
+  "stop_reason": "Human chose to pause unattended systemd-driven Codex execution and return to a visible interactive Codex session while preserving Project Method, the current CF-I03 bounded rework scope, and GitHub as durable state.",
   "event": {
-    "seq": 7,
-    "id": "CF-I03@REWORK-2",
-    "type": "BOUNDED_REWORK"
+    "seq": 8,
+    "id": "CF-I03@VISIBLE-SESSION",
+    "type": "HUMAN_ACTION_REQUIRED"
   },
   "external_review": {
     "required": false,
