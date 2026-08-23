@@ -36,7 +36,7 @@ Codex then implemented and locally validated CF-I03, but could not create the re
 
 During host-bridge execution:
 
-- Codex may use read-only Git inspection but MUST NOT perform Git writes or Git network mutations (`fetch`, `switch`, `checkout`, `add`, `commit`, `merge`, `rebase`, `push`, branch/ref mutation).
+- Codex may use read-only Git inspection but MUST NOT perform Git writes or Git network mutations (`fetch`, `pull`, `switch`, `checkout`, `add`, `commit`, `merge`, `rebase`, `reset`, `push`, branch/ref mutation).
 - Read-only `.git` is expected and MUST NOT itself be recorded as a runtime blocker.
 - The trusted host launcher owns:
   - synchronization of canonical `main`;
@@ -51,7 +51,7 @@ During host-bridge execution:
 If canonical status does not provide `work_branch`:
 
 1. derive `runtime/<safe-active-task-slug>-<event.seq>`;
-2. refuse if that remote branch already exists, because ownership would be ambiguous;
+2. refuse if that local or remote branch already exists, because ownership would be ambiguous;
 3. create the local branch from the exact validated canonical main HEAD;
 4. run Codex on that branch under `workspace-write`.
 
@@ -60,7 +60,7 @@ If canonical status does not provide `work_branch`:
 If canonical status provides `work_branch`:
 
 1. require it to match the allowed `runtime/...` namespace;
-2. fetch that exact branch outside the Codex sandbox;
+2. fetch the runtime branch outside the Codex sandbox;
 3. switch/reset the local work branch to its remote head only while the worktree is clean;
 4. run Codex on that branch;
 5. never silently select another branch.
@@ -81,33 +81,36 @@ After Codex exits:
   - persist a local handoff record containing event id/seq, canonical main head, work branch and published head;
 - zero exit + no changes: refuse an ambiguous new-branch publication rather than manufacturing an empty artifact.
 
-The published work branch is an immutable artifact boundary suitable for a later independent Critic/PR review. Independent Critic approval is not manufactured by the launcher.
+The published work branch is an immutable artifact boundary suitable for later ChatGPT Independent Critic / PR review. Independent Critic approval is not manufactured by the launcher.
 
 ## CODEX EXIT PROTOCOL UNDER HOST BRIDGE
 
-The runtime prompt must explicitly tell Codex:
+The runtime instructions must explicitly tell Codex:
 
 - `.git` write protection is intentional;
-- do not attempt Git writes;
+- do not attempt Git writes or Git network mutations;
 - implement/rework only the authorized task;
 - run local non-destructive validation;
-- if substantive changes are ready for immutable publication, stop before independent Critic and persist branch-local state indicating host publication / independent review is next;
+- if substantive changes are ready for immutable publication, stop before independent Critic because the host must first create the immutable commit;
+- persist branch-local state indicating host publication / ChatGPT independent review is next;
 - a legitimate Human Gate, blocker, Human Action/Input or Product Acceptance boundary still overrides routine continuation;
-- do not self-PASS substantive work.
+- do not self-PASS substantive work;
+- do not trigger `@codex review`.
 
 ## REQUIRED ACCEPTANCE
 
 | Requirement | Acceptance | Evidence |
 |---|---|---|
-| Preserve sandbox | Codex still runs with `--sandbox workspace-write`; no Full Access workaround. | launcher diff + docs |
-| No Git writes by Codex | prompt/AGENTS explicitly assign Git mutations to host bridge. | prompt + policy review |
-| New branch isolation | new event creates deterministic `runtime/...` branch from exact validated main and refuses collision. | shell review/tests |
+| Preserve sandbox | Codex still runs with `--sandbox workspace-write`; no Full Access workaround. | launcher diff + runtime instructions |
+| No Git writes by Codex | prompt/AGENTS explicitly assign Git mutations to host bridge. | prompt + AGENTS review |
+| New branch isolation | new event creates deterministic `runtime/...` branch from exact validated main and refuses collision. | shell review |
 | Rework branch isolation | only explicit safe `work_branch` may be resumed. | parser/branch validation |
-| Host immutable artifact | successful dirty Codex output is committed and pushed by host only on expected non-main work branch. | launcher review/tests |
+| Host immutable artifact | successful dirty Codex output is committed and pushed by host only on expected non-main work branch. | launcher review |
 | Failure fail-close | non-zero Codex exit never auto-commits/pushes newly dirty output. | shell control-flow evidence |
 | No auto merge | launcher cannot merge product work to main. | diff review |
 | Existing gates preserved | main authorization, gate/blocker/external-review/stale-event checks remain. | regression review |
 | Auditability | local published-handoff record contains canonical/main/event/branch/head identity. | launcher evidence |
+| Review quota policy | Independent Critic is performed by ChatGPT through GitHub; routine `@codex review` is not used. | AGENTS + contract review |
 
 ## FORBIDDEN ACTIONS
 
@@ -117,10 +120,11 @@ The runtime prompt must explicitly tell Codex:
 - automatic product merge.
 - paid service, remote D1 mutation, deployment or CF-I03 product changes in this runtime repair.
 - treating sandbox-protected `.git` as writable through permission hacks.
+- routine `@codex review` for Independent Critic work.
 
 ## REQUIRED REVIEW
 
-This controller-authored runtime repair MUST receive a fresh independent Codex Critic on its exact current head before integration.
+This controller-authored runtime repair MUST receive a fresh independent ChatGPT Critic on its exact current head before integration. The Critic reads the PR/diff, contract and canonical evidence through GitHub and does not trigger Codex review quota.
 
 Critic focus:
 
@@ -133,8 +137,9 @@ Critic focus:
 - rework branch selection;
 - event replay/idempotence regression;
 - any path that grants Codex broader filesystem permissions than `workspace-write`;
-- any new Human message-bus dependency.
+- any new Human message-bus dependency;
+- mismatch between branch-local review state and canonical `main` authorization.
 
 ## DONE WHEN
 
-The repair receives a fresh independent PASS, is integrated into `main`, the local repository pulls the updated scripts, and a controlled probe demonstrates that host Git publication can preserve a sandboxed Codex artifact without manual commit/push. Unattended product continuation remains disabled until that probe succeeds.
+The repair receives a fresh ChatGPT Independent Critic PASS, is integrated into `main`, the local repository pulls the updated scripts, and a controlled probe demonstrates that host Git publication can preserve a sandboxed Codex artifact without manual commit/push. Unattended product continuation remains disabled until that probe succeeds.
