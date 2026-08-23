@@ -97,13 +97,15 @@ Conversation history is supporting context only and is never the sole source of 
 
 Status: `REWORK CYCLE 2 IMPLEMENTED / LOCAL VALIDATION PASS / IMMUTABLE PUBLICATION REQUIRED`.
 
-Runtime execution: `READY_TO_RESUME` with `resume_authorized=false` — event `CF-I03@REWORK-2-READY` (seq 10), active task `CF-I03`, on `runtime/cf-i03-rework-6`. The bounded P1 rework and local validation are complete; external review is required after immutable publication.
+Runtime execution: `READY_TO_RESUME` with `resume_authorized=false` — event `CF-I03@REWORK-2-PUBLISHED` (seq 11), active task `CF-I03`, on `runtime/cf-i03-rework-6`. The bounded P1 rework and local validation are complete; immutable artifact `900054ad49d9c401ffe261a88dcd73cf9d1b94cb` is published and external review is required.
 
 CF-I03 REWORK-1 implementation evidence: API/domain changes repair blank optional notes, atomic hold/booking validation and claim replacement, safe integer totals, unavailable-room rejection, cancelled-booking revival, and bounded booking queries. The `/bookings` UI now uses date-scoped availability and provides detail/edit interaction. Local validation passed: `npm run typecheck`, `npm run test` (14/14), `npm run web:build`, `npm run types:check`, `npm run wrangler:dry-run`, and `git diff --check`. Wrangler dry-run emitted the known read-only `.wrangler` log warning but completed both dry-runs.
 
 CF-I03 REWORK-2 implementation evidence: hold create/update mutations now reject dates claimed by active bookings; booking edits delete all prior room-night claims before replacing the booking and its claims atomically; claim insertion now guards against the bound `room_id` rather than the stay date. Local validation passed: `npm run check` (typecheck plus 14/14 tests), `npm run web:build`, `npm run types:check`, `npm run wrangler:dry-run`, and `git diff --check`. Wrangler emitted the known read-only `.wrangler` log warning but both dry-runs completed successfully.
 
-Stop reason: substantive CF-I03 cycle-2 changes are ready for immutable publication and ChatGPT Independent Critic review. Codex does not self-PASS the artifact.
+Stop reason: immutable CF-I03 cycle-2 artifact is published and awaits ChatGPT Independent Critic review. Codex does not self-PASS the artifact.
+
+Published artifact: `900054ad49d9c401ffe261a88dcd73cf9d1b94cb` on `runtime/cf-i03-rework-6`.
 
 Cycle-2 final local validation: `npm run check` (typecheck plus 14/14 tests), `npm run web:build`, `npm run types:check`, `npm run wrangler:dry-run`, and `git diff --check` all passed. Wrangler emitted the known read-only `.wrangler` log warning; both dry-runs completed successfully. The final P1 hardening also prevents an invalid booking edit from deleting the existing room-night claims before the atomic replacement can succeed.
 
