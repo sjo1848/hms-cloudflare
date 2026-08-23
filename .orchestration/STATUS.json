@@ -3,19 +3,19 @@
   "project": "HMS Cloudflare",
   "phase": "BUILD",
   "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": true,
-  "active_task": null,
+  "resume_authorized": false,
+  "active_task": "CF-RUNTIME-AUTOMATION-001",
   "last_completed_task": "CF-I02",
   "last_completed_head": "24a1e68a8df8fd7251586415619045f287e2c95a",
-  "next_action": "RECONCILE_STATE_AND_CREATE_NEXT_AUTHORIZED_TASK_CONTRACT",
-  "stop_reason": "Codex runtime ended after CF-I02 independent PASS; authorized BUILD work remains.",
+  "next_action": "INDEPENDENT_CRITIC_CF_RUNTIME_AUTOMATION_001",
+  "stop_reason": "Controller-authored runtime automation change requires fresh independent Critic before integration or local installation.",
   "event": {
-    "seq": 1,
-    "id": "CF-I02@24a1e68a8df8fd7251586415619045f287e2c95a",
-    "type": "RUNTIME_END_AFTER_TASK_PASS"
+    "seq": 2,
+    "id": "CF-RUNTIME-AUTOMATION-001@PR2",
+    "type": "INDEPENDENT_REVIEW_REQUIRED"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": "24a1e68a8df8fd7251586415619045f287e2c95a",
     "last_verdict": "PASS_WITH_GOVERNANCE_OBSERVATIONS"
   },
