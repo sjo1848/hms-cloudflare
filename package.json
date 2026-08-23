@@ -12,7 +12,8 @@
     "types:check": "npm run types:api -- --check && npm run types:web -- --check",
     "wrangler:check:api": "wrangler check -c apps/api/wrangler.jsonc",
     "wrangler:check:web": "wrangler check -c apps/web/wrangler.jsonc",
-    "wrangler:dry-run": "npx wrangler deploy --dry-run -c apps/api/wrangler.jsonc && npx wrangler deploy --dry-run -c apps/web/wrangler.jsonc"
+    "wrangler:dry-run": "npx wrangler deploy --dry-run -c apps/api/wrangler.jsonc && npx wrangler deploy --dry-run -c apps/web/wrangler.jsonc",
+    "codex:resume": "bash scripts/codex-resume.sh"
   },
   "dependencies": {
     "hono": "^4.9.8",
