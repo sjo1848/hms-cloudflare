@@ -143,6 +143,12 @@ PY
   exit 26
 }
 
+EVENT_KEY="$($PYTHON_BIN - "$EVENT_ID" <<'PY'
+import hashlib, sys
+print(hashlib.sha256(sys.argv[1].encode("utf-8")).hexdigest())
+PY
+)"
+
 validate_work_branch() {
   local branch="$1"
   "$PYTHON_BIN" - "$branch" <<'PY'
@@ -157,31 +163,150 @@ PY
 
 if [[ -n "$CANONICAL_WORK_BRANCH" ]]; then
   WORK_BRANCH="$CANONICAL_WORK_BRANCH"
-  if ! validate_work_branch "$WORK_BRANCH"; then
-    log "unsafe canonical work_branch: $WORK_BRANCH"
-    exit 27
-  fi
-  if ! "$GIT_BIN" show-ref --verify --quiet "refs/remotes/origin/$WORK_BRANCH"; then
-    log "canonical work_branch does not exist on origin: $WORK_BRANCH"
-    exit 28
-  fi
-  "$GIT_BIN" switch -C "$WORK_BRANCH" "origin/$WORK_BRANCH" >/dev/null
 else
   WORK_BRANCH="runtime/${TASK_SLUG}-${EVENT_SEQ}"
-  if ! validate_work_branch "$WORK_BRANCH"; then
-    log "derived unsafe work branch: $WORK_BRANCH"
-    exit 29
-  fi
-  if "$GIT_BIN" show-ref --verify --quiet "refs/heads/$WORK_BRANCH" || "$GIT_BIN" show-ref --verify --quiet "refs/remotes/origin/$WORK_BRANCH"; then
-    log "derived work branch already exists; refusing ambiguous ownership: $WORK_BRANCH"
-    exit 30
-  fi
-  "$GIT_BIN" switch -c "$WORK_BRANCH" "$CURRENT_HEAD" >/dev/null
+fi
+if ! validate_work_branch "$WORK_BRANCH"; then
+  log "unsafe work branch: $WORK_BRANCH"
+  exit 27
+fi
+if [[ "$WORK_BRANCH" == "main" ]]; then
+  log "main can never be a runtime work branch"
+  exit 28
 fi
 
-if [[ "$WORK_BRANCH" == "main" || "$($GIT_BIN branch --show-current)" != "$WORK_BRANCH" ]]; then
+CLAIM_FILE="$STATE_HOME/event-${EVENT_SEQ}.claim"
+CLAIM_SEQ=""
+CLAIM_EVENT_KEY=""
+CLAIM_MAIN_HEAD=""
+CLAIM_BRANCH=""
+CLAIM_BASE_HEAD=""
+CLAIM_ARTIFACT_HEAD=""
+
+write_claim() {
+  local artifact_head="$1"
+  local tmp="$CLAIM_FILE.tmp.$$"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$EVENT_SEQ" "$EVENT_KEY" "$CURRENT_HEAD" "$WORK_BRANCH" "$BASE_WORK_HEAD" "$artifact_head" > "$tmp"
+  mv "$tmp" "$CLAIM_FILE"
+}
+
+if [[ -f "$CLAIM_FILE" ]]; then
+  if ! IFS=$'\t' read -r CLAIM_SEQ CLAIM_EVENT_KEY CLAIM_MAIN_HEAD CLAIM_BRANCH CLAIM_BASE_HEAD CLAIM_ARTIFACT_HEAD < "$CLAIM_FILE"; then
+    log "cannot parse event ownership claim"
+    exit 29
+  fi
+  if [[ ! "$CLAIM_SEQ" =~ ^[0-9]+$ || ! "$CLAIM_EVENT_KEY" =~ ^[0-9a-f]{64}$ || ! "$CLAIM_MAIN_HEAD" =~ ^[0-9a-f]{40}$ || ! "$CLAIM_BASE_HEAD" =~ ^[0-9a-f]{40}$ ]]; then
+    log "invalid event ownership claim"
+    exit 30
+  fi
+  if [[ "$CLAIM_ARTIFACT_HEAD" != "-" && ! "$CLAIM_ARTIFACT_HEAD" =~ ^[0-9a-f]{40}$ ]]; then
+    log "invalid claimed artifact head"
+    exit 31
+  fi
+  if [[ "$CLAIM_SEQ" != "$EVENT_SEQ" || "$CLAIM_EVENT_KEY" != "$EVENT_KEY" || "$CLAIM_MAIN_HEAD" != "$CURRENT_HEAD" || "$CLAIM_BRANCH" != "$WORK_BRANCH" ]]; then
+    log "event ownership claim does not match canonical dispatch"
+    exit 32
+  fi
+  BASE_WORK_HEAD="$CLAIM_BASE_HEAD"
+else
+  if [[ -n "$CANONICAL_WORK_BRANCH" ]]; then
+    if ! "$GIT_BIN" show-ref --verify --quiet "refs/remotes/origin/$WORK_BRANCH"; then
+      log "canonical work_branch does not exist on origin: $WORK_BRANCH"
+      exit 33
+    fi
+    BASE_WORK_HEAD="$($GIT_BIN rev-parse "origin/$WORK_BRANCH")"
+  else
+    if "$GIT_BIN" show-ref --verify --quiet "refs/heads/$WORK_BRANCH" || "$GIT_BIN" show-ref --verify --quiet "refs/remotes/origin/$WORK_BRANCH"; then
+      log "derived work branch already exists without an ownership claim: $WORK_BRANCH"
+      exit 34
+    fi
+    BASE_WORK_HEAD="$CURRENT_HEAD"
+  fi
+  write_claim "-"
+  CLAIM_ARTIFACT_HEAD="-"
+fi
+
+finalize_handoff() {
+  local artifact_head="$1"
+  local handoff_tmp="$STATE_HOME/published-handoff.tmp.$$"
+  local handoff_file="$STATE_HOME/published-handoff"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$EVENT_SEQ" "$EVENT_ID" "$CURRENT_HEAD" "$WORK_BRANCH" "$artifact_head" "$ACTIVE_TASK" > "$handoff_tmp"
+  mv "$handoff_tmp" "$handoff_file"
+}
+
+recover_claimed_artifact() {
+  local artifact_head="$1"
+  if ! "$GIT_BIN" cat-file -e "${artifact_head}^{commit}" 2>/dev/null; then
+    log "claimed artifact commit is missing locally; refusing ambiguous recovery"
+    exit 35
+  fi
+  local parent_head
+  parent_head="$($GIT_BIN rev-parse "${artifact_head}^")"
+  if [[ "$parent_head" != "$BASE_WORK_HEAD" ]]; then
+    log "claimed artifact parent does not match claimed work base"
+    exit 36
+  fi
+
+  if "$GIT_BIN" show-ref --verify --quiet "refs/remotes/origin/$WORK_BRANCH"; then
+    local remote_head
+    remote_head="$($GIT_BIN rev-parse "origin/$WORK_BRANCH")"
+    if [[ "$remote_head" == "$artifact_head" ]]; then
+      finalize_handoff "$artifact_head"
+      log "HOST_GIT_ALREADY_PUBLISHED event=$EVENT_ID seq=$EVENT_SEQ branch=$WORK_BRANCH head=$artifact_head"
+      exit 0
+    fi
+    if [[ "$remote_head" != "$BASE_WORK_HEAD" ]]; then
+      log "remote runtime branch moved away from the claimed base/artifact; refusing overwrite"
+      exit 37
+    fi
+  elif [[ -n "$CANONICAL_WORK_BRANCH" ]]; then
+    log "canonical rework branch disappeared from origin; refusing recovery"
+    exit 38
+  fi
+
+  "$GIT_BIN" push --set-upstream origin "${artifact_head}:refs/heads/$WORK_BRANCH" >/dev/null
+  finalize_handoff "$artifact_head"
+  log "HOST_GIT_PUBLISHED_RECOVERY event=$EVENT_ID seq=$EVENT_SEQ branch=$WORK_BRANCH head=$artifact_head"
+  exit 0
+}
+
+if [[ "$CLAIM_ARTIFACT_HEAD" != "-" ]]; then
+  recover_claimed_artifact "$CLAIM_ARTIFACT_HEAD"
+fi
+
+if [[ -n "$CANONICAL_WORK_BRANCH" ]]; then
+  if ! "$GIT_BIN" show-ref --verify --quiet "refs/remotes/origin/$WORK_BRANCH"; then
+    log "canonical work_branch does not exist on origin: $WORK_BRANCH"
+    exit 39
+  fi
+  REMOTE_WORK_HEAD="$($GIT_BIN rev-parse "origin/$WORK_BRANCH")"
+  if [[ "$REMOTE_WORK_HEAD" != "$BASE_WORK_HEAD" ]]; then
+    log "canonical work_branch changed after event claim; refusing stale rework base"
+    exit 40
+  fi
+  "$GIT_BIN" switch -C "$WORK_BRANCH" "$BASE_WORK_HEAD" >/dev/null
+else
+  if "$GIT_BIN" show-ref --verify --quiet "refs/remotes/origin/$WORK_BRANCH"; then
+    log "new-event runtime branch appeared on origin without a published artifact claim"
+    exit 41
+  fi
+  if "$GIT_BIN" show-ref --verify --quiet "refs/heads/$WORK_BRANCH"; then
+    LOCAL_WORK_HEAD="$($GIT_BIN rev-parse "$WORK_BRANCH")"
+    if [[ "$LOCAL_WORK_HEAD" != "$BASE_WORK_HEAD" ]]; then
+      log "claimed local runtime branch moved before artifact publication"
+      exit 42
+    fi
+    "$GIT_BIN" switch -C "$WORK_BRANCH" "$BASE_WORK_HEAD" >/dev/null
+  else
+    "$GIT_BIN" switch -c "$WORK_BRANCH" "$BASE_WORK_HEAD" >/dev/null
+  fi
+fi
+
+if [[ "$($GIT_BIN branch --show-current)" != "$WORK_BRANCH" ]]; then
   log "work branch boundary invalid before Codex launch"
-  exit 31
+  exit 43
 fi
 
 BASE_PROMPT="$(cat .orchestration/RESUME_PROMPT.txt)"
@@ -193,9 +318,9 @@ Expected work branch: $WORK_BRANCH.
 
 Git metadata is intentionally protected by the Codex workspace-write sandbox. This is expected and is NOT a blocker. You may use read-only Git inspection (for example status, diff, log, show), including read-only inspection of origin/main. Do NOT run Git write/network mutation commands: fetch, pull, switch, checkout, add, commit, merge, rebase, reset, branch/ref mutation, or push. The trusted host launcher owns those operations after you exit successfully.
 
-When branch-local STATE/STATUS differs from canonical main, use read-only `git show origin/main:.orchestration/STATE.md` and `git show origin/main:.orchestration/STATUS.json` to understand the canonical dispatch decision, then use the work branch for implementation artifacts.
+When branch-local STATE/STATUS differs from canonical main, use read-only git show origin/main:.orchestration/STATE.md and git show origin/main:.orchestration/STATUS.json to understand the canonical dispatch decision, then use the work branch for implementation artifacts.
 
-Implement or rework only the authorized task and run relevant local non-destructive validation. If substantive changes are ready for immutable publication, stop BEFORE independent Critic review because the host must first create the immutable commit. Persist branch-local STATE.md and STATUS.json so they accurately say host publication / independent review is next; set resume_authorized=false and external_review.required=true for that review boundary. Do not classify read-only .git as BLOCKED. Legitimate unrelated Human Gates/blockers/Product Acceptance boundaries still apply normally.
+Implement or rework only the authorized task and run relevant local non-destructive validation. If substantive changes are ready for immutable publication, stop BEFORE independent Critic review because the host must first create the immutable commit. Persist branch-local STATE.md and STATUS.json so they accurately say host publication / ChatGPT independent review is next; set resume_authorized=false and external_review.required=true for that review boundary. Do not classify read-only .git as BLOCKED. Do not invoke @codex review. Legitimate unrelated Human Gates/blockers/Product Acceptance boundaries still apply normally.
 EOF
 )"
 
@@ -215,43 +340,54 @@ fi
 CURRENT_BRANCH="$($GIT_BIN branch --show-current)"
 if [[ "$CURRENT_BRANCH" != "$WORK_BRANCH" || "$CURRENT_BRANCH" == "main" ]]; then
   log "branch changed unexpectedly after Codex run; refusing publication"
-  exit 32
+  exit 44
 fi
 
 if [[ -z "$($GIT_BIN status --porcelain --untracked-files=all)" ]]; then
   log "Codex exited successfully with no repository changes; refusing to manufacture an empty runtime artifact"
-  exit 33
+  exit 45
 fi
 
 if ! "$GIT_BIN" diff --check; then
   log "working-tree diff check failed; refusing publication"
-  exit 34
+  exit 46
 fi
 
 "$GIT_BIN" add -A
 if "$GIT_BIN" diff --cached --quiet; then
   log "no staged changes after host add; refusing publication"
-  exit 35
+  exit 47
 fi
 if ! "$GIT_BIN" diff --cached --check; then
   log "staged diff check failed; refusing publication"
-  exit 36
+  exit 48
 fi
 
-"$GIT_BIN" commit -m "runtime: ${ACTIVE_TASK} event ${EVENT_SEQ}" >/dev/null
-PUBLISHED_HEAD="$($GIT_BIN rev-parse HEAD)"
-
-if [[ "$($GIT_BIN branch --show-current)" != "$WORK_BRANCH" || "$WORK_BRANCH" == "main" ]]; then
-  log "branch boundary invalid before push; refusing publication"
-  exit 37
+PARENT_HEAD="$($GIT_BIN rev-parse HEAD)"
+if [[ "$PARENT_HEAD" != "$BASE_WORK_HEAD" ]]; then
+  log "runtime branch parent changed before immutable publication"
+  exit 49
+fi
+TREE_HEAD="$($GIT_BIN write-tree)"
+PUBLISHED_HEAD="$(printf 'runtime: %s event %s\n' "$ACTIVE_TASK" "$EVENT_SEQ" | "$GIT_BIN" commit-tree "$TREE_HEAD" -p "$PARENT_HEAD")"
+if [[ ! "$PUBLISHED_HEAD" =~ ^[0-9a-f]{40}$ ]]; then
+  log "failed to create immutable runtime commit"
+  exit 50
 fi
 
-"$GIT_BIN" push --set-upstream origin "$WORK_BRANCH" >/dev/null
+write_claim "$PUBLISHED_HEAD"
+"$GIT_BIN" update-ref "refs/heads/$WORK_BRANCH" "$PUBLISHED_HEAD" "$PARENT_HEAD"
 
-HANDOFF_TMP="$STATE_HOME/published-handoff.tmp"
-HANDOFF_FILE="$STATE_HOME/published-handoff"
-printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
-  "$EVENT_SEQ" "$EVENT_ID" "$CURRENT_HEAD" "$WORK_BRANCH" "$PUBLISHED_HEAD" "$ACTIVE_TASK" > "$HANDOFF_TMP"
-mv "$HANDOFF_TMP" "$HANDOFF_FILE"
+if [[ "$($GIT_BIN branch --show-current)" != "$WORK_BRANCH" || "$($GIT_BIN rev-parse HEAD)" != "$PUBLISHED_HEAD" ]]; then
+  log "branch boundary invalid after immutable commit creation"
+  exit 51
+fi
+if [[ -n "$($GIT_BIN status --porcelain --untracked-files=all)" ]]; then
+  log "worktree is not clean after host commit; refusing push"
+  exit 52
+fi
+
+"$GIT_BIN" push --set-upstream origin "${PUBLISHED_HEAD}:refs/heads/$WORK_BRANCH" >/dev/null
+finalize_handoff "$PUBLISHED_HEAD"
 
 log "HOST_GIT_PUBLISHED event=$EVENT_ID seq=$EVENT_SEQ branch=$WORK_BRANCH head=$PUBLISHED_HEAD"
