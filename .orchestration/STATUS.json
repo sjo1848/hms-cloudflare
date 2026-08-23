@@ -7,24 +7,23 @@
   "active_task": "CF-I03",
   "last_completed_task": "CF-RUNTIME-AUTOMATION-001",
   "last_completed_head": "08af1ffda02447e53924345d900fa5f91c266765",
-  "next_action": "RESTORE_WRITABLE_GIT_METADATA_THEN_COMMIT_CF_I03_AND_RUN_INDEPENDENT_CRITIC",
-  "stop_reason": "Git cannot create .git/index.lock because repository metadata is read-only; immutable artifact commit and required independent review cannot proceed.",
+  "next_action": "RECOVER_LOCAL_CF_I03_AND_REPAIR_GIT_HANDOFF",
+  "stop_reason": "Automatic CF-I03 execution produced validated local changes but Codex sandbox could not write .git, so commit/publish failed. Preserve local work and repair runtime Git handoff before resuming.",
   "event": {
-    "seq": 5,
-    "id": "CF-I03@BLOCKED",
-    "type": "TECHNICAL_BLOCKER_GIT_METADATA_READ_ONLY"
+    "seq": 4,
+    "id": "CF-I03@LOCAL-GIT-BLOCKER",
+    "type": "BLOCKED"
   },
   "external_review": {
-    "required": true,
+    "required": false,
     "last_audited_head": "400ca30e40362dda28e5b81fcdd8f169d971caf0",
     "last_verdict": "PASS"
   },
   "human_gate": null,
   "blocker": {
-    "code": "GIT_METADATA_READ_ONLY",
-    "message": "git fetch cannot write .git/FETCH_HEAD and git commit cannot create .git/index.lock in this runtime.",
-    "recovery_attempts": ["git fetch origin", "git commit -m 'feat: implement CF-I03 bookings and room-night protection'"],
-    "required_resolution": "Provide a runtime with writable .git metadata or commit/publish the controlled workspace changes through the repository channel."
+    "type": "RUNTIME_GIT_WRITE_RESTRICTION",
+    "scope": "local Codex sandbox commit/publish handoff",
+    "recovery": "Preserve dirty CF-I03 worktree, publish it from the host Git process, then repair launcher ownership of branch/commit/push before re-enabling unattended resume."
   },
   "cost_guard": {
     "target": "$0/month / Cloudflare Free",
