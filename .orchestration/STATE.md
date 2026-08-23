@@ -157,15 +157,20 @@ No Human Gate currently blocks DESIGN.
 
 ### CF-I02
 
-Status: `ACTIVE`
+Status: `PASS`
 Contract: `.orchestration/contracts/CF-I02.md`
 Objective: rooms, guests and room holds parity increment under the approved Option B foundation.
 
-Implementation evidence is being prepared in `docs/cf-i02-inventory.md`; API, D1 migration, React/Vite UI and validation tests are present in the working tree. Pre-Critic verification currently passes: typecheck, 13 tests, web build, generated-type check, API/web Wrangler dry-run and diff check. No remote deployment or paid resource mutation.
+Artifact commits: `8551fc01352b8162ad1bf5d90dc2255784396808`, followed by bounded UI rework `bb3a136526c900522394f223206600f543e99e23`.
+Artifacts: `apps/api/**`, `apps/web/**`, `docs/cf-i02-inventory.md`, `.github/workflows/ci.yml`.
+Critic verdict: first artifact required bounded UI-surface rework; fresh `PASS` at `bb3a136526c900522394f223206600f543e99e23`.
+Critic evidence: `.orchestration/reviews/CF-I02-critic.md`.
+Evidence: typecheck PASS; 13 tests PASS; web build PASS; generated-type check PASS; API/web Wrangler dry-run PASS; diff check PASS. No remote deployment or paid resource mutation.
+Rework cycles: `1`.
 
 ## NEXT AUTHORIZED ACTION
 
-Commit the CF-I02 artifact, then execute the independent `CF-I02` Critic. Routine rework is autonomous; do not deploy or activate paid services.
+CF-I02 passed its independent Critic. Continue with the next READY task after synchronizing/publishing the repository state; do not deploy or activate paid services.
 
 Do not ask for routine human confirmation after PASS.
 
