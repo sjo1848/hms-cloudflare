@@ -69,3 +69,43 @@ The strongest contrary evidence is that the bootstrap already says “You are th
 
 Repair `AGENTS.md` within bootstrap scope by adding an explicit durable authority-role section, commit the repaired head, and send that exact head through a fresh logically independent Critic review. Do not resolve `CF-DATA-001` or begin product BUILD.
 
+---
+
+## Fresh independent review after REWORK
+
+- Reviewed repaired head: `84310a386ea24aa318f665d5c62b1cd502d49c4e`
+- Reviewed base / merge-base: `c11141f1c724f2c83d2e06dc868e0bcc0cd9af4d`
+- Working tree before this evidence update: clean.
+- Review method: new pass over the repaired head, complete `main...HEAD` diff, state, both task contracts and the repair commit; no reliance on the original conclusion.
+
+### Fresh findings
+
+- F-001 is resolved: `AGENTS.md` now explicitly assigns Human/Product-Risk, Codex/Runtime-Orchestrator and ChatGPT/External-Controller authority boundaries.
+- No new blocking findings. The repair changes only durable governance instructions and does not introduce product implementation, deployment, real-data access or a `CF-DATA-001` choice.
+
+### Fresh requirement review
+
+| # | Requirement | Result | Evidence |
+|---:|---|---|---|
+| 1 | Explicit Human/Codex/ChatGPT role split | PASS | `AGENTS.md` “Durable authority roles” section at repaired head. |
+| 2 | Reconstruct state without chat | PASS | `.orchestration/STATE.md` contains authoritative state, refs, gates, tasks, next action and stop condition. |
+| 3 | Mode, phase, baseline, target, CF-ARCH-001, CF-DATA-001, scope/non-goals | PASS | `AGENTS.md` and state snapshot. |
+| 4 | No silent CF-DATA-001 resolution | PASS | Explicit pending gate, choices and prohibition on inference. |
+| 5 | Specialist/Critic/REWORK/Integration/Gate semantics | PASS | Operating protocol and contract handoffs. |
+| 6 | No self-approval/message-bus behavior | PASS | Independent Critic requirement, self-approval prohibition and no-message-bus rule. |
+| 7 | Acceptance-surface and state separation | PASS | Traceability rule, evidence distinctions and lifecycle status vocabulary. |
+| 8 | Source contract bounded to independent DESIGN/no BUILD | PASS | `CF-SOURCE-CONTRACT-001.md` constraints and forbidden actions. |
+| 9 | No product/deployment/real-data/D1 implementation in PR | PASS | Changed paths remain limited to `AGENTS.md` and `.orchestration/**`. |
+| 10 | Artifact refs and next action sufficient | PASS | State and contracts identify immutable commits, review artifact and continuation path. |
+
+### Fresh contrary evidence and limitations
+
+The only contrary evidence is the unavailable Drive governance connection and unavailable local source repository. The contract explicitly permits the portable snapshot when Drive is unavailable, and source inspection belongs to `CF-SOURCE-CONTRACT-001`; neither prevents bootstrap review. No contrary bootstrap evidence remains.
+
+### Fresh verdict
+
+`PASS`
+
+### Next authorized action
+
+Persist this PASS, integrate PR #1 through the normal Git path, update authoritative state to mark the bootstrap integrated, and immediately execute `CF-SOURCE-CONTRACT-001`. Do not resolve `CF-DATA-001` or begin `CF-I01` BUILD.
