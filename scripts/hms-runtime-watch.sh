@@ -58,14 +58,15 @@ fi
 
 readarray -t STATUS_FIELDS < <(
   STATUS_JSON="$STATUS_JSON" "$PYTHON_BIN" - <<'PY'
-import json, os
+import hashlib, json, os
 
 def fail(msg):
     print(f"ERROR:{msg}")
     raise SystemExit(0)
 
+raw = os.environ["STATUS_JSON"]
 try:
-    data = json.loads(os.environ["STATUS_JSON"])
+    data = json.loads(raw)
 except Exception as exc:
     fail(f"invalid json: {exc}")
 
@@ -80,6 +81,8 @@ if type(data.get("resume_authorized")) is not bool:
 external = data.get("external_review")
 if not isinstance(external, dict) or type(external.get("required")) is not bool:
     fail("external_review.required must be boolean")
+if "human_gate" not in data or "blocker" not in data:
+    fail("human_gate and blocker keys must be present")
 event = data.get("event")
 if not isinstance(event, dict):
     fail("event must be object")
@@ -93,11 +96,12 @@ if not isinstance(data.get("next_action"), str) or not data["next_action"]:
 print(data["runtime_status"])
 print("true" if data["resume_authorized"] else "false")
 print("true" if external["required"] else "false")
-print("null" if data.get("human_gate") is None else "set")
-print("null" if data.get("blocker") is None else "set")
+print("null" if data["human_gate"] is None else "set")
+print("null" if data["blocker"] is None else "set")
 print(event["id"])
 print(str(event["seq"]))
 print(data["next_action"])
+print(hashlib.sha256(raw.encode("utf-8")).hexdigest())
 PY
 )
 
@@ -114,6 +118,40 @@ BLOCKER_STATE="${STATUS_FIELDS[4]:-set}"
 EVENT_ID="${STATUS_FIELDS[5]:-}"
 EVENT_SEQ="${STATUS_FIELDS[6]:-0}"
 NEXT_ACTION="${STATUS_FIELDS[7]:-}"
+STATUS_HASH="${STATUS_FIELDS[8]:-}"
+
+if [[ -z "$EVENT_ID" || ! "$EVENT_SEQ" =~ ^[0-9]+$ || "$EVENT_SEQ" -le 0 || -z "$NEXT_ACTION" || ! "$STATUS_HASH" =~ ^[0-9a-f]{64}$ ]]; then
+  log "missing/invalid event, next_action, or status fingerprint; refusing ambiguous state"
+  exit 0
+fi
+
+OBSERVED_FILE="$STATE_HOME/highest-observed-event"
+LAST_OBSERVED_SEQ=0
+LAST_OBSERVED_EVENT=""
+LAST_OBSERVED_HASH=""
+if [[ -f "$OBSERVED_FILE" ]]; then
+  if ! IFS=$'\t' read -r LAST_OBSERVED_SEQ LAST_OBSERVED_EVENT LAST_OBSERVED_HASH < "$OBSERVED_FILE"; then
+    log "cannot parse highest-observed-event; refusing automatic dispatch"
+    exit 0
+  fi
+  if [[ ! "$LAST_OBSERVED_SEQ" =~ ^[0-9]+$ || ! "$LAST_OBSERVED_HASH" =~ ^[0-9a-f]{64}$ ]]; then
+    log "invalid highest-observed-event; refusing automatic dispatch"
+    exit 0
+  fi
+fi
+
+if (( EVENT_SEQ < LAST_OBSERVED_SEQ )); then
+  log "event.seq=$EVENT_SEQ is older than highest observed seq=$LAST_OBSERVED_SEQ; refusing rollback"
+  exit 0
+fi
+if (( EVENT_SEQ == LAST_OBSERVED_SEQ && LAST_OBSERVED_SEQ > 0 )); then
+  if [[ "$EVENT_ID" != "$LAST_OBSERVED_EVENT" || "$STATUS_HASH" != "$LAST_OBSERVED_HASH" ]]; then
+    log "event seq=$EVENT_SEQ was previously observed with different identity/state; refusing mutation without seq advance"
+    exit 0
+  fi
+else
+  printf '%s\t%s\t%s\n' "$EVENT_SEQ" "$EVENT_ID" "$STATUS_HASH" > "$OBSERVED_FILE"
+fi
 
 if [[ "$RUNTIME_STATUS" != "READY_TO_RESUME" ]]; then
   log "runtime_status=$RUNTIME_STATUS; no automatic resume"
@@ -129,10 +167,6 @@ if [[ "$EXTERNAL_REVIEW_REQUIRED" != "false" ]]; then
 fi
 if [[ "$HUMAN_GATE_STATE" != "null" || "$BLOCKER_STATE" != "null" ]]; then
   log "Human Gate or blocker present; dispatcher will not launch Codex"
-  exit 0
-fi
-if [[ -z "$EVENT_ID" || "$EVENT_SEQ" -le 0 || -z "$NEXT_ACTION" ]]; then
-  log "missing/invalid event or next_action; refusing ambiguous resume"
   exit 0
 fi
 
