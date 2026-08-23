@@ -54,7 +54,9 @@ Do not infer the human choice. The gate blocks final D1 tenancy/schema architect
 - Branch: `chore/method-bootstrap`
 - PR: `#1 — chore: bootstrap Project Method for Codex`
 - External-controller bootstrap commit: `ca5f145f7e89d539075baee8f97d00ff309b8fa4`
-- Bootstrap is **not independently PASS yet**.
+- Bootstrap review `CF-BOOTSTRAP-REVIEW-001`: `REWORK` at head `91217a116635c6878bca4fcb91cc6929b2f1483a`.
+- Review evidence: `.orchestration/reviews/CF-BOOTSTRAP-REVIEW-001.md`.
+- Repair is authorized within bootstrap scope: add an explicit Human/Codex/ChatGPT authority-role split, then route the repaired head through a fresh independent Critic.
 - Codex must first execute `CF-BOOTSTRAP-REVIEW-001` as an independent Critic. If PASS, integrate the bootstrap; if REWORK, repair and send through a fresh independent Critic before integration.
 
 ## CRITICAL INVARIANTS
@@ -72,7 +74,7 @@ Do not infer the human choice. The gate blocks final D1 tenancy/schema architect
 ## ACTIVE / READY TASKS
 
 ### CF-BOOTSTRAP-REVIEW-001
-Status: `READY`
+Status: `REWORK`
 Contract: `.orchestration/contracts/CF-BOOTSTRAP-REVIEW-001.md`
 Purpose: independent review of Project Method/Codex bootstrap PR #1 because the external controller that authored it cannot approve its own work.
 Handoff on PASS: integrate PR #1, update state, continue automatically to `CF-SOURCE-CONTRACT-001`.
