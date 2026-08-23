@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 INDEPENDENT CRITIC PASS / CLEAN INTEGRATION VALIDATED / INDEPENDENT REVIEW PENDING`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PREPARATION`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -72,13 +72,10 @@ Conversation history is supporting context only and is never the sole source of 
 
 ### Runtime automation — CF-RUNTIME-AUTOMATION-001
 
-- Status: `PASS / INTEGRATED`.
+- Status: `PASS / INTEGRATED` as a technical experiment, but unattended Codex is not the normal operating mode.
 - PR #2 merged at `08af1ffda02447e53924345d900fa5f91c266765`.
-- systemd user dispatcher installed locally.
-- Initial fail-close probe passed.
 - First real dispatch proved `GitHub → systemd → dispatcher → Codex` works without Human relay.
-- Incident found: Codex `workspace-write` could edit workspace but not `.git`, so it could not commit/push CF-I03.
-- Recovered CF-I03 workspace was checkpointed once to `cf-i03-recovery@c1bd966` solely to preserve the artifact.
+- User-visible execution is the preferred operating mode; automation must not hide substantive Codex work.
 
 ### Runtime Git handoff repair — CF-RUNTIME-GIT-HANDOFF-002
 
@@ -86,50 +83,52 @@ Conversation history is supporting context only and is never the sole source of 
 - PR #5 exact reviewed head: `f3f1565f15b69fb2b9a0046fc4ca0d72b31fdd28`.
 - ChatGPT Independent Critic verdict: PASS after one controller-found rework concerning non-idempotent commit/push recovery.
 - PR #5 merged to main at `a2f8a7eb760834b7868368ebe9c793a0fc2f188b`.
-- Codex remains in `--sandbox workspace-write`.
-- Host launcher owns bounded `runtime/...` branch creation/resume, immutable commit creation and push.
-- Runtime event ownership/base/artifact claims support recovery after commit/push interruption without rerunning Codex when identity remains exact.
 - No host auto-commit to `main`; no auto-merge path.
-- ChatGPT watcher derives/inspects runtime branches so the Human is not required to relay branch publication.
-- Controlled local probe passed repeatedly on 2026-08-23: dispatcher observed `HUMAN_ACTION_REQUIRED` and exited without launching Codex.
 
-## CF-I03
+## CF-I03 — BOOKINGS / AVAILABILITY / ROOM-NIGHT PROTECTION
 
-Status: `PASS / INDEPENDENT CRITIC COMPLETE / CLEAN INTEGRATION VALIDATED / INDEPENDENT REVIEW PENDING`.
+Status: `PASS / CLEAN INTEGRATION PASS / CLOSED`.
 
-Base product branch: `cf-i03-bookings@834e4a2aa3ec37aac036dc0273b15e6abf5c7d81`.
-Original review PR: #4.
-Authorized runtime rework branch: `runtime/cf-i03-rework-6`.
-Task Contract: `.orchestration/contracts/CF-I03.md` on the work branch.
-
+Task Contract: `.orchestration/contracts/CF-I03.md`.
 Accepted implementation artifact: `65ed1e5710a20af97d183f04364b5aa7b605a74a` on `runtime/cf-i03-rework-6`.
-Clean integration artifact: `f6f3d230348ca22834704a063eec728d27235e6a` on `integration/cf-i03-clean`, fast-forward integrated into current `main` at `a720966f25fe10dbe5b43ab258e0f6014c93cca8`.
+Clean integration product commit: `f6f3d230348ca22834704a063eec728d27235e6a`.
+Integrated main head independently reviewed: `58c84a2564d9a4b85785203ff04fee24fee47213`.
+Original PR #4 was closed without merge because it was stale.
 
-Independent Critic record: `.orchestration/reviews/CF-I03-REWORK-4-CRITIC.md`.
-Critic verdict: `PASS`.
+Independent Critic records:
+- `.orchestration/reviews/CF-I03-REWORK-4-CRITIC.md` — implementation artifact PASS.
+- `.orchestration/reviews/CF-I03-INTEGRATION-CRITIC.md` — clean integration PASS.
+
+Accepted evidence includes:
+- booking create/list/detail/update/cancellation;
+- date-scoped availability with holds and active booking claims;
+- unique `(room_id, stay_date)` room-night claims;
+- `booking_id -> bookings(id) ON DELETE CASCADE` relational integrity;
+- guarded PATCH false-success prevention;
+- overlap rollback, claim replacement, failed-update preservation, hold exclusion, cancellation release and half-open adjacency;
+- tenant routing fail-closed behavior;
+- persisted browser validation for loading, empty, validation, availability, create, detail/edit and surfaced backend error;
+- 16/16 tests, executable CF-I03 D1/API regression, web build, generated types, Wrangler dry-runs and diff check PASS during clean integration validation.
+
 Human Gate: `NONE`.
 
-Runtime capability record: `RUNTIME_CAPABILITY_FALLBACK` — the visible Codex adapter did not expose separate specialist/subagent execution capability, so no false multiagency result is claimed. The bounded implementation and adversarial validation were executed in this runtime, with the independent Critic boundary preserved.
+Runtime capability record: `RUNTIME_CAPABILITY_FALLBACK` — the visible Codex adapter did not expose separate specialist/subagent execution capability, so no false multiagency result is claimed. The Independent Critic boundary remained external and intact. This is a runtime/method limitation to improve, not a CF-I03 product blocker.
 
-### Prior review input — 8 findings
+Non-blocking migration note: `0004_booking_claim_fk.sql` uses `PRAGMA foreign_keys = OFF/ON`; prefer `PRAGMA defer_foreign_keys` or no toggle in future D1 migrations when appropriate.
 
-The first review found 4 P1 + 4 P2 issues: blank notes, non-atomic hold/booking exclusion, missing date-scoped availability UI, cancelled-booking resurrection, missing detail/edit UI, unsafe derived integer total, unavailable room acceptance, and unbounded list query.
+## CF-I04 — PREPARATION
 
-### ChatGPT Independent Critic — resolved runtime artifact
+Target increment: Reception Lifecycle.
 
-Verdict: `PASS` after bounded rework. The accepted artifact includes the booking claim FK, guarded PATCH update, executable D1/API regressions and persisted Playwright evidence.
+Before implementation, derive a fresh Task Contract from current `main`, the approved migration design package and source parity inventory. The contract must preserve lifecycle semantics rather than generic CRUD and must explicitly separate these responsibilities:
 
-Previously reported findings, now resolved in the accepted artifact:
+- Domain/Lifecycle: check-in, checkout, reassignment and transition invariants/atomicity.
+- Reception UX: browser/mobile reception journey and observable states.
+- QA/Integration: adversarial lifecycle, tenant, concurrency and integrated journey evidence.
 
-1. **P1 — hold/booking exclusion remains non-atomic in the hold mutation direction.** `POST /rooms/:id/holds` and `PATCH /rooms/:id/holds/:hold_id` still only check overlap against `room_holds`; neither checks `room_inventory_nights`. A hold can therefore be created or moved onto nights already claimed by a confirmed booking. This violates the accepted shared exclusion invariant and leaves availability semantically inconsistent.
+If the visible Codex runtime can instantiate true specialist/subagent contexts, the Runtime Orchestrator should delegate these bounded responsibilities. If it still cannot, record `RUNTIME_CAPABILITY_FALLBACK` explicitly and preserve contextual separation and independent QA evidence without simulating multiagency.
 
-2. **P1 — booking claim replacement on PATCH is incorrect when room or dates change.** The delete statement only removes old claims if the existing booking already matches the *new* room/date tuple. For an actual room/date edit that predicate is false, so old `room_inventory_nights` rows survive while new claims are added. This can strand stale claims and incorrectly block availability after a booking edit.
-
-3. **P1 — `claimStatements()` binds the room-id predicate incorrectly.** The claim insert guard checks `bookings.room_id = ?2`, but `?2` is bound to `stayDate`, not `roomId`. The guard can therefore fail for valid bookings, meaning the expected per-night claims may not be inserted at all. This undermines the unique room-night protection relied on by booking creation and update.
-
-Positive progress observed: blank optional notes are normalized to null; derived totals use `Number.isSafeInteger`; booking PATCH rejects lifecycle revival; booking list is bounded; booking UI now exposes date-scoped availability and an edit/detail interaction; room operational status is checked on booking write.
-
-No Human Gate is required. These findings are ordinary bounded rework within CF-I03.
+No CF-I04 implementation is authorized before its Task Contract exists.
 
 ## PENDING HUMAN GATES
 
@@ -143,12 +142,14 @@ None.
 
 ## BLOCKERS
 
-None. CF-I03 has a fresh Independent Critic PASS and its clean integration is published; the next boundary is Independent Critic review of the integrated head.
+None.
 
 ## NEXT AUTHORIZED ACTION
 
-1. ChatGPT performs the Independent Critic review of the exact clean integration head after publication to current `main`.
-2. After that review boundary, reconcile canonical state and derive/authorize CF-I04 under a fresh Task Contract.
+1. Derive and persist the fresh `CF-I04` Reception Lifecycle Task Contract from current `main`.
+2. Define its dependency graph and responsibility split before implementation.
+3. Start visible Codex execution only after the contract is canonical.
+4. Stop again at the next Independent Critic boundary or legitimate Human Gate/stop condition.
 
 ## STOP CONDITION
 
@@ -163,7 +164,7 @@ Stop only for:
 ## ORCHESTRATION RULES
 
 - Human = Product/Risk Authority.
-- Codex = Runtime Orchestrator / implementation and bounded rework.
+- Codex = Runtime Orchestrator; implementation may be delegated to bounded Specialists when the runtime exposes that capability.
 - ChatGPT = External Project Controller / Method Custodian / Independent Critic / Human Gate interface.
 - Every substantive task requires a Task Contract.
 - Every substantive output requires an independent ChatGPT Critic.
@@ -171,3 +172,4 @@ Stop only for:
 - Retry exhaustion triggers diagnosis, not automatic escalation.
 - Do not use the Human as a routine message bus.
 - Preserve `Requirement → Expected Surface → Acceptance → Evidence` for material requirements.
+- Optimize for minimum unnecessary Human coordination plus maximum execution visibility.
