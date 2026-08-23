@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23
 Global Project Mode: `DELIVERY`
 Phase: `DESIGN`
-Phase Status: `WAITING_HUMAN_GATE` with independent work still available
+Phase Status: `DESIGN_WORK_IN_PROGRESS`; `CF-DATA-001` remains `WAITING_HUMAN_GATE`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -75,15 +75,18 @@ Do not infer the human choice. The gate blocks final D1 tenancy/schema architect
 ## ACTIVE / READY TASKS
 
 ### CF-BOOTSTRAP-REVIEW-001
-Status: `PASS_PENDING_INTEGRATION`
+Status: `PASS / INTEGRATED`
 Contract: `.orchestration/contracts/CF-BOOTSTRAP-REVIEW-001.md`
 Purpose: independent review of Project Method/Codex bootstrap PR #1 because the external controller that authored it cannot approve its own work.
 Handoff on PASS: integrate PR #1, update state, continue automatically to `CF-SOURCE-CONTRACT-001`.
 
 ### CF-SOURCE-CONTRACT-001
-Status: `READY_AFTER_BOOTSTRAP_PASS`
+Status: `ARTIFACT_READY_FOR_INDEPENDENT_CRITIC`
 Contract: `.orchestration/contracts/CF-SOURCE-CONTRACT-001.md`
 Purpose: build a durable source API/product contract inventory and representative acceptance-journey map from the pinned HMS baseline. This work is independent of `CF-DATA-001`.
+Artifact: `docs/source-contract-inventory.md`
+Source evidence: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`; router/OpenAPI completeness check: 51 operations each.
+Next: persist artifact commit SHA, then execute an independent Critic review under the contract.
 
 ### CF-FOUNDATION-RECONCILE-001
 Status: `PLANNED / BLOCKED_BY_DESIGN_EXIT`
@@ -114,13 +117,12 @@ Purpose: platform foundation BUILD under an approved Task Contract.
 
 ## NEXT AUTHORIZED ACTION
 
-Execute `CF-BOOTSTRAP-REVIEW-001` as an independent review of PR #1:
-1. pre-flight and artifact identity check;
-2. compare bootstrap against Project Method/Transfer Pack/current Drive state;
-3. verify no product BUILD or hidden `CF-DATA-001` decision;
+Execute the independent Critic review for `CF-SOURCE-CONTRACT-001` after committing `docs/source-contract-inventory.md`:
+1. verify immutable target and source baseline identity;
+2. cross-check router, OpenAPI and frontend route/API evidence;
+3. search for missing endpoints, UI/API evidence substitution, flattened lifecycle semantics and hidden D1 topology assumptions;
 4. emit `PASS | REWORK | HUMAN_GATE | CONTRACT_DEFECT`;
-5. persist review evidence;
-6. on PASS integrate bootstrap and immediately execute `CF-SOURCE-CONTRACT-001`.
+5. persist review evidence and update this state.
 
 Continue automatically until the only remaining next action requires `CF-DATA-001` or another legitimate Human Gate/material blocker.
 
