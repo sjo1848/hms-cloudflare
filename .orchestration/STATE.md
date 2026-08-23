@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`
-Phase Status: `CF-I01 ARTIFACT_READY_FOR_INDEPENDENT_CRITIC`
+Phase Status: `CF-I01 PASS — CF-I02 READY`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -126,12 +126,16 @@ Objective: inspect the provisional foundation against the accepted Design Packag
 
 ### CF-I01
 
-Status: `ARTIFACT_READY_FOR_INDEPENDENT_CRITIC`
+Status: `PASS`
 Contract: `.orchestration/contracts/CF-I01.md`
 Artifact commit: `faeff038d041f6bbbeab8af3dac7f55e26937316`
 Artifacts: `apps/api/**`, `apps/web/**`, `docs/cf-i01-foundation.md`, `.github/workflows/ci.yml`, package/tooling configs.
 Evidence before Critic: `npm test` 7/7 passed; `npm run typecheck` passed; `npm run types:check` passed; `npm run wrangler:dry-run` passed for API and web; local CONTROL_DB and HOTEL_DEMO_DB migrations applied successfully; no remote deploy or paid resource mutation.
 Access hardening: `Cf-Access-Jwt-Assertion` is validated with Access JWKS, issuer and audience; malformed/missing assertions fail closed; local auth is explicit opt-in and disabled in checked-in vars.
+Critic verdict: first `REWORK` at artifact commit `faeff038d041f6bbbeab8af3dac7f55e26937316`; fresh `PASS` at repaired artifact commit `27515d85d9db0677c4946746fa86374252bff4f5`.
+Critic evidence: `.orchestration/reviews/CF-I01-critic.md`.
+Findings: arbitrary credentialed CORS reflection; missing operational binding resolution; local auth not constrained to development environment.
+Rework cycle: `1` of `2`.
 
 Objective: platform foundation BUILD under a formal Task Contract after DESIGN independently passes.
 
@@ -149,11 +153,17 @@ None.
 
 No Human Gate currently blocks DESIGN.
 
-`CF-I01` BUILD artifact is persisted and ready for independent Critic review under `.orchestration/contracts/CF-I01.md`.
+`CF-I01` foundation passed its independent Critic and is ready for routine integration/publish.
+
+### CF-I02
+
+Status: `READY_AFTER_CF-I01_PASS`
+Contract: `.orchestration/contracts/CF-I02.md` (to be persisted before implementation)
+Objective: rooms, guests and room holds parity increment under the approved Option B foundation.
 
 ## NEXT AUTHORIZED ACTION
 
-Execute the independent Critic review for `CF-I01` against artifact commit `faeff038d041f6bbbeab8af3dac7f55e26937316`; persist `.orchestration/reviews/CF-I01-critic.md`, then integrate only after `PASS` or bounded autonomous rework with fresh Critic `PASS`.
+Create/activate `.orchestration/contracts/CF-I02.md`, then execute its bounded Specialist work. Do not deploy or activate paid services.
 
 Do not ask for routine human confirmation after PASS.
 
