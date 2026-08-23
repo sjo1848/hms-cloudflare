@@ -1,0 +1,34 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "hms-cloudflare-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    }
+  },
+  "vars": {
+    "ENVIRONMENT": "development",
+    "ACCESS_TEAM_DOMAIN": "https://example.cloudflareaccess.com",
+    "ACCESS_AUDIENCE": "local-development",
+    "LOCAL_DEV_AUTH": "false"
+  },
+  "d1_databases": [
+    {
+      "binding": "CONTROL_DB",
+      "database_name": "hms-control-local",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "schema/control-migrations"
+    },
+    {
+      "binding": "HOTEL_DEMO_DB",
+      "database_name": "hms-hotel-demo-local",
+      "database_id": "00000000-0000-0000-0000-000000000002",
+      "migrations_dir": "schema/hotel-migrations"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "name": "@hms-cloudflare/api",
+  "private": true,
+  "type": "module"
+}
