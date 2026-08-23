@@ -52,34 +52,70 @@ fi
 
 readarray -t STATUS_FIELDS < <(
   STATUS_JSON="$STATUS_JSON" "$PYTHON_BIN" - <<'PY'
-import json, os, sys
+import json, os
+
+
+def fail(message: str) -> None:
+    print(f"ERROR:{message}")
+    raise SystemExit(0)
+
 try:
     data = json.loads(os.environ["STATUS_JSON"])
 except Exception as exc:
-    print(f"ERROR:{exc}")
-    sys.exit(0)
+    fail(f"invalid JSON: {exc}")
 
-def b(v):
-    return "true" if v is True else "false"
+if not isinstance(data, dict):
+    fail("root must be an object")
 
-print(str(data.get("runtime_status") or ""))
-print(b(data.get("resume_authorized")))
-print(b((data.get("external_review") or {}).get("required")))
-print("null" if data.get("human_gate") is None else "set")
-print("null" if data.get("blocker") is None else "set")
-print(str((data.get("event") or {}).get("id") or ""))
-print(str(data.get("next_action") or ""))
+runtime_status = data.get("runtime_status")
+if not isinstance(runtime_status, str) or not runtime_status:
+    fail("runtime_status must be a non-empty string")
+
+resume_authorized = data.get("resume_authorized")
+if not isinstance(resume_authorized, bool):
+    fail("resume_authorized must be an explicit boolean")
+
+external_review = data.get("external_review")
+if not isinstance(external_review, dict):
+    fail("external_review must be an object")
+external_review_required = external_review.get("required")
+if not isinstance(external_review_required, bool):
+    fail("external_review.required must be an explicit boolean")
+
+if "human_gate" not in data:
+    fail("human_gate key is required")
+if "blocker" not in data:
+    fail("blocker key is required")
+
+event = data.get("event")
+if not isinstance(event, dict):
+    fail("event must be an object")
+event_id = event.get("id")
+if not isinstance(event_id, str) or not event_id.strip():
+    fail("event.id must be a non-empty string")
+
+next_action = data.get("next_action")
+if not isinstance(next_action, str) or not next_action.strip():
+    fail("next_action must be a non-empty string")
+
+print(runtime_status)
+print("true" if resume_authorized else "false")
+print("true" if external_review_required else "false")
+print("null" if data["human_gate"] is None else "set")
+print("null" if data["blocker"] is None else "set")
+print(event_id)
+print(next_action)
 PY
 )
 
 if [[ "${STATUS_FIELDS[0]:-}" == ERROR:* ]]; then
-  log "STATUS.json is invalid: ${STATUS_FIELDS[0]}"
+  log "STATUS.json rejected fail-closed: ${STATUS_FIELDS[0]}"
   exit 0
 fi
 
 RUNTIME_STATUS="${STATUS_FIELDS[0]:-}"
-RESUME_AUTHORIZED="${STATUS_FIELDS[1]:-false}"
-EXTERNAL_REVIEW_REQUIRED="${STATUS_FIELDS[2]:-false}"
+RESUME_AUTHORIZED="${STATUS_FIELDS[1]:-}"
+EXTERNAL_REVIEW_REQUIRED="${STATUS_FIELDS[2]:-}"
 HUMAN_GATE_STATE="${STATUS_FIELDS[3]:-set}"
 BLOCKER_STATE="${STATUS_FIELDS[4]:-set}"
 EVENT_ID="${STATUS_FIELDS[5]:-}"
@@ -90,11 +126,11 @@ if [[ "$RUNTIME_STATUS" != "READY_TO_RESUME" ]]; then
   exit 0
 fi
 if [[ "$RESUME_AUTHORIZED" != "true" ]]; then
-  log "resume_authorized=false; waiting for canonical authorization"
+  log "resume_authorized is not explicitly true; waiting for canonical authorization"
   exit 0
 fi
-if [[ "$EXTERNAL_REVIEW_REQUIRED" == "true" ]]; then
-  log "external review is required; dispatcher will not bypass it"
+if [[ "$EXTERNAL_REVIEW_REQUIRED" != "false" ]]; then
+  log "external review is required or ambiguous; dispatcher will not bypass it"
   exit 0
 fi
 if [[ "$HUMAN_GATE_STATE" != "null" || "$BLOCKER_STATE" != "null" ]]; then
