@@ -4,8 +4,14 @@ First synchronize and reconstruct current state from AGENTS.md, .orchestration/S
 
 Determine the exact next authorized action from canonical evidence. If the next bounded increment is already authorized by accepted design and no Human Gate is required, but its Task Contract does not yet exist, create that Task Contract before implementation.
 
+Before substantive execution, set runtime_status=RUNNING, resume_authorized=false and persist the active task in .orchestration/STATUS.json.
+
 Then continue autonomously through the Project Method loop: Specialist -> immutable artifact/evidence -> Independent Critic -> bounded REWORK if required -> fresh Critic -> Integration Review where applicable -> persist state/evidence -> derive the next authorized task.
 
 Do not ask for routine human confirmation. Stop only at a legitimate Human Gate, material unrecoverable blocker, unavoidable Human Action/Input, Product Acceptance boundary, or runtime/session end.
 
-Before every exit, update both .orchestration/STATE.md and .orchestration/STATUS.json with the exact terminal/resumable state, current/last task, head SHA, next action, stop reason and external-review signal. Publish the repository state when the runtime has the required channel/permission.
+Before every exit, update both .orchestration/STATE.md and .orchestration/STATUS.json with the exact terminal/resumable state, current/last task, head SHA, next action, stop reason, event sequence and external-review signal.
+
+For ordinary runtime/session end with authorized routine work remaining and no blocking external review, persist runtime_status=READY_TO_RESUME, resume_authorized=true and external_review.required=false so the local dispatcher may continue automatically. For Human Gates, blockers, Human Action/Input, Product Acceptance or blocking external review, persist resume_authorized=false.
+
+Publish the repository state when the runtime has the required channel/permission.
