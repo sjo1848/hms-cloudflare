@@ -14,7 +14,7 @@
     "type": "RUNTIME_END_AFTER_TASK_PASS"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": "24a1e68a8df8fd7251586415619045f287e2c95a",
     "last_verdict": "PASS_WITH_GOVERNANCE_OBSERVATIONS"
   },
