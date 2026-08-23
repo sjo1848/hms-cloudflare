@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PREPARATION`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 CRITIC REWORK-1 AUTONOMOUS`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -17,7 +17,8 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - Target repository: `sjo1848/hms-cloudflare`
 - Durable governance folder in Drive: `HMS Cloudflare`
 - Portable integrated Design Package: `docs/migration-design-package.md`
-- Runtime decision record: `.orchestration/decisions/CF-DATA-001.md`
+- Runtime data decision: `.orchestration/decisions/CF-DATA-001.md`
+- Autonomous execution decision: `.orchestration/decisions/PM-AUTONOMY-001.md`
 - Source parity artifact: `docs/source-contract-inventory.md`
 
 Conversation history is supporting context only and is never the sole source of truth.
@@ -42,6 +43,17 @@ Conversation history is supporting context only and is never the sole source of 
 - target remains `$0/month / Cloudflare Free`;
 - no paid Cloudflare plan, paid D1 transition or material recurring-cost increase may be activated without a separate Human Gate;
 - critical atomic workflows stay inside the relevant hotel operational D1.
+
+### PM-AUTONOMY-001 — APPROVED
+
+- Human = Product/Risk Authority; the Human decides legitimate Human Gates and Product Acceptance, not routine technical work.
+- ChatGPT = External Project Controller / Method Custodian / Independent Critic / Human-Gate Classifier.
+- Codex = Runtime Orchestrator and execution owner for planning, implementation, tests, adversarial QA, routine repair, evidence, artifact publication and bounded integration mechanics.
+- Bugs, red tests, ordinary migration defects, incomplete evidence and Independent Critic REWORK are not Human Gates.
+- Routine REWORK is consumed directly from persisted GitHub review evidence and repaired autonomously by Codex.
+- Full Independent Critic remains mandatory for substantive artifacts; identity-preserving post-PASS integration may use deterministic verification rather than duplicating the same substantive review.
+- The Human is never a routine message bus.
+- `RUNTIME_CAPABILITY_FALLBACK` remains mandatory when true Specialist contexts are unavailable; no false multiagency claims.
 
 ### Independent review policy
 
@@ -112,28 +124,37 @@ Accepted evidence includes:
 
 Human Gate: `NONE`.
 
-Runtime capability record: `RUNTIME_CAPABILITY_FALLBACK` — the visible Codex adapter did not expose separate specialist/subagent execution capability, so no false multiagency result is claimed. The Independent Critic boundary remained external and intact. This is a runtime/method limitation to improve, not a CF-I03 product blocker.
+Runtime capability record: `RUNTIME_CAPABILITY_FALLBACK` — the visible Codex adapter did not expose separate specialist/subagent execution capability, so no false multiagency result is claimed. The Independent Critic boundary remained external and intact.
 
 Non-blocking migration note: `0004_booking_claim_fk.sql` uses `PRAGMA foreign_keys = OFF/ON`; prefer `PRAGMA defer_foreign_keys` or no toggle in future D1 migrations when appropriate.
 
-## CF-I04 — IMPLEMENTATION VALIDATED / INDEPENDENT REVIEW PENDING
+## CF-I04 — INDEPENDENT CRITIC REWORK-1 / AUTONOMOUS REPAIR AUTHORIZED
 
 Target increment: Reception Lifecycle.
 
-Task Contract: `.orchestration/contracts/CF-I04.md`, derived from current integrated `main` and the approved design/source parity artifacts.
-Implementation artifact: `32b5070dbd80b4b4d3667fe45573f8851cb60a7c` on `main`.
-Evidence: `docs/cf-i04-reception-lifecycle-evidence.md`, `npm run test:cf-i04`, full build/type/dry-run validation and persisted Playwright lifecycle evidence.
-Dependency graph and dispatch record are persisted in the contract. Runtime capability: `RUNTIME_CAPABILITY_FALLBACK`; no separate Specialist contexts are exposed by the visible adapter.
+Task Contract: `.orchestration/contracts/CF-I04.md`.
+Reviewed implementation artifact: `32b5070dbd80b4b4d3667fe45573f8851cb60a7c`.
+Published pre-review state: `855d0515716949284309da000e99c8037a113b27`.
+Independent Critic record: `.orchestration/reviews/CF-I04-CRITIC.md`.
+Verdict: `REWORK`.
+Human Gate: `NONE`.
+Diagnosis: `EXECUTION_DEFECT + EVIDENCE_DEFECT`.
 
-The contract was derived from current `main`, the approved migration design package and source parity inventory. It preserves lifecycle semantics rather than generic CRUD and explicitly separates these responsibilities:
+What is already useful:
+- explicit check-in/reassignment/checkout domain endpoints;
+- checklist gating on the ordinary path;
+- lifecycle actor/request/hotel event records;
+- ordinary successful D1/API lifecycle path;
+- persisted reassignment/checkout browser journey;
+- explicit `RUNTIME_CAPABILITY_FALLBACK`.
 
-- Domain/Lifecycle: check-in, checkout, reassignment and transition invariants/atomicity.
-- Reception UX: browser/mobile reception journey and observable states.
-- QA/Integration: adversarial lifecycle, tenant, concurrency and integrated journey evidence.
+Blocking repair input:
+1. **Lifecycle atomicity/concurrency:** critical guarded `UPDATE` row-count checks occur after successful `D1.batch()` completion. Zero-row statements are successful SQL operations, so later statements may commit before the route returns conflict. Concurrent reassignment can desynchronize booking, claims and room occupancy; stale check-in/checkout guards can commit partial room/audit/lifecycle state.
+2. **Adversarial D1/API evidence:** current lifecycle regression covers ordinary preflight rejection but not stale/zero-row transactional invalidation. Add repeatable race/conflict regressions proving complete state preservation, including lifecycle event counts.
+3. **Browser acceptance:** persisted browser test starts from `CheckedIn`, covers reassignment/checkout only and does not exercise required 375/390/430/768/1024 widths. Add Confirmed→CheckedIn checklist, validation/error/success and all accepted responsive widths.
+4. **Lifecycle security evidence:** add forbidden-role and cross-tenant/unknown-binding lifecycle attempts proving fail-closed behavior with zero mutation/event side effects.
 
-If the visible Codex runtime can instantiate true specialist/subagent contexts, the Runtime Orchestrator should delegate these bounded responsibilities. If it still cannot, record `RUNTIME_CAPABILITY_FALLBACK` explicitly and preserve contextual separation and independent QA evidence without simulating multiagency.
-
-The responsibility dependency graph and `RUNTIME_CAPABILITY_FALLBACK` dispatch record were persisted before implementation. The bounded implementation is complete; no Independent Critic verdict has been claimed.
+Under `PM-AUTONOMY-001`, these are routine technical findings. Codex consumes the review directly and repairs without Human approval. Do not advance to CF-I05 until CF-I04 obtains Independent Critic PASS.
 
 ## PENDING HUMAN GATES
 
@@ -147,32 +168,43 @@ None.
 
 ## BLOCKERS
 
-None.
+None. CF-I04 has routine bounded technical REWORK with a clear contract and authorized autonomous repair path.
 
 ## NEXT AUTHORIZED ACTION
 
-1. ChatGPT performs the Independent Critic review of exact artifact `32b5070dbd80b4b4d3667fe45573f8851cb60a7c`.
-2. Resume only from the Critic verdict: bounded rework if required, or reconcile PASS and continue under a fresh authorized action.
+Codex reads `.orchestration/STATUS.json`, `.orchestration/decisions/PM-AUTONOMY-001.md` and `.orchestration/reviews/CF-I04-CRITIC.md`, then autonomously:
+
+1. repairs lifecycle concurrency/atomicity so failed/stale guards cause transaction rollback rather than post-commit conflict detection;
+2. adds adversarial D1/API regression for stale check-in, concurrent reassignment and checkout invalidation plus lifecycle authorization/tenant failures;
+3. completes browser acceptance for check-in/reassignment/checkout, validation/error/success and widths 375/390/430/768/1024;
+4. runs full validation and self-adversarial QA;
+5. publishes a fresh immutable CF-I04 artifact and persists `external_review.required=true`;
+6. stops only at the next Independent Critic boundary or another legitimate stop condition.
+
+No Human confirmation is authorized or required for this rework.
 
 ## STOP CONDITION
 
 Stop only for:
+- a substantive immutable-artifact / Independent Critic boundary;
 - a legitimate Human Gate;
-- material unrecoverable blocker;
-- unavoidable Human Action/Input;
 - Product Acceptance boundary;
-- external Independent Critic boundary;
+- material unrecoverable blocker after bounded recovery/diagnosis;
+- unavoidable Human-only Action/Input;
 - runtime/session end with exact resumable state persisted.
+
+Routine bugs, red tests and Independent Critic REWORK do not stop the authorized Codex work loop.
 
 ## ORCHESTRATION RULES
 
-- Human = Product/Risk Authority.
-- Codex = Runtime Orchestrator; implementation may be delegated to bounded Specialists when the runtime exposes that capability.
-- ChatGPT = External Project Controller / Method Custodian / Independent Critic / Human Gate interface.
+- Human = Product/Risk Authority; Human decides only legitimate Human Gates/Product Acceptance.
+- ChatGPT = External Project Controller / Method Custodian / Independent Critic / Human-Gate Classifier.
+- Codex = Runtime Orchestrator / execution owner; routine implementation, QA and REWORK are autonomous.
 - Every substantive task requires a Task Contract.
-- Every substantive output requires an independent ChatGPT Critic.
-- Routine REWORK is autonomous.
-- Retry exhaustion triggers diagnosis, not automatic escalation.
-- Do not use the Human as a routine message bus.
+- Every substantive artifact requires an external ChatGPT Independent Critic before substantive PASS.
+- ChatGPT REWORK is persisted directly for Codex consumption; the Human is not a relay or routine approver.
+- Retry exhaustion triggers diagnosis, not automatic Human escalation.
+- Identity-preserving post-PASS integration may use deterministic verification instead of duplicating the same full substantive review; substantive integration changes still require fresh Critic.
+- Specialists are delegated only when the runtime genuinely supports separate contexts; otherwise record `RUNTIME_CAPABILITY_FALLBACK`.
 - Preserve `Requirement → Expected Surface → Acceptance → Evidence` for material requirements.
 - Optimize for minimum unnecessary Human coordination plus maximum execution visibility.
