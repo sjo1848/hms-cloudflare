@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "project": "HMS Cloudflare",
+  "phase": "BUILD",
+  "runtime_status": "READY_TO_RESUME",
+  "resume_authorized": false,
+  "active_task": "CF-RUNTIME-AUTOMATION-001",
+  "last_completed_task": "CF-I02",
+  "last_completed_head": "24a1e68a8df8fd7251586415619045f287e2c95a",
+  "next_action": "INDEPENDENT_CRITIC_CF_RUNTIME_AUTOMATION_001",
+  "stop_reason": "Controller-authored runtime automation change requires fresh independent Critic before integration or local installation.",
+  "event": {
+    "seq": 2,
+    "id": "CF-RUNTIME-AUTOMATION-001@PR2",
+    "type": "INDEPENDENT_REVIEW_REQUIRED"
+  },
+  "external_review": {
+    "required": true,
+    "last_audited_head": "24a1e68a8df8fd7251586415619045f287e2c95a",
+    "last_verdict": "PASS_WITH_GOVERNANCE_OBSERVATIONS"
+  },
+  "human_gate": null,
+  "blocker": null,
+  "cost_guard": {
+    "target": "$0/month / Cloudflare Free",
+    "paid_transition_requires_human_gate": true
+  }
+}
