@@ -157,13 +157,15 @@ No Human Gate currently blocks DESIGN.
 
 ### CF-I02
 
-Status: `READY`
+Status: `ACTIVE`
 Contract: `.orchestration/contracts/CF-I02.md`
 Objective: rooms, guests and room holds parity increment under the approved Option B foundation.
 
+Implementation evidence is being prepared in `docs/cf-i02-inventory.md`; API, D1 migration, React/Vite UI and validation tests are present in the working tree. Pre-Critic verification currently passes: typecheck, 13 tests, web build, generated-type check, API/web Wrangler dry-run and diff check. No remote deployment or paid resource mutation.
+
 ## NEXT AUTHORIZED ACTION
 
-Execute `CF-I02` from its persisted contract, beginning with pre-flight and source/API/UI evidence reconstruction. Do not deploy or activate paid services.
+Commit the CF-I02 artifact, then execute the independent `CF-I02` Critic. Routine rework is autonomous; do not deploy or activate paid services.
 
 Do not ask for routine human confirmation after PASS.
 

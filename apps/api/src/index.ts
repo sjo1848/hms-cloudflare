@@ -2,22 +2,17 @@ import { Hono } from "hono";
 import {
   AccessAuthenticationError,
   resolveAccessIdentity,
-  type AccessIdentity,
 } from "./auth/access";
 import {
   listMemberships,
   selectAuthorizedMembership,
-  type Membership,
 } from "./auth/membership";
+import type { ApiVariables } from "./context";
+import { ApiError } from "./errors";
+import { createInventoryRoutes } from "./routes/inventory";
 import { resolveOperationalDatabase } from "./routing";
-type Variables = {
-  identity: AccessIdentity;
-  membership: Membership;
-  operationalDatabase: Pick<D1Database, "prepare">;
-  requestId: string;
-};
 
-const app = new Hono<{ Bindings: Env; Variables: Variables }>();
+const app = new Hono<{ Bindings: Env; Variables: ApiVariables }>();
 
 app.use("*", async (context, next) => {
   const incoming = context.req.header("x-request-id")?.trim();
@@ -33,6 +28,9 @@ app.onError((error, context) => {
   const requestId = context.get("requestId");
   if (error instanceof AccessAuthenticationError) {
     return context.json({ error: { code: "UNAUTHORIZED", message: error.message, requestId } }, 401);
+  }
+  if (error instanceof ApiError) {
+    return context.json({ error: { code: error.code, message: error.message, requestId } }, error.status);
   }
   console.error(JSON.stringify({ event: "request_error", requestId, message: error.message }));
   return context.json({ error: { code: "INTERNAL_ERROR", message: "Internal error", requestId } }, 500);
@@ -83,12 +81,14 @@ app.get("/api/v1/auth/me", (context) => {
   });
 });
 
+app.route("/api/v1", createInventoryRoutes());
+
 app.all("/api/v1/*", (context) =>
   context.json(
     {
       error: {
         code: "NOT_IMPLEMENTED",
-        message: "Foundation only; product routes arrive in later increments",
+        message: "Route not found",
         requestId: context.get("requestId"),
       },
     },
