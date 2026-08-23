@@ -61,6 +61,19 @@ async function findBooking(database: Db, id: string): Promise<BookingRow | null>
   return database.prepare(`${bookingSelect} WHERE b.id = ?1`).bind(id).first<BookingRow>();
 }
 
+async function validateBookingReferences(database: Db, guestId: string, roomId: string, bookingId: string | null, start: string, end: string): Promise<number> {
+  const row = await database.prepare(
+    `SELECT r.price_cents FROM rooms AS r JOIN guests AS g ON g.id = ?1
+     WHERE r.id = ?2 AND r.status = 'AVAILABLE'
+       AND NOT EXISTS (SELECT 1 FROM room_holds AS h WHERE h.room_id = r.id AND h.start_date < ?4 AND h.end_date > ?3)
+       AND NOT EXISTS (SELECT 1 FROM room_inventory_nights AS n
+                       WHERE n.room_id = r.id AND n.stay_date >= ?3 AND n.stay_date < ?4
+                         AND (?5 IS NULL OR n.booking_id <> ?5))`,
+  ).bind(guestId, roomId, start, end, bookingId).first<{ price_cents: number }>();
+  if (!row) throw ApiError.conflict("Guest, room or availability is invalid");
+  return row.price_cents;
+}
+
 function claimStatements(database: Db, bookingId: string, roomId: string, claimNights: string[], start: string, end: string) {
   return claimNights.map((stayDate) => database.prepare(
     "INSERT INTO room_inventory_nights (room_id, stay_date, booking_id) SELECT ?1, ?2, ?3 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?3 AND room_id = ?1 AND check_in = ?4 AND check_out = ?5 AND status = 'CONFIRMED')",
@@ -93,9 +106,8 @@ export function createBookingRoutes(): BookingApp {
     const guestId = requiredText(body.guest_id, "guest_id", 1, 100); const roomId = requiredText(body.room_id, "room_id", 1, 100);
     const range = dateRange(body.check_in, body.check_out); const notes = optionalNotes(body.notes); const database = context.get("operationalDatabase");
     const id = crypto.randomUUID(); const now = new Date().toISOString(); const claimNights = nights(range.start, range.end);
-    const price = await database.prepare("SELECT price_cents FROM rooms WHERE id = ?1").bind(roomId).first<{ price_cents: number }>();
-    if (!price) throw ApiError.conflict("Guest, room or availability is invalid");
-    const total = totalCents(price.price_cents, claimNights.length);
+    const priceCents = await validateBookingReferences(database, guestId, roomId, null, range.start, range.end);
+    const total = totalCents(priceCents, claimNights.length);
     try {
       await database.batch([
         database.prepare(`INSERT INTO bookings (id, guest_id, room_id, check_in, check_out, status, total_cents, notes, created_at, updated_at)
@@ -130,12 +142,17 @@ export function createBookingRoutes(): BookingApp {
       const guestId = body.guest_id == null ? current.guest_id : requiredText(body.guest_id, "guest_id", 1, 100);
       const roomId = body.room_id == null ? current.room_id : requiredText(body.room_id, "room_id", 1, 100);
       const range = dateRange(body.check_in ?? current.check_in, body.check_out ?? current.check_out); const notes = optionalNotes(body.notes, current.notes);
-      const claimNights = nights(range.start, range.end); const price = await database.prepare("SELECT price_cents FROM rooms WHERE id = ?1").bind(roomId).first<{ price_cents: number }>();
-      if (!price) throw ApiError.conflict("Guest, room or availability is invalid");
-      const total = totalCents(price.price_cents, claimNights.length); const now = new Date().toISOString();
+      const claimNights = nights(range.start, range.end);
+      const priceCents = await validateBookingReferences(database, guestId, roomId, id, range.start, range.end);
+      const total = totalCents(priceCents, claimNights.length); const now = new Date().toISOString();
       try {
         await database.batch([
-          database.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1").bind(id),
+          database.prepare(`DELETE FROM room_inventory_nights
+            WHERE booking_id = ?1 AND EXISTS (
+              SELECT 1 FROM bookings AS b WHERE b.id = ?1 AND b.room_id = ?2 AND b.check_in = ?3 AND b.check_out = ?4 AND b.status = 'CONFIRMED'
+            ) AND NOT EXISTS (
+              SELECT 1 FROM room_holds AS h WHERE h.room_id = ?2 AND h.start_date < ?4 AND h.end_date > ?3
+            )`).bind(id, roomId, range.start, range.end),
           database.prepare(`UPDATE bookings SET guest_id = ?2, room_id = ?3, check_in = ?4, check_out = ?5, total_cents = ?6, notes = ?7, updated_at = ?8
             WHERE id = ?1 AND status = 'CONFIRMED' AND EXISTS (SELECT 1 FROM guests WHERE id = ?2) AND EXISTS (SELECT 1 FROM rooms WHERE id = ?3 AND status = 'AVAILABLE')
             AND NOT EXISTS (SELECT 1 FROM room_holds WHERE room_id = ?3 AND start_date < ?5 AND end_date > ?4)`).bind(id, guestId, roomId, range.start, range.end, total, notes, now),

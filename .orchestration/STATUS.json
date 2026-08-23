@@ -8,10 +8,10 @@
   "work_branch": "runtime/cf-i03-rework-6",
   "last_completed_task": "CF-RUNTIME-GIT-HANDOFF-002",
   "last_completed_head": "a2f8a7eb760834b7868368ebe9c793a0fc2f188b",
-  "next_action": "HOST_PUBLISH_RUNTIME_CF_I03_REWORK_BRANCH_THEN_CHATGPT_INDEPENDENT_REVIEW",
-  "stop_reason": "CF-I03 cycle-2 implementation and local validation are complete. Stop at the immutable-artifact boundary; the host must create/push the exact artifact before independent review.",
+  "next_action": "PUBLISH_RUNTIME_CF_I03_REWORK_BRANCH_THEN_CHATGPT_INDEPENDENT_REVIEW",
+  "stop_reason": "CF-I03 cycle-2 P1 rework and local validation are complete. Stop at the immutable-artifact boundary; independent review is required.",
   "event": {
-    "seq": 8,
+    "seq": 10,
     "id": "CF-I03@REWORK-2-READY",
     "type": "IMMUTABLE_PUBLICATION_REQUIRED"
   },
