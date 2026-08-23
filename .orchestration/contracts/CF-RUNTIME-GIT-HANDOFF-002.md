@@ -51,9 +51,12 @@ During host-bridge execution:
 If canonical status does not provide `work_branch`:
 
 1. derive `runtime/<safe-active-task-slug>-<event.seq>`;
-2. refuse if that local or remote branch already exists, because ownership would be ambiguous;
-3. create the local branch from the exact validated canonical main HEAD;
-4. run Codex on that branch under `workspace-write`.
+2. refuse an unrelated pre-existing local/remote branch with that name;
+3. persist an event-ownership claim before the runtime branch is used;
+4. create the local branch from the exact validated canonical main HEAD;
+5. run Codex on that branch under `workspace-write`.
+
+A retry may reuse the deterministic branch only when the persisted ownership claim proves the same event id/seq, canonical main head, branch and work-base identity.
 
 ### Rework / resumed work branch
 
@@ -61,9 +64,10 @@ If canonical status provides `work_branch`:
 
 1. require it to match the allowed `runtime/...` namespace;
 2. fetch the runtime branch outside the Codex sandbox;
-3. switch/reset the local work branch to its remote head only while the worktree is clean;
-4. run Codex on that branch;
-5. never silently select another branch.
+3. claim the exact remote work-base head for the event;
+4. switch/reset the local work branch to that claimed remote head only while the worktree is clean;
+5. run Codex on that branch;
+6. never silently select another branch.
 
 Canonical dispatch state still comes from `origin/main`; branch-local state/artifacts are work evidence. The runtime prompt must tell Codex to inspect canonical main state read-only when branch-local state differs.
 
@@ -76,10 +80,13 @@ After Codex exits:
   - verify the current branch is exactly the expected runtime branch and is not `main`;
   - stage all controlled workspace changes;
   - run diff checks;
-  - create one deterministic host commit for the event;
+  - create one immutable host commit whose single parent is the claimed work-base head;
+  - persist the artifact commit identity in the local event claim before moving/pushing the branch ref;
   - push only the expected runtime branch;
   - persist a local handoff record containing event id/seq, canonical main head, work branch and published head;
 - zero exit + no changes: refuse an ambiguous new-branch publication rather than manufacturing an empty artifact.
+
+If the process or network fails after the immutable commit exists but before publication is acknowledged, a later retry must recover the exact claimed artifact without rerunning Codex, provided the remote branch is still either at the claimed base or the exact artifact. Any different remote movement fails closed rather than overwriting it.
 
 The published work branch is an immutable artifact boundary suitable for later ChatGPT Independent Critic / PR review. Independent Critic approval is not manufactured by the launcher.
 
@@ -103,13 +110,14 @@ The runtime instructions must explicitly tell Codex:
 |---|---|---|
 | Preserve sandbox | Codex still runs with `--sandbox workspace-write`; no Full Access workaround. | launcher diff + runtime instructions |
 | No Git writes by Codex | prompt/AGENTS explicitly assign Git mutations to host bridge. | prompt + AGENTS review |
-| New branch isolation | new event creates deterministic `runtime/...` branch from exact validated main and refuses collision. | shell review |
-| Rework branch isolation | only explicit safe `work_branch` may be resumed. | parser/branch validation |
-| Host immutable artifact | successful dirty Codex output is committed and pushed by host only on expected non-main work branch. | launcher review |
+| New branch isolation | new event creates deterministic `runtime/...` branch from exact validated main with event ownership. | shell review |
+| Rework branch isolation | only explicit safe `work_branch` and exact claimed base may be resumed. | parser/branch validation |
+| Host immutable artifact | successful dirty Codex output becomes one host commit and is pushed only on the expected non-main work branch. | launcher review |
+| Publication retry | commit/push interruption can recover the exact claimed artifact without rerunning Codex or requiring Human relay. | claim/recovery control-flow review |
 | Failure fail-close | non-zero Codex exit never auto-commits/pushes newly dirty output. | shell control-flow evidence |
 | No auto merge | launcher cannot merge product work to main. | diff review |
 | Existing gates preserved | main authorization, gate/blocker/external-review/stale-event checks remain. | regression review |
-| Auditability | local published-handoff record contains canonical/main/event/branch/head identity. | launcher evidence |
+| Auditability | local claim + published-handoff record preserve canonical/event/branch/base/artifact identity. | launcher evidence |
 | Review quota policy | Independent Critic is performed by ChatGPT through GitHub; routine `@codex review` is not used. | AGENTS + contract review |
 
 ## FORBIDDEN ACTIONS
@@ -118,6 +126,7 @@ The runtime instructions must explicitly tell Codex:
 - weakening Human Gate, blocker, Product Acceptance or external-review rules.
 - automatic product commit to `main`.
 - automatic product merge.
+- force-pushing a runtime artifact over unexpected remote movement.
 - paid service, remote D1 mutation, deployment or CF-I03 product changes in this runtime repair.
 - treating sandbox-protected `.git` as writable through permission hacks.
 - routine `@codex review` for Independent Critic work.
@@ -134,8 +143,8 @@ Critic focus:
 - accidental commit/push to main;
 - committing after failed Codex execution;
 - dirty-worktree loss/reset;
+- commit/push crash recovery and event idempotence;
 - rework branch selection;
-- event replay/idempotence regression;
 - any path that grants Codex broader filesystem permissions than `workspace-write`;
 - any new Human message-bus dependency;
 - mismatch between branch-local review state and canonical `main` authorization.
