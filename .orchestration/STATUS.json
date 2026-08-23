@@ -2,18 +2,18 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "BUILD",
-  "runtime_status": "READY_TO_RESUME",
+  "runtime_status": "RUNNING",
   "resume_authorized": false,
-  "active_task": "CF-I04-PREPARATION",
+  "active_task": "CF-I04-CONTRACT",
   "work_branch": "main",
   "last_completed_task": "CF-I03-INTEGRATION-CRITIC-PASS",
   "last_completed_head": "58c84a2564d9a4b85785203ff04fee24fee47213",
-  "next_action": "DERIVE_CF_I04_TASK_CONTRACT_FROM_CURRENT_MAIN",
-  "stop_reason": "CF-I03 clean integration received Independent Critic PASS. CF-I03 is closed on main; derive a fresh CF-I04 Reception Lifecycle Task Contract before implementation.",
+  "next_action": "DEFINE_CF_I04_DEPENDENCY_GRAPH_AND_SPECIALIST_DISPATCH",
+  "stop_reason": "Fresh CF-I04 Reception Lifecycle Task Contract is persisted; define bounded responsibility dependencies before any implementation.",
   "event": {
-    "seq": 22,
-    "id": "CF-I03@INTEGRATION-PASS",
-    "type": "INDEPENDENT_REVIEW_PASS"
+    "seq": 23,
+    "id": "CF-I04@CONTRACT-READY",
+    "type": "TASK_CONTRACT_CREATED"
   },
   "external_review": {
     "required": false,

@@ -116,9 +116,12 @@ Runtime capability record: `RUNTIME_CAPABILITY_FALLBACK` — the visible Codex a
 
 Non-blocking migration note: `0004_booking_claim_fk.sql` uses `PRAGMA foreign_keys = OFF/ON`; prefer `PRAGMA defer_foreign_keys` or no toggle in future D1 migrations when appropriate.
 
-## CF-I04 — PREPARATION
+## CF-I04 — CONTRACT READY / PRE-IMPLEMENTATION
 
 Target increment: Reception Lifecycle.
+
+Task Contract: `.orchestration/contracts/CF-I04.md`, derived from current integrated `main` and the approved design/source parity artifacts. No CF-I04 implementation has started.
+Dependency graph and dispatch record are persisted in the contract. Runtime capability: `RUNTIME_CAPABILITY_FALLBACK`; no separate Specialist contexts are exposed by the visible adapter.
 
 Before implementation, derive a fresh Task Contract from current `main`, the approved migration design package and source parity inventory. The contract must preserve lifecycle semantics rather than generic CRUD and must explicitly separate these responsibilities:
 
@@ -128,7 +131,7 @@ Before implementation, derive a fresh Task Contract from current `main`, the app
 
 If the visible Codex runtime can instantiate true specialist/subagent contexts, the Runtime Orchestrator should delegate these bounded responsibilities. If it still cannot, record `RUNTIME_CAPABILITY_FALLBACK` explicitly and preserve contextual separation and independent QA evidence without simulating multiagency.
 
-No CF-I04 implementation is authorized before its Task Contract exists.
+No CF-I04 implementation is authorized before the responsibility dependency graph is defined and the bounded specialist dispatch is recorded.
 
 ## PENDING HUMAN GATES
 
@@ -146,9 +149,9 @@ None.
 
 ## NEXT AUTHORIZED ACTION
 
-1. Derive and persist the fresh `CF-I04` Reception Lifecycle Task Contract from current `main`.
-2. Define its dependency graph and responsibility split before implementation.
-3. Start visible Codex execution only after the contract is canonical.
+1. Define and persist the CF-I04 dependency graph and responsibility split.
+2. Dispatch bounded Domain/Lifecycle, Reception UX and QA/Security specialist contexts when runtime capability permits; this runtime has recorded `RUNTIME_CAPABILITY_FALLBACK` and must preserve the contextual boundaries without simulating multiagency.
+3. Start implementation only after the contract and dispatch record are canonical.
 4. Stop again at the next Independent Critic boundary or legitimate Human Gate/stop condition.
 
 ## STOP CONDITION
