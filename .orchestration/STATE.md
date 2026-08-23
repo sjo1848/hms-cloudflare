@@ -95,9 +95,9 @@ Conversation history is supporting context only and is never the sole source of 
 
 ## CF-I03
 
-Status: `REWORK CYCLE 3 IMPLEMENTED / ADVERSARIAL D1/API VALIDATION PASS / IMMUTABLE PUBLICATION REQUIRED`.
+Status: `REWORK CYCLE 3 IMPLEMENTED / ADVERSARIAL D1/API VALIDATION PASS / IMMUTABLE ARTIFACT PUBLISHED / INDEPENDENT REVIEW REQUIRED`.
 
-Runtime execution: `READY_TO_RESUME` with `resume_authorized=false` — event `CF-I03@REWORK-3-READY` (seq 13), active task `CF-I03`, on `runtime/cf-i03-rework-6`. The Independent Critic returned REWORK. The Engineering/Domain and QA/Security passes were contextually separated under explicit `RUNTIME_CAPABILITY_FALLBACK`; the implementation and adversarial D1/API validation are complete.
+Runtime execution: `READY_TO_RESUME` with `resume_authorized=false` — event `CF-I03@REWORK-3-PUBLISHED` (seq 14), active task `CF-I03`, on `runtime/cf-i03-rework-6`. The Independent Critic returned REWORK. The Engineering/Domain and QA/Security passes were contextually separated under explicit `RUNTIME_CAPABILITY_FALLBACK`; implementation and adversarial D1/API validation are complete. Immutable artifact `86f4028df45d9d4b977b378d6f89d3c0b9bf35ed` is published and awaits Independent Critic.
 
 CF-I03 REWORK-1 implementation evidence: API/domain changes repair blank optional notes, atomic hold/booking validation and claim replacement, safe integer totals, unavailable-room rejection, cancelled-booking revival, and bounded booking queries. The `/bookings` UI now uses date-scoped availability and provides detail/edit interaction. Local validation passed: `npm run typecheck`, `npm run test` (14/14), `npm run web:build`, `npm run types:check`, `npm run wrangler:dry-run`, and `git diff --check`. Wrangler dry-run emitted the known read-only `.wrangler` log warning but completed both dry-runs.
 
@@ -110,6 +110,8 @@ Published artifact: `900054ad49d9c401ffe261a88dcd73cf9d1b94cb` on `runtime/cf-i0
 Runtime capability record: `RUNTIME_CAPABILITY_FALLBACK` — no separate specialist/subagent execution capability is exposed in this runtime; no multiagency result is claimed.
 
 CF-I03 REWORK-3 evidence: `docs/cf-i03-rework-3-evidence.md`. The booking migration explicitly redeclares the idempotent claim table/index surface; PATCH now performs `UPDATE → conditional claim delete → claim insert` inside one D1 batch, preserving old claims on failed updates and replacing claims when room/dates change. Local Worker/D1 evidence covers overlap rollback, hold exclusion, cancellation release and half-open adjacency.
+
+Published artifact: `86f4028df45d9d4b977b378d6f89d3c0b9bf35ed` on `runtime/cf-i03-rework-6`.
 
 Cycle-2 final local validation: `npm run check` (typecheck plus 14/14 tests), `npm run web:build`, `npm run types:check`, `npm run wrangler:dry-run`, and `git diff --check` all passed. Wrangler emitted the known read-only `.wrangler` log warning; both dry-runs completed successfully. The final P1 hardening also prevents an invalid booking edit from deleting the existing room-night claims before the atomic replacement can succeed.
 
