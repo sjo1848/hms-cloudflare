@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 CRITIC REWORK-1 AUTONOMOUS`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 REWORK-1 IMPLEMENTATION VALIDATED / INDEPENDENT REVIEW PENDING`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -128,19 +128,22 @@ Runtime capability record: `RUNTIME_CAPABILITY_FALLBACK` — the visible Codex a
 
 Non-blocking migration note: `0004_booking_claim_fk.sql` uses `PRAGMA foreign_keys = OFF/ON`; prefer `PRAGMA defer_foreign_keys` or no toggle in future D1 migrations when appropriate.
 
-## CF-I04 — INDEPENDENT CRITIC REWORK-1 / AUTONOMOUS REPAIR AUTHORIZED
+## CF-I04 — REWORK-1 IMPLEMENTATION VALIDATED / INDEPENDENT REVIEW PENDING
 
 Target increment: Reception Lifecycle.
 
 Task Contract: `.orchestration/contracts/CF-I04.md`.
 Reviewed implementation artifact: `32b5070dbd80b4b4d3667fe45573f8851cb60a7c`.
+Repaired implementation artifact: `88c8361bae2148f682947bba1976a41404db9212` on `main`.
 Published pre-review state: `855d0515716949284309da000e99c8037a113b27`.
 Independent Critic record: `.orchestration/reviews/CF-I04-CRITIC.md`.
 Verdict: `REWORK`.
 Human Gate: `NONE`.
 Diagnosis: `EXECUTION_DEFECT + EVIDENCE_DEFECT`.
 
-What is already useful:
+REWORK-1 result: lifecycle side effects now share transition guards inside D1 batches; SQL transition uniqueness guards force conflicting check-in/checkout/reassignment attempts to serialize or roll back; named adversarial D1/API evidence covers lifecycle state/claim/room/event consistency and forbidden/unknown/cross-tenant attempts; browser evidence covers checklist validation/error/success, reassignment, checkout and widths 375/390/430/768/1024. No new Independent Critic verdict is claimed.
+
+What was already useful in the reviewed artifact:
 - explicit check-in/reassignment/checkout domain endpoints;
 - checklist gating on the ordinary path;
 - lifecycle actor/request/hotel event records;
@@ -148,13 +151,13 @@ What is already useful:
 - persisted reassignment/checkout browser journey;
 - explicit `RUNTIME_CAPABILITY_FALLBACK`.
 
-Blocking repair input:
+Prior blocking repair input, addressed in `88c8361`:
 1. **Lifecycle atomicity/concurrency:** critical guarded `UPDATE` row-count checks occur after successful `D1.batch()` completion. Zero-row statements are successful SQL operations, so later statements may commit before the route returns conflict. Concurrent reassignment can desynchronize booking, claims and room occupancy; stale check-in/checkout guards can commit partial room/audit/lifecycle state.
 2. **Adversarial D1/API evidence:** current lifecycle regression covers ordinary preflight rejection but not stale/zero-row transactional invalidation. Add repeatable race/conflict regressions proving complete state preservation, including lifecycle event counts.
 3. **Browser acceptance:** persisted browser test starts from `CheckedIn`, covers reassignment/checkout only and does not exercise required 375/390/430/768/1024 widths. Add Confirmed→CheckedIn checklist, validation/error/success and all accepted responsive widths.
 4. **Lifecycle security evidence:** add forbidden-role and cross-tenant/unknown-binding lifecycle attempts proving fail-closed behavior with zero mutation/event side effects.
 
-Under `PM-AUTONOMY-001`, these are routine technical findings. Codex consumes the review directly and repairs without Human approval. Do not advance to CF-I05 until CF-I04 obtains Independent Critic PASS.
+Under `PM-AUTONOMY-001`, these were routine technical findings and were repaired without Human approval. Do not advance to CF-I05 until CF-I04 obtains Independent Critic PASS.
 
 ## PENDING HUMAN GATES
 
@@ -168,18 +171,12 @@ None.
 
 ## BLOCKERS
 
-None. CF-I04 has routine bounded technical REWORK with a clear contract and authorized autonomous repair path.
+None. CF-I04 REWORK-1 is locally validated and awaits the next Independent Critic.
 
 ## NEXT AUTHORIZED ACTION
 
-Codex reads `.orchestration/STATUS.json`, `.orchestration/decisions/PM-AUTONOMY-001.md` and `.orchestration/reviews/CF-I04-CRITIC.md`, then autonomously:
-
-1. repairs lifecycle concurrency/atomicity so failed/stale guards cause transaction rollback rather than post-commit conflict detection;
-2. adds adversarial D1/API regression for stale check-in, concurrent reassignment and checkout invalidation plus lifecycle authorization/tenant failures;
-3. completes browser acceptance for check-in/reassignment/checkout, validation/error/success and widths 375/390/430/768/1024;
-4. runs full validation and self-adversarial QA;
-5. publishes a fresh immutable CF-I04 artifact and persists `external_review.required=true`;
-6. stops only at the next Independent Critic boundary or another legitimate stop condition.
+1. ChatGPT performs the Independent Critic review of exact repaired artifact `88c8361bae2148f682947bba1976a41404db9212`.
+2. Resume only from that verdict; do not advance to CF-I05 before CF-I04 PASS.
 
 No Human confirmation is authorized or required for this rework.
 
