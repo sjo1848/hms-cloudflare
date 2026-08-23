@@ -34,7 +34,7 @@ if ! "$FLOCK_BIN" -n 9; then
   exit 0
 fi
 
-if [[ -n "$($GIT_BIN status --porcelain)" ]]; then
+if [[ -n "$($GIT_BIN status --porcelain --untracked-files=all)" ]]; then
   log "local worktree is dirty; refusing automatic dispatch"
   exit 0
 fi
