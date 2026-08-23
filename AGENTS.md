@@ -14,7 +14,7 @@ Mutable project state MUST NOT be hardcoded in this file.
 
 At runtime read, in this order:
 1. `.orchestration/STATE.md` — human-readable authoritative runtime/project state.
-2. `.orchestration/STATUS.json` — machine-readable handoff/watch signal.
+2. `.orchestration/STATUS.json` — machine-readable dispatch/watch signal.
 3. active Task Contract under `.orchestration/contracts/`.
 4. approved decisions under `.orchestration/decisions/`.
 5. durable design/source artifacts under `docs/`.
@@ -36,15 +36,18 @@ On every new or resumed Codex run:
 
 Do not ask the Human whether to continue routine work.
 
-## Machine-readable handoff protocol
+## Machine-readable handoff and dispatch protocol
 
-`.orchestration/STATUS.json` exists so external automation can detect runtime completion without reading conversational output.
+`.orchestration/STATUS.json` exists so local dispatch and external monitoring can react without reading conversational output.
 
 Keep it synchronized with `.orchestration/STATE.md`.
 
-Before substantive execution set `runtime_status` to `RUNNING` and persist the current `active_task`.
+Before substantive execution set:
+- `runtime_status = RUNNING`;
+- `resume_authorized = false`;
+- the current `active_task`.
 
-Before exiting, always persist a terminal or resumable status:
+Before exiting, persist one of:
 - `READY_TO_RESUME` — runtime stopped for ordinary session/tool limits but authorized work remains;
 - `WAITING_HUMAN_GATE` — a legitimate Human Gate is required;
 - `BLOCKED` — material technical/runtime blocker remains after bounded recovery attempts;
@@ -52,22 +55,34 @@ Before exiting, always persist a terminal or resumable status:
 - `PRODUCT_ACCEPTANCE_READY` — technical/integration evidence is complete and Human Product Acceptance is the next boundary;
 - `COMPLETE` — the currently authorized workflow is genuinely complete.
 
-For every status transition update:
+For every transition update:
 - `phase`;
+- `runtime_status`;
+- `resume_authorized`;
 - `active_task`;
 - `last_completed_task` and `last_completed_head` when applicable;
 - `next_action`;
 - `stop_reason`;
 - `event.id`, `event.type`, and monotonically increasing `event.seq`;
-- `external_review.required` when external audit is materially useful.
+- `external_review.required`.
 
-Set `external_review.required=true` when:
-- the runtime ends while authorized work remains;
-- a Human Gate or material blocker is reached;
-- Product Acceptance becomes ready;
-- a potentially global PASS or security/cost-sensitive milestone needs external controller audit.
+`resume_authorized=true` is allowed ONLY when all are true:
+- `runtime_status = READY_TO_RESUME`;
+- authorized routine work remains under approved scope/design;
+- no Human Gate, blocker, Human Action/Input or Product Acceptance boundary is pending;
+- no blocking external review is required.
 
-Routine internal PASSes may continue without external review if the Project Method and active contract authorize continuation.
+Set `resume_authorized=false` for every other status.
+
+Set `external_review.required=true` only when external controller audit must block further execution, including:
+- a Human Gate or material blocker;
+- Product Acceptance readiness;
+- a global/integration milestone whose evidence needs external audit before continuation;
+- a security/cost/scope-sensitive decision or potentially global PASS.
+
+An ordinary runtime/session end is NOT automatically a blocking external review. If routine authorized work remains, persist `READY_TO_RESUME`, `resume_authorized=true` and normally `external_review.required=false` so the local dispatcher may continue without waiting for the hourly external monitor.
+
+If `external_review.required=true`, `resume_authorized` MUST be false until the blocking review is resolved and canonical state explicitly authorizes continuation.
 
 ## Execution and review rules
 
