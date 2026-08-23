@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { cors } from "hono/cors";
 import {
   AccessAuthenticationError,
   resolveAccessIdentity,
@@ -10,15 +9,15 @@ import {
   selectAuthorizedMembership,
   type Membership,
 } from "./auth/membership";
+import { resolveOperationalDatabase } from "./routing";
 type Variables = {
   identity: AccessIdentity;
   membership: Membership;
+  operationalDatabase: Pick<D1Database, "prepare">;
   requestId: string;
 };
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
-
-app.use("*", cors({ origin: (origin) => origin ?? "", credentials: true }));
 
 app.use("*", async (context, next) => {
   const incoming = context.req.header("x-request-id")?.trim();
@@ -65,8 +64,10 @@ app.use("/api/v1/*", async (context, next) => {
       403,
     );
   }
+  const operationalDatabase = resolveOperationalDatabase(context.env, membership);
   context.set("identity", identity);
   context.set("membership", membership);
+  context.set("operationalDatabase", operationalDatabase);
   await next();
 });
 

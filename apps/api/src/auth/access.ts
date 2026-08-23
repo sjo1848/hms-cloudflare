@@ -6,6 +6,7 @@ export type AccessIdentity = {
 };
 
 type AccessEnvironment = {
+  ENVIRONMENT?: string;
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUDIENCE?: string;
   LOCAL_DEV_AUTH?: string;
@@ -30,7 +31,7 @@ export async function resolveAccessIdentity(
   request: Request,
   env: AccessEnvironment,
 ): Promise<AccessIdentity> {
-  if (env.LOCAL_DEV_AUTH === "true") {
+  if (env.ENVIRONMENT === "development" && env.LOCAL_DEV_AUTH === "true") {
     const subject = request.headers.get("x-local-access-subject")?.trim();
     const email = request.headers.get("x-local-access-email")?.trim();
     if (!subject || !email) {

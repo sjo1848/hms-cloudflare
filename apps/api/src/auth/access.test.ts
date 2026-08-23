@@ -33,8 +33,22 @@ describe("Cloudflare Access identity boundary", () => {
           "x-local-access-email": "local@example.test",
         },
       }),
-      { LOCAL_DEV_AUTH: "true" },
+      { ENVIRONMENT: "development", LOCAL_DEV_AUTH: "true" },
     );
     expect(identity).toEqual({ subject: "local-user", email: "local@example.test" });
+  });
+
+  it("does not enable local auth outside development", async () => {
+    await expect(
+      resolveAccessIdentity(
+        new Request("https://example.test/api/v1/auth/me", {
+          headers: {
+            "x-local-access-subject": "local-user",
+            "x-local-access-email": "local@example.test",
+          },
+        }),
+        { ENVIRONMENT: "production", LOCAL_DEV_AUTH: "true" },
+      ),
+    ).rejects.toThrow(AccessAuthenticationError);
   });
 });

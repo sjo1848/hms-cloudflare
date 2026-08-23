@@ -12,6 +12,7 @@ describe("API foundation", () => {
   it("does not expose protected application bootstrap without Access identity", async () => {
     const response = await app.request("http://example.test/api/v1/auth/me", undefined, {
       LOCAL_DEV_AUTH: "false",
+      ENVIRONMENT: "development",
       ACCESS_TEAM_DOMAIN: "https://team.cloudflareaccess.com",
       ACCESS_AUDIENCE: "audience",
     });
