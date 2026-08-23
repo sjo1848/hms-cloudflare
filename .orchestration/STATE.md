@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23
 Global Project Mode: `DELIVERY`
 Phase: `DESIGN`
-Phase Status: `DESIGN_WORK_IN_PROGRESS`; `CF-DATA-001` remains `WAITING_HUMAN_GATE`
+Phase Status: `WAITING_HUMAN_GATE: CF-DATA-001`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -81,12 +81,14 @@ Purpose: independent review of Project Method/Codex bootstrap PR #1 because the 
 Handoff on PASS: integrate PR #1, update state, continue automatically to `CF-SOURCE-CONTRACT-001`.
 
 ### CF-SOURCE-CONTRACT-001
-Status: `ARTIFACT_READY_FOR_INDEPENDENT_CRITIC`
+Status: `PASS`
 Contract: `.orchestration/contracts/CF-SOURCE-CONTRACT-001.md`
 Purpose: build a durable source API/product contract inventory and representative acceptance-journey map from the pinned HMS baseline. This work is independent of `CF-DATA-001`.
 Artifact: `docs/source-contract-inventory.md`
 Source evidence: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`; router/OpenAPI completeness check: 51 operations each.
-Next: persist artifact commit SHA, then execute an independent Critic review under the contract.
+Artifact commit before Critic: `89e945e8f0328c64bbaca3ab38646cd26cc04dbf`.
+Critic evidence: `.orchestration/reviews/CF-SOURCE-CONTRACT-001-critic.md`.
+Critic verdict: `PASS`; rework cycles: `0`.
 
 ### CF-FOUNDATION-RECONCILE-001
 Status: `PLANNED / BLOCKED_BY_DESIGN_EXIT`
@@ -117,12 +119,9 @@ Purpose: platform foundation BUILD under an approved Task Contract.
 
 ## NEXT AUTHORIZED ACTION
 
-Execute the independent Critic review for `CF-SOURCE-CONTRACT-001` after committing `docs/source-contract-inventory.md`:
-1. verify immutable target and source baseline identity;
-2. cross-check router, OpenAPI and frontend route/API evidence;
-3. search for missing endpoints, UI/API evidence substitution, flattened lifecycle semantics and hidden D1 topology assumptions;
-4. emit `PASS | REWORK | HUMAN_GATE | CONTRACT_DEFECT`;
-5. persist review evidence and update this state.
+Human decision at `CF-DATA-001`: choose the D1 tenant-isolation topology documented in the canonical Design Package. This gate is now the only remaining authorized next action.
+
+Do not begin `CF-I01` BUILD or final D1 tenancy/schema architecture until the gate is resolved and DESIGN exit criteria pass.
 
 Continue automatically until the only remaining next action requires `CF-DATA-001` or another legitimate Human Gate/material blocker.
 
