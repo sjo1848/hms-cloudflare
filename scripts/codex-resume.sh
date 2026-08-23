@@ -16,7 +16,7 @@ fi
 ROOT="$($GIT_BIN rev-parse --show-toplevel)"
 cd "$ROOT"
 
-if [[ -n "$($GIT_BIN status --porcelain)" ]]; then
+if [[ -n "$($GIT_BIN status --porcelain --untracked-files=all)" ]]; then
   echo "Refusing to start Codex with a dirty worktree." >&2
   exit 2
 fi
@@ -37,7 +37,7 @@ if [[ $CODEX_STATUS -ne 0 ]]; then
   exit "$CODEX_STATUS"
 fi
 
-if [[ -n "$($GIT_BIN status --porcelain)" ]]; then
+if [[ -n "$($GIT_BIN status --porcelain --untracked-files=all)" ]]; then
   echo "Codex exited successfully but left uncommitted changes. Not pushing automatically." >&2
   exit 3
 fi
