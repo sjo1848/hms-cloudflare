@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`
-Phase Status: `CF-I01 PASS — CF-I02 READY`
+Phase Status: `CF-I02 ACTIVE`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -157,13 +157,13 @@ No Human Gate currently blocks DESIGN.
 
 ### CF-I02
 
-Status: `READY_AFTER_CF-I01_PASS`
-Contract: `.orchestration/contracts/CF-I02.md` (to be persisted before implementation)
+Status: `READY`
+Contract: `.orchestration/contracts/CF-I02.md`
 Objective: rooms, guests and room holds parity increment under the approved Option B foundation.
 
 ## NEXT AUTHORIZED ACTION
 
-Create/activate `.orchestration/contracts/CF-I02.md`, then execute its bounded Specialist work. Do not deploy or activate paid services.
+Execute `CF-I02` from its persisted contract, beginning with pre-flight and source/API/UI evidence reconstruction. Do not deploy or activate paid services.
 
 Do not ask for routine human confirmation after PASS.
 
