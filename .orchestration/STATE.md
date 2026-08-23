@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 INDEPENDENT CRITIC PASS / CLEAN INTEGRATION IN PROGRESS`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 INDEPENDENT CRITIC PASS / CLEAN INTEGRATION VALIDATED / INDEPENDENT REVIEW PENDING`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -95,7 +95,7 @@ Conversation history is supporting context only and is never the sole source of 
 
 ## CF-I03
 
-Status: `PASS / INDEPENDENT CRITIC COMPLETE / CLEAN INTEGRATION IN PROGRESS`.
+Status: `PASS / INDEPENDENT CRITIC COMPLETE / CLEAN INTEGRATION VALIDATED / INDEPENDENT REVIEW PENDING`.
 
 Base product branch: `cf-i03-bookings@834e4a2aa3ec37aac036dc0273b15e6abf5c7d81`.
 Original review PR: #4.
@@ -103,6 +103,7 @@ Authorized runtime rework branch: `runtime/cf-i03-rework-6`.
 Task Contract: `.orchestration/contracts/CF-I03.md` on the work branch.
 
 Accepted implementation artifact: `65ed1e5710a20af97d183f04364b5aa7b605a74a` on `runtime/cf-i03-rework-6`.
+Clean integration artifact: `f6f3d230348ca22834704a063eec728d27235e6a` on `integration/cf-i03-clean`, based on current `main`.
 
 Independent Critic record: `.orchestration/reviews/CF-I03-REWORK-4-CRITIC.md`.
 Critic verdict: `PASS`.
@@ -144,9 +145,8 @@ None. CF-I03 has a fresh Independent Critic PASS; only clean integration remains
 
 ## NEXT AUTHORIZED ACTION
 
-1. Validate the clean integration of accepted CF-I03 product/schema/test/evidence changes on `integration/cf-i03-clean`.
-2. Integrate the validated candidate into current `main` after exact-head verification.
-3. Reconcile canonical state and derive/authorize CF-I04 under a fresh Task Contract.
+1. ChatGPT performs the Independent Critic review of the exact clean integration head after publication to current `main`.
+2. After that review boundary, reconcile canonical state and derive/authorize CF-I04 under a fresh Task Contract.
 
 ## STOP CONDITION
 
