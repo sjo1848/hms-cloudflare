@@ -8,17 +8,17 @@
   "work_branch": "runtime/cf-i03-rework-6",
   "last_completed_task": "CF-RUNTIME-GIT-HANDOFF-002",
   "last_completed_head": "a2f8a7eb760834b7868368ebe9c793a0fc2f188b",
-  "next_action": "REWORK_CF_I03_REVIEW_FINDINGS",
-  "stop_reason": "Controlled runtime fail-close probe passed. CF-I03 bounded rework is authorized on the exact runtime work branch seeded from the reviewed CF-I03 artifact plus current runtime instructions.",
+  "next_action": "REWORK_CF_I03_CRITIC_FINDINGS_CYCLE_2",
+  "stop_reason": "ChatGPT Independent Critic reviewed the published CF-I03 runtime artifact and found material invariant defects requiring bounded rework on the exact same runtime branch.",
   "event": {
-    "seq": 6,
-    "id": "CF-I03@REWORK-1",
+    "seq": 7,
+    "id": "CF-I03@REWORK-2",
     "type": "BOUNDED_REWORK"
   },
   "external_review": {
     "required": false,
-    "last_audited_head": "834e4a2aa3ec37aac036dc0273b15e6abf5c7d81",
-    "last_verdict": "REWORK_4P1_4P2"
+    "last_audited_head": "runtime/cf-i03-rework-6",
+    "last_verdict": "REWORK_P1_ATOMIC_HOLD_BOOKING_AND_CLAIM_REPLACEMENT"
   },
   "human_gate": null,
   "blocker": null,
