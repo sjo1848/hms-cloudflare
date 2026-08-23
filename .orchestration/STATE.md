@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I02 PASS / RUNTIME AUTOMATION PASS / CF-I03 READY_TO_RESUME`
+Phase Status: `CF-I02 PASS / RUNTIME AUTOMATION PASS / CF-I03 RECOVERED TO BRANCH / RUNTIME GIT HANDOFF BLOCKED`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -79,24 +79,27 @@ Conversation history is supporting context only and is never the sole source of 
 
 ### Runtime automation — CF-RUNTIME-AUTOMATION-001
 
-- Status: `PASS / INTEGRATED`.
+- Status: `PASS / INTEGRATED`, but runtime Git handoff now has a technical blocker discovered by the first real autonomous product run.
 - Independently reviewed final PR head: `400ca30e40362dda28e5b81fcdd8f169d971caf0` with no fresh Codex findings.
 - PR #2 merged to main at `08af1ffda02447e53924345d900fa5f91c266765`.
 - User-scoped systemd dispatcher installed locally.
-- Controlled fail-close probe passed: service started, observed canonical `resume_authorized=false`, and exited without launching Codex.
-- Polling alone does not invoke Codex.
-- No linger was enabled.
-- Safety model includes dirty-worktree fail-close, `flock`, strict STATUS schema checks, explicit gate/blocker keys, stale-main revalidation, monotonic observed event sequencing/status fingerprinting, bounded retry/cooldown, and no bypass of Human Gate/blocker/external review.
+- Controlled fail-close probe passed.
+- First real automatic dispatch passed the `GitHub → systemd → dispatcher → Codex` path and launched CF-I03 without Human relay.
+- Codex implemented and locally validated CF-I03, but `codex exec --sandbox workspace-write` could not write `.git/FETCH_HEAD` or `.git/index.lock`, so it could not create the immutable artifact commit or publish it.
+- The launcher then correctly refused automatic push because the worktree was dirty.
+- Subsequent timer runs correctly failed closed on the dirty worktree.
+- The recovered CF-I03 workspace was manually checkpointed once to branch `cf-i03-recovery` at `c1bd966` solely to preserve the artifact; this is a recovery action, not acceptance.
 
 ## NEXT PRODUCT INCREMENT
 
 ### CF-I03
 
-Status: `READY_TO_RESUME`.
+Status: `RECOVERED_ARTIFACT / REQUIRES INDEPENDENT CRITIC`.
 
 Accepted design scope: bookings, availability and room-night overlap protection.
 
-Next routine runtime action is authorized to derive/create the formal CF-I03 Task Contract from accepted design and execute CF-I03 according to Project Method. No deploy, remote D1 mutation, paid transition or Product Acceptance decision is implied by this authorization.
+Recovered implementation branch: `cf-i03-recovery` at `c1bd966`.
+The recovered artifact is not PASS and must not be merged until it receives an independent Critic and bounded rework if needed.
 
 ## PENDING HUMAN GATES
 
@@ -108,24 +111,24 @@ Any paid Cloudflare transition remains a separate Human Gate.
 
 None.
 
+The one-time manual recovery commit/push has already been completed. Do not require further Human relay for routine Git/Codex coordination.
+
 ## BLOCKERS
 
-None.
+### Runtime Git handoff blocker
+
+`codex exec --sandbox workspace-write` can modify the project workspace but cannot reliably write Git metadata. The current launcher therefore cannot depend on Codex itself creating commits/branches inside the sandbox.
+
+Required repair: keep Codex sandboxed for implementation, but move immutable Git publication responsibilities to the trusted host-side launcher or an equivalent bounded repository channel. The repaired handoff must preserve fail-close behavior, exact reviewed artifact identity, branch isolation, and Human Gate/blocker semantics.
 
 ## NEXT AUTHORIZED ACTION
 
-Local runtime dispatcher may resume Codex for the new CF-I03 event.
+Two bounded tracks are authorized:
 
-Codex must:
-- create/derive the formal CF-I03 Task Contract from accepted design;
-- implement only the accepted CF-I03 scope;
-- preserve the room-night overlap invariant and tenant boundaries;
-- run required tests/evidence;
-- obtain an independent Critic for the substantive output;
-- perform bounded routine REWORK autonomously;
-- persist exact orchestration state before runtime/session end.
+1. Open the recovered CF-I03 artifact as a PR and request a fresh independent Critic against `.orchestration/contracts/CF-I03.md`. On REWORK, repair within the contract and require a fresh Critic. Do not merge until PASS.
+2. Repair the runtime Git handoff in a separate automation PR so future autonomous runs can produce immutable commits/branches without granting unrestricted Codex access to `.git`. Require independent Critic before integration.
 
-Stop and set `resume_authorized=false` only for a legitimate Human Gate, material blocker, unavoidable Human Action/Input, Product Acceptance boundary, or blocking external-review boundary.
+Do not resume unattended product execution until the runtime Git handoff repair is integrated and locally re-probed.
 
 ## STOP CONDITION
 
