@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I02 PASS / RUNTIME GIT HANDOFF REPAIR PASS+MERGED / LOCAL CONTROLLED PROBE REQUIRED / CF-I03 REWORK`
+Phase Status: `CF-I02 PASS / RUNTIME GIT HANDOFF PASS+PROBED / CF-I03 REWORK AUTHORIZED`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -82,34 +82,37 @@ Conversation history is supporting context only and is never the sole source of 
 
 ### Runtime Git handoff repair — CF-RUNTIME-GIT-HANDOFF-002
 
-- Status: `PASS / INTEGRATED`.
+- Status: `PASS / INTEGRATED / LOCAL PROBE PASS`.
 - PR #5 exact reviewed head: `f3f1565f15b69fb2b9a0046fc4ca0d72b31fdd28`.
 - ChatGPT Independent Critic verdict: PASS after one controller-found rework concerning non-idempotent commit/push recovery.
 - PR #5 merged to main at `a2f8a7eb760834b7868368ebe9c793a0fc2f188b`.
 - Codex remains in `--sandbox workspace-write`.
-- Host launcher now owns bounded `runtime/...` branch creation/resume, immutable commit creation and push.
+- Host launcher owns bounded `runtime/...` branch creation/resume, immutable commit creation and push.
 - Runtime event ownership/base/artifact claims support recovery after commit/push interruption without rerunning Codex when identity remains exact.
 - No host auto-commit to `main`; no auto-merge path.
-- ChatGPT watcher now derives/inspects runtime branches so the Human is not required to relay branch publication.
+- ChatGPT watcher derives/inspects runtime branches so the Human is not required to relay branch publication.
+- Controlled local probe passed repeatedly on 2026-08-23: dispatcher observed `HUMAN_ACTION_REQUIRED` and exited without launching Codex.
 
 ## CF-I03
 
-Status: `REWORK REQUIRED / PR #4 OPEN / NOT MERGEABLE BY METHOD YET`.
+Status: `REWORK AUTHORIZED / PR #4 BASE ARTIFACT / RUNTIME REWORK BRANCH`.
 
-Clean product branch: `cf-i03-bookings@834e4a2aa3ec37aac036dc0273b15e6abf5c7d81`.
-PR: #4.
+Base product branch: `cf-i03-bookings@834e4a2aa3ec37aac036dc0273b15e6abf5c7d81`.
+Original review PR: #4.
+Authorized runtime rework branch: `runtime/cf-i03-rework-6`, created from the exact reviewed CF-I03 base artifact.
+Task Contract: `.orchestration/contracts/CF-I03.md` on the work branch.
 
-The already-triggered Codex review returned 8 material findings before review policy changed:
-- P1 optional blank notes break valid creation;
+The already-triggered Codex review returned 8 material findings before review policy changed. They are now the exact bounded rework input:
+- P1 optional blank notes break otherwise valid booking creation;
 - P1 hold/booking exclusion is not atomic in both mutation directions;
-- P1 booking UI does not use date-scoped availability;
+- P1 booking UI does not use date-scoped `/rooms/available` results;
 - P1 generic PATCH can revive a cancelled booking;
-- P2 booking detail/edit UI missing;
-- P2 derived total can exceed JS safe integer range;
-- P2 unavailable room operational status is not rejected;
-- P2 booking list query is unbounded.
+- P2 booking detail/edit UI interaction is missing;
+- P2 derived booking total can exceed JavaScript safe-integer range;
+- P2 unavailable room operational status is not rejected during booking validation;
+- P2 booking list/calendar query is unbounded.
 
-No further Codex review should be triggered. After the local runtime probe succeeds, these findings are the authorized bounded CF-I03 rework input for Codex; ChatGPT will perform the fresh Critic on the resulting immutable runtime branch.
+Codex must repair these findings within CF-I03 scope, run relevant local validation, persist branch-local review-ready state, and stop at the immutable-artifact boundary. It must not trigger `@codex review` or self-PASS the substantive artifact. The host Git bridge will commit/push the exact runtime branch, then ChatGPT performs the fresh Independent Critic.
 
 ## PENDING HUMAN GATES
 
@@ -119,36 +122,22 @@ Any paid Cloudflare transition remains a separate Human Gate.
 
 ## PENDING HUMAN ACTION
 
-### Local runtime update + controlled probe
+None.
 
-The runtime repair is merged but the installed workstation copy must pull `main` before it can be trusted.
-
-Required local action:
-
-```bash
-cd /home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare
-git switch main
-git pull --ff-only
-systemctl --user start hms-codex-dispatch.service
-journalctl --user -u hms-codex-dispatch.service -n 30 --no-pager
-```
-
-Expected result: canonical status is `HUMAN_ACTION_REQUIRED` with `resume_authorized=false`, therefore the controlled probe must start the service and exit without launching Codex.
-
-This is a local operational action, not a Human Gate.
+The local runtime update + controlled fail-close probe has been completed successfully. No routine Human relay is authorized or required for CF-I03 rework.
 
 ## BLOCKERS
 
-No product-risk blocker. Unattended execution remains deliberately disabled until the local controlled probe confirms the merged host-Git bridge is active on the workstation.
+None.
 
 ## NEXT AUTHORIZED ACTION
 
-1. Human performs the local pull + controlled fail-close probe above.
-2. On successful probe, ChatGPT reconciles canonical state and authorizes a new CF-I03 rework event on a bounded runtime branch.
-3. systemd launches Codex automatically for implementation/rework only.
-4. Host bridge commits/pushes the immutable runtime branch.
-5. ChatGPT detects that branch and performs the fresh Independent Critic without `@codex review`.
-6. Routine REWORK continues autonomously until PASS or a legitimate stop condition.
+1. Canonical `STATUS.json` authorizes event `CF-I03@REWORK-1` on `runtime/cf-i03-rework-6`.
+2. systemd launches Codex automatically for CF-I03 bounded implementation/rework only.
+3. Codex repairs the 8 recorded findings and runs local validation under `workspace-write`.
+4. Host Git bridge creates/pushes the immutable artifact on the same `runtime/...` branch.
+5. ChatGPT detects/reviews that exact head against CF-I03 Task Contract, design and evidence without `@codex review`.
+6. Routine bounded REWORK continues autonomously until PASS or a legitimate stop condition.
 
 ## STOP CONDITION
 
