@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I02 PASS / RUNTIME AUTOMATION PASS / CF-I03 READY_TO_RESUME`
+Phase Status: `CF-I02 PASS / RUNTIME AUTOMATION PASS / CF-I03 BLOCKED`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -92,7 +92,7 @@ Conversation history is supporting context only and is never the sole source of 
 
 ### CF-I03
 
-Status: `READY_TO_RESUME`.
+Status: `RUNNING`; Task Contract created at `.orchestration/contracts/CF-I03.md`.
 
 Accepted design scope: bookings, availability and room-night overlap protection.
 
@@ -114,10 +114,10 @@ None.
 
 ## NEXT AUTHORIZED ACTION
 
-Local runtime dispatcher may resume Codex for the new CF-I03 event.
+CF-I03 specialist implementation is present in the controlled workspace under the new Task Contract, but the required immutable artifact commit is blocked by read-only Git metadata.
 
-Codex must:
-- create/derive the formal CF-I03 Task Contract from accepted design;
+Codex completed the bounded implementation attempt for:
+- the formal CF-I03 Task Contract derived from accepted design;
 - implement only the accepted CF-I03 scope;
 - preserve the room-night overlap invariant and tenant boundaries;
 - run required tests/evidence;
@@ -125,7 +125,13 @@ Codex must:
 - perform bounded routine REWORK autonomously;
 - persist exact orchestration state before runtime/session end.
 
-Stop and set `resume_authorized=false` only for a legitimate Human Gate, material blocker, unavoidable Human Action/Input, Product Acceptance boundary, or blocking external-review boundary.
+## BLOCKER
+
+`GIT_METADATA_READ_ONLY`: `git fetch` cannot write `.git/FETCH_HEAD`, and `git commit` cannot create `.git/index.lock`. The CF-I03 workspace changes are controlled and pass local checks, but cannot become an immutable artifact or be independently reviewed/integrated until Git metadata is writable or the repository channel publishes the controlled changes.
+
+Recovery attempted: remote fetch and commit retry. Next action is to restore writable Git metadata, commit CF-I03, then run the required independent Critic and bounded integration review.
+
+Stop and set `resume_authorized=false` for the material Git metadata blocker. No Human Gate is being requested; this is a technical/runtime blocker.
 
 ## STOP CONDITION
 

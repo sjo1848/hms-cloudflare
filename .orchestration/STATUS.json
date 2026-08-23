@@ -2,25 +2,30 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "BUILD",
-  "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": true,
+  "runtime_status": "BLOCKED",
+  "resume_authorized": false,
   "active_task": "CF-I03",
   "last_completed_task": "CF-RUNTIME-AUTOMATION-001",
   "last_completed_head": "08af1ffda02447e53924345d900fa5f91c266765",
-  "next_action": "CREATE_CF_I03_TASK_CONTRACT_AND_EXECUTE",
-  "stop_reason": "Routine CF-I03 continuation authorized after runtime automation PASS and successful local fail-close probe.",
+  "next_action": "RESTORE_WRITABLE_GIT_METADATA_THEN_COMMIT_CF_I03_AND_RUN_INDEPENDENT_CRITIC",
+  "stop_reason": "Git cannot create .git/index.lock because repository metadata is read-only; immutable artifact commit and required independent review cannot proceed.",
   "event": {
-    "seq": 3,
-    "id": "CF-I03@START",
-    "type": "ROUTINE_RESUME_AUTHORIZED"
+    "seq": 5,
+    "id": "CF-I03@BLOCKED",
+    "type": "TECHNICAL_BLOCKER_GIT_METADATA_READ_ONLY"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": "400ca30e40362dda28e5b81fcdd8f169d971caf0",
     "last_verdict": "PASS"
   },
   "human_gate": null,
-  "blocker": null,
+  "blocker": {
+    "code": "GIT_METADATA_READ_ONLY",
+    "message": "git fetch cannot write .git/FETCH_HEAD and git commit cannot create .git/index.lock in this runtime.",
+    "recovery_attempts": ["git fetch origin", "git commit -m 'feat: implement CF-I03 bookings and room-night protection'"],
+    "required_resolution": "Provide a runtime with writable .git metadata or commit/publish the controlled workspace changes through the repository channel."
+  },
   "cost_guard": {
     "target": "$0/month / Cloudflare Free",
     "paid_transition_requires_human_gate": true
