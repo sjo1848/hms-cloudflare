@@ -44,6 +44,12 @@ Conversation history is supporting context only and is never the sole source of 
 - no paid Cloudflare plan, paid D1 transition or material recurring-cost increase may be activated without a separate Human Gate;
 - critical atomic workflows stay inside the relevant hotel operational D1.
 
+### CF-UX-PARITY-001 — APPROVED
+
+- Cloudflare is a technical migration of the accepted HMS product, not a product redesign.
+- Required source UX journeys and responsive behavior remain binding across CF-I04 and later increments.
+- Any material UX departure requires explicit classification and the appropriate Human Gate; no such departure is authorized here.
+
 ### PM-AUTONOMY-001 — APPROVED
 
 - Human = Product/Risk Authority; the Human decides legitimate Human Gates and Product Acceptance, not routine technical work.
@@ -133,6 +139,7 @@ Non-blocking migration note: `0004_booking_claim_fk.sql` uses `PRAGMA foreign_ke
 Target increment: Reception Lifecycle.
 
 Task Contract: `.orchestration/contracts/CF-I04.md`.
+Binding UX decision: `.orchestration/decisions/CF-UX-PARITY-001.md`.
 Reviewed implementation artifact: `32b5070dbd80b4b4d3667fe45573f8851cb60a7c`.
 Repaired implementation artifact: `88c8361bae2148f682947bba1976a41404db9212` on `main`.
 Published pre-review state: `855d0515716949284309da000e99c8037a113b27`.
