@@ -8,17 +8,17 @@
   "work_branch": "runtime/cf-i03-rework-6",
   "last_completed_task": "CF-I03-REWORK-CYCLE-2-IMPLEMENTATION",
   "last_completed_head": "900054ad49d9c401ffe261a88dcd73cf9d1b94cb",
-  "next_action": "PUBLISH_RUNTIME_CF_I03_REWORK_BRANCH_THEN_CHATGPT_INDEPENDENT_REVIEW",
-  "stop_reason": "CF-I03 cycle-2 P1 rework and local validation are complete. Stop at the immutable-artifact boundary; independent review is required.",
+  "next_action": "PUBLISH_CF_I03_REWORK_3_ARTIFACT_THEN_CHATGPT_INDEPENDENT_REVIEW",
+  "stop_reason": "CF-I03 rework findings are repaired and adversarial local D1/API evidence is complete; stop at the immutable-artifact and Independent Critic boundary.",
   "event": {
-    "seq": 11,
-    "id": "CF-I03@REWORK-2-PUBLISHED",
-    "type": "IMMUTABLE_ARTIFACT_PUBLISHED"
+    "seq": 13,
+    "id": "CF-I03@REWORK-3-READY",
+    "type": "IMMUTABLE_PUBLICATION_REQUIRED"
   },
   "external_review": {
     "required": true,
     "last_audited_head": "runtime/cf-i03-rework-6",
-    "last_verdict": "REWORK_P1_ATOMIC_HOLD_BOOKING_AND_CLAIM_REPLACEMENT"
+    "last_verdict": "REWORK_SCHEMA_CLAIMS_REPLACEMENT_EVIDENCE"
   },
   "human_gate": null,
   "blocker": null,
