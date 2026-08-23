@@ -109,6 +109,8 @@ Independent Critic record: `.orchestration/reviews/CF-I03-REWORK-4-CRITIC.md`.
 Critic verdict: `PASS`.
 Human Gate: `NONE`.
 
+Runtime capability record: `RUNTIME_CAPABILITY_FALLBACK` — the visible Codex adapter did not expose separate specialist/subagent execution capability, so no false multiagency result is claimed. The bounded implementation and adversarial validation were executed in this runtime, with the independent Critic boundary preserved.
+
 ### Prior review input — 8 findings
 
 The first review found 4 P1 + 4 P2 issues: blank notes, non-atomic hold/booking exclusion, missing date-scoped availability UI, cancelled-booking resurrection, missing detail/edit UI, unsafe derived integer total, unavailable room acceptance, and unbounded list query.
