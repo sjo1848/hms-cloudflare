@@ -115,7 +115,8 @@ export function createInventoryRoutes(): InventoryApp {
     const rows = await context.get("operationalDatabase").prepare(
       `SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents
        FROM rooms AS r
-       WHERE NOT EXISTS (
+       WHERE r.status = 'AVAILABLE'
+       AND NOT EXISTS (
          SELECT 1 FROM room_holds AS h
          WHERE h.room_id = r.id AND h.start_date < ?2 AND h.end_date > ?1
        )
@@ -220,6 +221,9 @@ export function createInventoryRoutes(): InventoryApp {
        WHERE r.id = ?8 AND NOT EXISTS (
          SELECT 1 FROM room_holds AS h
          WHERE h.room_id = ?8 AND h.start_date < ?3 AND h.end_date > ?2
+       ) AND NOT EXISTS (
+         SELECT 1 FROM room_inventory_nights AS n
+         WHERE n.room_id = ?8 AND n.stay_date >= ?2 AND n.stay_date < ?3
        )
        RETURNING id, room_id, start_date, end_date, hold_type, reason, created_by_user_id, created_at`,
     ).bind(id, range.start, range.end, holdType, reason, context.get("identity").subject, new Date().toISOString(), roomId).first<HoldRow>();
@@ -250,6 +254,9 @@ export function createInventoryRoutes(): InventoryApp {
        WHERE id = ?1 AND room_id = ?2 AND NOT EXISTS (
          SELECT 1 FROM room_holds AS h
          WHERE h.room_id = ?2 AND h.id <> ?1 AND h.start_date < ?4 AND h.end_date > ?3
+       ) AND NOT EXISTS (
+         SELECT 1 FROM room_inventory_nights AS n
+         WHERE n.room_id = ?2 AND n.stay_date >= ?3 AND n.stay_date < ?4
        )
        RETURNING id, room_id, start_date, end_date, hold_type, reason, created_by_user_id, created_at`,
     ).bind(holdId, roomId, range.start, range.end, holdType, reason).first<HoldRow>();

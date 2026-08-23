@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I02 PASS / RUNTIME GIT HANDOFF PASS+PROBED / CF-I03 REWORK CYCLE 2 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 INDEPENDENT CRITIC PASS / CLEAN INTEGRATION IN PROGRESS`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -95,22 +95,28 @@ Conversation history is supporting context only and is never the sole source of 
 
 ## CF-I03
 
-Status: `REWORK CYCLE 2 AUTHORIZED / SAME RUNTIME BRANCH`.
+Status: `PASS / INDEPENDENT CRITIC COMPLETE / CLEAN INTEGRATION IN PROGRESS`.
 
 Base product branch: `cf-i03-bookings@834e4a2aa3ec37aac036dc0273b15e6abf5c7d81`.
 Original review PR: #4.
 Authorized runtime rework branch: `runtime/cf-i03-rework-6`.
 Task Contract: `.orchestration/contracts/CF-I03.md` on the work branch.
 
+Accepted implementation artifact: `65ed1e5710a20af97d183f04364b5aa7b605a74a` on `runtime/cf-i03-rework-6`.
+
+Independent Critic record: `.orchestration/reviews/CF-I03-REWORK-4-CRITIC.md`.
+Critic verdict: `PASS`.
+Human Gate: `NONE`.
+
 ### Prior review input — 8 findings
 
 The first review found 4 P1 + 4 P2 issues: blank notes, non-atomic hold/booking exclusion, missing date-scoped availability UI, cancelled-booking resurrection, missing detail/edit UI, unsafe derived integer total, unavailable room acceptance, and unbounded list query.
 
-### ChatGPT Independent Critic — current runtime artifact
+### ChatGPT Independent Critic — resolved runtime artifact
 
-Verdict: `REWORK`.
+Verdict: `PASS` after bounded rework. The accepted artifact includes the booking claim FK, guarded PATCH update, executable D1/API regressions and persisted Playwright evidence.
 
-Material findings that still prevent PASS:
+Previously reported findings, now resolved in the accepted artifact:
 
 1. **P1 — hold/booking exclusion remains non-atomic in the hold mutation direction.** `POST /rooms/:id/holds` and `PATCH /rooms/:id/holds/:hold_id` still only check overlap against `room_holds`; neither checks `room_inventory_nights`. A hold can therefore be created or moved onto nights already claimed by a confirmed booking. This violates the accepted shared exclusion invariant and leaves availability semantically inconsistent.
 
@@ -134,15 +140,13 @@ None.
 
 ## BLOCKERS
 
-None. CF-I03 is in bounded technical rework.
+None. CF-I03 has a fresh Independent Critic PASS; only clean integration remains.
 
 ## NEXT AUTHORIZED ACTION
 
-1. Canonical `STATUS.json` authorizes `CF-I03@REWORK-2` on the exact existing branch `runtime/cf-i03-rework-6`.
-2. Codex fixes the three P1 findings above within CF-I03 scope and runs focused regression tests for hold-vs-booking conflicts, booking room/date edits, claim release/replacement, and half-open availability.
-3. Host Git bridge publishes the immutable repaired artifact on the same runtime branch.
-4. ChatGPT performs a fresh Independent Critic on the exact new head without `@codex review`.
-5. Continue bounded rework autonomously until PASS or a legitimate stop condition.
+1. Validate the clean integration of accepted CF-I03 product/schema/test/evidence changes on `integration/cf-i03-clean`.
+2. Integrate the validated candidate into current `main` after exact-head verification.
+3. Reconcile canonical state and derive/authorize CF-I04 under a fresh Task Contract.
 
 ## STOP CONDITION
 
