@@ -26,19 +26,29 @@ function requireCapability(context: Context<{ Bindings: Env; Variables: ApiVaria
 
 function nights(start: string, end: string): string[] {
   const result: string[] = [];
-  for (let cursor = new Date(`${start}T00:00:00.000Z`); cursor < new Date(`${end}T00:00:00.000Z`); cursor.setUTCDate(cursor.getUTCDate() + 1)) {
-    result.push(cursor.toISOString().slice(0, 10));
-  }
+  for (let cursor = new Date(`${start}T00:00:00.000Z`); cursor < new Date(`${end}T00:00:00.000Z`); cursor.setUTCDate(cursor.getUTCDate() + 1)) result.push(cursor.toISOString().slice(0, 10));
   return result;
+}
+
+function optionalNotes(value: unknown, current: string | null = null): string | null {
+  if (value == null) return current;
+  if (typeof value !== "string" || value.trim().length > 500) throw ApiError.badRequest("notes length is invalid");
+  const normalized = value.trim();
+  return normalized || null;
+}
+
+function totalCents(priceCents: number, stayNights: number): number {
+  const total = priceCents * stayNights;
+  if (!Number.isSafeInteger(total)) throw ApiError.badRequest("booking total exceeds the supported integer range");
+  return total;
 }
 
 function view(row: BookingRow, hotelId: string) {
   return {
-    id: row.id, hotel_id: hotelId, guest_id: row.guest_id, guest_name: row.guest_name,
-    guest_email: row.guest_email, room_id: row.room_id, room_number: row.room_number,
-    room_type: row.room_type, check_in: row.check_in, check_out: row.check_out,
-    status: row.status === "CONFIRMED" ? "Confirmed" : "Cancelled",
-    total_cents: row.total_cents, notes: row.notes, created_at: row.created_at, updated_at: row.updated_at,
+    id: row.id, hotel_id: hotelId, guest_id: row.guest_id, guest_name: row.guest_name, guest_email: row.guest_email,
+    room_id: row.room_id, room_number: row.room_number, room_type: row.room_type, check_in: row.check_in, check_out: row.check_out,
+    status: row.status === "CONFIRMED" ? "Confirmed" : "Cancelled", total_cents: row.total_cents, notes: row.notes,
+    created_at: row.created_at, updated_at: row.updated_at,
   };
 }
 
@@ -51,21 +61,10 @@ async function findBooking(database: Db, id: string): Promise<BookingRow | null>
   return database.prepare(`${bookingSelect} WHERE b.id = ?1`).bind(id).first<BookingRow>();
 }
 
-async function validateReferences(database: Db, guestId: string, roomId: string, range: { start: string; end: string }): Promise<{ priceCents: number }> {
-  const refs = await database.prepare(
-    `SELECT r.price_cents FROM rooms AS r JOIN guests AS g ON g.id = ?1
-     WHERE r.id = ?2 AND NOT EXISTS (
-       SELECT 1 FROM room_holds AS h WHERE h.room_id = r.id AND h.start_date < ?4 AND h.end_date > ?3
-     )`,
-  ).bind(guestId, roomId, range.start, range.end).first<{ price_cents: number }>();
-  if (!refs) throw ApiError.conflict("Guest, room or availability is invalid");
-  return { priceCents: refs.price_cents };
-}
-
-function claimStatements(database: Db, bookingId: string, roomId: string, claimNights: string[]) {
+function claimStatements(database: Db, bookingId: string, roomId: string, claimNights: string[], start: string, end: string) {
   return claimNights.map((stayDate) => database.prepare(
-    "INSERT INTO room_inventory_nights (room_id, stay_date, booking_id) VALUES (?1, ?2, ?3)",
-  ).bind(roomId, stayDate, bookingId));
+    "INSERT INTO room_inventory_nights (room_id, stay_date, booking_id) SELECT ?1, ?2, ?3 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?3 AND room_id = ?2 AND check_in = ?4 AND check_out = ?5 AND status = 'CONFIRMED')",
+  ).bind(roomId, stayDate, bookingId, start, end));
 }
 
 export function createBookingRoutes(): BookingApp {
@@ -74,85 +73,78 @@ export function createBookingRoutes(): BookingApp {
   app.get("/bookings", async (context) => {
     requireCapability(context, "bookings.read");
     const status = context.req.query("status");
-    const query = `${bookingSelect}${status ? " WHERE b.status = ?1" : ""} ORDER BY b.check_in, b.created_at DESC`;
-    const statement = status ? context.get("operationalDatabase").prepare(query).bind(status) : context.get("operationalDatabase").prepare(query);
-    const rows = await statement.all<BookingRow>();
+    if (status && !["CONFIRMED", "CANCELLED"].includes(status.toUpperCase())) throw ApiError.badRequest("status is invalid");
+    const start = context.req.query("start"); const end = context.req.query("end");
+    const range = start || end ? dateRange(start, end) : null;
+    const limitInput = context.req.query("limit"); const limit = limitInput == null ? 100 : Number(limitInput);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw ApiError.badRequest("limit must be an integer from 1 to 100");
+    const conditions: string[] = []; const values: string[] = [];
+    if (status) { conditions.push("b.status = ?"); values.push(status.toUpperCase()); }
+    if (range) { conditions.push("b.check_in < ?"); values.push(range.end); conditions.push("b.check_out > ?"); values.push(range.start); }
+    const where = conditions.length ? ` WHERE ${conditions.join(" AND ")}` : "";
+    const statement = context.get("operationalDatabase").prepare(`${bookingSelect}${where} ORDER BY b.check_in, b.created_at DESC LIMIT ${limit}`);
+    const rows = values.length ? await statement.bind(...values).all<BookingRow>() : await statement.all<BookingRow>();
     return context.json(rows.results.map((row) => view(row, context.get("membership").hotelId)));
   });
 
   app.post("/bookings", async (context) => {
     requireCapability(context, "bookings.write");
     const body = await jsonBody<Record<string, unknown>>(context.req.raw);
-    const guestId = requiredText(body.guest_id, "guest_id", 1, 100);
-    const roomId = requiredText(body.room_id, "room_id", 1, 100);
-    const range = dateRange(body.check_in, body.check_out);
-    const notes = body.notes == null ? null : requiredText(body.notes, "notes", 1, 500);
-    const refs = await validateReferences(context.get("operationalDatabase"), guestId, roomId, range);
-    const id = crypto.randomUUID();
-    const now = new Date().toISOString();
-    const totalCents = refs.priceCents * nights(range.start, range.end).length;
+    const guestId = requiredText(body.guest_id, "guest_id", 1, 100); const roomId = requiredText(body.room_id, "room_id", 1, 100);
+    const range = dateRange(body.check_in, body.check_out); const notes = optionalNotes(body.notes); const database = context.get("operationalDatabase");
+    const id = crypto.randomUUID(); const now = new Date().toISOString(); const claimNights = nights(range.start, range.end);
+    const price = await database.prepare("SELECT price_cents FROM rooms WHERE id = ?1").bind(roomId).first<{ price_cents: number }>();
+    if (!price) throw ApiError.conflict("Guest, room or availability is invalid");
+    const total = totalCents(price.price_cents, claimNights.length);
     try {
-      await context.get("operationalDatabase").batch([
-        context.get("operationalDatabase").prepare(
-          `INSERT INTO bookings (id, guest_id, room_id, check_in, check_out, status, total_cents, notes, created_at, updated_at)
-           VALUES (?1, ?2, ?3, ?4, ?5, 'CONFIRMED', ?6, ?7, ?8, ?8)`,
-        ).bind(id, guestId, roomId, range.start, range.end, totalCents, notes, now),
-        ...claimStatements(context.get("operationalDatabase"), id, roomId, nights(range.start, range.end)),
+      await database.batch([
+        database.prepare(`INSERT INTO bookings (id, guest_id, room_id, check_in, check_out, status, total_cents, notes, created_at, updated_at)
+          SELECT ?1, g.id, r.id, ?4, ?5, 'CONFIRMED', ?6, ?7, ?8, ?8 FROM guests AS g JOIN rooms AS r ON r.id = ?3
+          WHERE g.id = ?2 AND r.status = 'AVAILABLE' AND NOT EXISTS (SELECT 1 FROM room_holds AS h WHERE h.room_id = r.id AND h.start_date < ?5 AND h.end_date > ?4)`).bind(id, guestId, roomId, range.start, range.end, total, notes, now),
+        ...claimStatements(database, id, roomId, claimNights, range.start, range.end),
       ]);
-    } catch {
-      throw ApiError.conflict("Room is unavailable for one or more nights");
-    }
-    const row = await findBooking(context.get("operationalDatabase"), id);
-    if (!row) throw ApiError.notFound("Booking was not created");
+    } catch { throw ApiError.conflict("Room is unavailable for one or more nights"); }
+    const row = await findBooking(database, id); if (!row) throw ApiError.conflict("Guest, room or availability is invalid");
     return context.json(view(row, context.get("membership").hotelId), 201);
   });
 
   app.get("/bookings/:id", async (context) => {
-    requireCapability(context, "bookings.read");
-    const row = await findBooking(context.get("operationalDatabase"), context.req.param("id"));
-    if (!row) throw ApiError.notFound("Booking not found");
-    return context.json(view(row, context.get("membership").hotelId));
+    requireCapability(context, "bookings.read"); const row = await findBooking(context.get("operationalDatabase"), context.req.param("id"));
+    if (!row) throw ApiError.notFound("Booking not found"); return context.json(view(row, context.get("membership").hotelId));
   });
 
   app.patch("/bookings/:id", async (context) => {
-    requireCapability(context, "bookings.write");
-    const database = context.get("operationalDatabase");
-    const id = context.req.param("id");
-    const current = await findBooking(database, id);
-    if (!current) throw ApiError.notFound("Booking not found");
+    requireCapability(context, "bookings.write"); const database = context.get("operationalDatabase"); const id = context.req.param("id");
+    const current = await findBooking(database, id); if (!current) throw ApiError.notFound("Booking not found");
     const body = await jsonBody<Record<string, unknown>>(context.req.raw);
-    const status = body.status == null ? current.status : requiredText(body.status, "status", 1, 20).toUpperCase();
-    if (!["CONFIRMED", "CANCELLED"].includes(status)) throw ApiError.badRequest("Only confirmation or cancellation is supported in this increment");
-    if (status === "CANCELLED") {
+    const requestedStatus = body.status == null ? null : requiredText(body.status, "status", 1, 20).toUpperCase();
+    if (requestedStatus && requestedStatus !== "CANCELLED") throw ApiError.badRequest("Only cancellation is supported as a booking status update");
+    if (requestedStatus === "CANCELLED") {
+      if (current.status !== "CONFIRMED") throw ApiError.conflict("Cancelled bookings cannot be changed");
       await database.batch([
-        database.prepare("UPDATE bookings SET status = 'CANCELLED', updated_at = ?2 WHERE id = ?1 AND status <> 'CANCELLED'").bind(id, new Date().toISOString()),
+        database.prepare("UPDATE bookings SET status = 'CANCELLED', updated_at = ?2 WHERE id = ?1 AND status = 'CONFIRMED'").bind(id, new Date().toISOString()),
         database.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1").bind(id),
       ]);
     } else {
+      if (current.status !== "CONFIRMED") throw ApiError.conflict("Cancelled bookings cannot be revived");
       const guestId = body.guest_id == null ? current.guest_id : requiredText(body.guest_id, "guest_id", 1, 100);
       const roomId = body.room_id == null ? current.room_id : requiredText(body.room_id, "room_id", 1, 100);
-      const range = dateRange(body.check_in ?? current.check_in, body.check_out ?? current.check_out);
-      const notes = body.notes == null ? current.notes : requiredText(body.notes, "notes", 1, 500);
-      const refs = await validateReferences(database, guestId, roomId, range);
-      const claimNights = nights(range.start, range.end);
-      const now = new Date().toISOString();
+      const range = dateRange(body.check_in ?? current.check_in, body.check_out ?? current.check_out); const notes = optionalNotes(body.notes, current.notes);
+      const claimNights = nights(range.start, range.end); const price = await database.prepare("SELECT price_cents FROM rooms WHERE id = ?1").bind(roomId).first<{ price_cents: number }>();
+      if (!price) throw ApiError.conflict("Guest, room or availability is invalid");
+      const total = totalCents(price.price_cents, claimNights.length); const now = new Date().toISOString();
       try {
         await database.batch([
-          database.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1").bind(id),
-          database.prepare(
-            `UPDATE bookings SET guest_id = ?2, room_id = ?3, check_in = ?4, check_out = ?5, status = 'CONFIRMED', total_cents = ?6, notes = ?7, updated_at = ?8 WHERE id = ?1`,
-          ).bind(id, guestId, roomId, range.start, range.end, refs.priceCents * claimNights.length, notes, now),
-          ...claimStatements(database, id, roomId, claimNights),
+          database.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND room_id = ?2 AND check_in = ?3 AND check_out = ?4 AND status = 'CONFIRMED')").bind(id, roomId, range.start, range.end),
+          database.prepare(`UPDATE bookings SET guest_id = ?2, room_id = ?3, check_in = ?4, check_out = ?5, total_cents = ?6, notes = ?7, updated_at = ?8
+            WHERE id = ?1 AND status = 'CONFIRMED' AND EXISTS (SELECT 1 FROM guests WHERE id = ?2) AND EXISTS (SELECT 1 FROM rooms WHERE id = ?3 AND status = 'AVAILABLE')
+            AND NOT EXISTS (SELECT 1 FROM room_holds WHERE room_id = ?3 AND start_date < ?5 AND end_date > ?4)`).bind(id, guestId, roomId, range.start, range.end, total, notes, now),
+          ...claimStatements(database, id, roomId, claimNights, range.start, range.end),
         ]);
-      } catch {
-        throw ApiError.conflict("Room is unavailable for one or more nights");
-      }
+      } catch { throw ApiError.conflict("Room is unavailable for one or more nights"); }
     }
-    const row = await findBooking(database, id);
-    if (!row) throw ApiError.notFound("Booking not found");
-    return context.json(view(row, context.get("membership").hotelId));
+    const row = await findBooking(database, id); if (!row) throw ApiError.notFound("Booking not found"); return context.json(view(row, context.get("membership").hotelId));
   });
-
   return app;
 }
 

@@ -2,20 +2,21 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "BUILD",
-  "runtime_status": "HUMAN_ACTION_REQUIRED",
+  "runtime_status": "READY_TO_RESUME",
   "resume_authorized": false,
-  "active_task": "CF-RUNTIME-GIT-HANDOFF-002",
+  "active_task": "CF-I03",
+  "work_branch": "runtime/cf-i03-rework-6",
   "last_completed_task": "CF-RUNTIME-GIT-HANDOFF-002",
   "last_completed_head": "a2f8a7eb760834b7868368ebe9c793a0fc2f188b",
-  "next_action": "LOCAL_PULL_AND_CONTROLLED_RUNTIME_PROBE",
-  "stop_reason": "Runtime Git handoff repair passed ChatGPT Independent Critic and merged. Local workstation must pull main and run one controlled fail-close probe before unattended CF-I03 rework is authorized.",
+  "next_action": "HOST_PUBLISH_RUNTIME_CF_I03_REWORK_BRANCH_THEN_CHATGPT_INDEPENDENT_REVIEW",
+  "stop_reason": "CF-I03 REWORK-1 implementation and local validation are complete. Stop at the immutable-artifact boundary; the host must create/push the exact artifact before independent review.",
   "event": {
-    "seq": 5,
-    "id": "CF-RUNTIME-GIT-HANDOFF-002@LOCAL-PROBE",
-    "type": "HUMAN_ACTION_REQUIRED"
+    "seq": 8,
+    "id": "CF-I03@REWORK-1-READY",
+    "type": "IMMUTABLE_PUBLICATION_REQUIRED"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": "f3f1565f15b69fb2b9a0046fc4ca0d72b31fdd28",
     "last_verdict": "PASS"
   },

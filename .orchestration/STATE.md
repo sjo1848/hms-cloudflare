@@ -97,6 +97,12 @@ Conversation history is supporting context only and is never the sole source of 
 
 Status: `REWORK AUTHORIZED / PR #4 BASE ARTIFACT / RUNTIME REWORK BRANCH`.
 
+Runtime execution: `READY_TO_RESUME` with `resume_authorized=false` — event `CF-I03@REWORK-1-READY` (seq 8), active task `CF-I03`, on `runtime/cf-i03-rework-6`. The branch-local status was reconciled to canonical `origin/main` dispatch authorization before implementation. External review is required after immutable publication.
+
+CF-I03 REWORK-1 implementation evidence: API/domain changes repair blank optional notes, atomic hold/booking validation and claim replacement, safe integer totals, unavailable-room rejection, cancelled-booking revival, and bounded booking queries. The `/bookings` UI now uses date-scoped availability and provides detail/edit interaction. Local validation passed: `npm run typecheck`, `npm run test` (14/14), `npm run web:build`, `npm run types:check`, `npm run wrangler:dry-run`, and `git diff --check`. Wrangler dry-run emitted the known read-only `.wrangler` log warning but completed both dry-runs.
+
+Stop reason: substantive implementation is ready for host-created immutable publication. Do not invent a commit head. Next: host publishes `runtime/cf-i03-rework-6`, then ChatGPT independently reviews that exact artifact against CF-I03.
+
 Base product branch: `cf-i03-bookings@834e4a2aa3ec37aac036dc0273b15e6abf5c7d81`.
 Original review PR: #4.
 Authorized runtime rework branch: `runtime/cf-i03-rework-6`, created from the exact reviewed CF-I03 base artifact.

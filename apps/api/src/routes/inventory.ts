@@ -115,7 +115,8 @@ export function createInventoryRoutes(): InventoryApp {
     const rows = await context.get("operationalDatabase").prepare(
       `SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents
        FROM rooms AS r
-       WHERE NOT EXISTS (
+       WHERE r.status = 'AVAILABLE'
+       AND NOT EXISTS (
          SELECT 1 FROM room_holds AS h
          WHERE h.room_id = r.id AND h.start_date < ?2 AND h.end_date > ?1
        )
