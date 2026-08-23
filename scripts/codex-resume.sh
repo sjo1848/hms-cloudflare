@@ -61,6 +61,8 @@ if type(data.get("resume_authorized")) is not bool:
 external = data.get("external_review")
 if not isinstance(external, dict) or type(external.get("required")) is not bool:
     fail("external_review.required must be boolean")
+if "human_gate" not in data or "blocker" not in data:
+    fail("human_gate and blocker keys must be present")
 event = data.get("event")
 if not isinstance(event, dict):
     fail("event must be object")
@@ -74,8 +76,8 @@ if not isinstance(data.get("next_action"), str) or not data["next_action"]:
 print(data["runtime_status"])
 print("true" if data["resume_authorized"] else "false")
 print("true" if external["required"] else "false")
-print("null" if data.get("human_gate") is None else "set")
-print("null" if data.get("blocker") is None else "set")
+print("null" if data["human_gate"] is None else "set")
+print("null" if data["blocker"] is None else "set")
 print(event["id"])
 print(str(event["seq"]))
 PY
