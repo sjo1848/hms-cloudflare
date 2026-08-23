@@ -16,7 +16,7 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - Source baseline: `main@4df56a6217caab611f2f5fcbd98bde8386bb5629`
 - Target repository: `sjo1848/hms-cloudflare`
 - Durable governance folder in Drive: `HMS Cloudflare`
-- Durable governance docs: `HMS-CLOUDFLARE — Project State & Orchestration`; `HMS-CLOUDFLARE — Migration Design Package v0.1`; `REFERENCE — PROJECT-METHOD-TRANSFER-PACK-v0.1`
+- Durable governance docs: `HMS-CLOUDFLARE — Project State & Orchestration`; `HMS-CLOUDFLARE — Migration Design Package v0.1`; `HMS-CLOUDFLARE — Codex Runtime Bootstrap`; `REFERENCE — PROJECT-METHOD-TRANSFER-PACK-v0.1`
 - This file: portable runtime snapshot, not permission to override newer explicit Human Gate decisions.
 
 ## ACTIVE DECISIONS
@@ -49,6 +49,14 @@ Decision choices documented in the Design Package:
 
 Do not infer the human choice. The gate blocks final D1 tenancy/schema architecture and `CF-I01` BUILD.
 
+## BOOTSTRAP STATUS
+
+- Branch: `chore/method-bootstrap`
+- PR: `#1 — chore: bootstrap Project Method for Codex`
+- External-controller bootstrap commit: `ca5f145f7e89d539075baee8f97d00ff309b8fa4`
+- Bootstrap is **not independently PASS yet**.
+- Codex must first execute `CF-BOOTSTRAP-REVIEW-001` as an independent Critic. If PASS, integrate the bootstrap; if REWORK, repair and send through a fresh independent Critic before integration.
+
 ## CRITICAL INVARIANTS
 
 - Tenant isolation.
@@ -63,8 +71,14 @@ Do not infer the human choice. The gate blocks final D1 tenancy/schema architect
 
 ## ACTIVE / READY TASKS
 
-### CF-SOURCE-CONTRACT-001
+### CF-BOOTSTRAP-REVIEW-001
 Status: `READY`
+Contract: `.orchestration/contracts/CF-BOOTSTRAP-REVIEW-001.md`
+Purpose: independent review of Project Method/Codex bootstrap PR #1 because the external controller that authored it cannot approve its own work.
+Handoff on PASS: integrate PR #1, update state, continue automatically to `CF-SOURCE-CONTRACT-001`.
+
+### CF-SOURCE-CONTRACT-001
+Status: `READY_AFTER_BOOTSTRAP_PASS`
 Contract: `.orchestration/contracts/CF-SOURCE-CONTRACT-001.md`
 Purpose: build a durable source API/product contract inventory and representative acceptance-journey map from the pinned HMS baseline. This work is independent of `CF-DATA-001`.
 
@@ -97,16 +111,16 @@ Purpose: platform foundation BUILD under an approved Task Contract.
 
 ## NEXT AUTHORIZED ACTION
 
-Execute `CF-SOURCE-CONTRACT-001`:
-1. pre-flight;
-2. source inventory;
-3. durable artifact;
-4. independent Critic;
-5. bounded REWORK if needed;
-6. update this state with artifact ref/verdict/evidence.
+Execute `CF-BOOTSTRAP-REVIEW-001` as an independent review of PR #1:
+1. pre-flight and artifact identity check;
+2. compare bootstrap against Project Method/Transfer Pack/current Drive state;
+3. verify no product BUILD or hidden `CF-DATA-001` decision;
+4. emit `PASS | REWORK | HUMAN_GATE | CONTRACT_DEFECT`;
+5. persist review evidence;
+6. on PASS integrate bootstrap and immediately execute `CF-SOURCE-CONTRACT-001`.
 
 Continue automatically until the only remaining next action requires `CF-DATA-001` or another legitimate Human Gate/material blocker.
 
 ## STOP CONDITION
 
-If `CF-SOURCE-CONTRACT-001` is independently PASS and no other independent DESIGN task remains, transition this runtime to `WAITING_HUMAN_GATE: CF-DATA-001` and provide one concise gate handoff. Do not begin `CF-I01` BUILD before the gate is resolved and DESIGN exit criteria pass.
+If bootstrap review passes and `CF-SOURCE-CONTRACT-001` later receives independent PASS with no other independent DESIGN task remaining, transition to `WAITING_HUMAN_GATE: CF-DATA-001` and provide one concise gate handoff. Do not begin `CF-I01` BUILD before the gate is resolved and DESIGN exit criteria pass.

@@ -17,6 +17,7 @@ You are the runtime Orchestrator for the HMS Cloudflare migration. Your objectiv
 The durable Drive project folder is `HMS Cloudflare`. Its governance documents are:
 - `HMS-CLOUDFLARE — Project State & Orchestration`
 - `HMS-CLOUDFLARE — Migration Design Package v0.1`
+- `HMS-CLOUDFLARE — Codex Runtime Bootstrap`
 - `REFERENCE — PROJECT-METHOD-TRANSFER-PACK-v0.1`
 
 If Drive is not available to this runtime, `.orchestration/STATE.md` is the portable current-state snapshot. Do not rely on chat history.
@@ -66,10 +67,18 @@ Rules:
 
 ## Current authorized work
 
-`CF-DATA-001` blocks final D1 tenancy/schema architecture and `CF-I01` BUILD, but it does **not** block source contract inventory and acceptance-journey mapping.
+The bootstrap itself was prepared by the external controller and **must not self-approve**.
 
-The currently READY contract is:
+First READY contract:
+
+`.orchestration/contracts/CF-BOOTSTRAP-REVIEW-001.md`
+
+Execute this as an independent Critic of PR #1. If PASS, integrate the bootstrap through the normal PR path, update `.orchestration/STATE.md`, then automatically execute:
 
 `.orchestration/contracts/CF-SOURCE-CONTRACT-001.md`
 
-Execute it autonomously, independently criticise it, persist the verdict/evidence, update `.orchestration/STATE.md`, then stop if the only remaining dependency is `CF-DATA-001`.
+If bootstrap review returns REWORK, repair within contract scope and route the repaired artifact through a fresh logically independent Critic before integration.
+
+`CF-DATA-001` blocks final D1 tenancy/schema architecture and `CF-I01` BUILD, but does **not** block source contract inventory and acceptance-journey mapping.
+
+After `CF-SOURCE-CONTRACT-001`, persist verdict/evidence and continue independent DESIGN work. Stop only when the remaining next action genuinely depends on `CF-DATA-001` or another legitimate Human Gate/material blocker.
