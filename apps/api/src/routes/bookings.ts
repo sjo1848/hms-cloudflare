@@ -63,7 +63,7 @@ async function findBooking(database: Db, id: string): Promise<BookingRow | null>
 
 function claimStatements(database: Db, bookingId: string, roomId: string, claimNights: string[], start: string, end: string) {
   return claimNights.map((stayDate) => database.prepare(
-    "INSERT INTO room_inventory_nights (room_id, stay_date, booking_id) SELECT ?1, ?2, ?3 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?3 AND room_id = ?2 AND check_in = ?4 AND check_out = ?5 AND status = 'CONFIRMED')",
+    "INSERT INTO room_inventory_nights (room_id, stay_date, booking_id) SELECT ?1, ?2, ?3 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?3 AND room_id = ?1 AND check_in = ?4 AND check_out = ?5 AND status = 'CONFIRMED')",
   ).bind(roomId, stayDate, bookingId, start, end));
 }
 
@@ -135,7 +135,7 @@ export function createBookingRoutes(): BookingApp {
       const total = totalCents(price.price_cents, claimNights.length); const now = new Date().toISOString();
       try {
         await database.batch([
-          database.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND room_id = ?2 AND check_in = ?3 AND check_out = ?4 AND status = 'CONFIRMED')").bind(id, roomId, range.start, range.end),
+          database.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1").bind(id),
           database.prepare(`UPDATE bookings SET guest_id = ?2, room_id = ?3, check_in = ?4, check_out = ?5, total_cents = ?6, notes = ?7, updated_at = ?8
             WHERE id = ?1 AND status = 'CONFIRMED' AND EXISTS (SELECT 1 FROM guests WHERE id = ?2) AND EXISTS (SELECT 1 FROM rooms WHERE id = ?3 AND status = 'AVAILABLE')
             AND NOT EXISTS (SELECT 1 FROM room_holds WHERE room_id = ?3 AND start_date < ?5 AND end_date > ?4)`).bind(id, guestId, roomId, range.start, range.end, total, notes, now),

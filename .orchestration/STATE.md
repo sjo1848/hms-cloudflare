@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I02 PASS / RUNTIME GIT HANDOFF PASS+PROBED / CF-I03 REWORK AUTHORIZED`
+Phase Status: `CF-I02 PASS / RUNTIME GIT HANDOFF PASS+PROBED / CF-I03 REWORK CYCLE 2 READY FOR REVIEW`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -95,13 +95,15 @@ Conversation history is supporting context only and is never the sole source of 
 
 ## CF-I03
 
-Status: `REWORK AUTHORIZED / PR #4 BASE ARTIFACT / RUNTIME REWORK BRANCH`.
+Status: `REWORK CYCLE 2 IMPLEMENTED / LOCAL VALIDATION PASS / IMMUTABLE PUBLICATION REQUIRED`.
 
-Runtime execution: `READY_TO_RESUME` with `resume_authorized=false` — event `CF-I03@REWORK-1-READY` (seq 8), active task `CF-I03`, on `runtime/cf-i03-rework-6`. The branch-local status was reconciled to canonical `origin/main` dispatch authorization before implementation. External review is required after immutable publication.
+Runtime execution: `READY_TO_RESUME` with `resume_authorized=false` — event `CF-I03@REWORK-2-READY` (seq 9), active task `CF-I03`, on `runtime/cf-i03-rework-6`. Cycle-2 implementation and local validation are complete; external review is required after immutable publication.
 
 CF-I03 REWORK-1 implementation evidence: API/domain changes repair blank optional notes, atomic hold/booking validation and claim replacement, safe integer totals, unavailable-room rejection, cancelled-booking revival, and bounded booking queries. The `/bookings` UI now uses date-scoped availability and provides detail/edit interaction. Local validation passed: `npm run typecheck`, `npm run test` (14/14), `npm run web:build`, `npm run types:check`, `npm run wrangler:dry-run`, and `git diff --check`. Wrangler dry-run emitted the known read-only `.wrangler` log warning but completed both dry-runs.
 
-Stop reason: substantive implementation is ready for host-created immutable publication. Do not invent a commit head. Next: host publishes `runtime/cf-i03-rework-6`, then ChatGPT independently reviews that exact artifact against CF-I03.
+CF-I03 REWORK-2 implementation evidence: hold create/update mutations now reject dates claimed by active bookings; booking edits delete all prior room-night claims before replacing the booking and its claims atomically; claim insertion now guards against the bound `room_id` rather than the stay date. Local validation passed: `npm run check` (typecheck plus 14/14 tests), `npm run web:build`, `npm run types:check`, `npm run wrangler:dry-run`, and `git diff --check`. Wrangler emitted the known read-only `.wrangler` log warning but both dry-runs completed successfully.
+
+Stop reason: substantive CF-I03 cycle-2 changes are ready for host-created immutable publication and ChatGPT Independent Critic review. Codex does not self-PASS the artifact and does not invent a commit head.
 
 Base product branch: `cf-i03-bookings@834e4a2aa3ec37aac036dc0273b15e6abf5c7d81`.
 Original review PR: #4.
@@ -138,12 +140,9 @@ None.
 
 ## NEXT AUTHORIZED ACTION
 
-1. Canonical `STATUS.json` authorizes event `CF-I03@REWORK-1` on `runtime/cf-i03-rework-6`.
-2. systemd launches Codex automatically for CF-I03 bounded implementation/rework only.
-3. Codex repairs the 8 recorded findings and runs local validation under `workspace-write`.
-4. Host Git bridge creates/pushes the immutable artifact on the same `runtime/...` branch.
-5. ChatGPT detects/reviews that exact head against CF-I03 Task Contract, design and evidence without `@codex review`.
-6. Routine bounded REWORK continues autonomously until PASS or a legitimate stop condition.
+1. Host Git bridge creates and pushes the immutable artifact on `runtime/cf-i03-rework-6`; no commit SHA exists yet in this workspace.
+2. ChatGPT independently reviews that exact artifact against the CF-I03 Task Contract, design and evidence without `@codex review`.
+3. Routine bounded REWORK continues autonomously after the review verdict until PASS or a legitimate stop condition.
 
 ## STOP CONDITION
 
