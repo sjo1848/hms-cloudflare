@@ -50,10 +50,11 @@ export function assertBookingUpdateApplied(result: BookingUpdateResult): void {
 }
 
 function view(row: BookingRow, hotelId: string) {
+  const status = ({ CONFIRMED: "Confirmed", CANCELLED: "Cancelled", CHECKED_IN: "CheckedIn", CHECKED_OUT: "CheckedOut" } as Record<string, string>)[row.status] ?? row.status;
   return {
     id: row.id, hotel_id: hotelId, guest_id: row.guest_id, guest_name: row.guest_name, guest_email: row.guest_email,
     room_id: row.room_id, room_number: row.room_number, room_type: row.room_type, check_in: row.check_in, check_out: row.check_out,
-    status: row.status === "CONFIRMED" ? "Confirmed" : "Cancelled", total_cents: row.total_cents, notes: row.notes,
+    status, total_cents: row.total_cents, notes: row.notes,
     created_at: row.created_at, updated_at: row.updated_at,
   };
 }

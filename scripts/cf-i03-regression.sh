@@ -72,4 +72,37 @@ status=$(request -G --data-urlencode start=2026-08-26 --data-urlencode end=2026-
 assert_status "$status" 200
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if (!r.some(x=>x.id==='room-b')) process.exit(1)"
 
-echo "CF-I03 D1/API regression PASS"
+status=$(request -d '{"guest_id":"guest-a","room_id":"room-a","check_in":"2026-09-01","check_out":"2026-09-03"}' "$base/bookings")
+assert_status "$status" 201
+lifecycle_id=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')).id)")
+status=$(request -X POST -d '{"guest_count_confirmed":true,"document_verified":true,"contact_confirmed":true,"stay_confirmed":false}' "$base/bookings/$lifecycle_id/check-in")
+assert_status "$status" 400
+status=$(request -d '{"start_date":"2026-09-01","end_date":"2026-09-03","hold_type":"Other","reason":"QA reassignment hold"}' "$base/rooms/room-b/holds")
+assert_status "$status" 201
+hold_id=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')).id)")
+status=$(request -X POST -d '{"guest_count_confirmed":true,"document_verified":true,"contact_confirmed":true,"stay_confirmed":true}' "$base/bookings/$lifecycle_id/check-in")
+assert_status "$status" 200
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.status!=='CheckedIn'||r.room_status!=='Occupied') process.exit(1)"
+status=$(request -X POST -d '{"room_id":"room-b"}' "$base/bookings/$lifecycle_id/reassign")
+assert_status "$status" 409
+status=$(request "$base/bookings/$lifecycle_id")
+assert_status "$status" 200
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.status!=='CheckedIn'||r.room_id!=='room-a') process.exit(1)"
+status=$(request -X DELETE "$base/rooms/room-b/holds/$hold_id")
+assert_status "$status" 200
+status=$(request -X POST -d '{"room_id":"room-b"}' "$base/bookings/$lifecycle_id/reassign")
+assert_status "$status" 200
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.room_id!=='room-b') process.exit(1)"
+status=$(request -X POST -d '{"payment_policy_accepted":true,"charge_reviewed":true,"release_confirmed":true,"handoff_confirmed":false}' "$base/bookings/$lifecycle_id/check-out")
+assert_status "$status" 400
+status=$(request "$base/bookings/$lifecycle_id")
+assert_status "$status" 200
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.status!=='CheckedIn') process.exit(1)"
+status=$(request -X POST -d '{"payment_policy_accepted":true,"charge_reviewed":true,"release_confirmed":true,"handoff_confirmed":true}' "$base/bookings/$lifecycle_id/check-out")
+assert_status "$status" 200
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.status!=='CheckedOut'||r.room_status!=='Dirty'||!r.housekeeping_handoff) process.exit(1)"
+status=$(request "$base/bookings/$lifecycle_id")
+assert_status "$status" 200
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.status!=='CheckedOut') process.exit(1)"
+
+echo "CF-I03 + CF-I04 lifecycle D1/API regression PASS"
