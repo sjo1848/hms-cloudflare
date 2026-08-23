@@ -5,8 +5,8 @@
 Project: HMS Cloudflare  
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
-Phase: `DESIGN`  
-Phase Status: `DESIGN COMPLETE — CF-I01 READY`
+Phase: `BUILD`
+Phase Status: `CF-I01 ARTIFACT_READY_FOR_INDEPENDENT_CRITIC`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -126,8 +126,12 @@ Objective: inspect the provisional foundation against the accepted Design Packag
 
 ### CF-I01
 
-Status: `READY_AFTER_DESIGN_PASS`
+Status: `ARTIFACT_READY_FOR_INDEPENDENT_CRITIC`
 Contract: `.orchestration/contracts/CF-I01.md`
+Artifact commit: `faeff038d041f6bbbeab8af3dac7f55e26937316`
+Artifacts: `apps/api/**`, `apps/web/**`, `docs/cf-i01-foundation.md`, `.github/workflows/ci.yml`, package/tooling configs.
+Evidence before Critic: `npm test` 7/7 passed; `npm run typecheck` passed; `npm run types:check` passed; `npm run wrangler:dry-run` passed for API and web; local CONTROL_DB and HOTEL_DEMO_DB migrations applied successfully; no remote deploy or paid resource mutation.
+Access hardening: `Cf-Access-Jwt-Assertion` is validated with Access JWKS, issuer and audience; malformed/missing assertions fail closed; local auth is explicit opt-in and disabled in checked-in vars.
 
 Objective: platform foundation BUILD under a formal Task Contract after DESIGN independently passes.
 
@@ -145,11 +149,11 @@ None.
 
 No Human Gate currently blocks DESIGN.
 
-`CF-I01` BUILD is now authorized under `.orchestration/contracts/CF-I01.md`, subject to independent Critic review and the contract invariants.
+`CF-I01` BUILD artifact is persisted and ready for independent Critic review under `.orchestration/contracts/CF-I01.md`.
 
 ## NEXT AUTHORIZED ACTION
 
-Codex, as Runtime Orchestrator, must execute the active `CF-I01` Task Contract after it is persisted, beginning with pre-flight and contextual Specialist work. Every substantive BUILD output requires an independent Critic before integration.
+Execute the independent Critic review for `CF-I01` against artifact commit `faeff038d041f6bbbeab8af3dac7f55e26937316`; persist `.orchestration/reviews/CF-I01-critic.md`, then integrate only after `PASS` or bounded autonomous rework with fresh Critic `PASS`.
 
 Do not ask for routine human confirmation after PASS.
 
