@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I02 PASS / RUNTIME GIT HANDOFF PASS+PROBED / CF-I03 REWORK CYCLE 2 READY FOR REVIEW`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 INDEPENDENT CRITIC PASS / CLEAN INTEGRATION REQUIRED BEFORE CF-I04`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -72,69 +72,46 @@ Conversation history is supporting context only and is never the sole source of 
 
 ### Runtime automation — CF-RUNTIME-AUTOMATION-001
 
-- Status: `PASS / INTEGRATED`.
+- Status: `PASS / INTEGRATED` as an experiment, but unattended execution is not the active operating mode.
 - PR #2 merged at `08af1ffda02447e53924345d900fa5f91c266765`.
-- systemd user dispatcher installed locally.
-- Initial fail-close probe passed.
-- First real dispatch proved `GitHub → systemd → dispatcher → Codex` works without Human relay.
-- Incident found: Codex `workspace-write` could edit workspace but not `.git`, so it could not commit/push CF-I03.
-- Recovered CF-I03 workspace was checkpointed once to `cf-i03-recovery@c1bd966` solely to preserve the artifact.
+- First dispatch proved `GitHub → systemd → dispatcher → Codex` technically works.
+- Human selected visible interactive Codex execution as the active workflow because observability is a method requirement.
 
 ### Runtime Git handoff repair — CF-RUNTIME-GIT-HANDOFF-002
 
 - Status: `PASS / INTEGRATED / LOCAL PROBE PASS`.
 - PR #5 exact reviewed head: `f3f1565f15b69fb2b9a0046fc4ca0d72b31fdd28`.
-- ChatGPT Independent Critic verdict: PASS after one controller-found rework concerning non-idempotent commit/push recovery.
 - PR #5 merged to main at `a2f8a7eb760834b7868368ebe9c793a0fc2f188b`.
-- Codex remains in `--sandbox workspace-write`.
-- Host launcher owns bounded `runtime/...` branch creation/resume, immutable commit creation and push.
-- Runtime event ownership/base/artifact claims support recovery after commit/push interruption without rerunning Codex when identity remains exact.
 - No host auto-commit to `main`; no auto-merge path.
-- ChatGPT watcher derives/inspects runtime branches so the Human is not required to relay branch publication.
-- Controlled local probe passed repeatedly on 2026-08-23: dispatcher observed `HUMAN_ACTION_REQUIRED` and exited without launching Codex.
 
 ## CF-I03
 
-Status: `REWORK CYCLE 4 IMPLEMENTED / D1-API-BROWSER VALIDATION PASS / IMMUTABLE ARTIFACT PUBLISHED / INDEPENDENT REVIEW REQUIRED`.
+Status: `PASS / INDEPENDENT CRITIC COMPLETE / CLEAN INTEGRATION REQUIRED`.
 
-Runtime execution: `READY_TO_RESUME` with `resume_authorized=false` — event `CF-I03@REWORK-4-PUBLISHED` (seq 17), active task `CF-I03`, on `runtime/cf-i03-rework-6`. The Independent Critic returned REWORK. The bounded repair and complete D1/API/browser validation are complete; immutable artifact `65ed1e5710a20af97d183f04364b5aa7b605a74a` is published and awaits fresh Independent Critic review.
+Accepted implementation artifact: `65ed1e5710a20af97d183f04364b5aa7b605a74a` on `runtime/cf-i03-rework-6`.
+Independent Critic record: `.orchestration/reviews/CF-I03-REWORK-4-CRITIC.md`.
+Critic verdict: `PASS`.
+Human Gate: `NONE`.
 
-CF-I03 REWORK-1 implementation evidence: API/domain changes repair blank optional notes, atomic hold/booking validation and claim replacement, safe integer totals, unavailable-room rejection, cancelled-booking revival, and bounded booking queries. The `/bookings` UI now uses date-scoped availability and provides detail/edit interaction. Local validation passed: `npm run typecheck`, `npm run test` (14/14), `npm run web:build`, `npm run types:check`, `npm run wrangler:dry-run`, and `git diff --check`. Wrangler dry-run emitted the known read-only `.wrangler` log warning but completed both dry-runs.
+The accepted increment covers booking create/list/detail/update/cancellation, date-scoped availability, room-night uniqueness, hold/booking exclusion, integer-cent totals, half-open intervals, typed errors and the `/bookings` browser surface. Migration `0004_booking_claim_fk.sql` preserves relational ownership with `booking_id -> bookings(id) ON DELETE CASCADE`.
 
-CF-I03 REWORK-2 implementation evidence: hold create/update mutations now reject dates claimed by active bookings; booking edits delete all prior room-night claims before replacing the booking and its claims atomically; claim insertion now guards against the bound `room_id` rather than the stay date. Local validation passed: `npm run check` (typecheck plus 14/14 tests), `npm run web:build`, `npm run types:check`, `npm run wrangler:dry-run`, and `git diff --check`. Wrangler emitted the known read-only `.wrangler` log warning but both dry-runs completed successfully.
+Executable evidence:
+- `npm run test`: 16/16 PASS as persisted by the worker;
+- `npm run test:cf-i03`: local D1/API regression covering FK/orphan rejection, overlap rollback, adjacency, room/date PATCH claim replacement, failed-update preservation, hold exclusion and cancellation release;
+- persisted Playwright scripts cover loading, empty, validation, date-scoped availability, create, detail/edit and surfaced backend error;
+- web build, generated types, Wrangler dry-runs and diff check PASS as persisted evidence.
 
-Stop reason: immutable CF-I03 cycle-2 artifact is published and awaits ChatGPT Independent Critic review. Codex does not self-PASS the artifact.
+Rework history:
+- REWORK-1 corrected blank notes, hold/booking semantics, UI availability/detail/edit, lifecycle revival, safe totals, room status and bounded queries.
+- REWORK-2 corrected hold-vs-booking mutation direction and claim replacement defects.
+- REWORK-3 materialized claim schema and strengthened D1/API evidence.
+- REWORK-4 closed the zero-row PATCH false-success path, added booking-claim FK and persisted executable D1/API/browser regression.
 
-Published artifact: `900054ad49d9c401ffe261a88dcd73cf9d1b94cb` on `runtime/cf-i03-rework-6`.
+Runtime capability record: `RUNTIME_CAPABILITY_FALLBACK` — the visible Codex adapter did not expose separate specialist/subagent execution capability, and no false multiagency result is claimed. This remains a runtime/method refinement item and does not invalidate CF-I03 technical PASS.
 
-Runtime capability record: `RUNTIME_CAPABILITY_FALLBACK` — no separate specialist/subagent execution capability is exposed in this runtime; no multiagency result is claimed.
+Non-blocking observation: `0004_booking_claim_fk.sql` uses `PRAGMA foreign_keys = OFF/ON`; future D1 schema changes should prefer Cloudflare's recommended `PRAGMA defer_foreign_keys` when temporary deferral is actually needed.
 
-CF-I03 REWORK-4: the guarded booking PATCH now asserts exactly one updated row and returns typed `409 CONFLICT` on zero-row invalidation while preserving existing claims. A new `0004_booking_claim_fk.sql` migration rebuilds `room_inventory_nights` with a booking foreign key and `ON DELETE CASCADE`. Executable D1/API regression is `npm run test:cf-i03`; browser evidence is persisted in `scripts/cf-i03-browser-regression.mjs`, `scripts/cf-i03-browser-loading.mjs` and `docs/cf-i03-rework-3-evidence.md`. Full validation passed: 16/16 tests, D1/API regression, web build, generated types, Wrangler dry-runs and diff check.
-
-Published artifact: `65ed1e5710a20af97d183f04364b5aa7b605a74a` on `runtime/cf-i03-rework-6`.
-
-CF-I03 REWORK-3 evidence: `docs/cf-i03-rework-3-evidence.md`. The booking migration explicitly redeclares the idempotent claim table/index surface; PATCH now performs `UPDATE → conditional claim delete → claim insert` inside one D1 batch, preserving old claims on failed updates and replacing claims when room/dates change. Local Worker/D1 evidence covers overlap rollback, hold exclusion, cancellation release and half-open adjacency.
-
-Published artifact: `86f4028df45d9d4b977b378d6f89d3c0b9bf35ed` on `runtime/cf-i03-rework-6`.
-
-Cycle-2 final local validation: `npm run check` (typecheck plus 14/14 tests), `npm run web:build`, `npm run types:check`, `npm run wrangler:dry-run`, and `git diff --check` all passed. Wrangler emitted the known read-only `.wrangler` log warning; both dry-runs completed successfully. The final P1 hardening also prevents an invalid booking edit from deleting the existing room-night claims before the atomic replacement can succeed.
-
-Base product branch: `cf-i03-bookings@834e4a2aa3ec37aac036dc0273b15e6abf5c7d81`.
-Original review PR: #4.
-Authorized runtime rework branch: `runtime/cf-i03-rework-6`, created from the exact reviewed CF-I03 base artifact.
-Task Contract: `.orchestration/contracts/CF-I03.md` on the work branch.
-
-The already-triggered Codex review returned 8 material findings before review policy changed. They are now the exact bounded rework input:
-- P1 optional blank notes break otherwise valid booking creation;
-- P1 hold/booking exclusion is not atomic in both mutation directions;
-- P1 booking UI does not use date-scoped `/rooms/available` results;
-- P1 generic PATCH can revive a cancelled booking;
-- P2 booking detail/edit UI interaction is missing;
-- P2 derived booking total can exceed JavaScript safe-integer range;
-- P2 unavailable room operational status is not rejected during booking validation;
-- P2 booking list/calendar query is unbounded.
-
-Codex must repair these findings within CF-I03 scope, run relevant local validation, persist branch-local review-ready state, and stop at the immutable-artifact boundary. It must not trigger `@codex review` or self-PASS the substantive artifact. The host Git bridge will commit/push the exact runtime branch, then ChatGPT performs the fresh Independent Critic.
+Original PR #4 remains stale at `cf-i03-bookings@834e4a2aa3ec37aac036dc0273b15e6abf5c7d81` and must not be merged as the accepted artifact.
 
 ## PENDING HUMAN GATES
 
@@ -146,17 +123,18 @@ Any paid Cloudflare transition remains a separate Human Gate.
 
 None.
 
-The local runtime update + controlled fail-close probe has been completed successfully. No routine Human relay is authorized or required for CF-I03 rework.
-
 ## BLOCKERS
 
-None.
+None. Current integration is routine technical work, but the accepted rework branch has diverged from `main`; integration must reconcile current main state rather than merge stale PR #4.
 
 ## NEXT AUTHORIZED ACTION
 
-1. Host Git bridge creates and pushes the immutable artifact on `runtime/cf-i03-rework-6`; no commit SHA exists yet in this workspace.
-2. ChatGPT independently reviews that exact artifact against the CF-I03 Task Contract, design and evidence without `@codex review`.
-3. Routine bounded REWORK continues autonomously after the review verdict until PASS or a legitimate stop condition.
+1. Create a clean integration from current `main` containing the accepted CF-I03 product/schema/test/evidence changes from artifact `65ed1e5710a20af97d183f04364b5aa7b605a74a`, while reconciling orchestration state rather than overwriting newer main/runtime decisions.
+2. Validate the integrated candidate against the CF-I03 regression suite and normal build/type/dry-run checks.
+3. Integrate the clean candidate to `main` after exact-head verification.
+4. Close or supersede stale PR #4.
+5. Derive and authorize CF-I04 Reception Lifecycle under a fresh Task Contract.
+6. Continue in visible interactive Codex mode; do not re-enable unattended execution as the normal workflow.
 
 ## STOP CONDITION
 
@@ -179,3 +157,4 @@ Stop only for:
 - Retry exhaustion triggers diagnosis, not automatic escalation.
 - Do not use the Human as a routine message bus.
 - Preserve `Requirement → Expected Surface → Acceptance → Evidence` for material requirements.
+- Optimize for minimum unnecessary Human coordination plus maximum runtime visibility; resumability must not require hidden background execution.
