@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `DESIGN`  
-Phase Status: `ACTIVE — CF-DESIGN-REVIEW-001 READY`
+Phase Status: `DESIGN COMPLETE — CF-I01 READY`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion is authorized.
 
@@ -105,10 +105,12 @@ Operational constraint:
 
 ### CF-DESIGN-REVIEW-001
 
-Status: `READY`  
-Contract: `.orchestration/contracts/CF-DESIGN-REVIEW-001.md`  
-Review artifact target: `.orchestration/reviews/CF-DESIGN-REVIEW-001.md`  
+Status: `PASS`
+Contract: `.orchestration/contracts/CF-DESIGN-REVIEW-001.md`
+Review artifact: `.orchestration/reviews/CF-DESIGN-REVIEW-001.md`
 Design artifact: `docs/migration-design-package.md`
+Reviewed HEAD: `84cc541ae9b5ac8ceccf18ad38885b1b4b3b4617`
+Critic verdict: `PASS`; rework cycles: `0`.
 
 Objective: independently review the integrated Migration Design Package after CF-DATA-001 Option B, including tenant topology, auth adaptation, D1 semantic translation, room-night overlap design, implementation increments, Decision Latitude, acceptance surfaces and Free-tier cost boundary.
 
@@ -124,7 +126,8 @@ Objective: inspect the provisional foundation against the accepted Design Packag
 
 ### CF-I01
 
-Status: `PLANNED / BLOCKED_BY_DESIGN_EXIT`
+Status: `READY_AFTER_DESIGN_PASS`
+Contract: `.orchestration/contracts/CF-I01.md`
 
 Objective: platform foundation BUILD under a formal Task Contract after DESIGN independently passes.
 
@@ -142,18 +145,11 @@ None.
 
 No Human Gate currently blocks DESIGN.
 
-`CF-I01` BUILD remains blocked until:
-1. CF-DATA-001 Option B is integrated into the complete Design Package;
-2. `CF-DESIGN-REVIEW-001` returns independent PASS after any bounded REWORK;
-3. DESIGN exit criteria close.
+`CF-I01` BUILD is now authorized under `.orchestration/contracts/CF-I01.md`, subject to independent Critic review and the contract invariants.
 
 ## NEXT AUTHORIZED ACTION
 
-Codex, as Runtime Orchestrator:
-1. read this state, `.orchestration/decisions/CF-DATA-001.md`, `docs/migration-design-package.md` and the active Task Contract;
-2. execute `CF-DESIGN-REVIEW-001` using a logically independent Critic;
-3. on `REWORK`, repair autonomously inside approved DESIGN scope and use a fresh independent Critic;
-4. on `PASS`, close DESIGN, create/activate the `CF-I01` Task Contract and continue automatically.
+Codex, as Runtime Orchestrator, must execute the active `CF-I01` Task Contract after it is persisted, beginning with pre-flight and contextual Specialist work. Every substantive BUILD output requires an independent Critic before integration.
 
 Do not ask for routine human confirmation after PASS.
 
