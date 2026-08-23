@@ -50,12 +50,15 @@ export function createLifecycleRoutes(): LifecycleApp {
     if (!current) throw ApiError.notFound("Booking not found");
     if (current.status !== "CONFIRMED") throw ApiError.conflict("Only confirmed bookings can be checked in");
     const now = new Date().toISOString();
-    const results = await db.batch([
-      db.prepare("UPDATE bookings SET status = 'CHECKED_IN', checked_in_at = ?2, checked_in_by = ?3, updated_at = ?2 WHERE id = ?1 AND status = 'CONFIRMED' AND EXISTS (SELECT 1 FROM rooms WHERE id = ?4 AND status = 'AVAILABLE')").bind(id, now, context.get("identity").subject, current.room_id),
-      db.prepare("UPDATE rooms SET status = 'OCCUPIED' WHERE id = ?1 AND status = 'AVAILABLE'").bind(current.room_id),
-      event(db, id, "CHECK_IN", context, { checklist: ["guest_count_confirmed", "document_verified", "contact_confirmed", "stay_confirmed"] }),
-    ]);
-    if (results[0].meta.changes !== 1 || results[1].meta.changes !== 1) throw ApiError.conflict("Booking became unavailable during check-in");
+    let results: Array<{ meta: { changes: number } }>;
+    try {
+      results = await db.batch([
+        db.prepare("UPDATE bookings SET status = 'CHECKED_IN', checked_in_at = ?2, checked_in_by = ?3, updated_at = ?2 WHERE id = ?1 AND status = 'CONFIRMED' AND EXISTS (SELECT 1 FROM rooms WHERE id = ?4 AND status = 'AVAILABLE')").bind(id, now, context.get("identity").subject, current.room_id),
+        db.prepare("UPDATE rooms SET status = 'OCCUPIED' WHERE id = ?1 AND status = 'AVAILABLE' AND EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?1)").bind(current.room_id, id),
+        db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) SELECT ?1, ?2, 'CHECK_IN', ?3, ?4, ?5, ?6, ?7, ?8 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?3)").bind(crypto.randomUUID(), id, current.room_id, context.get("identity").subject, context.get("requestId"), context.get("membership").hotelId, JSON.stringify({ checklist: ["guest_count_confirmed", "document_verified", "contact_confirmed", "stay_confirmed"] }), now),
+      ]);
+    } catch { throw ApiError.conflict("Booking became unavailable during check-in"); }
+    if (results[0]?.meta.changes !== 1 || results[1]?.meta.changes !== 1 || results[2]?.meta.changes !== 1) throw ApiError.conflict("Booking became unavailable during check-in");
     return context.json({ id, status: "CheckedIn", room_status: "Occupied" });
   });
 
@@ -76,13 +79,13 @@ export function createLifecycleRoutes(): LifecycleApp {
     try {
       const results = await db.batch([
         db.prepare("UPDATE bookings SET room_id = ?2, updated_at = ?3 WHERE id = ?1 AND status = 'CHECKED_IN' AND room_id = ?4").bind(id, roomId, now, current.room_id),
-        db.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1").bind(id),
-        ...dates.map((date) => db.prepare("INSERT INTO room_inventory_nights (room_id, stay_date, booking_id) VALUES (?1, ?2, ?3)").bind(roomId, date, id)),
-        db.prepare("UPDATE rooms SET status = 'AVAILABLE' WHERE id = ?1 AND status = 'OCCUPIED'").bind(current.room_id),
-        db.prepare("UPDATE rooms SET status = 'OCCUPIED' WHERE id = ?1 AND status = 'AVAILABLE'").bind(roomId),
-        event(db, id, "REASSIGN", context, { from_room_id: current.room_id, to_room_id: roomId }),
+        db.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND status = 'CHECKED_IN' AND room_id = ?2)").bind(id, roomId),
+        ...dates.map((date) => db.prepare("INSERT INTO room_inventory_nights (room_id, stay_date, booking_id) SELECT ?1, ?2, ?3 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?3 AND status = 'CHECKED_IN' AND room_id = ?1)").bind(roomId, date, id)),
+        db.prepare("UPDATE rooms SET status = 'AVAILABLE' WHERE id = ?1 AND status = 'OCCUPIED' AND EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?3)").bind(current.room_id, id, roomId),
+        db.prepare("UPDATE rooms SET status = 'OCCUPIED' WHERE id = ?1 AND status = 'AVAILABLE' AND EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?1)").bind(roomId, id),
+        db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) SELECT ?1, ?2, 'REASSIGN', ?3, ?4, ?5, ?6, ?7, ?8 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?9)").bind(crypto.randomUUID(), id, current.room_id, context.get("identity").subject, context.get("requestId"), context.get("membership").hotelId, JSON.stringify({ from_room_id: current.room_id, to_room_id: roomId }), now, roomId),
       ]);
-      if (results[0].meta.changes !== 1) throw ApiError.conflict("Booking became unavailable during reassignment");
+      if (results[0]?.meta.changes !== 1 || results[results.length - 1]?.meta.changes !== 1) throw ApiError.conflict("Booking became unavailable during reassignment");
     } catch (error) {
       if (error instanceof ApiError) throw error;
       throw ApiError.conflict("Room reassignment failed without changing the booking");
@@ -98,13 +101,16 @@ export function createLifecycleRoutes(): LifecycleApp {
     if (!current) throw ApiError.notFound("Booking not found");
     if (current.status !== "CHECKED_IN") throw ApiError.conflict("Only checked-in bookings can be checked out");
     const now = new Date().toISOString();
-    const results = await db.batch([
-      db.prepare("UPDATE bookings SET status = 'CHECKED_OUT', checked_out_at = ?2, checked_out_by = ?3, updated_at = ?2 WHERE id = ?1 AND status = 'CHECKED_IN'").bind(id, now, context.get("identity").subject),
-      db.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1").bind(id),
-      db.prepare("UPDATE rooms SET status = 'DIRTY' WHERE id = ?1 AND status = 'OCCUPIED'").bind(current.room_id),
-      event(db, id, "CHECK_OUT", context, { handoff: "housekeeping", payment_policy_accepted: true, charge_reviewed: true }),
-    ]);
-    if (results[0].meta.changes !== 1 || results[2].meta.changes !== 1) throw ApiError.conflict("Booking became unavailable during checkout");
+    let results: Array<{ meta: { changes: number } }>;
+    try {
+      results = await db.batch([
+        db.prepare("UPDATE bookings SET status = 'CHECKED_OUT', checked_out_at = ?2, checked_out_by = ?3, updated_at = ?2 WHERE id = ?1 AND status = 'CHECKED_IN'").bind(id, now, context.get("identity").subject),
+        db.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND status = 'CHECKED_OUT' AND room_id = ?2)").bind(id, current.room_id),
+        db.prepare("UPDATE rooms SET status = 'DIRTY' WHERE id = ?1 AND status = 'OCCUPIED' AND EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_OUT' AND room_id = ?1)").bind(current.room_id, id),
+        db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) SELECT ?1, ?2, 'CHECK_OUT', ?3, ?4, ?5, ?6, ?7, ?8 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_OUT' AND room_id = ?3)").bind(crypto.randomUUID(), id, current.room_id, context.get("identity").subject, context.get("requestId"), context.get("membership").hotelId, JSON.stringify({ handoff: "housekeeping", payment_policy_accepted: true, charge_reviewed: true }), now),
+      ]);
+    } catch { throw ApiError.conflict("Booking became unavailable during checkout"); }
+    if (results[0]?.meta.changes !== 1 || results[2]?.meta.changes !== 1 || results[3]?.meta.changes !== 1) throw ApiError.conflict("Booking became unavailable during checkout");
     return context.json({ id, status: "CheckedOut", room_status: "Dirty", housekeeping_handoff: true });
   });
   return app;
