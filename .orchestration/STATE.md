@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 REWORK-3 ARTIFACT READY FOR INDEPENDENT CRITIC`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 REWORK-4 AUTHORIZED`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -22,7 +22,7 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - Autonomous execution decision: `.orchestration/decisions/PM-AUTONOMY-001.md`
 - UX parity decision: `.orchestration/decisions/CF-UX-PARITY-001.md`
 - Active Task Contract: `.orchestration/contracts/CF-I04.md`
-- Current Critic record: `.orchestration/reviews/CF-I04-REWORK-2-CRITIC.md`
+- Current Critic record: `.orchestration/reviews/CF-I04-REWORK-3-CRITIC.md`
 
 Conversation history is supporting context only and is never the sole source of truth.
 
@@ -89,8 +89,6 @@ Status: `PASS / CLEAN INTEGRATION PASS / CLOSED`.
 Accepted artifact: `65ed1e5710a20af97d183f04364b5aa7b605a74a`.  
 Integrated reviewed head: `58c84a2564d9a4b85785203ff04fee24fee47213`.
 
-Accepted evidence includes booking create/list/detail/update/cancel, date-scoped availability, unique room-night claims, claim FK integrity, overlap rollback, failed-update preservation, hold exclusion, cancellation release, half-open adjacency, tenant routing, UI/browser evidence and full regression/build/type/Wrangler validation.
-
 Human Gate: `NONE`.
 
 ## CF-I04 — RECEPTION LIFECYCLE
@@ -102,38 +100,30 @@ Task Contract: `.orchestration/contracts/CF-I04.md`.
 - Initial artifact `32b5070dbd80b4b4d3667fe45573f8851cb60a7c` → `REWORK`.
 - REWORK-1 artifact `88c8361bae2148f682947bba1976a41404db9212` → `REWORK`.
 - REWORK-2 artifact `22eb064c68e2793ef0d67dd984384f32f5a13873` → `REWORK`.
-- REWORK-3 artifact `cea75f7ebce322e49be16c1167b55efa59cbada6` → local implementation, adversarial QA, browser evidence and full validation complete; Independent Critic pending.
-- Current Critic record: `.orchestration/reviews/CF-I04-REWORK-2-CRITIC.md`.
+- REWORK-3 artifact `cea75f7ebce322e49be16c1167b55efa59cbada6` → `REWORK`.
+- Current Critic record: `.orchestration/reviews/CF-I04-REWORK-3-CRITIC.md`.
 
-### What REWORK-2 materially improved
+### What REWORK-3 materially resolved
 
-- final lifecycle-event SQLite triggers now abort D1 batches when checkout/reassignment final room/booking state is inconsistent;
-- lifetime reassignment-event uniqueness was removed;
-- valid repeated room history `A -> B -> A -> C` is regression-tested;
-- deterministic stale-checkout rollback is regression-tested;
-- reception now exposes a case queue/workspace rather than only flat booking cards;
-- browser evidence includes a typed check-in 409 error and recovery;
-- authorization/unknown-binding fail-closed evidence remains present;
+- actual positive check-in guest count is now persisted in D1;
+- checkout policy/reference are now persisted in D1;
+- reassignment final guard now checks overlapping room holds;
+- deterministic stale-destination reassignment rollback is present;
+- deterministic hold-vs-reassignment rollback is present;
+- valid `A -> B -> A -> C` room history remains legal and tested;
+- stale checkout rollback guard remains present;
+- no generic lifecycle status PATCH bypass was observed;
 - `RUNTIME_CAPABILITY_FALLBACK` remains accurate.
 
-### REWORK-3 EXECUTION
+### Current blocking findings — REWORK-4 input
 
-Runtime status: `RUNNING`; `RUNTIME_CAPABILITY_FALLBACK` remains active because this runtime exposes no separate Specialist contexts. Domain/Engineering and QA/Security responsibilities remain separated in implementation and evidence passes; no multiagency claim is made.
+1. **Extra check-in gate:** target still requires `guest_count_confirmed=true` in addition to the actual positive guest count; source/Task Contract do not.
+2. **Extra checkout gate:** target still requires `payment_policy_accepted=true` in addition to selecting a valid checkout policy; source/Task Contract do not.
+3. **Reference parity:** source requires `pending-approved` closing reference trimmed length >= 6; target currently accepts 3.
+4. **Mobile UX parity:** `checkInStep` is only a hidden click counter. It does not render the accepted visible staged flow, progress or next/back behavior, and it is not reset per selected case.
+5. **Responsive evidence:** 390/430/768/1024 still prove workspace/queue/case reachability rather than actual lifecycle control usability. Browser evidence does not substantively cover pending-approved reference behavior.
 
-Authorized repair is limited to actual check-in count, checkout policy/reference, hold/reassignment atomicity, deterministic evidence and accepted mobile task-flow parity.
-
-Terminal boundary: artifact `cea75f7ebce322e49be16c1167b55efa59cbada6` is published on `main`. Independent Critic review is required; no technical PASS, Product Acceptance or CF-I05 advancement is self-declared.
-
-### Current blocking findings — REWORK-3 input
-
-1. **Check-in domain parity:** source HMS stores actual positive `check_in_guests_count`; target reduces this to `guest_count_confirmed: true` and does not persist the actual count.
-2. **Checkout domain parity:** source/Task Contract requires concrete checkout payment policy and conditional closing reference; target reduces this to `payment_policy_accepted: true` and persists no policy/reference.
-3. **Hold-vs-reassignment race:** the final reassignment trigger does not re-check overlapping `room_holds`, so a hold created after preflight but before reassignment batch can coexist with booking claims.
-4. **Deterministic reassignment evidence:** stale-checkout is deterministic, but the specifically required deterministic stale-destination/reassignment rollback test is still absent.
-5. **Mobile UX parity:** source mobile check-in is a stepwise reception task flow; target merely stacks the generic form. This remains a material interaction-model drift under `CF-UX-PARITY-001`.
-6. **Responsive evidence:** at 390/430/768/1024 the browser test proves shell/queue/case reachability, not lifecycle control usability; evidence text overstates full journey coverage at each width.
-
-Diagnosis: `DOMAIN_PARITY_DEFECT + CONCURRENCY_DEFECT + EVIDENCE_DEFECT + UX_PARITY_DEFECT`.  
+Diagnosis: `DOMAIN_PARITY_DEFECT + UX_PARITY_DEFECT + EVIDENCE_DEFECT`.  
 Human Gate: `NONE`.  
 Blocker: `NONE`.
 
@@ -149,21 +139,20 @@ None.
 
 ## BLOCKERS
 
-None. CF-I04 REWORK-3 is authorized routine technical/product-parity repair.
+None. CF-I04 REWORK-4 is authorized routine parity/evidence repair.
 
 ## NEXT AUTHORIZED ACTION
 
-Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I04-REWORK-2-CRITIC.md`, the CF-I04 Task Contract, source contract inventory and binding decisions, then autonomously:
+Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I04-REWORK-3-CRITIC.md`, the CF-I04 Task Contract, source contract inventory and binding decisions, then autonomously:
 
-1. restores actual check-in guest-count semantics and persistence/audit parity;
-2. restores checkout policy/reference semantics without pulling CF-I06 settlement implementation forward;
-3. closes the hold-vs-reassignment transactional race;
-4. adds deterministic stale-reassignment and hold-race regressions with exact final-state assertions;
-5. finishes lifecycle-relevant mobile/source UX parity;
-6. exercises lifecycle-relevant controls at 375/390/430/768/1024 and aligns evidence claims with what is actually tested;
-7. runs full self-adversarial QA and validation;
-8. publishes a fresh immutable CF-I04 artifact with `external_review.required=true`;
-9. stops at the next Independent Critic boundary or another legitimate stop condition.
+1. removes target-only `guest_count_confirmed` and `payment_policy_accepted` gates;
+2. enforces source pending-reference semantics (trimmed length >= 6);
+3. replaces the hidden mobile click-counter with the accepted staged check-in interaction model and resets workflow state per case;
+4. strengthens browser evidence so lifecycle controls are exercised at 375/390/430/768/1024, including checkout policy/reference behavior;
+5. aligns evidence claims exactly with what tests prove;
+6. runs full self-adversarial QA, D1/API regressions, browser tests, build/types/Wrangler/diff checks;
+7. publishes a fresh immutable CF-I04 artifact with `external_review.required=true`;
+8. stops at the next Independent Critic boundary or another legitimate stop condition.
 
 Do not advance to CF-I05 before CF-I04 obtains a fresh Independent Critic PASS.
 
