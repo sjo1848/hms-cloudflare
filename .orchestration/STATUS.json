@@ -3,22 +3,22 @@
   "project": "HMS Cloudflare",
   "phase": "BUILD",
   "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": false,
-  "active_task": "CF-I05-INDEPENDENT-CRITIC-BOUNDARY",
+  "resume_authorized": true,
+  "active_task": "CF-I05",
   "work_branch": "main",
-  "last_completed_task": "CF-I05-REWORK-2-INVARIANTS-PRECRITIC-PASS",
-  "last_completed_head": "462bd05",
-  "next_action": "INDEPENDENT_CRITIC_REVIEW_CF_I05_ARTIFACT_462BD05",
-  "stop_reason": "CF-I05 REWORK-2 artifact 462bd05 is published after strengthened invariant evidence and Pre-Critic Gate PASS; stop at Independent Critic boundary. Do not start CF-I06 before a fresh CF-I05 PASS.",
+  "last_completed_task": "CF-I05-REWORK-2-INDEPENDENT-CRITIC-REWORK-3",
+  "last_completed_head": "462bd0519c7224dc996f23825dbbc8c5afc10aec",
+  "next_action": "CF_I05_AUTONOMOUS_REWORK_3_NEXT_TASK_FOCUS_AND_DRAFT_RESET_EVIDENCE",
+  "stop_reason": "CF-I05 REWORK-3 is routine and authorized after External Independent Critic review of artifact 462bd0519c7224dc996f23825dbbc8c5afc10aec. Codex must consume .orchestration/reviews/CF-I05-REWORK-2-CRITIC.md, make Siguiente tarea target the source-priority queue head, implement/prove mobile focus entry and return, prove per-room draft reset/clear behavior, run the full invariant/Pre-Critic Gate, publish one fresh immutable CF-I05 artifact and stop for Independent Critic. No Human Gate exists and CF-I06 remains unauthorized until CF-I05 PASS.",
   "event": {
-    "seq": 44,
-    "id": "CF-I05@REWORK-2-ARTIFACT-READY",
-    "type": "IMMUTABLE_ARTIFACT_PUBLISHED_FOR_INDEPENDENT_CRITIC"
+    "seq": 45,
+    "id": "CF-I05@CRITIC-REWORK-3",
+    "type": "INDEPENDENT_CRITIC_REWORK"
   },
   "external_review": {
-    "required": true,
-    "last_audited_head": "462bd05",
-    "last_verdict": "REWORK_P1_ABA_CASE_CORRELATION_MOBILE_FOCUSED_TASK_BROWSER_EVIDENCE"
+    "required": false,
+    "last_audited_head": "462bd0519c7224dc996f23825dbbc8c5afc10aec",
+    "last_verdict": "REWORK_P1_NEXT_TASK_SEMANTICS_MOBILE_FOCUS_DRAFT_RESET_EVIDENCE"
   },
   "human_gate": null,
   "blocker": null,
