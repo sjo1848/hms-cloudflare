@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-24  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 ACTIVE+AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 ARTIFACT PUBLISHED — INDEPENDENT CRITIC PENDING`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving product behavior, domain semantics, security, financial integrity and operational safety. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -29,6 +29,7 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - CF-I05 Housekeeping + Maintenance — PASS — artifact A `17372d3200b8e88eec116e97672c12589005103d`, boundary B `9a05013c4b38567ff4749a855b40c9fd1cba2314`.
 - CF-I06 Billing — PASS — artifact A `0004990ba60b0349776de139cd04dfc2f30eaa6d`, boundary B `de0dbdc0ed92b60a5fd32faa184484c701711d08`.
 - CF-I07 Users / RBAC / Audit / Hotel-Network Admin — PASS — artifact A `fdf9c6f82c3c5066152e49ecba70268d669a640f`, boundary B `c52656fcc311f53be9b584346f2afc9e54796ff9`, Independent Critic `.orchestration/reviews/CF-I07-REWORK-3-CRITIC.md`.
+- CF-I08 Analytics / Reports / Integrated Responsive Product — artifact A `ed7afe4722650933bc704c1d5f02150cbda82996` — focal deterministic D1/API, multi-hotel, Reports/Network browser and fresh inherited regressions complete; awaiting Independent Critic.
 
 ## CF-I07 ACCEPTED GUARANTEES
 
@@ -47,11 +48,11 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - responsive Users/Network workflows and authenticated forbidden-capability UX pass at contracted widths.
 - CF-I07 runners verify owned-process termination before PASS.
 
-## ACTIVE INCREMENT — CF-I08 ANALYTICS / REPORTS / INTEGRATED RESPONSIVE PRODUCT
+## COMPLETED INCREMENT — CF-I08 ANALYTICS / REPORTS / INTEGRATED RESPONSIVE PRODUCT — CRITIC PENDING
 
 Contract: `.orchestration/contracts/CF-I08.md`.
 
-CF-I08 is authorized and includes:
+CF-I08 was authorized and includes:
 
 - source-equivalent dashboard/report KPI semantics;
 - revenue and occupancy reporting with exact date/state inclusion rules;
@@ -60,8 +61,8 @@ CF-I08 is authorized and includes:
 - source-canonical report/network RBAC and tenant isolation;
 - Reports and Network responsive UX at 375/390/430/768/1024;
 - integrated responsive navigation/journey coverage across all modules accepted through CF-I07;
-- fresh inherited CF-I03–CF-I07 regressions plus focal deterministic report/multi-hotel evidence;
-- artifact A + orchestration-only boundary B, then Independent Critic.
+- fresh inherited CF-I03–CF-I07 regressions plus focal deterministic report/multi-hotel evidence — PASS;
+- artifact A `ed7afe4722650933bc704c1d5f02150cbda82996` plus orchestration-only boundary B, then Independent Critic.
 
 CF-I08 must not enter CF-I09 migration/cutover/readiness scope or production deployment.
 
@@ -91,7 +92,7 @@ None.
 
 ## NEXT AUTHORIZED ACTION
 
-`CF_I08_AUTONOMOUS_ANALYTICS_REPORTS_AND_INTEGRATED_RESPONSIVE_WAVE`
+Independent Critic audits exact immutable artifact A `ed7afe4722650933bc704c1d5f02150cbda82996` against `.orchestration/contracts/CF-I08.md`, source parity matrix, invariant evidence, focal D1/API, browser integration and inherited regressions. Codex must not begin CF-I09 before CF-I08 PASS.
 
 Codex reads canonical state, `.orchestration/contracts/CF-I08.md`, source reporting/network semantics, durable invariants and Pre-Critic Gate; then executes CF-I08 autonomously through implementation, deterministic D1/API analytics evidence, multi-hotel aggregation, responsive browser/integration, fresh inherited regressions, artifact A + boundary B, and stops for Independent Critic or a real Human Gate.
 
