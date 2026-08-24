@@ -3,24 +3,24 @@
   "project": "HMS Cloudflare",
   "phase": "BUILD",
   "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": false,
-  "active_task": "CF-I07-INDEPENDENT-CRITIC",
+  "resume_authorized": true,
+  "active_task": "CF-I07",
   "work_branch": "main",
-  "last_completed_task": "CF-I07-REWORK-2-ARTIFACT-A-PUBLISHED",
+  "last_completed_task": "CF-I07-REWORK-2-INDEPENDENT-CRITIC-REWORK-3",
   "last_completed_head": "87cf6c953e24b9374644f53c636c4d5a8574bea7",
-  "next_action": "INDEPENDENT_CRITIC_AUDIT_CF_I07_REWORK_2_ARTIFACT_A",
-  "stop_reason": "Immutable CF-I07 REWORK-2 artifact A 87cf6c953e24b9374644f53c636c4d5a8574bea7 is published after the complete Pre-Critic Gate, focal RBAC/audit regression, responsive/browser evidence and fresh CF-I03/04/05/06 inherited regressions. Await Independent Critic. No Human Gate exists. CF-I08 remains unauthorized until CF-I07 PASS.",
+  "next_action": "CF_I07_AUTONOMOUS_REWORK_3_BROWSER_AUTHZ_FIXTURE_UX_ASSERTIONS_PROCESS_CLEANUP_AND_EXACT_AUDIT_EVIDENCE",
+  "stop_reason": "CF-I07 REWORK-2 artifact A 87cf6c953e24b9374644f53c636c4d5a8574bea7 with boundary B cc13528a8809861aa17011251de6f60466019995 received External Independent Critic REWORK-3. Preserve all accepted backend/security repairs. Codex must consume .orchestration/reviews/CF-I07-REWORK-2-CRITIC.md and repair only the remaining evidence/runner closure: seed a real active housekeeping browser membership so forbidden UX proves capability denial, make create/error/role/deactivate/focus assertions match the responsive evidence claim, verify runner-owned process termination before terminal PASS, assert exact same-plan audit count, rerun fresh focal/inherited/browser/build/type/Wrangler checks, publish fresh artifact A plus orchestration-only boundary B and stop for Independent Critic. No Human Gate exists. CF-I08 remains unauthorized until CF-I07 PASS.",
   "event": {
-    "seq": 63,
-    "id": "CF-I07@REWORK-2-ARTIFACT-A-PUBLISHED",
-    "type": "IMMUTABLE_ARTIFACT_A_PUBLISHED"
+    "seq": 64,
+    "id": "CF-I07@CRITIC-REWORK-3",
+    "type": "INDEPENDENT_CRITIC_REWORK"
   },
   "external_review": {
-    "required": true,
-    "last_audited_head": "0a1698995e4f4d36e86a0b88c19f06932469fde7",
-    "last_verdict": "REWORK_NETWORK_AUDIT_RBAC_NOOP_AUDIT_DOWNGRADE_UX_RUNNER",
-    "artifact_head": "87cf6c953e24b9374644f53c636c4d5a8574bea7",
-    "pending_verdict": "INDEPENDENT_CRITIC"
+    "required": false,
+    "last_audited_head": "87cf6c953e24b9374644f53c636c4d5a8574bea7",
+    "last_verdict": "REWORK_BROWSER_AUTHZ_FIXTURE_UX_EVIDENCE_PROCESS_CLEANUP",
+    "artifact_head": null,
+    "pending_verdict": null
   },
   "human_gate": null,
   "blocker": null,
