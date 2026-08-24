@@ -11,19 +11,19 @@ export class OperationalRoutingError extends Error {
 
 type OperationalBindings = {
   HOTEL_DEMO_DB: OperationalDatabase;
+  HOTEL_SECOND_DB: OperationalDatabase;
 };
 
 /**
  * The binding name comes from the authorized control-plane membership, never
- * directly from the request. Unknown bindings fail closed until a future
- * increment registers another explicitly configured hotel binding.
+ * directly from the request. Each configured hotel gets its own operational
+ * D1 binding; unknown bindings fail closed.
  */
 export function resolveOperationalDatabase(
   bindings: OperationalBindings,
   membership: Membership,
 ): OperationalDatabase {
-  if (membership.operationalBinding !== "HOTEL_DEMO_DB") {
-    throw new OperationalRoutingError();
-  }
-  return bindings.HOTEL_DEMO_DB;
+  const database = bindings[membership.operationalBinding as keyof OperationalBindings];
+  if (!database) throw new OperationalRoutingError();
+  return database;
 }

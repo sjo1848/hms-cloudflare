@@ -17,13 +17,14 @@ const database = {
 
 describe("authorized operational routing", () => {
   it("resolves only an explicitly registered binding", () => {
-    expect(resolveOperationalDatabase({ HOTEL_DEMO_DB: database }, membership)).toBe(database);
+    expect(resolveOperationalDatabase({ HOTEL_DEMO_DB: database, HOTEL_SECOND_DB: database }, membership)).toBe(database);
+    expect(resolveOperationalDatabase({ HOTEL_DEMO_DB: { ...database }, HOTEL_SECOND_DB: database }, { ...membership, operationalBinding: "HOTEL_SECOND_DB" })).toBe(database);
   });
 
   it("fails closed for an unknown control-plane binding", () => {
     expect(() =>
       resolveOperationalDatabase(
-        { HOTEL_DEMO_DB: database },
+        { HOTEL_DEMO_DB: database, HOTEL_SECOND_DB: database },
         { ...membership, operationalBinding: "CLIENT_SUPPLIED_DB" },
       ),
     ).toThrow(OperationalRoutingError);

@@ -4,6 +4,7 @@
 interface __BaseEnv_Env {
 	CONTROL_DB: D1Database;
 	HOTEL_DEMO_DB: D1Database;
+	HOTEL_SECOND_DB: D1Database;
 	ENVIRONMENT: "development";
 	ACCESS_TEAM_DOMAIN: "https://example.cloudflareaccess.com";
 	ACCESS_AUDIENCE: "local-development";

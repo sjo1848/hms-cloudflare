@@ -43,7 +43,7 @@ app.onError((error, context) => {
 app.get("/health", (context) => context.json({ status: "ok" }));
 
 app.get("/ready", (context) => {
-  const ready = Boolean(context.env.CONTROL_DB && context.env.HOTEL_DEMO_DB);
+  const ready = Boolean(context.env.CONTROL_DB && context.env.HOTEL_DEMO_DB && context.env.HOTEL_SECOND_DB);
   return context.json({ status: ready ? "ready" : "not_ready" }, ready ? 200 : 503);
 });
 

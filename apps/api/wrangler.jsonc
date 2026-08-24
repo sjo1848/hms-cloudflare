@@ -29,6 +29,12 @@
       "database_name": "hms-hotel-demo-local",
       "database_id": "00000000-0000-0000-0000-000000000002",
       "migrations_dir": "schema/hotel-migrations"
+    },
+    {
+      "binding": "HOTEL_SECOND_DB",
+      "database_name": "hms-hotel-second-local",
+      "database_id": "00000000-0000-0000-0000-000000000003",
+      "migrations_dir": "schema/hotel-migrations"
     }
   ]
 }
