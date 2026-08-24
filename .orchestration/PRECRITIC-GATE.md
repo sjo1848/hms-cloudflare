@@ -23,6 +23,8 @@ For every migrated source capability:
 - compare workflow/information architecture on required UI surfaces;
 - compare source ordering/ranking/deduplication/synthetic-item/next-item rules where they affect operational behavior;
 - compare enum/value representations across source domain, target DB, API and UI; when serialization differs, define a canonical semantic mapping before using the value in business predicates;
+- when the source has a canonical role/capability matrix, diff the exact per-role capability sets against the target and prove every intentional target-only addition/rename is an explicit semantic adaptation rather than accidental privilege gain/loss;
+- when the source constrains an enum/domain value set (for example plan tiers), target DB/API/UI must preserve the same semantic set or use an explicitly approved mapping; convenience defaults are not parity;
 - assert route uniqueness: each canonical method/path has exactly one production handler unless explicit middleware chaining is intentional and verified; temporary/v2/legacy duplicate product endpoints are forbidden unless contract-authorized;
 - record intentional exceptions only if backed by an approved decision.
 
@@ -35,6 +37,7 @@ For every business operation with conditional writes:
 - verify later statements cannot still commit a false success;
 - when multiple related entities participate, prove every mutation belongs to the same logical operation rather than merely ending in compatible-looking final states;
 - when a decision is derived from mutable pre-read state (balance, remaining amount, version, availability, count, aggregate, current case), correlate or revalidate that snapshot inside the same authoritative write boundary before committing side effects;
+- when audit details include a `from`, previous role/state/value, that previous value must be correlated to the authoritative conditional mutation; a stale pre-read must not produce a truthful-looking but false audit row;
 - a client-supplied correlation/tracing id (for example `x-request-id`) must never be used by itself as proof that the current request won a conditional mutation; exact-winner proof must come from the authoritative write result or from a server-only operation token;
 - for financial operations, prove rejected/stale/overpay/close-conflict paths leave invoice/payment/charge/closure/event state exactly unchanged; a JavaScript check after a successfully completed D1 batch cannot be treated as rollback;
 - test ABA/re-entry where relevant: state/entity changes away and later returns to the same visible state, or K1 is replaced by K2 while a stale K1 caller is still in flight;
@@ -45,10 +48,14 @@ For every business operation with conditional writes:
 
 - backend capability enforcement exists;
 - unknown/forbidden role fails closed;
+- all migrated backend modules consume the intended centralized capability authority; local duplicate role maps are forbidden unless explicitly justified and parity-tested;
 - tenant routing is authoritative;
+- when architecture requires one operational store per tenant/hotel, configured binding ownership must be one-to-one; an allow-listed binding cannot be reused by a second active tenant merely because it exists in the Worker environment;
 - cross-tenant/unknown binding attempts are tested where applicable;
 - when a contract explicitly requires cross-tenant object isolation, an unknown/unconfigured binding denial is not a substitute for a real second-tenant object read/write attempt;
+- tenant-local membership/admin operations must not rewrite/reactivate shared identity truth used by another tenant without an explicitly authorized global identity operation;
 - capability-restricted mutations require at least one denied write-path assertion, not read-denial alone, when writes are in scope;
+- tenant-scoped audit/read models must not include unrelated global/network or other-tenant records; network/global audit access requires an explicit network capability and scope;
 - denial leaves zero business/audit side effects.
 
 ### 5. UX parity sweep
