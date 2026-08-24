@@ -23,6 +23,7 @@ For every migrated source capability:
 - compare workflow/information architecture on required UI surfaces;
 - compare source ordering/ranking/deduplication/synthetic-item/next-item rules where they affect operational behavior;
 - compare enum/value representations across source domain, target DB, API and UI; when serialization differs, define a canonical semantic mapping before using the value in business predicates;
+- assert route uniqueness: each canonical method/path has exactly one production handler unless explicit middleware chaining is intentional and verified; temporary/v2/legacy duplicate product endpoints are forbidden unless contract-authorized;
 - record intentional exceptions only if backed by an approved decision.
 
 ### 3. Mutation/concurrency sweep
@@ -81,12 +82,14 @@ If no evidence exists, weaken/remove the claim or add the missing proof.
 For ordering/priority claims, evidence must prove the source rule independently; target-self-consistency is not source parity.
 For enum/state claims, evidence must distinguish semantic state from source/target serialized spelling.
 A required test that did not complete because of runner/process/environment failure is `UNPROVEN`, not `PASS`; fix/isolate the runner or obtain equivalent executable evidence before publication.
+A duplicated or shadowed canonical route is `FAIL` until a route-uniqueness check proves the effective production method/path maps to one intended handler.
 
 ### 8. Full regression and scope audit
 
 - current increment regression passes;
 - inherited accepted regressions pass where required;
 - any required regression interrupted by runner/process lock remains `UNPROVEN` and blocks publication until it actually passes;
+- route uniqueness/static registration check passes for changed API surfaces;
 - build/type/Wrangler/diff checks pass;
 - diff does not absorb forbidden next-increment scope;
 - no paid/production/real-data/cutover action occurred unless explicitly authorized.
