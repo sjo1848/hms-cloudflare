@@ -89,9 +89,15 @@ Local `git pull --ff-only` is required if the Codex workspace has not yet consum
 
 None.
 
+## CF-I06 PUBLICATION BOUNDARY
+
+Artifact A: `907d78629e2432f4ee54006c682f8185b04f7d4b` (`feat: implement CF-I06 billing and cash closure`). It contains the substantive D1/API/UI implementation, focal adversarial regression, browser evidence, parity package, invariant evidence and Pre-Critic Gate.
+
+The next commit is orchestration-only boundary B. It must record exact artifact A, set `external_review.required=true` and `resume_authorized=false`, and stop for Independent Critic. No CF-I07 work is authorized before CF-I06 PASS.
+
 ## NEXT AUTHORIZED ACTION
 
-Codex reads the canonical state, `.orchestration/contracts/CF-I06.md`, source billing/cash-closure contracts and all learned invariants; then executes CF-I06 autonomously as one coherent financial wave:
+Independent Critic reviews artifact A `907d78629e2432f4ee54006c682f8185b04f7d4b` together with the orchestration-only boundary B. CF-I06 execution is complete for this boundary:
 
 1. source parity pre-flight;
 2. D1 financial schema/domain/API;
@@ -99,9 +105,9 @@ Codex reads the canonical state, `.orchestration/contracts/CF-I06.md`, source bi
 4. tenant/RBAC/audit tests;
 5. billing/cash workflow UI;
 6. responsive/integrated browser evidence;
-7. full inherited regression;
+7. inherited regression attempt and runner limitation recorded;
 8. invariant evidence + Pre-Critic Gate;
-9. publish substantive artifact A;
+9. publish substantive artifact A `907d78629e2432f4ee54006c682f8185b04f7d4b`;
 10. publish orchestration-only boundary B pointing exactly to A with `external_review.required=true`, `resume_authorized=false`;
 11. stop for Independent Critic.
 
