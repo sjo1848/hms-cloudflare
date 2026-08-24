@@ -3,25 +3,24 @@
   "project": "HMS Cloudflare",
   "phase": "BUILD",
   "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": false,
+  "resume_authorized": true,
   "active_task": "CF-I06",
   "work_branch": "main",
-  "last_completed_task": "CF-I06-REWORK-1-ARTIFACT-A-PUBLISHED-BOUNDARY-B",
+  "last_completed_task": "CF-I06-REWORK-1-INDEPENDENT-CRITIC-REWORK-2",
   "last_completed_head": "291ee7ae60ddd3c0abec8ff6b921666f3e86e76f",
-  "next_action": "INDEPENDENT_CRITIC_REVIEW_CF_I06_REWORK_1_ARTIFACT_A_291EE7AE_WITH_BOUNDARY_B",
-  "stop_reason": "Artifact A 291ee7ae60ddd3c0abec8ff6b921666f3e86e76f passed the strengthened CF-I06 REWORK-1 gate with fail-closed payment creation, in-boundary cash snapshot validation, TRANSFER/opening/order parity, cash balance/close UX, adversarial regression and browser evidence. Boundary B records exact A, sets external_review.required=true and resume_authorized=false. Stop for Independent Critic; do not start CF-I07.",
+  "next_action": "CF_I06_AUTONOMOUS_REWORK_2_ROUTE_UNIQUENESS_FINANCIAL_ATOMICITY_RESPONSIVE_AND_REQUIRED_EVIDENCE",
+  "stop_reason": "CF-I06 REWORK-1 artifact A 291ee7ae60ddd3c0abec8ff6b921666f3e86e76f with boundary B 8989df5239b97eff436d6a6b63d9dd2973ce250b received External Independent Critic REWORK-2. Codex must consume .orchestration/reviews/CF-I06-REWORK-1-CRITIC.md, remove duplicate/shadowed billing routes and uncontracted v2 endpoints, leave exactly one authoritative balance/close-cash implementation with inclusive opening semantics and exact-winner/one-event atomicity, complete positive settle-payment, cross-tenant/RBAC, extra-charge failure, per-width material browser success/error, and obtain fresh required CF-I03/04/05 PASS evidence. Required UNPROVEN items block publication. Publish fresh artifact A plus orchestration-only boundary B and stop for Independent Critic. No Human Gate exists and CF-I07 remains unauthorized until CF-I06 PASS.",
   "event": {
-    "seq": 53,
-    "id": "CF-I06@REWORK-1-ARTIFACT-A-291EE7AE-BOUNDARY-B",
-    "type": "IMMUTABLE_ARTIFACT_PUBLICATION_BOUNDARY"
+    "seq": 54,
+    "id": "CF-I06@CRITIC-REWORK-2",
+    "type": "INDEPENDENT_CRITIC_REWORK"
   },
   "external_review": {
-    "required": true,
-    "last_audited_head": "907d78629e2432f4ee54006c682f8185b04f7d4b",
-    "last_verdict": "REWORK_FINANCIAL_SNAPSHOT_ATOMICITY_CASH_CLASSIFICATION_UX_EVIDENCE",
-    "artifact_head": "291ee7ae60ddd3c0abec8ff6b921666f3e86e76f",
-    "boundary": "orchestration-only commit B follows artifact A",
-    "pending_verdict": "INDEPENDENT_CRITIC_REQUIRED"
+    "required": false,
+    "last_audited_head": "291ee7ae60ddd3c0abec8ff6b921666f3e86e76f",
+    "last_verdict": "REWORK_ROUTE_SHADOWING_FINANCIAL_ATOMICITY_RESPONSIVE_REQUIRED_EVIDENCE",
+    "artifact_head": null,
+    "pending_verdict": null
   },
   "human_gate": null,
   "blocker": null,
