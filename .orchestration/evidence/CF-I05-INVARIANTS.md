@@ -1,6 +1,6 @@
 # CF-I05 — Invariant Evidence
 
-Artifact candidate: `CF-I05 REWORK-1 immutable artifact; exact HEAD is persisted in canonical STATUS/STATE at publication`  
+Artifact candidate: `14915f7`  
 Task Contract: `.orchestration/contracts/CF-I05.md`  
 Pre-Critic gate: `.orchestration/PRECRITIC-GATE.md`
 
@@ -19,7 +19,7 @@ All registry invariants are classified below. `UNPROVEN` is not used; every appl
 | INV-EVID-001 | APPLIES | PASS | this file and parity doc map claims to named scripts, SQL assertions, screenshots and source baseline; integrated claims are labeled real local API/D1 | previous mocked-only claim removed |
 | INV-LEGACY-001 | APPLIES | PASS | `npm run test:cf-i05` asserts legacy case `reported_by_user_id=subject-a`, resolver, `return_status=DIRTY`; event details include `legacy_recovery` | synthesized case remains tenant-local and owned |
 | INV-MONEY-001 | N/A | N/A | CF-I05 contract forbids billing, payment, settlement and cash operations | begins with CF-I06 |
-| INV-STATE-001 | APPLIES | PASS | final publication updates exact immutable HEAD in `.orchestration/STATE.md` and `.orchestration/STATUS.json`, with clean synchronized boundary | this evidence is part of the publication sequence |
+| INV-STATE-001 | APPLIES | PASS | exact artifact `14915f7` is persisted in `.orchestration/STATE.md` and `.orchestration/STATUS.json`; final boundary commit is synchronized and clean | canonical state converges on the reviewed substantive artifact |
 | INV-SCOPE-001 | APPLIES | PASS | diff/scope audit covers only CF-I05 rework, invariant evidence, browser harness and local Vite proxy; no CF-I06 or paid/production work | no Human Gate semantics changed |
 
 ## Mandatory mutation inventory

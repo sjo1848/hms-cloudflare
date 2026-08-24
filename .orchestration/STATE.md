@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-1 RUNNING + LEARNED-INVARIANT GATE ACTIVE`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-1 ARTIFACT READY FOR INDEPENDENT CRITIC`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -127,7 +127,15 @@ Blocker: `NONE`.
 
 ## REWORK-1 EXECUTION
 
-Runtime status: `RUNNING`; rework is routine and authorized under the existing CF-I05 contract. No Human Gate, blocker, paid transition, production mutation or CF-I06 work is in scope.
+Runtime status: `STOPPED AT INDEPENDENT CRITIC BOUNDARY`; artifact `14915f7` contains the invariant repairs, integrated browser harness, full validation and gate evidence. No Human Gate, blocker, paid transition, production mutation or CF-I06 work is in scope.
+
+### REWORK-1 result
+
+- Artifact: `14915f7`.
+- Invariant evidence: `.orchestration/evidence/CF-I05-INVARIANTS.md` — all applicable invariants `PASS`; money is explicit `N/A`.
+- Pre-Critic Gate: `.orchestration/evidence/CF-I05-PRECRITIC-GATE.md` — `PASS`.
+- Browser evidence: `scripts/cf-i05-browser-regression.sh`, `scripts/cf-i05-browser-regression.playwright.js`, `output/playwright/cf-i05-integrated-housekeeping.png`.
+- Full validation: base tests, types, build, CF-I03/CF-I04/CF-I05 regressions, integrated browser regression, Wrangler dry-run and diff check passed.
 
 ## LEARNED-INVARIANT ENFORCEMENT — EFFECTIVE NOW
 

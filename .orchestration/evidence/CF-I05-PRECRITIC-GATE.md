@@ -1,7 +1,7 @@
 # CF-I05 REWORK-1 — Pre-Critic Gate Execution
 
 Gate: `.orchestration/PRECRITIC-GATE.md`  
-Decision: `PASS — eligible for one fresh Independent Critic artifact`
+Decision: `PASS — artifact 14915f7 eligible for one fresh Independent Critic review`
 
 | Gate step | Result | Evidence |
 |---|---|---|
@@ -14,7 +14,7 @@ Decision: `PASS — eligible for one fresh Independent Critic artifact`
 | 7. Evidence claim audit | PASS | `.orchestration/evidence/CF-I05-INVARIANTS.md` and parity doc distinguish integrated API-D1, browser, static and source evidence |
 | 8. Full regression/scope audit | PASS | `npm run check`, `npm run types:check`, `npm run web:build`, `npm run test:cf-i03`, `npm run test:cf-i04`, `npm run test:cf-i05`, `npm run wrangler:dry-run`, `git diff --check` |
 | 9. Invariant evidence | PASS | every applicable registry invariant is `PASS`; `INV-MONEY-001` is justified `N/A` |
-| 10. Publish boundary | READY | publish one immutable artifact, persist exact HEAD, set `external_review.required=true`, stop; do not start CF-I06 |
+| 10. Publish boundary | PASS | immutable artifact `14915f7` published; canonical state is persisted with `external_review.required=true`; stop and do not start CF-I06 |
 
 ## Gate repairs completed before this decision
 
