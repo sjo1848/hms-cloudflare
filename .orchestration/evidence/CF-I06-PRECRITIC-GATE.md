@@ -7,8 +7,9 @@
 - [x] API typecheck and web production build pass.
 - [x] Unit suite: 16 tests pass.
 - [x] `scripts/cf-i06-regression.sh` pass, including invalid amounts, overpay unchanged, partial/full settlement, concurrent payment race, exact balance, concurrent close race, counted difference and duplicate close rejection.
-- [x] Browser workflow pass at 375/430/768/1024 with no horizontal overflow; screenshot `output/playwright/cf-i06-billing.png`.
-- [x] Existing CF-I03/CF-I04/CF-I05 regression chain was attempted. The legacy harness stopped at its post-Worker D1 inspection due the local D1 process lock; this is a runner limitation, not a product FAIL. No CF-I03–CF-I05 source or test blob changed.
+- [x] Browser workflow pass at 375/390/430/768/1024 with no horizontal overflow; screenshot `output/playwright/cf-i06-billing.png`; overpay and stale-close typed errors are exercised.
+- [x] Existing CF-I03/CF-I04/CF-I05 accepted regression evidence remains mechanically identity-preserving: no inherited source/test blob changed. The legacy local harness's D1 process-lock path remains explicitly UNPROVEN as a fresh rerun and is not claimed as a new PASS.
+- [x] Focal regression proves no-invoice overpay zero state, stale snapshot rejection, TRANSFER non-cash classification, first-shift opening, newest-first history, settle conflict, unknown hotel denial, positive/negative difference and extra-charge consistency.
 - [x] Static money scan: no new `REAL`, `parseFloat`, or floating authoritative amount surface.
 - [x] No remote D1 mutation, deployment, paid transition, production data or CF-I07 scope.
 

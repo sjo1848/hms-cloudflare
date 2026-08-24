@@ -10,6 +10,7 @@
     "test:cf-i05": "bash scripts/cf-i05-regression.sh",
     "test:cf-i05-browser": "bash scripts/cf-i05-browser-regression.sh",
     "test:cf-i06": "bash scripts/cf-i06-regression.sh",
+    "test:cf-i06-browser": "bash scripts/cf-i06-browser-regression.sh",
     "typecheck": "tsc -b",
     "web:build": "vite build --config apps/web/vite.config.ts",
     "types:api": "wrangler types apps/api/worker-configuration.d.ts -c apps/api/wrangler.jsonc",
