@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-1 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-1 AUTHORIZED + LEARNED-INVARIANT GATE ACTIVE`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -20,6 +20,9 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - Data topology decision: `.orchestration/decisions/CF-DATA-001.md`
 - Autonomous execution decision: `.orchestration/decisions/PM-AUTONOMY-001.md`
 - UX parity decision: `.orchestration/decisions/CF-UX-PARITY-001.md`
+- Learned invariant decision: `.orchestration/decisions/PM-INVARIANTS-001.md`
+- Learned invariant registry: `.orchestration/INVARIANTS.md`
+- Mandatory Pre-Critic Gate: `.orchestration/PRECRITIC-GATE.md`
 - Active Task Contract: `.orchestration/contracts/CF-I05.md`
 - Current Critic record: `.orchestration/reviews/CF-I05-CRITIC.md`
 
@@ -55,6 +58,14 @@ Conversation history is supporting context only and is never the sole source of 
 - routine REWORK is autonomous.
 - Human is not a routine message bus.
 - `RUNTIME_CAPABILITY_FALLBACK` required when separate specialist contexts are unavailable.
+
+### PM-INVARIANTS-001 — APPROVED / BINDING
+- defects with reusable root causes are promoted into `.orchestration/INVARIANTS.md`;
+- every task/rework must classify applicable invariants and map them to evidence before implementation;
+- Codex must run `.orchestration/PRECRITIC-GATE.md` before publishing a substantive artifact;
+- `.orchestration/evidence/<TASK-ID>-INVARIANTS.md` is mandatory;
+- any applicable invariant that is `FAIL` or `UNPROVEN` blocks publication and is repaired autonomously;
+- this admission gate does not replace External Independent Critic and never permits Codex self-PASS.
 
 ## VALIDATED RESULTS
 
@@ -114,14 +125,32 @@ Diagnosis: `CONCURRENCY_DEFECT + DOMAIN_PARITY_DEFECT + UX_PARITY_DEFECT + EVIDE
 Human Gate: `NONE`.  
 Blocker: `NONE`.
 
+## LEARNED-INVARIANT ENFORCEMENT — EFFECTIVE NOW
+
+The CF-I05 defects were used to harden the method rather than merely record another bug list.
+
+The active rework must now prove the applicable reusable rules, including:
+- `INV-ATOMIC-001` conditional mutation cannot report false success;
+- `INV-AUDIT-001` event/audit exactly-once iff mutation succeeds;
+- `INV-LEGACY-001` legacy recovery actor/tenant/time/provenance;
+- `INV-UX-001` source workflow parity;
+- `INV-RESP-001` material operation at every contracted width;
+- `INV-EVID-001` evidence claims no stronger than proof.
+
+Before the next CF-I05 artifact is published Codex must persist `.orchestration/evidence/CF-I05-INVARIANTS.md` and pass the full mandatory Pre-Critic Gate.
+
+Future CF-I06+ Task Contracts inherit this mechanism automatically through `PM-INVARIANTS-001` and `AGENTS.md`.
+
 ## DELIVERY SPEED FINDING
 
 The accelerated wave model is retained. CF-I05 reached one meaningful Independent Critic boundary with a coherent artifact, which is preferable to repeated schema/API/UI micro-boundaries.
 
 Acceleration rule:
 - keep a complete contract and parity matrix before implementation;
+- apply the learned-invariant registry during planning and self-adversarial QA;
 - implement and self-critic the whole bounded wave;
-- surface all discovered defects in one external Critic review where possible;
+- run the mandatory Pre-Critic Gate before publication;
+- surface only genuinely new defect classes in the external Critic where possible;
 - keep financial, security/cross-tenant and migration/cutover domains as separate high-risk boundaries.
 
 The goal is fewer external coordination cycles, not weaker QA.
@@ -140,7 +169,7 @@ None. CF-I05 has bounded autonomous REWORK.
 
 ## NEXT AUTHORIZED ACTION
 
-Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I05-CRITIC.md`, `.orchestration/contracts/CF-I05.md`, source parity inventory and binding decisions, then autonomously as one bounded rework wave:
+Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I05-CRITIC.md`, `.orchestration/contracts/CF-I05.md`, `.orchestration/decisions/PM-INVARIANTS-001.md`, `.orchestration/INVARIANTS.md`, `.orchestration/PRECRITIC-GATE.md`, source parity inventory and other binding decisions, then autonomously as one bounded rework wave:
 
 1. fixes stale/concurrent start-cleaning, finish-cleaning and maintenance-resolution semantics so false success/duplicate transition audit is impossible;
 2. adds deterministic exact-state/event-count concurrency regressions;
@@ -148,9 +177,11 @@ Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I05-CRITIC.
 4. ports/adapts source queue/focused-room Housekeeping interaction model;
 5. isolates maintenance drafts per selected room/case;
 6. adds committed reproducible browser/integration evidence for start, finish, maintenance open and resolve, validation/error/recovery and 375/390/430/768/1024 usability;
-7. runs full CF-I03/CF-I04/CF-I05 regressions, tests, build, types, Wrangler and diff checks;
-8. publishes one fresh immutable CF-I05 artifact with `external_review.required=true`;
-9. stops at the next Independent Critic boundary.
+7. completes `.orchestration/evidence/CF-I05-INVARIANTS.md` with every applicable invariant `PASS` or justified `N/A`;
+8. runs the complete `.orchestration/PRECRITIC-GATE.md`, repairing any `FAIL/UNPROVEN` finding before publication;
+9. runs full CF-I03/CF-I04/CF-I05 regressions, tests, build, types, Wrangler and diff checks;
+10. publishes one fresh immutable CF-I05 artifact with `external_review.required=true`;
+11. stops at the next Independent Critic boundary.
 
 Do not begin CF-I06 before a fresh CF-I05 Independent Critic PASS.
 
