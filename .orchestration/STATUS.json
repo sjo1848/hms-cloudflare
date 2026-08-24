@@ -7,9 +7,9 @@
   "active_task": "CF-I07-INDEPENDENT-CRITIC",
   "work_branch": "main",
   "last_completed_task": "CF-I07-ARTIFACT-A-PUBLISHED",
-  "last_completed_head": "5ed9013c75c72807795964774d302aa3394c3ea0",
+  "last_completed_head": "5ed90137b2b58d69f16cca088b014153bf52eb4a",
   "next_action": "INDEPENDENT_CRITIC_AUDIT_CF_I07_ARTIFACT_A",
-  "stop_reason": "CF-I07 artifact A is published at 5ed9013c75c72807795964774d302aa3394c3ea0. Focal/admin/browser/type/build/Wrangler/CF-I03/CF-I06 evidence is present; the inherited CF-I05 runner did not emit its terminal PASS marker and is explicitly disclosed for Independent Critic audit. Stop at Independent Critic. CF-I08 remains unauthorized.",
+  "stop_reason": "CF-I07 artifact A is published at 5ed90137b2b58d69f16cca088b014153bf52eb4a. Focal/admin/browser/type/build/Wrangler/CF-I03/CF-I06 evidence is present; the inherited CF-I05 runner did not emit its terminal PASS marker and is explicitly disclosed for Independent Critic audit. Stop at Independent Critic. CF-I08 remains unauthorized.",
   "event": {
     "seq": 59,
     "id": "CF-I07@ARTIFACT-A-PUBLISHED",
@@ -19,7 +19,7 @@
     "required": true,
     "last_audited_head": "0004990ba60b0349776de139cd04dfc2f30eaa6d",
     "last_verdict": "PASS",
-    "artifact_head": "5ed9013c75c72807795964774d302aa3394c3ea0",
+    "artifact_head": "5ed90137b2b58d69f16cca088b014153bf52eb4a",
     "pending_verdict": "INDEPENDENT_CRITIC"
   },
   "human_gate": null,
