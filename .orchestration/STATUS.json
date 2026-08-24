@@ -3,25 +3,24 @@
   "project": "HMS Cloudflare",
   "phase": "BUILD",
   "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": false,
+  "resume_authorized": true,
   "active_task": "CF-I06",
   "work_branch": "main",
-  "last_completed_task": "CF-I06-ARTIFACT-A-PUBLISHED-BOUNDARY-B",
+  "last_completed_task": "CF-I06-INDEPENDENT-CRITIC-REWORK-1",
   "last_completed_head": "907d78629e2432f4ee54006c682f8185b04f7d4b",
-  "next_action": "INDEPENDENT_CRITIC_REVIEW_CF_I06_ARTIFACT_A_907D78629E_WITH_BOUNDARY_B",
-  "stop_reason": "Artifact A 907d78629e2432f4ee54006c682f8185b04f7d4b passed the CF-I06 Pre-Critic Gate with exact-cent, atomicity, audit, RBAC, adversarial regression and browser evidence. Boundary B records exact A, changes orchestration/evidence only, sets external_review.required=true and resume_authorized=false. Stop for Independent Critic; do not start CF-I07.",
+  "next_action": "CF_I06_AUTONOMOUS_REWORK_1_FINANCIAL_ATOMICITY_CASH_CLOSE_PARITY_UX_AND_EVIDENCE",
+  "stop_reason": "CF-I06 artifact A 907d78629e2432f4ee54006c682f8185b04f7d4b with boundary B 3f3abdadd5c1c6ad80d58308635c55a901c18752 received External Independent Critic REWORK-1. Codex must consume .orchestration/reviews/CF-I06-CRITIC.md and autonomously repair rejected-payment side effects, cash-close mutable-snapshot revalidation, TRANSFER/non-CASH classification, first-shift opening semantics, cash-balance/close UX, payment-history order, required 375/390/430/768/1024 browser/error journeys, settle/tenant/RBAC/transfer/difference/extra-charge/stale-snapshot regressions, and inherited CF-I03/04/05 runner PASS evidence. A blocked runner is UNPROVEN, not PASS. Publish fresh artifact A plus orchestration-only boundary B and stop for Independent Critic. No Human Gate exists and CF-I07 remains unauthorized until CF-I06 PASS.",
   "event": {
-    "seq": 51,
-    "id": "CF-I06@ARTIFACT-A-907D78629E-BOUNDARY-B",
-    "type": "IMMUTABLE_ARTIFACT_PUBLICATION_BOUNDARY"
+    "seq": 52,
+    "id": "CF-I06@CRITIC-REWORK-1",
+    "type": "INDEPENDENT_CRITIC_REWORK"
   },
   "external_review": {
-    "required": true,
-    "last_audited_head": "17372d3200b8e88eec116e97672c12589005103d",
-    "last_verdict": "PASS",
-    "artifact_head": "907d78629e2432f4ee54006c682f8185b04f7d4b",
-    "boundary": "orchestration-only commit B follows artifact A",
-    "pending_verdict": "INDEPENDENT_CRITIC_REQUIRED"
+    "required": false,
+    "last_audited_head": "907d78629e2432f4ee54006c682f8185b04f7d4b",
+    "last_verdict": "REWORK_FINANCIAL_SNAPSHOT_ATOMICITY_CASH_CLASSIFICATION_UX_EVIDENCE",
+    "artifact_head": null,
+    "pending_verdict": null
   },
   "human_gate": null,
   "blocker": null,
