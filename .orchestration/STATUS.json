@@ -3,25 +3,24 @@
   "project": "HMS Cloudflare",
   "phase": "BUILD",
   "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": false,
-  "active_task": "CF-I05",
+  "resume_authorized": true,
+  "active_task": "CF-I06",
   "work_branch": "main",
-  "last_completed_task": "CF-I05-REWORK-5-ARTIFACT-A-PUBLISHED-BOUNDARY-B",
+  "last_completed_task": "CF-I05-INDEPENDENT-CRITIC-PASS",
   "last_completed_head": "17372d3200b8e88eec116e97672c12589005103d",
-  "next_action": "INDEPENDENT_CRITIC_REVIEW_CF_I05_REWORK_5_ARTIFACT_A_17372D3_WITH_BOUNDARY_B",
-  "stop_reason": "Artifact A 17372d3200b8e88eec116e97672c12589005103d passed the full CF-I05 REWORK-5 Pre-Critic Gate, including INV-ENUM-001, INV-ORDER-001 and corrected INV-STATE-001. This boundary commit B records exact A, changes orchestration/evidence only, sets external_review.required=true and resume_authorized=false. Stop for Independent Critic; do not start CF-I06.",
+  "next_action": "CF_I06_AUTONOMOUS_FINANCIAL_WAVE",
+  "stop_reason": "CF-I05 passed External Independent Critic on artifact A 17372d3200b8e88eec116e97672c12589005103d with boundary B 9a05013c4b38567ff4749a855b40c9fd1cba2314. CF-I06 Billing is authorized under .orchestration/contracts/CF-I06.md. Codex must execute the complete financial wave with INV-MONEY-001 and all applicable learned invariants, use artifact A plus orchestration-only boundary B publication, and stop only for Independent Critic or a real Human Gate. CF-I07 remains unauthorized until CF-I06 PASS.",
   "event": {
-    "seq": 49,
-    "id": "CF-I05@ARTIFACT-A-17372D3-BOUNDARY-B",
-    "type": "IMMUTABLE_ARTIFACT_PUBLICATION_BOUNDARY"
+    "seq": 50,
+    "id": "CF-I06@AUTHORIZED-AFTER-CF-I05-PASS",
+    "type": "NEXT_INCREMENT_AUTHORIZED"
   },
   "external_review": {
-    "required": true,
-    "last_audited_head": "6837a61a7b27e5ae0b909d1a436ddff10e0e1b14",
-    "last_verdict": "REWORK_P1_ENUM_REPRESENTATION_AND_CANONICAL_PUBLICATION_BOUNDARY",
-    "artifact_head": "17372d3200b8e88eec116e97672c12589005103d",
-    "boundary": "orchestration-only commit B follows artifact A",
-    "pending_verdict": "INDEPENDENT_CRITIC_REQUIRED"
+    "required": false,
+    "last_audited_head": "17372d3200b8e88eec116e97672c12589005103d",
+    "last_verdict": "PASS",
+    "artifact_head": null,
+    "pending_verdict": null
   },
   "human_gate": null,
   "blocker": null,
