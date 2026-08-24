@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-24  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-2 ARTIFACT READY FOR INDEPENDENT CRITIC`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-3 AUTHORIZED`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -20,7 +20,7 @@ Conversation history is supporting context only. Canonical repository state, con
 - Migration design: `docs/migration-design-package.md`
 - Source parity inventory: `docs/source-contract-inventory.md`
 - Active Task Contract: `.orchestration/contracts/CF-I05.md`
-- Current Independent Critic: `.orchestration/reviews/CF-I05-REWORK-1-CRITIC.md`
+- Current Independent Critic: `.orchestration/reviews/CF-I05-REWORK-2-CRITIC.md`
 - Learned invariants: `.orchestration/INVARIANTS.md`
 - Mandatory admission gate: `.orchestration/PRECRITIC-GATE.md`
 - Machine-readable execution state: `.orchestration/STATUS.json`
@@ -28,117 +28,64 @@ Conversation history is supporting context only. Canonical repository state, con
 ## ACTIVE DECISIONS
 
 ### CF-ARCH-001 — APPROVED
-- Cloudflare Access authentication boundary.
-- React + Vite frontend.
-- Workers + Hono + TypeScript API.
-- D1 persistence.
-- Same-origin `/api/v1` compatibility where the accepted product contract is unchanged.
-- Source HMS remains read-only.
-- Parity before feature expansion.
+Cloudflare Access + React/Vite + Workers/Hono/TypeScript + D1; same-origin `/api/v1`; source HMS read-only; parity before expansion.
 
 ### CF-DATA-001 — APPROVED OPTION B
-- CONTROL_DB for identity/hotel/membership/routing metadata.
-- One operational D1 per hotel.
-- Critical atomic workflows remain inside one hotel D1.
-- Target `$0/month / Cloudflare Free`.
-- Paid/material recurring-cost transition requires Human Gate.
+CONTROL_DB for identity/hotel/membership/routing; one operational D1 per hotel; critical workflows atomic inside one hotel D1; target `$0/month / Cloudflare Free`; paid/material recurring-cost transition requires Human Gate.
 
 ### CF-UX-PARITY-001 — APPROVED
-- Cloudflare migration is not a product redesign.
-- Accepted source HMS is UX canon for workflow structure, interaction semantics and material responsive/mobile behavior.
-- Technical adaptation is allowed; material intentional departure requires Human Gate.
+Accepted source HMS is UX canon for workflow structure, interaction semantics and material responsive/mobile behavior. Technical adaptation is allowed; material intentional departure requires Human Gate.
 
 ### PM-AUTONOMY-001 — APPROVED
-- Human = Product/Risk Authority.
-- ChatGPT = External Controller / Method Custodian / Independent Critic / Human-Gate Classifier.
-- Codex = Runtime Orchestrator / execution owner.
-- Routine REWORK is autonomous.
-- Human is not a routine message bus.
-- `RUNTIME_CAPABILITY_FALLBACK` remains accurate when separate specialist contexts are unavailable.
+Human = Product/Risk Authority. ChatGPT = External Controller / Method Custodian / Independent Critic / Human-Gate Classifier. Codex = Runtime Orchestrator / execution owner. Routine REWORK is autonomous; Human is not a routine message bus.
 
 ### PM-INVARIANTS-001 — BINDING
-- Reusable defect classes become durable invariants.
-- Every task/rework classifies applicable invariants and maps them to evidence.
-- Codex must pass `.orchestration/PRECRITIC-GATE.md` before publishing a substantive artifact.
-- `FAIL` or `UNPROVEN` blocks publication and triggers autonomous repair.
-- The admission gate never replaces External Independent Critic.
+Reusable defect classes become durable invariants. Codex must classify applicable invariants, persist evidence and pass `.orchestration/PRECRITIC-GATE.md` before publishing. This never replaces External Independent Critic.
 
 ## VALIDATED RESULTS
 
-### CF-I01 — Platform foundation
-Status: `PASS`.  
-Accepted artifact: `27515d85d9db0677c4946746fa86374252bff4f5`.
-
-### CF-I02 — Rooms / guests / holds
-Status: `PASS`.  
-Accepted artifact: `bb3a136526c900522394f223206600f543e99e23`.
-
-### CF-I03 — Bookings / availability / room-night protection
-Status: `PASS / CLEAN INTEGRATION PASS / CLOSED`.  
-Accepted artifact: `65ed1e5710a20af97d183f04364b5aa7b605a74a`.  
-Integrated reviewed head: `58c84a2564d9a4b85785203ff04fee24fee47213`.
-
-### CF-I04 — Reception lifecycle
-Status: `PASS`.  
-Accepted artifact: `5dc91414301810dba4d5ae6a00f062b8cf59ea7a`.  
-Human Gate: `NONE`.
-
-Accepted scope includes real guest count, atomic lifecycle transitions, hold/claim-safe reassignment, checkout policy/reference semantics, actor/request/hotel traceability, source-aligned reception workspace/mobile journey and browser evidence at 375/390/430/768/1024.
+- CF-I01 Platform foundation — `PASS`; accepted `27515d85d9db0677c4946746fa86374252bff4f5`.
+- CF-I02 Rooms / guests / holds — `PASS`; accepted `bb3a136526c900522394f223206600f543e99e23`.
+- CF-I03 Bookings / availability / room-night protection — `PASS / CLEAN INTEGRATION PASS`; accepted `65ed1e5710a20af97d183f04364b5aa7b605a74a`; integrated reviewed `58c84a2564d9a4b85785203ff04fee24fee47213`.
+- CF-I04 Reception lifecycle — `PASS`; accepted `5dc91414301810dba4d5ae6a00f062b8cf59ea7a`.
 
 ## CF-I05 — HOUSEKEEPING + MAINTENANCE
 
 Task Contract: `.orchestration/contracts/CF-I05.md`.
 
-### Artifact history
+Artifact history:
+- `02421a19985fa71408e52be2a253b9082292dd78` → `REWORK`.
+- `14915f79c77ca688cafd5e50da4398b0cf57d113` → `REWORK`.
+- `462bd0519c7224dc996f23825dbbc8c5afc10aec` → Independent Critic `REWORK-3`.
 
-- `02421a19985fa71408e52be2a253b9082292dd78` → Independent Critic `REWORK`.
-- REWORK-1 artifact `14915f79c77ca688cafd5e50da4398b0cf57d113` → Independent Critic `REWORK`.
-- REWORK-2 artifact `462bd05` → fresh immutable artifact ready for Independent Critic.
-- Current review: `.orchestration/reviews/CF-I05-REWORK-1-CRITIC.md`.
+### Accepted in artifact `462bd05`
 
-### REWORK-1 improvements accepted
+- exact maintenance-case ABA correlation is repaired;
+- deterministic stale K1 vs newer open K2 preserves room MAINTENANCE, K1 RESOLVED, K2 OPEN and zero stale resolve event;
+- simple cleaning/resolve concurrency remains exactly-once;
+- legacy reporter/resolver ownership remains preserved;
+- mobile task workspace is now a distinct bottom focused surface;
+- per-room draft isolation and retention are browser-tested;
+- integrated browser harness remains real local API + D1 + Vite;
+- no CF-I06, production, remote D1, real-data or paid-resource scope drift.
 
-- simple concurrent cleaning start/finish now produces one success, one conflict and one event;
-- simple concurrent resolution of the same current maintenance case no longer duplicates the resolve event;
-- synthesized legacy maintenance recovery retains reporter and resolver ownership;
-- active desktop UX is queue → selected room → focused workspace instead of a flat action-card board;
-- maintenance drafts are keyed by room ID rather than globally shared;
-- committed browser harness is backed by the real local target API + D1 + Vite;
-- backend capability enforcement and authorized operational-D1 routing remain intact;
-- no CF-I06, production, remote-D1, real-data or paid-resource scope drift occurred.
+### REWORK-3 blocking findings
 
-### REWORK-2 result — artifact ready for Independent Critic
+1. `Siguiente tarea` target semantics are wrong: source opens `visibleQueue[0]`; target defaults selection to `visible[0]` and then cycles to `(index+1)`, so the first press skips the source-priority task.
+2. Mobile focused-task surface does not move focus into the task or restore focus to the originating queue/next-task control on close; previous Critic required source-equivalent focus/close behavior.
+3. Browser harness proves two-room draft isolation/retention but does not actually prove success/`Clear form` reset isolation, while evidence claims that reset proof exists.
 
-- Exact case correlation repaired: stale K1 against reopened K2 returns 409 and preserves room MAINTENANCE, K1 RESOLVED, K2 OPEN and zero stale event.
-- Mobile focused-task parity repaired with dialog/bottom-sheet entry and explicit close/queue return for `Siguiente tarea` and room selection.
-- Browser evidence now proves focus/close at 375/390/430, desktop workspace at 768/1024, per-room draft isolation/retention/reset and no overflow.
-- Full regression, browser, build, types, Wrangler dry-run, invariant evidence and Pre-Critic Gate PASS are persisted for artifact `462bd05`.
-
-Independent Critic: `REQUIRED`.
+Diagnosis: `NEXT_TASK_SEMANTIC_PARITY_DEFECT + MOBILE_FOCUS_BEHAVIOR_GAP + EVIDENCE_OVERCLAIM`.  
 Human Gate: `NONE`.  
 Blocker: `NONE`.
-
-## LEARNED-INVARIANT UPDATE
-
-`INV-ATOMIC-001` is strengthened effective immediately:
-- final-state checks are insufficient when related entity/case identity can change;
-- multi-entity operations must prove exact logical-operation correlation;
-- ABA/re-entry must be tested when a stale caller can observe K1/state A and later execute after K2/state A is recreated;
-- deterministic evidence must assert both the stale object and the newer/current related object.
-
-The mandatory Pre-Critic mutation sweep now explicitly requires identity/version/case correlation and ABA testing where applicable. UX/browser sweeps also require material mobile task-entry/focus semantics and browser proof of draft isolation when the contract requires it.
-
-This strengthening applies automatically to CF-I06+.
 
 ## DELIVERY SPEED POLICY
 
 Accelerated waves remain active. Speed comes from complete contracts, one coherent implementation wave, learned-invariant self-QA and one external boundary—not from skipping domain, security, UX or evidence guarantees.
 
-No intermediate Cloudflare preview is planned. Current authorized sequence remains:
+No intermediate Cloudflare preview is planned. Authorized sequence remains:
 
 `CF-I05 → CF-I06 → CF-I07 → CF-I08 → CF-I09 → Cloudflare test environment → Human Product Acceptance → production-readiness/release gates`.
-
-High-risk boundaries remain separately reviewable: financial operations, security/cross-tenant administration, migration/cutover and paid/production transitions.
 
 ## PENDING HUMAN GATES
 
@@ -150,12 +97,18 @@ None.
 
 ## BLOCKERS
 
-None. CF-I05 REWORK-2 artifact is published; external Independent Critic is the next boundary.
+None. CF-I05 REWORK-3 is bounded routine work.
 
 ## NEXT AUTHORIZED ACTION
 
-Stop at External Independent Critic review of immutable CF-I05 REWORK-2 artifact `462bd05`. Do not begin CF-I06 before a fresh CF-I05 Independent Critic PASS.
+Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I05-REWORK-2-CRITIC.md`, the active Task Contract, invariants, Pre-Critic Gate and source parity artifacts, then autonomously in one bounded wave:
 
-Do not begin CF-I06 before a fresh CF-I05 Independent Critic PASS.
+1. make `Siguiente tarea` open the source-equivalent first/prioritized visible task;
+2. implement mobile focus entry and close focus restoration;
+3. add exact browser proof for draft reset/clear isolation;
+4. align evidence claims with executable proof;
+5. run full CF-I03/CF-I04/CF-I05 regressions, browser, tests, build, types, Wrangler dry-runs and diff checks;
+6. publish one fresh immutable CF-I05 artifact with `external_review.required=true`;
+7. stop at Independent Critic.
 
-No production deployment, remote D1 mutation, real-data migration, Cloudflare preview deployment or paid transition is authorized by this state.
+Do not begin CF-I06 before a fresh CF-I05 Independent Critic PASS. No production deployment, remote D1 mutation, real-data migration, Cloudflare preview deployment or paid transition is authorized.
