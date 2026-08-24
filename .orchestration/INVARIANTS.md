@@ -91,6 +91,20 @@ When an Independent Critic finds a defect whose root cause can recur outside the
 
 **Origin:** CF-UX-PARITY-001; CF-I04 reception; CF-I05 housekeeping workspace.
 
+## INV-ORDER-001 — Operational ordering and next-item selection are product semantics
+
+**Applies when:** the accepted source ranks, prioritizes, deduplicates, synthesizes, or selects queue/list/work items and the order affects what the operator sees or does next.
+
+**Invariant:** target ordering cannot fall back to storage order, identifier order, alphabetical order, API order, or the first rendered target item when the source defines an operational ranking or synthetic-item rule. `next`, `best`, `priority`, queue-head and equivalent actions must resolve according to the accepted source semantics. Synthetic/derived work items required by the source must remain represented even when their base entity is absent from an ordinary list.
+
+**Required evidence:**
+- explicit source ranking/selection/synthetic-item rule → target implementation mapping;
+- deterministic fixture where natural/storage/identifier order conflicts with the expected operational rank;
+- assertion of the known expected ordered identities, not an expectation derived from the target's own first item;
+- when the source synthesizes work items, a fixture proving the item is present, contextualized and cannot expose an invalid operation.
+
+**Origin:** CF-I05 REWORK-3 review: source Housekeeping priority ranking and orphan-departure queue behavior were lost while the target browser incorrectly labeled first-rendered-target consistency as source-priority parity.
+
 ## INV-RESP-001 — Responsive evidence proves the operation, not only the shell
 
 **Applies when:** a Task Contract names responsive widths or a mobile/desktop journey.
