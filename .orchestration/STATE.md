@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-24  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 ARTIFACT PUBLISHED — INDEPENDENT CRITIC PENDING`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving product behavior, domain semantics, security, financial integrity and operational safety. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -28,6 +28,7 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - CF-I04 — PASS — `5dc91414301810dba4d5ae6a00f062b8cf59ea7a`.
 - CF-I05 Housekeeping + Maintenance — PASS — artifact A `17372d3200b8e88eec116e97672c12589005103d`, boundary B `9a05013c4b38567ff4749a855b40c9fd1cba2314`.
 - CF-I06 Billing — PASS — artifact A `0004990ba60b0349776de139cd04dfc2f30eaa6d`, boundary B `de0dbdc0ed92b60a5fd32faa184484c701711d08`, Independent Critic `.orchestration/reviews/CF-I06-REWORK-3-CRITIC.md`.
+- CF-I07 Security/Admin — artifact A `5ed9013c75c72807795964774d302aa3394c3ea0`; Independent Critic pending. Focal RBAC/users/audit/network and responsive browser checks passed; the inherited CF-I05 shell runner did not emit its terminal marker and is disclosed as not freshly proven in the artifact evidence.
 
 ### CF-I06 accepted guarantees
 
@@ -100,7 +101,9 @@ None.
 
 ## NEXT AUTHORIZED ACTION
 
-Codex autonomously executes CF-I07 under `.orchestration/contracts/CF-I07.md`:
+Independent Critic audits CF-I07 artifact A `5ed9013c75c72807795964774d302aa3394c3ea0` against the contract and evidence. Codex must not begin CF-I08 before CF-I07 PASS.
+
+The completed CF-I07 execution included:
 
 1. source parity pre-flight for Users, route guards, auth/admin handlers and Hotel Network administration;
 2. explicit Cloudflare Access identity/auth adaptation mapping;
