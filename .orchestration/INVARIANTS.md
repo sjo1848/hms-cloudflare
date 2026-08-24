@@ -177,6 +177,38 @@ External Independent Critic reviews artifact A plus canonical boundary state B. 
 
 **Origin:** CF-I05 REWORK-4 review exposed a circular self-SHA requirement: trying to write a commit's own SHA changes that commit. The method is corrected to use an explicit non-circular publication pair.
 
+## INV-CF-I07-001 — Central capability authority has no role-name bypass
+
+**Applies when:** a protected admin, audit or network route is in scope.
+
+**Invariant:** middleware and handlers must authorize only through the canonical capability authority. Direct role-name shortcuts cannot grant a capability absent from that authority.
+
+**Required evidence:** static scan for route-local role shortcuts plus positive/negative API assertions for each network/admin boundary.
+
+## INV-CF-I07-002 — Semantic no-op mutations produce no audit
+
+**Applies when:** a role, plan or other admin mutation is requested.
+
+**Invariant:** matching SQL rows is insufficient; same-value/no-op requests are rejected or return an explicit no-op and produce zero audit events.
+
+**Required evidence:** repeated same-role and same-plan requests with unchanged state and exact audit counts.
+
+## INV-CF-I07-003 — Downgrade proof is allowed-before/denied-after
+
+**Applies when:** a role downgrade is claimed.
+
+**Invariant:** the same Access subject must successfully perform a privileged operation before downgrade and be denied that same operation after downgrade, with no stale business/audit side effect.
+
+**Required evidence:** deterministic before/after API sequence and durable state assertions.
+
+## INV-CF-I07-004 — Successful regression owns process cleanup
+
+**Applies when:** a regression runner starts Worker/Vite/Playwright processes.
+
+**Invariant:** terminal PASS is emitted only after the runner's owned process tree is terminated; no owned process may remain after successful exit.
+
+**Required evidence:** runner cleanup trap and post-run process check.
+
 ## INV-SCOPE-001 — Accelerated wave does not imply scope blending
 
 **Applies to:** accelerated delivery waves.

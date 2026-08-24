@@ -57,6 +57,9 @@ For every business operation with conditional writes:
 - capability-restricted mutations require at least one denied write-path assertion, not read-denial alone, when writes are in scope;
 - tenant-scoped audit/read models must not include unrelated global/network or other-tenant records; network/global audit access requires an explicit network capability and scope;
 - denial leaves zero business/audit side effects.
+- CF-I07 protected admin/network/audit routes must have no direct role-name authorization shortcut outside the canonical capability helper.
+- same-role/same-plan no-ops must be rejected or explicitly no-op with zero audit rows.
+- downgrade evidence must prove the same subject was allowed before and denied after, using the same privileged operation.
 
 ### 5. UX parity sweep
 
@@ -103,6 +106,7 @@ A duplicated or shadowed canonical route is `FAIL` until a route-uniqueness chec
 - build/type/Wrangler/diff checks pass;
 - diff does not absorb forbidden next-increment scope;
 - no paid/production/real-data/cutover action occurred unless explicitly authorized.
+- every runner that emits PASS must terminate its owned Worker/Vite/Playwright process tree; a leaked process makes the run unproven.
 
 ### 9. Invariant evidence file
 

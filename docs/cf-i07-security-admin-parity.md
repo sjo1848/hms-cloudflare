@@ -8,7 +8,7 @@
 | `ops` operations | active hotel membership role `ops`; operational and billing capabilities, no user/network administration | backend capability check |
 | `receptionist` front desk | active hotel membership role `receptionist`; reception and billing read/write capabilities | backend capability check |
 | `housekeeping` | active hotel membership role `housekeeping`; housekeeping read/write only | backend capability check |
-| `saas_admin` network administration | active `network_memberships` row; `saas.hotels.read/write` and audit read | explicit network middleware + capability check |
+| `saas_admin` network administration | active `network_memberships` row; only `saas.hotels.read/write` | explicit network middleware + capability check; audit remains denied |
 | unknown role | no capability set | deny by default |
 
 Exact source-sensitive permissions are executable in `apps/api/src/auth/capabilities.ts`: `receptionist` has `billing.balance.read` and `billing.invoice.read` but not `billing.invoices.read`; `ops` retains `audit.events.read`; `saas_admin` is limited to network hotel read/write; and `bookings.checkout.override` is admin-only. Lifecycle and all migrated route modules consume this single authority.

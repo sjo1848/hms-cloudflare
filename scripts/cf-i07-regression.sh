@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd); cd "$repo_dir"; wrangler="$repo_dir/node_modules/.bin/wrangler"; tmp_dir=$(mktemp -d); worker_pid=""; trap '[[ -n "$worker_pid" ]] && kill "$worker_pid" 2>/dev/null || true' EXIT
+repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd); cd "$repo_dir"; wrangler="$repo_dir/node_modules/.bin/wrangler"; tmp_dir=$(mktemp -d); worker_pid=""; cleanup(){ if [[ -n "$worker_pid" ]]; then pkill -TERM -P "$worker_pid" 2>/dev/null || true; kill "$worker_pid" 2>/dev/null || true; worker_pid=""; fi; }; trap cleanup EXIT
 for db in CONTROL_DB HOTEL_DEMO_DB HOTEL_SECOND_DB; do CI=1 "$wrangler" d1 migrations apply "$db" --local -c apps/api/wrangler.jsonc >/dev/null; done
 CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --command "DELETE FROM control_audit_events; DELETE FROM hotel_admin_metadata; DELETE FROM network_memberships; DELETE FROM hotel_memberships; DELETE FROM access_identity_mappings; DELETE FROM control_hotels; INSERT INTO control_hotels VALUES ('hotel-a','hotel-a','HOTEL_DEMO_DB',1),('hotel-b','hotel-b','HOTEL_SECOND_DB',1); INSERT INTO hotel_admin_metadata(hotel_id,name,address,plan_tier) VALUES ('hotel-a','Hotel A','A Street','BASIC'),('hotel-b','Hotel B','B Street','BASIC'); INSERT INTO access_identity_mappings VALUES ('subject-a','a@test.com',1),('subject-b','b@test.com',1),('subject-hk','hk@test.com',1),('subject-rec','rec@test.com',1),('subject-network','network@test.com',1),('subject-new','new@test.com',1); INSERT INTO hotel_memberships VALUES ('subject-a','hotel-a','admin',1),('subject-b','hotel-b','ops',1),('subject-hk','hotel-a','housekeeping',1),('subject-rec','hotel-a','receptionist',1); INSERT INTO network_memberships VALUES ('subject-network','saas_admin',1);" >/dev/null
 "$wrangler" dev --local --ip 127.0.0.1 --port 8787 --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >"$tmp_dir/worker.log" 2>&1 & worker_pid=$!; for _ in {1..30}; do curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1 && break; sleep 1; done
@@ -9,7 +9,14 @@ status=$(req subject-a a@test.com -X POST -d '{"access_subject":"subject-new","e
 status=$(req subject-a a@test.com -X POST -d '{"access_subject":"subject-b","email":"rewritten@example.com","role":"receptionist"}' "$base/users"); expect "$status" 409
 status=$(req subject-a a@test.com -X POST -d '{"access_subject":"subject-new","email":"new@test.com","role":"receptionist"}' "$base/users"); expect "$status" 409
 status=$(req subject-a a@test.com -X PATCH -d '{"role":"ops"}' "$base/users/subject-new/role"); expect "$status" 200
+status=$(req subject-a a@test.com -X PATCH -d '{"role":"ops"}' "$base/users/subject-new/role"); expect "$status" 409
+status=$(req subject-a a@test.com -X PATCH -d '{"role":"admin"}' "$base/users/subject-new/role"); expect "$status" 200
+status=$(req subject-new new@test.com -X POST -d '{"access_subject":"subject-elevated-target","email":"elevated-target@test.com","role":"receptionist"}' "$base/users"); expect "$status" 201
+status=$(req subject-a a@test.com -X PATCH -d '{"role":"ops"}' "$base/users/subject-new/role"); expect "$status" 200
 status=$(req subject-new new@test.com -X POST -d '{"access_subject":"should-deny","email":"deny@test.com","role":"receptionist"}' "$base/users"); expect "$status" 403
+status=$(req subject-a a@test.com -X PATCH -d '{"role":"ops"}' "$base/users/subject-b/role"); expect "$status" 404
+status=$(req subject-a a@test.com -X DELETE "$base/users/subject-b"); expect "$status" 404
+status=$(curl -sS -o "$tmp_dir/r.json" -w '%{http_code}' -H 'x-local-access-subject: subject-b' -H 'x-local-access-email: b@test.com' -H 'x-hotel-id: hotel-b' -H 'content-type: application/json' "$base/audit/events"); expect "$status" 200
 status=$(req subject-a a@test.com -X DELETE "$base/users/subject-new"); expect "$status" 200
 status=$(req subject-a a@test.com -X DELETE "$base/users/subject-new"); expect "$status" 404
 status=$(req subject-hk hk@test.com -X POST -d '{"access_subject":"should-deny","email":"deny@test.com","role":"receptionist"}' "$base/users"); expect "$status" 403
@@ -17,10 +24,15 @@ status=$(curl -sS -o "$tmp_dir/r.json" -w '%{http_code}' -H 'x-local-access-subj
 status=$(curl -sS -o "$tmp_dir/r.json" -w '%{http_code}' -H 'x-local-access-subject: subject-b' -H 'x-local-access-email: b@test.com' -H 'x-hotel-id: hotel-b' -H 'content-type: application/json' "$base/audit/events"); expect "$status" 200
 status=$(req subject-b b@test.com -X PATCH -d '{"plan_tier":"PRO"}' "$base/hotels/hotel-a/plan"); expect "$status" 403
 status=$(curl -sS -o "$tmp_dir/r.json" -w '%{http_code}' -H 'x-local-access-subject: subject-network' -H 'x-local-access-email: network@test' -H 'content-type: application/json' "$base/hotels"); expect "$status" 200
+status=$(curl -sS -o "$tmp_dir/r.json" -w '%{http_code}' -H 'x-local-access-subject: subject-network' -H 'x-local-access-email: network@test' -H 'content-type: application/json' "$base/audit/events"); expect "$status" 403
 status=$(curl -sS -o "$tmp_dir/r.json" -w '%{http_code}' -H 'x-local-access-subject: subject-network' -H 'x-local-access-email: network@test' -H 'content-type: application/json' -X PATCH -d '{"plan_tier":"PRO"}' "$base/hotels/hotel-a/plan"); expect "$status" 200
+status=$(curl -sS -o "$tmp_dir/r.json" -w '%{http_code}' -H 'x-local-access-subject: subject-network' -H 'x-local-access-email: network@test' -H 'content-type: application/json' -X PATCH -d '{"plan_tier":"PRO"}' "$base/hotels/hotel-a/plan"); expect "$status" 409
 status=$(curl -sS -o "$tmp_dir/r.json" -w '%{http_code}' -H 'x-local-access-subject: subject-network' -H 'x-local-access-email: network@test' -H 'content-type: application/json' -X POST -d '{"id":"hotel-c","slug":"hotel-c","name":"Hotel C","operational_binding":"EVIL_DB"}' "$base/hotels"); expect "$status" 400
 status=$(curl -sS -o "$tmp_dir/r.json" -w '%{http_code}' -H 'x-local-access-subject: subject-network' -H 'x-local-access-email: network@test.com' -H 'content-type: application/json' -X POST -d '{"id":"hotel-c","slug":"hotel-c","name":"Hotel C","operational_binding":"HOTEL_SECOND_DB"}' "$base/hotels"); expect "$status" 409
 status=$(curl -sS -o "$tmp_dir/r.json" -w '%{http_code}' -H 'x-local-access-subject: subject-network' -H 'x-local-access-email: network@test.com' -H 'content-type: application/json' -X PATCH -d '{"plan_tier":"FREE"}' "$base/hotels/hotel-a/plan"); expect "$status" 400
 status=$(req subject-a a@test.com "$base/audit/events"); expect "$status" 200
-node -e "const x=JSON.parse(require('fs').readFileSync('$tmp_dir/r.json')); if(x.length<3||x[0].action!=='USER_DEACTIVATE'||x.filter(e=>e.action==='USER_CREATE').length!==1||x.filter(e=>e.action==='USER_ROLE_CHANGE').length!==1||!x.some(e=>e.provenance==='operational')) process.exit(1)"
-worker_pid=""; echo "CF-I07 RBAC/users/audit/network regression PASS"
+node -e "const x=JSON.parse(require('fs').readFileSync('$tmp_dir/r.json')); if(x[0].action!=='USER_DEACTIVATE'||x.filter(e=>e.action==='USER_CREATE').length!==2||x.filter(e=>e.action==='USER_ROLE_CHANGE').length!==3||!x.some(e=>e.provenance==='operational')) process.exit(1)"
+cleanup
+CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --command "SELECT role,active FROM hotel_memberships WHERE access_subject='subject-b' AND hotel_id='hotel-b'; SELECT COUNT(*) AS cross_audits FROM control_audit_events WHERE target_id='subject-b' AND hotel_id='hotel-a';" --json >"$tmp_dir/cross-tenant.json"
+node -e "const rows=JSON.parse(require('fs').readFileSync('$tmp_dir/cross-tenant.json')).flatMap(x=>x.results); if(rows[0].role!=='ops'||rows[0].active!==1||rows[1].cross_audits!==0) process.exit(1)"
+echo "CF-I07 RBAC/users/audit/network regression PASS"

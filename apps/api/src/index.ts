@@ -51,7 +51,7 @@ app.get("/ready", (context) => {
 app.use("/api/v1/*", async (context, next) => {
   const identity = await resolveAccessIdentity(context.req.raw, context.env);
   const network = await context.env.CONTROL_DB.prepare("SELECT role FROM network_memberships WHERE access_subject=?1 AND active=1").bind(identity.subject).first<{ role: string }>();
-  const networkPath = /^\/api\/v1\/(hotels(?:\/|$)|audit\/events$|auth\/me$)/.test(context.req.path);
+  const networkPath = /^\/api\/v1\/(hotels(?:\/|$)|auth\/me$)/.test(context.req.path);
   const memberships = await listMemberships(context.env.CONTROL_DB, identity);
   const membership = selectAuthorizedMembership(
     memberships,
