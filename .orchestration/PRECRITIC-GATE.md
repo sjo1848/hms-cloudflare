@@ -27,11 +27,13 @@ For every migrated source capability:
 
 For every business operation with conditional writes:
 
-- identify the authoritative state-changing statement;
-- determine what happens if it affects zero rows;
+- identify the authoritative state-changing statement(s) and the exact entity/version/case identity they represent;
+- determine what happens if any authoritative conditional mutation affects zero rows;
 - verify later statements cannot still commit a false success;
-- verify audit/event side effects are exactly-once on success and zero on failure;
-- add deterministic stale/concurrent regression where applicable.
+- when multiple related entities participate, prove every mutation belongs to the same logical operation rather than merely ending in compatible-looking final states;
+- test ABA/re-entry where relevant: state/entity changes away and later returns to the same visible state, or K1 is replaced by K2 while a stale K1 caller is still in flight;
+- verify audit/event side effects are exactly-once on success and zero on stale/rejected/ABA failure;
+- add deterministic stale/concurrent/ABA regression where applicable, with exact assertions for both the stale object and any newer/current related object.
 
 ### 4. Security sweep
 
@@ -46,11 +48,14 @@ For every business operation with conditional writes:
 - material source workflow is preserved;
 - no infrastructure/runtime migration has silently redesigned the journey;
 - mobile and desktop interaction models match the accepted product semantics;
+- source focused-task/open/close/focus behavior is preserved when it is operationally material, even if the visual implementation differs;
 - per-entity draft/form state cannot leak across selected cases/rooms/bookings.
 
 ### 6. Browser evidence sweep
 
 - every contracted responsive width executes material controls, not merely page reachability;
+- mobile workflows prove the material task-entry/focus/close semantics required by the source contract;
+- per-entity draft isolation/reset is exercised in browser when the Task Contract requires it, rather than inferred only from component state shape;
 - validation/error/success states are observable;
 - mocks are labeled as mocks;
 - integrated evidence is backed by real target API/D1 where required by the contract;
