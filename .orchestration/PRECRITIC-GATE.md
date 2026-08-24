@@ -35,6 +35,7 @@ For every business operation with conditional writes:
 - verify later statements cannot still commit a false success;
 - when multiple related entities participate, prove every mutation belongs to the same logical operation rather than merely ending in compatible-looking final states;
 - when a decision is derived from mutable pre-read state (balance, remaining amount, version, availability, count, aggregate, current case), correlate or revalidate that snapshot inside the same authoritative write boundary before committing side effects;
+- a client-supplied correlation/tracing id (for example `x-request-id`) must never be used by itself as proof that the current request won a conditional mutation; exact-winner proof must come from the authoritative write result or from a server-only operation token;
 - for financial operations, prove rejected/stale/overpay/close-conflict paths leave invoice/payment/charge/closure/event state exactly unchanged; a JavaScript check after a successfully completed D1 batch cannot be treated as rollback;
 - test ABA/re-entry where relevant: state/entity changes away and later returns to the same visible state, or K1 is replaced by K2 while a stale K1 caller is still in flight;
 - verify audit/event side effects are exactly-once on success and zero on stale/rejected/ABA failure;
@@ -46,6 +47,8 @@ For every business operation with conditional writes:
 - unknown/forbidden role fails closed;
 - tenant routing is authoritative;
 - cross-tenant/unknown binding attempts are tested where applicable;
+- when a contract explicitly requires cross-tenant object isolation, an unknown/unconfigured binding denial is not a substitute for a real second-tenant object read/write attempt;
+- capability-restricted mutations require at least one denied write-path assertion, not read-denial alone, when writes are in scope;
 - denial leaves zero business/audit side effects.
 
 ### 5. UX parity sweep
