@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 REWORK-4 RUNNING`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 REWORK-4 ARTIFACT READY FOR INDEPENDENT CRITIC`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -146,6 +146,8 @@ None. CF-I04 REWORK-4 is authorized routine parity/evidence repair.
 Runtime status: `RUNNING`; `RUNTIME_CAPABILITY_FALLBACK` remains active because this runtime exposes no separate Specialist contexts. Domain/Engineering and QA/Security responsibilities remain separated in implementation and evidence passes; no multiagency claim is made.
 
 Authorized repair is limited to the persisted `CF-I04-REWORK-3-CRITIC.md` findings: exact lifecycle parity, source-equivalent staged mobile check-in and substantive responsive browser evidence.
+
+Artifact `5dc91414301810dba4d5ae6a00f062b8cf59ea7a` is published on `main`; implementation, adversarial QA, browser evidence and full local validation are complete. Independent Critic review is required; no technical PASS, Product Acceptance or CF-I05 advancement is self-declared.
 
 ## NEXT AUTHORIZED ACTION
 
