@@ -19,8 +19,8 @@
     await page.waitForTimeout(150);
     await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
     const queueHead = await page.getByRole("complementary", { name: "Housekeeping task queue" }).getByRole("button").first().innerText();
-    const expectedRoom = queueHead.match(/Room \d+/)?.[0] ?? "";
-    if (!expectedRoom) throw new Error(`queue head has no room identity at ${width}: ${queueHead}`);
+    const expectedRoom = "Room 904";
+    if (!/^Room 904\b/.test(queueHead)) throw new Error(`source priority expected Room 904 before numeric Room 901 at ${width}: ${queueHead}`);
     await page.getByRole("button", { name: "Siguiente tarea" }).click();
     if (width < 768) {
       const focusedTask = page.getByRole("dialog", { name: /Focused task room/ });
@@ -41,7 +41,14 @@
 
   await page.goto("http://127.0.0.1:4174/housekeeping");
   await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
+  const boardEvidence = await page.evaluate(async () => fetch("/api/v1/housekeeping/board").then(response => response.json()));
+  if (boardEvidence.rooms.some(room => room.room_id === "browser-f")) throw new Error("orphan fixture unexpectedly appeared in eligible board rooms");
+  if (!boardEvidence.departures_today.some(departure => departure.room_id === "browser-f" && departure.guest_name === "Orphan Departure Guest")) throw new Error("orphan departure fixture missing from departures_today");
   await assertResponsive(375);
+  await waitForRoom("906");
+  if (await page.getByRole("button", { name: "Start cleaning" }).count() || await page.getByRole("button", { name: "Finish cleaning" }).count() || await page.getByRole("button", { name: "Create case and block" }).count()) throw new Error("orphan departure exposed an invalid mutation");
+  if (!(await page.getByText(/Blocked departure/).count())) throw new Error("orphan departure was not visibly blocked");
+  await page.getByRole("button", { name: "Cerrar tarea" }).click();
   await waitForRoom("901");
   await page.getByRole("button", { name: "Start cleaning" }).click();
   await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();

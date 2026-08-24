@@ -8,7 +8,7 @@ type HousekeepingApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 type Db = ApiVariables["operationalDatabase"];
 type RoomRow = { id: string; room_number: string; room_type: string; status: string; price_cents: number };
 type CaseRow = { id: string; room_id: string; status: string; priority: string; reason: string; assigned_to: string; reported_by_user_id: string | null; reported_at: string; resolution_note?: string | null; resolved_by_user_id?: string | null; resolved_at?: string | null; return_status?: string | null };
-type DepartureRow = { booking_id: string; room_id: string; guest_name: string; booking_status: string; check_out: string };
+type DepartureRow = { booking_id: string; room_id: string; room_number: string; room_type: string; room_status: string; guest_name: string; booking_status: string; check_out: string };
 
 const ROLE_CAPABILITIES: Record<string, ReadonlySet<string>> = {
   admin: new Set(["housekeeping.read", "housekeeping.write"]),
@@ -54,10 +54,10 @@ export function createHousekeepingRoutes(): HousekeepingApp {
     requireCapability(context, "housekeeping.read");
     const date = context.req.query("date") ?? new Date().toISOString().slice(0, 10); const db = context.get("operationalDatabase");
     const rooms = await db.prepare("SELECT id, room_number, room_type, status, price_cents FROM rooms WHERE status IN ('DIRTY', 'CLEANING', 'AVAILABLE', 'MAINTENANCE') ORDER BY room_number").all<RoomRow>();
-    const departures = await db.prepare("SELECT b.id AS booking_id, b.room_id, g.full_name AS guest_name, b.status AS booking_status, b.check_out FROM bookings b JOIN guests g ON g.id = b.guest_id WHERE b.check_out = ?1 AND b.status NOT IN ('CANCELLED')").bind(date).all<DepartureRow>();
+    const departures = await db.prepare("SELECT b.id AS booking_id, b.room_id, r.room_number, r.room_type, r.status AS room_status, g.full_name AS guest_name, b.status AS booking_status, b.check_out FROM bookings b JOIN guests g ON g.id = b.guest_id JOIN rooms r ON r.id = b.room_id WHERE b.check_out = ?1 AND b.status NOT IN ('CANCELLED')").bind(date).all<DepartureRow>();
     const cases = await db.prepare("SELECT id, room_id, status, priority, reason, assigned_to, reported_by_user_id, reported_at, resolution_note, resolved_by_user_id, resolved_at, return_status FROM maintenance_cases WHERE status = 'OPEN'").all<CaseRow>();
     const departureByRoom = new Map(departures.results.map(item => [item.room_id, item])); const caseByRoom = new Map(cases.results.map(item => [item.room_id, item]));
-    return context.json({ date, rooms: rooms.results.map(row => roomView(row, context.get("membership").hotelId, caseByRoom.get(row.id), departureByRoom.get(row.id))), departures_today: departures.results });
+    return context.json({ date, rooms: rooms.results.map(row => roomView(row, context.get("membership").hotelId, caseByRoom.get(row.id), departureByRoom.get(row.id))), departures_today: departures.results.map(item => ({ ...item, room_status: roomStatus(item.room_status) })) });
   });
   app.post("/housekeeping/:id/start", async (context) => transition(context, "DIRTY", "CLEANING", "CLEANING_START"));
   app.post("/housekeeping/:id/finish", async (context) => transition(context, "CLEANING", "AVAILABLE", "CLEANING_FINISH"));
