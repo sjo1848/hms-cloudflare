@@ -14,7 +14,7 @@ Decision: `PASS — fresh CF-I05 REWORK-3 artifact eligible for External Indepen
 | 7. Evidence claim audit | PASS | invariant evidence and parity matrix map queue-head, focus/return, drafts, API/D1 and screenshot claims to exact executable assertions; no mock or local evidence is overclaimed |
 | 8. Full regression/scope audit | PASS | `npm run check`, `npm run types:check`, `npm run web:build`, sequential `npm run test:cf-i03`, `npm run test:cf-i04`, `npm run test:cf-i05`, `npm run test:cf-i05-browser`, `npm run wrangler:dry-run`, `git diff --check` |
 | 9. Invariant evidence | PASS | every applicable registry invariant is `PASS`; `INV-MONEY-001` is justified `N/A` |
-| 10. Publish boundary | PASS | immutable CF-I05 REWORK-3 artifact will be published; canonical state will set `external_review.required=true`; stop and do not start CF-I06 |
+| 10. Publish boundary | PASS | immutable CF-I05 REWORK-3 artifact `97cd553` is published; canonical state will set `external_review.required=true`; stop and do not start CF-I06 |
 
 ## REWORK-3 repairs completed before this decision
 

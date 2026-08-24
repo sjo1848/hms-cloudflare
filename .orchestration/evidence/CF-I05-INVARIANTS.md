@@ -1,6 +1,6 @@
 # CF-I05 — Invariant Evidence
 
-Artifact candidate: `PENDING-CF-I05-REWORK-3`
+Artifact candidate: `97cd553`
 Task Contract: `.orchestration/contracts/CF-I05.md`  
 Pre-Critic gate: `.orchestration/PRECRITIC-GATE.md`
 

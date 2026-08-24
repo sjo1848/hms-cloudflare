@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-24  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-3 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-3 ARTIFACT READY FOR INDEPENDENT CRITIC`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -57,6 +57,7 @@ Artifact history:
 - `02421a19985fa71408e52be2a253b9082292dd78` → `REWORK`.
 - `14915f79c77ca688cafd5e50da4398b0cf57d113` → `REWORK`.
 - `462bd0519c7224dc996f23825dbbc8c5afc10aec` → Independent Critic `REWORK-3`.
+- `97cd553` → fresh immutable REWORK-3 artifact ready for Independent Critic.
 
 ### Accepted in artifact `462bd05`
 
@@ -69,14 +70,15 @@ Artifact history:
 - integrated browser harness remains real local API + D1 + Vite;
 - no CF-I06, production, remote D1, real-data or paid-resource scope drift.
 
-### REWORK-3 blocking findings
+### REWORK-3 result — artifact ready for Independent Critic
 
-1. `Siguiente tarea` target semantics are wrong: source opens `visibleQueue[0]`; target defaults selection to `visible[0]` and then cycles to `(index+1)`, so the first press skips the source-priority task.
-2. Mobile focused-task surface does not move focus into the task or restore focus to the originating queue/next-task control on close; previous Critic required source-equivalent focus/close behavior.
-3. Browser harness proves two-room draft isolation/retention but does not actually prove success/`Clear form` reset isolation, while evidence claims that reset proof exists.
+- `Siguiente tarea` now opens `visible[0]`, the first visible queue task, and the browser asserts the opened room matches the queue head at every contracted width.
+- Mobile focus enters the task heading and close restores focus to the originating next-task control; the browser asserts actual focus transition/return at 375px and open/close at all mobile widths.
+- Browser evidence explicitly executes `Clear form` for room B and verifies room A's draft remains retained; evidence no longer claims unexecuted success-reset proof.
+- Full regression, browser, build, types, Wrangler dry-run, invariant evidence and Pre-Critic Gate PASS are persisted for artifact `97cd553`.
 
-Diagnosis: `NEXT_TASK_SEMANTIC_PARITY_DEFECT + MOBILE_FOCUS_BEHAVIOR_GAP + EVIDENCE_OVERCLAIM`.  
-Human Gate: `NONE`.  
+Independent Critic: `REQUIRED`.
+Human Gate: `NONE`.
 Blocker: `NONE`.
 
 ## DELIVERY SPEED POLICY
@@ -97,18 +99,10 @@ None.
 
 ## BLOCKERS
 
-None. CF-I05 REWORK-3 is bounded routine work.
+None. CF-I05 REWORK-3 artifact is published; external Independent Critic is the next boundary.
 
 ## NEXT AUTHORIZED ACTION
 
-Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I05-REWORK-2-CRITIC.md`, the active Task Contract, invariants, Pre-Critic Gate and source parity artifacts, then autonomously in one bounded wave:
-
-1. make `Siguiente tarea` open the source-equivalent first/prioritized visible task;
-2. implement mobile focus entry and close focus restoration;
-3. add exact browser proof for draft reset/clear isolation;
-4. align evidence claims with executable proof;
-5. run full CF-I03/CF-I04/CF-I05 regressions, browser, tests, build, types, Wrangler dry-runs and diff checks;
-6. publish one fresh immutable CF-I05 artifact with `external_review.required=true`;
-7. stop at Independent Critic.
+Stop at External Independent Critic review of immutable CF-I05 REWORK-3 artifact `97cd553`. Do not begin CF-I06 before a fresh CF-I05 Independent Critic PASS.
 
 Do not begin CF-I06 before a fresh CF-I05 Independent Critic PASS. No production deployment, remote D1 mutation, real-data migration, Cloudflare preview deployment or paid transition is authorized.
