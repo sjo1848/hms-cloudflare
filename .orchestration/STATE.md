@@ -32,7 +32,7 @@ Carry-forward debt: source `NoShow` departure exclusion must be resolved before 
 
 ## CF-I06 — BILLING
 
-Artifact A `8d4584fe8e9f1afecef104d32d900513d57d32c8` + boundary B `d93debc9f86b7a2ced54f0fa986e422ddc24b61c` received Independent Critic `REWORK-3`.
+Artifact A `0004990ba60b0349776de139cd04dfc2f30eaa6d` is complete and awaits a new Independent Critic boundary B. It is not self-approved.
 
 ### Accepted repairs from REWORK-2 that must be preserved
 
@@ -48,18 +48,19 @@ Artifact A `8d4584fe8e9f1afecef104d32d900513d57d32c8` + boundary B `d93debc9f86b
 - A→B publication boundary is correct;
 - no CF-I07, production, remote D1, real-data or paid-resource drift.
 
-### Blocking REWORK-3 findings
+### REWORK-3 resolution evidence
 
-1. `x-request-id` is client-controlled in `apps/api/src/index.ts`. Close-cash currently proves ownership by querying the persisted closure using that request id after the insert. Two concurrent requests reusing the same `x-request-id` can let the losing request find the winner's row and return false success.
-2. Cross-tenant evidence still uses `hotel-b -> UNKNOWN_DB`, proving unknown-binding denial rather than a real second-tenant financial object read/write attempt with zero side effects.
-3. RBAC evidence proves denied reads, but not a denied financial write for forbidden and unknown roles with zero side effects.
-4. Positive `/settle-payment` response is proven, but exact durable payment-row/event metadata and retry zero-side-effect semantics are not explicitly asserted.
-5. Extra-charge negative evidence uses pre-validation (`amount_cents=0`) and does not prove authoritative write-boundary rollback when one component of the charge/trigger/audit operation fails.
-6. `CF-I06-INVARIANTS.md` overstates `INV-TENANT-001`, `INV-RBAC-001` and complete evidence as PROVEN relative to these missing executable proofs.
+- close-cash ownership now uses a server-only operation token; same client `x-request-id` race produces one success, one conflict, one closure and one event;
+- hotel-a and hotel-b use separate configured operational D1 bindings; cross-tenant invoice/payment/extra-charge reads and writes return 404 with zero side effects in both stores;
+- forbidden and unknown roles are denied financial writes with 403 and unchanged financial state;
+- positive settle-payment asserts exact durable payment/event metadata and retry zero-side-effect behavior;
+- a local-only injected NOT NULL failure inside the charge batch proves authoritative rollback of charge, booking total and audit event;
+- invariant and Pre-Critic evidence are corrected to match these executable proofs;
+- focal, browser, inherited, build, type and dry-run checks pass.
 
 Full verdict and exit criteria: `.orchestration/reviews/CF-I06-REWORK-2-CRITIC.md`.
 
-Diagnosis: `CLIENT_CONTROLLED_WINNER_TOKEN + TENANT_RBAC_EVIDENCE_GAP + FINANCIAL_FAILURE_EVIDENCE_GAP`.
+Diagnosis: `REWORK-3_IMPLEMENTED_AWAITING_INDEPENDENT_CRITIC`.
 Human Gate: `NONE`.
 Blocker: `NONE`.
 
@@ -87,11 +88,11 @@ Local `git pull --ff-only` only if the Codex workspace has not consumed the late
 
 ## BLOCKERS
 
-None. CF-I06 REWORK-3 is routine and authorized.
+None. CF-I06 REWORK-3 implementation is complete; Independent Critic is the next boundary.
 
 ## NEXT AUTHORIZED ACTION
 
-Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I06-REWORK-2-CRITIC.md`, the active contract, source financial services/repositories/UI, learned invariants and Pre-Critic Gate; then autonomously:
+Codex consumed `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I06-REWORK-2-CRITIC.md`, the active contract, source financial services/repositories/UI, learned invariants and Pre-Critic Gate and completed:
 
 1. make close-cash success depend on the authoritative write result or server-only operation token, never reusable client `x-request-id`;
 2. add deterministic same-`x-request-id` concurrent close race requiring one success, one conflict, one closure and one event;
@@ -101,5 +102,7 @@ Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I06-REWORK-
 6. add an authoritative extra-charge write-boundary failure proving full rollback;
 7. correct invariant/evidence claims and run the complete required gate/regression suite;
 8. publish fresh artifact A plus orchestration-only boundary B and stop for Independent Critic.
+
+Artifact A `0004990ba60b0349776de139cd04dfc2f30eaa6d` is now awaiting Independent Critic. Do not begin CF-I07 before CF-I06 receives external PASS.
 
 Do not begin CF-I07 before CF-I06 Independent Critic PASS. No production deployment, remote D1 mutation, real-data migration, Cloudflare preview deployment or paid transition is authorized.
