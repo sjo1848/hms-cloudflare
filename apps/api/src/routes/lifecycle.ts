@@ -50,7 +50,7 @@ export function createLifecycleRoutes(): LifecycleApp {
   app.post("/bookings/:id/check-in", async (context) => {
     requireLifecycle(context);
     const body = await jsonBody<LifecycleBody>(context.req.raw);
-    for (const field of ["guest_count_confirmed", "document_verified", "contact_confirmed", "stay_confirmed"]) requiredConfirmation(body, field);
+    for (const field of ["document_verified", "contact_confirmed", "stay_confirmed"]) requiredConfirmation(body, field);
     const guestCount = positiveCount(body.check_in_guests_count);
     const id = context.req.param("id"); const db = context.get("operationalDatabase"); const current = await booking(db, id);
     if (!current) throw ApiError.notFound("Booking not found");
@@ -61,7 +61,7 @@ export function createLifecycleRoutes(): LifecycleApp {
       results = await db.batch([
         db.prepare("UPDATE bookings SET status = 'CHECKED_IN', check_in_guests_count = ?4, checked_in_at = ?2, checked_in_by = ?3, updated_at = ?2 WHERE id = ?1 AND status = 'CONFIRMED' AND EXISTS (SELECT 1 FROM rooms WHERE id = ?5 AND status = 'AVAILABLE')").bind(id, now, context.get("identity").subject, guestCount, current.room_id),
         db.prepare("UPDATE rooms SET status = 'OCCUPIED' WHERE id = ?1 AND status = 'AVAILABLE' AND EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?1)").bind(current.room_id, id),
-        db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) SELECT ?1, ?2, 'CHECK_IN', ?3, ?4, ?5, ?6, ?7, ?8 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?3)").bind(crypto.randomUUID(), id, current.room_id, context.get("identity").subject, context.get("requestId"), context.get("membership").hotelId, JSON.stringify({ checklist: ["guest_count_confirmed", "document_verified", "contact_confirmed", "stay_confirmed"], check_in_guests_count: guestCount }), now),
+        db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) SELECT ?1, ?2, 'CHECK_IN', ?3, ?4, ?5, ?6, ?7, ?8 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?3)").bind(crypto.randomUUID(), id, current.room_id, context.get("identity").subject, context.get("requestId"), context.get("membership").hotelId, JSON.stringify({ checklist: ["document_verified", "contact_confirmed", "stay_confirmed"], check_in_guests_count: guestCount }), now),
       ]);
     } catch { throw ApiError.conflict("Booking became unavailable during check-in"); }
     if (results[0]?.meta.changes !== 1 || results[1]?.meta.changes !== 1 || results[2]?.meta.changes !== 1) throw ApiError.conflict("Booking became unavailable during check-in");
@@ -101,11 +101,11 @@ export function createLifecycleRoutes(): LifecycleApp {
   app.post("/bookings/:id/check-out", async (context) => {
     requireLifecycle(context);
     const body = await jsonBody<LifecycleBody>(context.req.raw);
-    for (const field of ["payment_policy_accepted", "charge_reviewed", "release_confirmed", "handoff_confirmed"]) requiredConfirmation(body, field);
+    for (const field of ["charge_reviewed", "release_confirmed", "handoff_confirmed"]) requiredConfirmation(body, field);
     const policy = requiredText(body.check_out_payment_policy, "check_out_payment_policy", 1, 30);
     if (!["settled", "pending-approved"].includes(policy)) throw ApiError.badRequest("check_out_payment_policy is invalid");
     const reference = body.check_out_reference == null ? null : requiredText(body.check_out_reference, "check_out_reference", 3, 120);
-    if (policy === "pending-approved" && !reference) throw ApiError.badRequest("check_out_reference is required for pending-approved");
+    if (policy === "pending-approved" && (!reference || reference.trim().length < 6)) throw ApiError.badRequest("check_out_reference must be at least 6 characters for pending-approved");
     const id = context.req.param("id"); const db = context.get("operationalDatabase"); const current = await booking(db, id);
     if (!current) throw ApiError.notFound("Booking not found");
     if (current.status !== "CHECKED_IN") throw ApiError.conflict("Only checked-in bookings can be checked out");
