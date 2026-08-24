@@ -12,9 +12,9 @@ Decision: `PASS — fresh CF-I05 REWORK-2 artifact eligible for External Indepen
 | 5. UX parity sweep | PASS | active route preserves queue → selected room → focused workspace; mobile `Siguiente tarea`/room selection opens a dialog and `Cerrar tarea` returns to queue; drafts are room-keyed |
 | 6. Browser evidence sweep | PASS | `npm run test:cf-i05-browser`; real local API+D1+Vite harness proves mobile focus/close at 375/390/430, desktop workspace at 768/1024, per-room draft isolation/retention and responsive no-overflow |
 | 7. Evidence claim audit | PASS | invariant evidence and parity matrix map ABA, focus/close, drafts, API/D1 and screenshot claims to exact executable assertions; no mock or local evidence is overclaimed |
-| 8. Full regression/scope audit | PASS | `npm run check`, `npm run types:check`, `npm run web:build`, `npm run test:cf-i03`, `npm run test:cf-i04`, `npm run test:cf-i05`, `npm run wrangler:dry-run`, `git diff --check` |
+| 8. Full regression/scope audit | PASS | `npm run check`, `npm run types:check`, `npm run web:build`, sequential `npm run test:cf-i03`, `npm run test:cf-i04`, `npm run test:cf-i05`, `npm run test:cf-i05-browser`, `npm run wrangler:dry-run`, `git diff --check` |
 | 9. Invariant evidence | PASS | every applicable registry invariant is `PASS`; `INV-MONEY-001` is justified `N/A` |
-| 10. Publish boundary | PASS | immutable artifact `14915f7` published; canonical state is persisted with `external_review.required=true`; stop and do not start CF-I06 |
+| 10. Publish boundary | PASS | immutable artifact `462bd05` published; canonical state is persisted with `external_review.required=true`; stop and do not start CF-I06 |
 
 ## REWORK-2 repairs completed before this decision
 

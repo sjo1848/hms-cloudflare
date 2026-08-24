@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-24  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-2 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-2 ARTIFACT READY FOR INDEPENDENT CRITIC`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -93,6 +93,7 @@ Task Contract: `.orchestration/contracts/CF-I05.md`.
 
 - `02421a19985fa71408e52be2a253b9082292dd78` → Independent Critic `REWORK`.
 - REWORK-1 artifact `14915f79c77ca688cafd5e50da4398b0cf57d113` → Independent Critic `REWORK`.
+- REWORK-2 artifact `462bd05` → fresh immutable artifact ready for Independent Critic.
 - Current review: `.orchestration/reviews/CF-I05-REWORK-1-CRITIC.md`.
 
 ### REWORK-1 improvements accepted
@@ -106,13 +107,14 @@ Task Contract: `.orchestration/contracts/CF-I05.md`.
 - backend capability enforcement and authorized operational-D1 routing remain intact;
 - no CF-I06, production, remote-D1, real-data or paid-resource scope drift occurred.
 
-### Current blocking findings — REWORK-2
+### REWORK-2 result — artifact ready for Independent Critic
 
-1. **Maintenance resolution ABA / case-correlation defect.** A stale request can pre-read old case K1, another request resolves K1, a newer case K2 is opened on the same room, and the stale K1 request can then change the room from the new K2 `MAINTENANCE` state to `DIRTY` because the room UPDATE is not correlated to the case resolution actually won by the current operation. The final event can reference already-resolved K1 while K2 remains OPEN. Exact case/room operation correlation is required.
-2. **Mobile focused-task UX parity defect.** Source mobile Housekeeping uses `Siguiente tarea → Abrir` / room selection to open a focused bottom-sheet task workspace. Target mobile merely changes selection and stacks the workspace below the full queue. `Siguiente tarea` does not enter/focus the task and therefore remains a material interaction departure under `CF-UX-PARITY-001`.
-3. **Browser/evidence overclaim.** The harness does not yet prove per-room draft isolation/reset in browser and does not prove source-equivalent mobile task-entry/focus/close behavior. `INV-UX-001`, `INV-RESP-001` and browser-gate claims must match executable assertions.
+- Exact case correlation repaired: stale K1 against reopened K2 returns 409 and preserves room MAINTENANCE, K1 RESOLVED, K2 OPEN and zero stale event.
+- Mobile focused-task parity repaired with dialog/bottom-sheet entry and explicit close/queue return for `Siguiente tarea` and room selection.
+- Browser evidence now proves focus/close at 375/390/430, desktop workspace at 768/1024, per-room draft isolation/retention/reset and no overflow.
+- Full regression, browser, build, types, Wrangler dry-run, invariant evidence and Pre-Critic Gate PASS are persisted for artifact `462bd05`.
 
-Diagnosis: `ABA_CONCURRENCY_DEFECT + MOBILE_UX_PARITY_DEFECT + EVIDENCE_OVERCLAIM`.  
+Independent Critic: `REQUIRED`.
 Human Gate: `NONE`.  
 Blocker: `NONE`.
 
@@ -148,19 +150,11 @@ None.
 
 ## BLOCKERS
 
-None. CF-I05 REWORK-2 is bounded routine work.
+None. CF-I05 REWORK-2 artifact is published; external Independent Critic is the next boundary.
 
 ## NEXT AUTHORIZED ACTION
 
-Codex must read `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I05-REWORK-1-CRITIC.md`, `.orchestration/contracts/CF-I05.md`, `.orchestration/INVARIANTS.md`, `.orchestration/PRECRITIC-GATE.md` and the source parity inputs, then autonomously as one bounded accelerated rework wave:
-
-1. correlate maintenance-case resolution, room transition and resolve audit to the exact case/current logical operation;
-2. add deterministic K1 resolved → K2 reopened → stale-K1 attempt regression proving K2 remains OPEN, room remains MAINTENANCE and no stale event/success occurs;
-3. preserve source-equivalent mobile focused-task behavior for `Siguiente tarea` and room selection, including direct task entry and close/focus return semantics;
-4. add browser proof for mobile focus/open/close and per-room draft isolation/reset;
-5. update invariant and Pre-Critic evidence so every PASS claim maps to an executable assertion;
-6. run full CF-I03/CF-I04/CF-I05 regressions, browser, tests, build, types, Wrangler dry-runs and diff checks;
-7. publish one fresh immutable CF-I05 artifact with `external_review.required=true` and stop for External Independent Critic.
+Stop at External Independent Critic review of immutable CF-I05 REWORK-2 artifact `462bd05`. Do not begin CF-I06 before a fresh CF-I05 Independent Critic PASS.
 
 Do not begin CF-I06 before a fresh CF-I05 Independent Critic PASS.
 
