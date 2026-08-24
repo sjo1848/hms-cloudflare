@@ -55,6 +55,7 @@ For every business operation with conditional writes:
 - when a contract explicitly requires cross-tenant object isolation, an unknown/unconfigured binding denial is not a substitute for a real second-tenant object read/write attempt;
 - tenant-local membership/admin operations must not rewrite/reactivate shared identity truth used by another tenant without an explicitly authorized global identity operation;
 - capability-restricted mutations require at least one denied write-path assertion, not read-denial alone, when writes are in scope;
+- authorization-denial evidence must positively establish the claimed authenticated identity, active membership/network membership, claimed role/capabilities and intended tenant routing before the protected request; a denial caused by missing identity, missing membership, unknown binding, wrong tenant selection or another earlier guard is not proof that the intended capability check worked;
 - tenant-scoped audit/read models must not include unrelated global/network or other-tenant records; network/global audit access requires an explicit network capability and scope;
 - denial leaves zero business/audit side effects.
 - CF-I07 protected admin/network/audit routes must have no direct role-name authorization shortcut outside the canonical capability helper.
@@ -79,7 +80,8 @@ For every business operation with conditional writes:
 - where the source synthesizes/derives queue items, prove those items remain visible/contextualized and do not expose invalid actions;
 - when target enum serialization differs from source, include at least one fixture using the target serialized value and prove the same source business predicate/rank/filter fires;
 - per-entity draft isolation/reset is exercised in browser when the Task Contract requires it, rather than inferred only from component state shape;
-- validation/error/success states are observable;
+- validation/error/success states are observable and explicitly asserted when the contract names them; direct API status checks cannot substitute for a claimed user-visible UX state;
+- authorization browser fixtures must seed the exact identity/membership/role they claim to test and distinguish capability denial from authentication/membership/routing denial;
 - mocks are labeled as mocks;
 - integrated evidence is backed by real target API/D1 where required by the contract;
 - durable screenshots are diagnostic evidence, not substitutes for executable assertions.
@@ -94,6 +96,7 @@ If no evidence exists, weaken/remove the claim or add the missing proof.
 
 For ordering/priority claims, evidence must prove the source rule independently; target-self-consistency is not source parity.
 For enum/state claims, evidence must distinguish semantic state from source/target serialized spelling.
+For authorization claims, evidence must identify which guard denied the request and prove prerequisite identity/membership/routing state so an earlier fail-closed guard is not mislabeled as RBAC proof.
 A required test that did not complete because of runner/process/environment failure is `UNPROVEN`, not `PASS`; fix/isolate the runner or obtain equivalent executable evidence before publication.
 A duplicated or shadowed canonical route is `FAIL` until a route-uniqueness check proves the effective production method/path maps to one intended handler.
 
@@ -106,7 +109,7 @@ A duplicated or shadowed canonical route is `FAIL` until a route-uniqueness chec
 - build/type/Wrangler/diff checks pass;
 - diff does not absorb forbidden next-increment scope;
 - no paid/production/real-data/cutover action occurred unless explicitly authorized.
-- every runner that emits PASS must terminate its owned Worker/Vite/Playwright process tree; a leaked process makes the run unproven.
+- every runner that emits PASS must terminate its owned Worker/Vite/Playwright process tree and positively verify owned processes are gone before the terminal PASS marker; issuing `kill`/`pkill` without a post-termination check is insufficient.
 
 ### 9. Invariant evidence file
 
