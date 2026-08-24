@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-1 AUTHORIZED + LEARNED-INVARIANT GATE ACTIVE`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-1 RUNNING + LEARNED-INVARIANT GATE ACTIVE`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -124,6 +124,10 @@ Task Contract: `.orchestration/contracts/CF-I05.md`.
 Diagnosis: `CONCURRENCY_DEFECT + DOMAIN_PARITY_DEFECT + UX_PARITY_DEFECT + EVIDENCE_DEFECT`.  
 Human Gate: `NONE`.  
 Blocker: `NONE`.
+
+## REWORK-1 EXECUTION
+
+Runtime status: `RUNNING`; rework is routine and authorized under the existing CF-I05 contract. No Human Gate, blocker, paid transition, production mutation or CF-I06 work is in scope.
 
 ## LEARNED-INVARIANT ENFORCEMENT — EFFECTIVE NOW
 

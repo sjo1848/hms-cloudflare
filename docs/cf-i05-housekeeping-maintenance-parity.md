@@ -33,11 +33,12 @@ The accelerated wave was validated as one coherent increment:
 - `npm run test:cf-i03`: lifecycle D1/API regression passed.
 - `npm run test:cf-i04`: lifecycle D1/API regression passed.
 - `npm run test:cf-i05`: Housekeeping + Maintenance D1/API regression passed.
-- `output/playwright/cf-i05-housekeeping-mobile.png`: browser evidence at 375×812.
-- `output/playwright/cf-i05-housekeeping-desktop.png`: browser evidence at 1024×768.
-- Browser assertions confirmed `document.documentElement.scrollWidth === window.innerWidth` at 375/390/430/768/1024px, four rendered room cards at each width, and a successful mocked Start cleaning interaction.
+- `npm run test:cf-i05-browser`: committed integrated API+D1+Vite browser harness passed.
+- `scripts/cf-i05-browser-regression.playwright.js`: reproducible Playwright journey for queue selection, Start cleaning, Finish cleaning, maintenance open/resolve, validation states and per-width control interaction.
+- `output/playwright/cf-i05-integrated-housekeeping.png`: diagnostic focused queue/workspace screenshot from the integrated run.
+- Browser assertions confirmed `document.documentElement.scrollWidth === window.innerWidth` at 375/390/430/768/1024px, queue/workspace reachability at every width, real local API success for all four domain mutations, and client-side blocking of short reason/resolution values.
 
-Adversarial coverage includes invalid status transitions, short reason/resolution validation, duplicate open maintenance rejection, trigger-backed rollback, receptionist read/write denial, missing-room 404, actor/request/hotel event traceability, and legacy maintenance resolution through the explicit Dirty return path.
+Adversarial coverage includes deterministic stale start/finish/resolve races with exact `200,409` outcomes and one event each, invalid status transitions, short reason/resolution validation, duplicate open maintenance rejection, trigger-backed rollback, receptionist read/write denial, missing-room 404, actor/request/hotel event traceability, and legacy maintenance resolution through the explicit Dirty return path.
 
 ## Self-critic checklist
 
@@ -47,5 +48,6 @@ Adversarial coverage includes invalid status transitions, short reason/resolutio
 - [x] Room status changes and maintenance case/event writes are transactionally coupled.
 - [x] Open maintenance is unique per room and resolution returns the room to Dirty.
 - [x] API typed error/status behavior is preserved for invalid, conflicting, and missing-room operations.
-- [x] UI exposes board context, filters, actions, maintenance forms, and responsive single-column mobile layout.
+- [x] UI preserves queue → selected room → focused workspace, mobile next-task behavior, board context, filters, actions and per-room maintenance drafts.
+- [x] Integrated browser evidence is committed and its claims are backed by real local API/D1 responses; mocks are not used for the domain journey.
 - [x] No CF-I06 scope, paid service, production cutover, or Human Gate decision was introduced.

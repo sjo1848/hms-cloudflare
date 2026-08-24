@@ -2,18 +2,18 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "BUILD",
-  "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": true,
+  "runtime_status": "RUNNING",
+  "resume_authorized": false,
   "active_task": "CF-I05",
   "work_branch": "main",
   "last_completed_task": "CF-I05-INDEPENDENT-CRITIC-REWORK-LEARNED-INVARIANTS-PROMOTED",
   "last_completed_head": "02421a19985fa71408e52be2a253b9082292dd78",
-  "next_action": "CF_I05_AUTONOMOUS_REWORK_WITH_MANDATORY_INVARIANT_PRECRITIC_GATE",
-  "stop_reason": "CF-I05 REWORK-1 remains routine and authorized. PM-INVARIANTS-001 is now binding: Codex must consume CF-I05-CRITIC.md, prove applicable rules from .orchestration/INVARIANTS.md, persist .orchestration/evidence/CF-I05-INVARIANTS.md, pass .orchestration/PRECRITIC-GATE.md, repair any FAIL/UNPROVEN finding autonomously, then publish one fresh immutable CF-I05 artifact for Independent Critic. No Human Gate exists and CF-I06 remains unauthorized until CF-I05 PASS.",
+  "next_action": "REPAIR_CF_I05_REWORK_FINDINGS_AND_RUN_INVARIANT_PRECRITIC_GATE",
+  "stop_reason": "CF-I05 REWORK-1 is authorized routine work. Codex is repairing the learned invariant findings and will not publish until the mandatory evidence and Pre-Critic Gate pass.",
   "event": {
-    "seq": 40,
-    "id": "CF-I05@LEARNED-INVARIANT-GATE-ACTIVE",
-    "type": "METHOD_GOVERNANCE_HARDENED"
+    "seq": 41,
+    "id": "CF-I05@REWORK-1-RUNNING",
+    "type": "RUNTIME_STARTED_REWORK"
   },
   "external_review": {
     "required": false,
