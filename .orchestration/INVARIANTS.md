@@ -22,19 +22,20 @@ When an Independent Critic finds a defect whose root cause can recur outside the
 
 ---
 
-## INV-ATOMIC-001 — Conditional mutation cannot report false success
+## INV-ATOMIC-001 — Conditional aggregate mutation cannot report false success
 
-**Applies when:** a business operation contains a state-dependent `UPDATE`/`DELETE`, multiple writes, or a mutation followed by an event/audit record.
+**Applies when:** a business operation contains a state-dependent `UPDATE`/`DELETE`, multiple writes, related entity/case transitions, or a mutation followed by an event/audit record.
 
-**Invariant:** if the authoritative conditional mutation affects zero rows because the state became stale, the whole business operation must fail and all later side effects must roll back. A transaction/batch is not sufficient if zero-row statements are treated as successful.
+**Invariant:** the business operation must prove that the exact authoritative entity/version/case intended by the current operation won the transition. If a conditional mutation affects zero rows, a related entity has been replaced/reopened, or state leaves and later re-enters the same visible value (ABA), the operation must not succeed merely because the final state again looks valid. All writes and audit/event side effects must represent the same logical operation or roll back together. A transaction/batch plus final-state checks is not sufficient when zero-row statements, stale identities or ABA re-entry can be treated as success.
 
 **Required evidence:**
-- deterministic stale-state regression;
-- exact final-state assertions for every affected entity/table;
+- deterministic zero-row stale-state regression;
+- when identity/version/case correlation exists, deterministic stale-identity or ABA regression (for example K1 -> resolved -> K2 opened -> stale K1 attempt);
+- exact final-state assertions for every affected entity/table, including newer/current related records;
 - zero unauthorized event/audit side effects;
-- endpoint must not return success for the stale operation.
+- endpoint/business operation must not return success for the stale operation.
 
-**Origin:** CF-I04 lifecycle races; CF-I05 cleaning/maintenance concurrency review.
+**Origin:** CF-I04 lifecycle races; CF-I05 cleaning/maintenance concurrency review; CF-I05 REWORK-1 stale maintenance-case ABA review.
 
 ## INV-AUDIT-001 — Audit/event exists iff the business mutation succeeded
 
