@@ -34,9 +34,9 @@ The accelerated wave was validated as one coherent increment:
 - `npm run test:cf-i04`: lifecycle D1/API regression passed.
 - `npm run test:cf-i05`: Housekeeping + Maintenance D1/API regression passed.
 - `npm run test:cf-i05-browser`: committed integrated API+D1+Vite browser harness passed.
-- `scripts/cf-i05-browser-regression.playwright.js`: reproducible Playwright journey for queue selection, `Siguiente tarea` mobile focus/open/close, Start cleaning, Finish cleaning, maintenance open/resolve, validation states, per-room draft isolation and per-width control interaction.
+- `scripts/cf-i05-browser-regression.playwright.js`: reproducible Playwright journey for source-priority queue-head selection, `Siguiente tarea` mobile focus/open/close, actual focus transition/return at 375px, Start cleaning, Finish cleaning, maintenance open/resolve, validation states, selected-room Clear form isolation and per-width control interaction.
 - `output/playwright/cf-i05-integrated-housekeeping.png`: diagnostic focused queue/workspace screenshot from the integrated run.
-- Browser assertions confirmed `document.documentElement.scrollWidth === window.innerWidth` at 375/390/430/768/1024px, mobile focused-task dialog entry/close at 375/390/430, desktop workspace at 768/1024, real local API success for all four domain mutations, client-side blocking of short reason/resolution values, room-A draft isolation from room-B and room-A draft retention/reset semantics.
+- Browser assertions confirmed `document.documentElement.scrollWidth === window.innerWidth` at 375/390/430/768/1024px, `Siguiente tarea` opened the first visible queue button at every width, mobile focused-task dialog entry/close at 375/390/430, actual focus entry/return at 375, desktop workspace at 768/1024, real local API success for all four domain mutations, client-side blocking of short reason/resolution values, room-A draft isolation/retention and Clear form clearing only room-B.
 
 Adversarial coverage includes deterministic stale start/finish/resolve races with exact `200,409` outcomes and one event each, a K1-resolved → K2-open → stale-K1 resolve attempt proving MAINTENANCE/K2 OPEN/no stale event, invalid status transitions, short reason/resolution validation, duplicate open maintenance rejection, trigger-backed rollback, receptionist read/write denial, missing-room 404, actor/request/hotel event traceability, and legacy maintenance resolution through the explicit Dirty return path.
 
@@ -48,6 +48,6 @@ Adversarial coverage includes deterministic stale start/finish/resolve races wit
 - [x] Room status changes and maintenance case/event writes are transactionally coupled to the exact case mutation; ABA re-entry cannot resolve a stale case.
 - [x] Open maintenance is unique per room and resolution returns the room to Dirty.
 - [x] API typed error/status behavior is preserved for invalid, conflicting, and missing-room operations.
-- [x] UI preserves queue → selected room → focused workspace, mobile next-task behavior, board context, filters, actions and per-room maintenance drafts.
+- [x] UI preserves queue → selected room → focused workspace, source-priority next-task behavior, mobile focus entry/return, board context, filters, actions and per-room maintenance drafts.
 - [x] Integrated browser evidence is committed and its claims are backed by real local API/D1 responses; mocks are not used for the domain journey.
 - [x] No CF-I06 scope, paid service, production cutover, or Human Gate decision was introduced.

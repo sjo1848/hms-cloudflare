@@ -13,16 +13,29 @@
     await page.getByRole("heading", { name: new RegExp(`Room ${roomNumber}`) }).waitFor();
   };
   const assertResponsive = async (width) => {
+    const existingFocusedTask = page.getByRole("dialog", { name: /Focused task room/ });
+    if (await existingFocusedTask.count()) { await page.getByRole("button", { name: "Cerrar tarea" }).click(); await existingFocusedTask.waitFor({ state: "hidden", timeout: 5000 }); }
     await page.setViewportSize({ width, height: 812 });
     await page.waitForTimeout(150);
     await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
+    const queueHead = await page.getByRole("complementary", { name: "Housekeeping task queue" }).getByRole("button").first().innerText();
+    const expectedRoom = queueHead.match(/Room \d+/)?.[0] ?? "";
+    if (!expectedRoom) throw new Error(`queue head has no room identity at ${width}: ${queueHead}`);
     await page.getByRole("button", { name: "Siguiente tarea" }).click();
     if (width < 768) {
       const focusedTask = page.getByRole("dialog", { name: /Focused task room/ });
       await focusedTask.waitFor({ state: "visible", timeout: 5000 });
+      const focusedHeading = page.getByRole("heading", { name: new RegExp(expectedRoom) });
+      if (await focusedHeading.count() !== 1) throw new Error(`next task did not open ${expectedRoom} at ${width}; headings=${JSON.stringify(await page.getByRole("heading").allTextContents())}`);
+      await focusedHeading.waitFor();
+      if (width === 375) {
+        await page.waitForTimeout(100);
+        if (!await focusedHeading.evaluate(element => document.activeElement === element)) throw new Error(`focused task did not receive focus at ${width}; active=${await page.evaluate(() => `${document.activeElement?.tagName}:${document.activeElement?.textContent}`)}`);
+      }
       await page.getByRole("button", { name: "Cerrar tarea" }).click();
       await focusedTask.waitFor({ state: "hidden", timeout: 5000 });
-    }
+      if (width === 375 && !await page.getByRole("button", { name: "Siguiente tarea" }).evaluate(element => document.activeElement === element)) throw new Error(`focus did not return to next-task control at ${width}`);
+    } else if (await page.getByRole("heading", { name: new RegExp(expectedRoom) }).count() !== 1) throw new Error(`next task did not open queue head ${expectedRoom} at ${width}`);
     results.push({ width, scrollWidth: await page.evaluate(() => document.documentElement.scrollWidth), queue: await page.getByRole("complementary", { name: "Housekeeping task queue" }).count() });
   };
 
@@ -44,7 +57,11 @@
   await reason.fill("Water leak in bathroom");
   await page.getByRole("button", { name: "Cerrar tarea" }).click();
   await page.getByRole("button", { name: /Room 905/ }).click();
-  if ((await page.getByRole("textbox", { name: "Reason for room 905" }).inputValue()) !== "") throw new Error("room B inherited room A draft");
+  const roomBReason = page.getByRole("textbox", { name: "Reason for room 905" });
+  if ((await roomBReason.inputValue()) !== "") throw new Error("room B inherited room A draft");
+  await roomBReason.fill("Room B independent draft");
+  await page.getByRole("button", { name: "Clear form" }).click();
+  if ((await roomBReason.inputValue()) !== "") throw new Error("Clear form did not clear only the selected room draft");
   await page.getByRole("button", { name: "Cerrar tarea" }).click();
   await page.getByRole("button", { name: /Room 903/ }).click();
   if ((await page.getByRole("textbox", { name: "Reason for room 903" }).inputValue()) !== "Water leak in bathroom") throw new Error("room A draft did not remain scoped to room A");
