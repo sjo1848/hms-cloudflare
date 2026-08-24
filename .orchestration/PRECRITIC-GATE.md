@@ -33,9 +33,11 @@ For every business operation with conditional writes:
 - determine what happens if any authoritative conditional mutation affects zero rows;
 - verify later statements cannot still commit a false success;
 - when multiple related entities participate, prove every mutation belongs to the same logical operation rather than merely ending in compatible-looking final states;
+- when a decision is derived from mutable pre-read state (balance, remaining amount, version, availability, count, aggregate, current case), correlate or revalidate that snapshot inside the same authoritative write boundary before committing side effects;
+- for financial operations, prove rejected/stale/overpay/close-conflict paths leave invoice/payment/charge/closure/event state exactly unchanged; a JavaScript check after a successfully completed D1 batch cannot be treated as rollback;
 - test ABA/re-entry where relevant: state/entity changes away and later returns to the same visible state, or K1 is replaced by K2 while a stale K1 caller is still in flight;
 - verify audit/event side effects are exactly-once on success and zero on stale/rejected/ABA failure;
-- add deterministic stale/concurrent/ABA regression where applicable, with exact assertions for both the stale object and any newer/current related object.
+- add deterministic stale/concurrent/ABA or mutable-snapshot regression where applicable, with exact assertions for both the stale object and any newer/current related object.
 
 ### 4. Security sweep
 
@@ -52,7 +54,8 @@ For every business operation with conditional writes:
 - mobile and desktop interaction models match the accepted product semantics;
 - source focused-task/open/close/focus behavior is preserved when it is operationally material, even if the visual implementation differs;
 - operational queues/lists preserve source ranking, priority, synthetic/derived work items and next-item selection when those semantics exist;
-- per-entity draft/form state cannot leak across selected cases/rooms/bookings.
+- per-entity draft/form state cannot leak across selected cases/rooms/bookings;
+- financial/operational workflows named in the contract (for example balance and cash close) must exist on a user-visible target surface; API-only implementation is not UX parity.
 
 ### 6. Browser evidence sweep
 
@@ -77,11 +80,13 @@ If no evidence exists, weaken/remove the claim or add the missing proof.
 
 For ordering/priority claims, evidence must prove the source rule independently; target-self-consistency is not source parity.
 For enum/state claims, evidence must distinguish semantic state from source/target serialized spelling.
+A required test that did not complete because of runner/process/environment failure is `UNPROVEN`, not `PASS`; fix/isolate the runner or obtain equivalent executable evidence before publication.
 
 ### 8. Full regression and scope audit
 
 - current increment regression passes;
 - inherited accepted regressions pass where required;
+- any required regression interrupted by runner/process lock remains `UNPROVEN` and blocks publication until it actually passes;
 - build/type/Wrangler/diff checks pass;
 - diff does not absorb forbidden next-increment scope;
 - no paid/production/real-data/cutover action occurred unless explicitly authorized.
