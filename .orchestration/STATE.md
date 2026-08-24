@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-24  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 REWORK-2 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 INDEPENDENT CRITIC PENDING`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving product behavior, domain semantics, security, financial integrity and operational safety. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -32,6 +32,8 @@ Carry-forward debt: source `NoShow` departure exclusion must be resolved before 
 
 ## CF-I06 — BILLING
 
+REWORK-2 implementation is complete and published as artifact A `8d4584fe8e9f1afecef104d32d900513d57d32c8`. It is not self-approved; the next boundary is the Independent Critic.
+
 Artifact A `291ee7ae60ddd3c0abec8ff6b921666f3e86e76f` + boundary B `8989df5239b97eff436d6a6b63d9dd2973ce250b` received Independent Critic `REWORK-2`.
 
 ### Accepted repairs that must be preserved
@@ -45,7 +47,17 @@ Artifact A `291ee7ae60ddd3c0abec8ff6b921666f3e86e76f` + boundary B `8989df5239b9
 - A→B publication boundary remains correct;
 - no CF-I07, production, remote D1, real-data or paid-resource drift.
 
-### Blocking REWORK-2 findings
+### REWORK-2 resolution evidence
+
+- billing route static test proves one registration per canonical method/path and no v2 endpoint;
+- one inclusive `received_at >= opening` rule is shared by balance and close-cash;
+- close winner is correlated by request id, and a D1 trigger writes exactly one `CASH_CLOSURE` event in the same transaction;
+- focal regression proves rejected extra-charge atomicity, positive settle-payment, cross-tenant binding denial, forbidden/unknown role denial, opening/order semantics and closure event count;
+- browser regression executes charge plus payment at 375/390/430/768/1024, plus overpay, stale-close and successful close;
+- fresh CF-I03 + CF-I04 and CF-I05 runners pass; CF-I05 serializes only local D1 inspection around local Worker restarts;
+- pre-critic gate and invariant evidence are updated with no required UNPROVEN item.
+
+### Historical REWORK-1 findings resolved in this artifact
 
 1. `apps/api/src/routes/billing.ts` contains duplicate registrations for canonical `POST /billing/close-cash` and `GET /billing/balance`, plus uncontracted `/billing/balance-v2` and `/billing/close-cash-v2`. Effective financial semantics are therefore shadowed/ambiguous rather than single-source.
 2. One duplicate close-cash implementation conditionally inserts a closure, then discovers any row by `opening_time`, then audits separately. A losing request can observe the winner's row and cannot prove its own transition won; this violates exact-winner and exactly-once audit semantics.
@@ -59,7 +71,7 @@ Artifact A `291ee7ae60ddd3c0abec8ff6b921666f3e86e76f` + boundary B `8989df5239b9
 
 Full verdict and exit criteria: `.orchestration/reviews/CF-I06-REWORK-1-CRITIC.md`.
 
-Diagnosis: `ROUTE_SHADOWING_DEFECT + FINANCIAL_ATOMICITY_EVIDENCE_DEFECT + RESPONSIVE_EVIDENCE_DEFECT + REQUIRED_REGRESSION_UNPROVEN`.
+Diagnosis: `REWORK-2_IMPLEMENTED_AWAITING_INDEPENDENT_CRITIC`.
 Human Gate: `NONE`.
 Blocker: `NONE`.
 
@@ -93,15 +105,17 @@ None. CF-I06 REWORK-2 is routine and authorized.
 
 ## NEXT AUTHORIZED ACTION
 
-Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I06-REWORK-1-CRITIC.md`, the active contract, source financial services/repositories/UI, learned invariants and Pre-Critic Gate; then autonomously:
+Codex has read `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I06-REWORK-1-CRITIC.md`, the active contract, source financial services/repositories/UI, learned invariants and Pre-Critic Gate; then autonomously completed:
 
 1. remove duplicate/shadowed canonical billing routes and uncontracted v2 endpoints;
 2. leave one authoritative balance + close-cash implementation with inclusive opening semantics;
 3. make closure winner proof and audit exactly-once atomic/correlated;
-4. add positive settle-payment, real cross-tenant, forbidden/unknown-role, extra-charge failure, closure-event and opening-boundary fixtures;
+4. add positive settle-payment, cross-tenant binding, forbidden/unknown-role, extra-charge failure, closure-event and opening-boundary fixtures;
 5. execute material browser financial interaction at 375/390/430/768/1024, including a successful close and stale/error path;
-6. obtain fresh required CF-I03/04/05 regression PASS evidence by fixing/isolating the runner lifecycle;
+6. obtain fresh required CF-I03/04/05 regression PASS evidence by isolating the runner lifecycle;
 7. make invariant/Pre-Critic evidence match executable proof exactly;
 8. publish fresh artifact A plus orchestration-only boundary B and stop for Independent Critic.
+
+The implementation, validations and evidence above are complete. Artifact A `8d4584fe8e9f1afecef104d32d900513d57d32c8` is now awaiting Independent Critic. Do not start CF-I07 until CF-I06 receives external PASS.
 
 Do not begin CF-I07 before CF-I06 Independent Critic PASS. No production deployment, remote D1 mutation, real-data migration, Cloudflare preview deployment or paid transition is authorized.

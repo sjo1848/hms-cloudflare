@@ -3,24 +3,24 @@
   "project": "HMS Cloudflare",
   "phase": "BUILD",
   "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": true,
+  "resume_authorized": false,
   "active_task": "CF-I06",
   "work_branch": "main",
-  "last_completed_task": "CF-I06-REWORK-1-INDEPENDENT-CRITIC-REWORK-2",
-  "last_completed_head": "291ee7ae60ddd3c0abec8ff6b921666f3e86e76f",
-  "next_action": "CF_I06_AUTONOMOUS_REWORK_2_ROUTE_UNIQUENESS_FINANCIAL_ATOMICITY_RESPONSIVE_AND_REQUIRED_EVIDENCE",
-  "stop_reason": "CF-I06 REWORK-1 artifact A 291ee7ae60ddd3c0abec8ff6b921666f3e86e76f with boundary B 8989df5239b97eff436d6a6b63d9dd2973ce250b received External Independent Critic REWORK-2. Codex must consume .orchestration/reviews/CF-I06-REWORK-1-CRITIC.md, remove duplicate/shadowed billing routes and uncontracted v2 endpoints, leave exactly one authoritative balance/close-cash implementation with inclusive opening semantics and exact-winner/one-event atomicity, complete positive settle-payment, cross-tenant/RBAC, extra-charge failure, per-width material browser success/error, and obtain fresh required CF-I03/04/05 PASS evidence. Required UNPROVEN items block publication. Publish fresh artifact A plus orchestration-only boundary B and stop for Independent Critic. No Human Gate exists and CF-I07 remains unauthorized until CF-I06 PASS.",
+  "last_completed_task": "CF-I06-REWORK-2-IMPLEMENTATION",
+  "last_completed_head": "8d4584fe8e9f1afecef104d32d900513d57d32c8",
+  "next_action": "INDEPENDENT_CRITIC_REVIEW_CF_I06_REWORK_2_ARTIFACT_A",
+  "stop_reason": "CF-I06 REWORK-2 artifact A is complete and all required focal, browser, inherited, build and gate evidence passes. Runtime stops at the Independent Critic boundary. No Human Gate exists and CF-I07 remains unauthorized until CF-I06 PASS.",
   "event": {
-    "seq": 54,
-    "id": "CF-I06@CRITIC-REWORK-2",
-    "type": "INDEPENDENT_CRITIC_REWORK"
+    "seq": 55,
+    "id": "CF-I06@REWORK-2-ARTIFACT-A-PUBLISHED",
+    "type": "IMMUTABLE_ARTIFACT_A_PENDING_INDEPENDENT_CRITIC"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": "291ee7ae60ddd3c0abec8ff6b921666f3e86e76f",
     "last_verdict": "REWORK_ROUTE_SHADOWING_FINANCIAL_ATOMICITY_RESPONSIVE_REQUIRED_EVIDENCE",
-    "artifact_head": null,
-    "pending_verdict": null
+    "artifact_head": "8d4584fe8e9f1afecef104d32d900513d57d32c8",
+    "pending_verdict": "INDEPENDENT_CRITIC_REQUIRED"
   },
   "human_gate": null,
   "blocker": null,
