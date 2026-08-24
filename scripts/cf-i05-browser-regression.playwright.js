@@ -35,7 +35,10 @@
       await page.getByRole("button", { name: "Cerrar tarea" }).click();
       await focusedTask.waitFor({ state: "hidden", timeout: 5000 });
       if (width === 375 && !await page.getByRole("button", { name: "Siguiente tarea" }).evaluate(element => document.activeElement === element)) throw new Error(`focus did not return to next-task control at ${width}`);
-    } else if (await page.getByRole("heading", { name: new RegExp(expectedRoom) }).count() !== 1) throw new Error(`next task did not open queue head ${expectedRoom} at ${width}`);
+    } else {
+      await page.getByRole("heading", { name: new RegExp(expectedRoom) }).waitFor({ state: "visible", timeout: 5000 });
+      if (await page.getByRole("heading", { name: new RegExp(expectedRoom) }).count() !== 1) throw new Error(`next task did not open queue head ${expectedRoom} at ${width}`);
+    }
     results.push({ width, scrollWidth: await page.evaluate(() => document.documentElement.scrollWidth), queue: await page.getByRole("complementary", { name: "Housekeeping task queue" }).count() });
   };
 
@@ -44,10 +47,20 @@
   const boardEvidence = await page.evaluate(async () => fetch("/api/v1/housekeeping/board").then(response => response.json()));
   if (boardEvidence.rooms.some(room => room.room_id === "browser-f")) throw new Error("orphan fixture unexpectedly appeared in eligible board rooms");
   if (!boardEvidence.departures_today.some(departure => departure.room_id === "browser-f" && departure.guest_name === "Orphan Departure Guest")) throw new Error("orphan departure fixture missing from departures_today");
+  const checkedInDeparture = boardEvidence.departures_today.find(departure => departure.room_id === "browser-g");
+  const confirmedDeparture = boardEvidence.departures_today.find(departure => departure.room_id === "browser-h");
+  if (checkedInDeparture?.booking_status !== "CHECKED_IN" || confirmedDeparture?.booking_status !== "CONFIRMED") throw new Error("enum fixture did not preserve target serialized booking statuses");
+  const queueButtons = await page.getByRole("complementary", { name: "Housekeeping task queue" }).getByRole("button").allTextContents();
+  const queueIndex = room => queueButtons.findIndex(text => text.includes(`Room ${room}`));
+  if (!(queueIndex(907) >= 0 && queueIndex(901) >= 0 && queueIndex(908) >= 0 && queueIndex(907) < queueIndex(901) && queueIndex(901) < queueIndex(908))) throw new Error(`checked-in semantic rank/order mismatch: ${JSON.stringify(queueButtons)}`);
   await assertResponsive(375);
   await waitForRoom("906");
   if (await page.getByRole("button", { name: "Start cleaning" }).count() || await page.getByRole("button", { name: "Finish cleaning" }).count() || await page.getByRole("button", { name: "Create case and block" }).count()) throw new Error("orphan departure exposed an invalid mutation");
   if (!(await page.getByText(/Blocked departure/).count())) throw new Error("orphan departure was not visibly blocked");
+  await page.getByRole("button", { name: "Cerrar tarea" }).click();
+  await waitForRoom("907");
+  if (await page.getByRole("button", { name: "Start cleaning" }).count() || await page.getByRole("button", { name: "Finish cleaning" }).count() || await page.getByRole("button", { name: "Create case and block" }).count()) throw new Error("eligible checked-in departure exposed an invalid mutation");
+  if (!(await page.getByText(/Blocked departure/).count())) throw new Error("eligible checked-in departure was not visibly blocked");
   await page.getByRole("button", { name: "Cerrar tarea" }).click();
   await waitForRoom("901");
   await page.getByRole("button", { name: "Start cleaning" }).click();
