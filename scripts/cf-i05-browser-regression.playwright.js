@@ -14,8 +14,15 @@
   };
   const assertResponsive = async (width) => {
     await page.setViewportSize({ width, height: 812 });
+    await page.waitForTimeout(150);
     await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
     await page.getByRole("button", { name: "Siguiente tarea" }).click();
+    if (width < 768) {
+      const focusedTask = page.getByRole("dialog", { name: /Focused task room/ });
+      await focusedTask.waitFor({ state: "visible", timeout: 5000 });
+      await page.getByRole("button", { name: "Cerrar tarea" }).click();
+      await focusedTask.waitFor({ state: "hidden", timeout: 5000 });
+    }
     results.push({ width, scrollWidth: await page.evaluate(() => document.documentElement.scrollWidth), queue: await page.getByRole("complementary", { name: "Housekeeping task queue" }).count() });
   };
 
@@ -35,6 +42,12 @@
   await reason.fill("bad");
   if (!await page.getByRole("button", { name: "Create case and block" }).isDisabled()) throw new Error("short maintenance reason was not blocked");
   await reason.fill("Water leak in bathroom");
+  await page.getByRole("button", { name: "Cerrar tarea" }).click();
+  await page.getByRole("button", { name: /Room 905/ }).click();
+  if ((await page.getByRole("textbox", { name: "Reason for room 905" }).inputValue()) !== "") throw new Error("room B inherited room A draft");
+  await page.getByRole("button", { name: "Cerrar tarea" }).click();
+  await page.getByRole("button", { name: /Room 903/ }).click();
+  if ((await page.getByRole("textbox", { name: "Reason for room 903" }).inputValue()) !== "Water leak in bathroom") throw new Error("room A draft did not remain scoped to room A");
   await page.getByRole("button", { name: "Create case and block" }).click();
   await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
   await assertResponsive(768);

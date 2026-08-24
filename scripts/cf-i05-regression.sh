@@ -18,11 +18,13 @@ CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --c
   INSERT OR REPLACE INTO rooms (id,room_number,room_type,status,price_cents) VALUES
     ('room-a','101','STANDARD','DIRTY',10000),('room-b','102','STANDARD','CLEANING',12000),
     ('room-c','103','STANDARD','AVAILABLE',13000),('room-d','104','STANDARD','MAINTENANCE',14000),
-    ('room-e','105','STANDARD','DIRTY',15000),('room-f','106','STANDARD','MAINTENANCE',16000),('room-g','107','STANDARD','DIRTY',17000);
+    ('room-e','105','STANDARD','DIRTY',15000),('room-f','106','STANDARD','MAINTENANCE',16000),('room-g','107','STANDARD','DIRTY',17000),
+    ('room-h','108','STANDARD','MAINTENANCE',18000);
   INSERT OR REPLACE INTO guests (id,full_name,email,created_at) VALUES ('guest-a','Guest A','a@example.test','2026-01-01');
 " >/dev/null
 
 CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "INSERT OR REPLACE INTO maintenance_cases (id,room_id,status,priority,reason,assigned_to,reported_by_user_id,reported_at) VALUES ('case-f','room-f','OPEN','HIGH','Existing maintenance case','ops','subject-a','2026-01-01T00:00:00Z');" >/dev/null
+CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "INSERT OR REPLACE INTO maintenance_cases (id,room_id,status,priority,reason,assigned_to,reported_by_user_id,reported_at,resolution_note,resolved_by_user_id,resolved_at,return_status) VALUES ('case-h1','room-h','RESOLVED','HIGH','First maintenance case','ops','subject-a','2026-01-01T00:00:00Z','First case resolved','subject-a','2026-01-02T00:00:00Z','DIRTY'), ('case-h2','room-h','OPEN','URGENT','New maintenance case after re-entry','ops','subject-a','2026-01-03T00:00:00Z',NULL,NULL,NULL,NULL);" >/dev/null
 
 ./node_modules/.bin/wrangler dev --local --ip 127.0.0.1 --port 8787 --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >"$tmp_dir/worker.log" 2>&1 & worker_pid=$!
 ready=false
@@ -36,7 +38,7 @@ assert_status() { [[ "$1" == "$2" ]] || { echo "expected HTTP $2, got $1: $(cat 
 status=$(request "$base/housekeeping/dirty"); assert_status "$status" 200
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.map(x=>x.id).sort().join(',')!=='room-a,room-b,room-e,room-g') process.exit(1)"
 status=$(request "$base/housekeeping/board"); assert_status "$status" 200
-node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.rooms.length!==7||!r.rooms.some(x=>x.room_id==='room-d'&&x.room_status==='Maintenance')) process.exit(1)"
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.rooms.length!==8||!r.rooms.some(x=>x.room_id==='room-d'&&x.room_status==='Maintenance')) process.exit(1)"
 
 status=$(request -X POST "$base/housekeeping/room-a/start"); assert_status "$status" 200
 status=$(request -X POST "$base/housekeeping/room-a/start"); assert_status "$status" 409
@@ -68,6 +70,9 @@ status=$(request "$base/housekeeping/board"); assert_status "$status" 200
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); const c=r.rooms.find(x=>x.room_id==='room-c'); if(!c||c.room_status!=='Dirty') process.exit(1)"
 
 status=$(request -X POST -d '{"resolution_note":"Legacy maintenance reviewed and repaired"}' "$base/housekeeping/room-d/dirty"); assert_status "$status" 200
+status=$(request -X POST -d '{"case_id":"case-h1","resolution_note":"Stale first case attempt"}' "$base/housekeeping/room-h/dirty"); assert_status "$status" 409
+CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT status FROM rooms WHERE id='room-h'; SELECT id,status FROM maintenance_cases WHERE room_id='room-h' ORDER BY id; SELECT COUNT(*) AS events FROM housekeeping_events WHERE room_id='room-h' AND event_type='MAINTENANCE_RESOLVE';" --json >"$tmp_dir/aba.json"
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/aba.json')).flatMap(x=>x.results); if(r[0].status!=='MAINTENANCE'||r[1].id!=='case-h1'||r[1].status!=='RESOLVED'||r[2].id!=='case-h2'||r[2].status!=='OPEN'||r[3].events!==0) process.exit(1)"
 curl -sS -o "$tmp_dir/race-resolve-a.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"resolution_note":"Race resolver completed"}' "$base/housekeeping/room-f/dirty" >"$tmp_dir/race-resolve-a.status" & race_a=$!
 curl -sS -o "$tmp_dir/race-resolve-b.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"resolution_note":"Race resolver completed"}' "$base/housekeeping/room-f/dirty" >"$tmp_dir/race-resolve-b.status" & race_b=$!
 wait "$race_a" "$race_b"

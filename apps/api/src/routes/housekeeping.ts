@@ -77,12 +77,14 @@ export function createHousekeepingRoutes(): HousekeepingApp {
   });
   app.post("/housekeeping/:id/dirty", async (context) => {
     requireCapability(context, "housekeeping.write"); const db = context.get("operationalDatabase"); const roomId = context.req.param("id"); const body = await jsonBody<Record<string, unknown>>(context.req.raw); const note = requiredText(body.resolution_note, "resolution_note", 6, 250); const room = await findRoom(db, roomId); if (!room) throw ApiError.notFound("Room not found"); if (room.status !== "MAINTENANCE") throw ApiError.conflict("Only maintenance rooms can return to dirty");
-    const open = await findOpenCase(db, roomId); const caseId = open?.id ?? crypto.randomUUID(); const now = new Date().toISOString();
+    const requestedCaseId = typeof body.case_id === "string" && body.case_id.trim() ? body.case_id.trim() : undefined;
+    const open = requestedCaseId ? await db.prepare("SELECT id, room_id, status, priority, reason, assigned_to, reported_by_user_id, reported_at, resolution_note, resolved_by_user_id, resolved_at, return_status FROM maintenance_cases WHERE id = ?1 AND room_id = ?2 AND status = 'OPEN'").bind(requestedCaseId, roomId).first<CaseRow>() : await findOpenCase(db, roomId);
+    const caseId = open?.id ?? (requestedCaseId ?? crypto.randomUUID()); const now = new Date().toISOString();
     const eventId = crypto.randomUUID();
     try { await db.batch([
       ...(open ? [] : [db.prepare("INSERT INTO maintenance_cases (id, room_id, status, priority, reason, assigned_to, reported_by_user_id, reported_at) SELECT ?1, ?2, 'OPEN', 'MEDIUM', 'Legacy maintenance room without an opening case', 'ops', ?3, ?4 WHERE EXISTS (SELECT 1 FROM rooms WHERE id = ?2 AND status = 'MAINTENANCE') AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id = ?2 AND status = 'OPEN')").bind(caseId, roomId, context.get("identity").subject, now)]),
       db.prepare("UPDATE maintenance_cases SET status = 'RESOLVED', resolution_note = ?2, resolved_by_user_id = ?3, resolved_at = ?4, return_status = 'DIRTY' WHERE id = ?1 AND room_id = ?5 AND status = 'OPEN'").bind(caseId, note, context.get("identity").subject, now, roomId),
-      db.prepare("UPDATE rooms SET status = 'DIRTY' WHERE id = ?1 AND status = 'MAINTENANCE'").bind(roomId),
+      db.prepare("UPDATE rooms SET status = 'DIRTY' WHERE id = ?1 AND status = 'MAINTENANCE' AND changes() = 1 AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id = ?1 AND status = 'OPEN')").bind(roomId),
       audit(db, eventId, roomId, caseId, "MAINTENANCE_RESOLVE", "MAINTENANCE", "DIRTY", context, { resolution_note: note, legacy_recovery: !open }),
     ]); } catch { throw ApiError.conflict("Maintenance case could not be resolved without changing the room"); }
     if (!(await eventWasRecorded(db, eventId))) throw ApiError.conflict("Maintenance case was not resolved because the room changed concurrently");
