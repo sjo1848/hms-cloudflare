@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import type { ApiVariables } from "../context";
 import { ApiError } from "../errors";
+import { hasCapability } from "../auth/capabilities";
 import { jsonBody, requiredText } from "../validation";
 
 type HousekeepingApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
@@ -10,15 +11,8 @@ type RoomRow = { id: string; room_number: string; room_type: string; status: str
 type CaseRow = { id: string; room_id: string; status: string; priority: string; reason: string; assigned_to: string; reported_by_user_id: string | null; reported_at: string; resolution_note?: string | null; resolved_by_user_id?: string | null; resolved_at?: string | null; return_status?: string | null };
 type DepartureRow = { booking_id: string; room_id: string; room_number: string; room_type: string; room_status: string; guest_name: string; booking_status: string; check_out: string };
 
-const ROLE_CAPABILITIES: Record<string, ReadonlySet<string>> = {
-  admin: new Set(["housekeeping.read", "housekeeping.write"]),
-  ops: new Set(["housekeeping.read", "housekeeping.write"]),
-  receptionist: new Set(),
-  housekeeping: new Set(["housekeeping.read", "housekeeping.write"]),
-};
-
 function requireCapability(context: Context<{ Bindings: Env; Variables: ApiVariables }>, capability: string): void {
-  if (!ROLE_CAPABILITIES[context.get("membership").role]?.has(capability)) throw ApiError.forbidden();
+  if (!hasCapability(context.get("membership").role, capability)) throw ApiError.forbidden();
 }
 
 function roomStatus(status: string): string {

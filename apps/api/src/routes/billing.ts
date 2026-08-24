@@ -3,21 +3,16 @@ import type { Context } from "hono";
 import type { ApiVariables } from "../context";
 import { ApiError } from "../errors";
 import { jsonBody, requiredText } from "../validation";
+import { hasCapability } from "../auth/capabilities";
 
 type BillingApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 type Db = ApiVariables["operationalDatabase"];
 type Ctx = Context<{ Bindings: Env; Variables: ApiVariables }>;
 type Body = Record<string, unknown>;
 
-const caps: Record<string, ReadonlySet<string>> = {
-  admin: new Set(["bookings.extra_charges.read", "bookings.extra_charges.write", "billing.balance.read", "billing.close_cash.write", "billing.invoices.read", "billing.invoice.read", "bookings.update"]),
-  ops: new Set(["bookings.extra_charges.read", "bookings.extra_charges.write", "billing.balance.read", "billing.close_cash.write", "billing.invoices.read", "billing.invoice.read", "bookings.update"]),
-  receptionist: new Set(["bookings.extra_charges.read", "bookings.extra_charges.write", "billing.balance.read", "billing.invoices.read", "billing.invoice.read", "bookings.update"]),
-  housekeeping: new Set(),
-};
-
 function requireCap(c: Ctx, capability: string) {
-  if (!caps[c.get("membership").role]?.has(capability)) throw ApiError.forbidden();
+  const role = c.get("membership").role;
+  if (!hasCapability(role, capability)) throw ApiError.forbidden();
 }
 
 function cents(value: unknown, field: string, positive = false): number {

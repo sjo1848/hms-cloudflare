@@ -7,4 +7,5 @@ export type ApiVariables = {
   membership: Membership;
   operationalDatabase: OperationalDatabase;
   requestId: string;
+  networkRole?: string;
 };

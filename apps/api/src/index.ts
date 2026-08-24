@@ -14,6 +14,7 @@ import { createBookingRoutes } from "./routes/bookings";
 import { createLifecycleRoutes } from "./routes/lifecycle";
 import { createHousekeepingRoutes } from "./routes/housekeeping";
 import { createBillingRoutes } from "./routes/billing";
+import { createAdminRoutes } from "./routes/admin";
 import { OperationalRoutingError, resolveOperationalDatabase } from "./routing";
 
 const app = new Hono<{ Bindings: Env; Variables: ApiVariables }>();
@@ -49,12 +50,14 @@ app.get("/ready", (context) => {
 
 app.use("/api/v1/*", async (context, next) => {
   const identity = await resolveAccessIdentity(context.req.raw, context.env);
+  const network = await context.env.CONTROL_DB.prepare("SELECT role FROM network_memberships WHERE access_subject=?1 AND active=1").bind(identity.subject).first<{ role: string }>();
+  const networkPath = /^\/api\/v1\/(hotels(?:\/|$)|auth\/me$)/.test(context.req.path);
   const memberships = await listMemberships(context.env.CONTROL_DB, identity);
   const membership = selectAuthorizedMembership(
     memberships,
     context.req.header("x-hotel-id")?.trim(),
   );
-  if (!membership) {
+  if (!membership && !(network && networkPath)) {
     return context.json(
       {
         error: {
@@ -67,6 +70,12 @@ app.use("/api/v1/*", async (context, next) => {
     );
   }
   let operationalDatabase;
+  if (!membership) {
+    context.set("identity", identity);
+    context.set("networkRole", network?.role);
+    await next();
+    return;
+  }
   try {
     operationalDatabase = resolveOperationalDatabase(context.env, membership);
   } catch (error) {
@@ -80,6 +89,7 @@ app.use("/api/v1/*", async (context, next) => {
   }
   context.set("identity", identity);
   context.set("membership", membership);
+  context.set("networkRole", network?.role);
   context.set("operationalDatabase", operationalDatabase);
   await next();
 });
@@ -87,12 +97,14 @@ app.use("/api/v1/*", async (context, next) => {
 app.get("/api/v1/auth/me", (context) => {
   const identity = context.get("identity");
   const membership = context.get("membership");
+  const networkRole = context.get("networkRole");
   return context.json({
     subject: identity.subject,
     email: identity.email,
-    hotel_id: membership.hotelId,
-    role: membership.role,
-    operational_binding: membership.operationalBinding,
+    hotel_id: membership?.hotelId ?? null,
+    role: membership?.role ?? null,
+    operational_binding: membership?.operationalBinding ?? null,
+    network_role: networkRole ?? null,
   });
 });
 
@@ -101,6 +113,7 @@ app.route("/api/v1", createBookingRoutes());
 app.route("/api/v1", createLifecycleRoutes());
 app.route("/api/v1", createHousekeepingRoutes());
 app.route("/api/v1", createBillingRoutes());
+app.route("/api/v1", createAdminRoutes());
 
 app.all("/api/v1/*", (context) =>
   context.json(

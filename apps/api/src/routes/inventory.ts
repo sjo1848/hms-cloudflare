@@ -3,6 +3,7 @@ import type { Context } from "hono";
 import type { ApiVariables } from "../context";
 import { ApiError } from "../errors";
 import { dateRange, email, integerCents, isoDate, jsonBody, requiredText } from "../validation";
+import { hasCapability } from "../auth/capabilities";
 
 type InventoryApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 
@@ -35,19 +36,12 @@ type HoldRow = {
   created_at: string;
 };
 
-const ROLE_CAPABILITIES: Record<string, ReadonlySet<string>> = {
-  admin: new Set(["rooms.read", "rooms.write", "rooms.search", "guests.read", "guests.write"]),
-  ops: new Set(["rooms.read", "rooms.search", "guests.read", "guests.write"]),
-  receptionist: new Set(["rooms.read", "rooms.search", "guests.read", "guests.write"]),
-  housekeeping: new Set(),
-};
-
 function requireCapability(
   context: Context<{ Bindings: Env; Variables: ApiVariables }>,
   capability: string,
 ): void {
   const role = context.get("membership").role;
-  if (!ROLE_CAPABILITIES[role]?.has(capability)) {
+  if (!hasCapability(role, capability)) {
     throw ApiError.forbidden();
   }
 }

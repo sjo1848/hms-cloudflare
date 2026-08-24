@@ -3,6 +3,7 @@ import type { Context } from "hono";
 import type { ApiVariables } from "../context";
 import { ApiError } from "../errors";
 import { dateRange, jsonBody, requiredText } from "../validation";
+import { hasCapability } from "../auth/capabilities";
 
 type BookingApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 type Db = ApiVariables["operationalDatabase"];
@@ -15,15 +16,8 @@ type BookingRow = {
 
 type BookingUpdateResult = { meta: { changes: number } };
 
-const ROLE_CAPABILITIES: Record<string, ReadonlySet<string>> = {
-  admin: new Set(["bookings.read", "bookings.write", "rooms.search"]),
-  ops: new Set(["bookings.read", "bookings.write", "rooms.search"]),
-  receptionist: new Set(["bookings.read", "bookings.write", "rooms.search"]),
-  housekeeping: new Set(),
-};
-
 function requireCapability(context: Context<{ Bindings: Env; Variables: ApiVariables }>, capability: string): void {
-  if (!ROLE_CAPABILITIES[context.get("membership").role]?.has(capability)) throw ApiError.forbidden();
+  if (!hasCapability(context.get("membership").role, capability)) throw ApiError.forbidden();
 }
 
 function nights(start: string, end: string): string[] {
