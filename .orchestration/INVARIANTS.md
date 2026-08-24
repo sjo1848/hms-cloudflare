@@ -157,13 +157,25 @@ When an Independent Critic finds a defect whose root cause can recur outside the
 
 **Critical starting with:** CF-I06.
 
-## INV-STATE-001 — Local PASS is not canonical closure
+## INV-STATE-001 — Canonical closure uses a non-circular publication boundary
 
 **Applies to:** every substantive task.
 
-**Invariant:** artifact, review verdict, STATUS/STATE, branch/HEAD and evidence references must converge before the task is considered closed. Conversation output is not authoritative state.
+**Invariant:** a commit cannot contain its own SHA as canonical metadata. Publication therefore uses a two-commit boundary:
 
-**Required evidence:** clean/synchronized boundary and canonical files pointing at the exact reviewed artifact/verdict.
+1. **Artifact commit A** — immutable substantive implementation + tests + evidence content. It does not need to know its own SHA.
+2. **Publication-boundary commit B** — orchestration-only commit that records the exact full SHA of A in STATUS/STATE, sets `external_review.required=true`, `resume_authorized=false`, and identifies the next action as External Independent Critic.
+
+External Independent Critic reviews artifact A plus canonical boundary state B. B must not change substantive product code. Conversation claims or local-only state never substitute for remote B. After a Critic verdict, a later orchestration commit may record PASS/REWORK and authorize the next action.
+
+**Required evidence:**
+- remote main contains artifact A followed by publication-boundary B;
+- B records exact `artifact_head=A` (or equivalent exact field/reference), current task and external-review flags;
+- B changes only orchestration/evidence metadata needed for publication, not substantive product behavior;
+- no stale prior-artifact head or `PENDING_IMMUTABLE_HEAD` is presented as canonical closure;
+- reviewer can resolve both A and B remotely.
+
+**Origin:** CF-I05 REWORK-4 review exposed a circular self-SHA requirement: trying to write a commit's own SHA changes that commit. The method is corrected to use an explicit non-circular publication pair.
 
 ## INV-SCOPE-001 — Accelerated wave does not imply scope blending
 
@@ -184,6 +196,7 @@ A substantive artifact is eligible for External Independent Critic only when:
 - every applicable invariant is `PASS` with concrete evidence or explicitly `N/A` with rationale;
 - full regression required by the Task Contract passes;
 - evidence documentation has been checked against `INV-EVID-001`;
-- canonical state identifies the exact immutable artifact and sets `external_review.required=true`.
+- artifact commit A is immutable and remotely resolvable;
+- publication-boundary commit B records exact A, sets `external_review.required=true` and `resume_authorized=false`, and contains no substantive product-code changes.
 
 Codex self-checking these items is not an Independent Critic PASS; it is the admission gate for external review.
