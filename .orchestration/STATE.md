@@ -92,19 +92,23 @@ Local `git pull --ff-only` only if the Codex workspace has not consumed the late
 
 None. CF-I06 REWORK-1 is routine and authorized.
 
+## CF-I06 REWORK-1 PUBLICATION BOUNDARY
+
+Artifact A: `291ee7ae60ddd3c0abec8ff6b921666f3e86e76f` (`fix: harden CF-I06 financial rework`). It contains the substantive financial hardening, cash balance/close UX, expanded regression/browser harnesses and refreshed invariant/gate evidence.
+
+The next commit is orchestration-only boundary B. It records exact A, sets `external_review.required=true` and `resume_authorized=false`, and stops for Independent Critic. No CF-I07 work is authorized before CF-I06 PASS.
+
 ## NEXT AUTHORIZED ACTION
 
-Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I06-CRITIC.md`, `.orchestration/contracts/CF-I06.md`, the source financial services/repositories/UI, learned invariants and Pre-Critic Gate; then autonomously in one bounded wave:
+Independent Critic reviews artifact A `291ee7ae60ddd3c0abec8ff6b921666f3e86e76f` together with orchestration-only boundary B. CF-I06 REWORK-1 execution is complete for this boundary:
 
-1. repair rejected-payment zero-side-effect atomicity including no-invoice overpay;
-2. revalidate complete cash-close snapshot inside the write boundary and prove payment-vs-close race;
-3. restore source non-CASH/TRANSFER classification and first-shift opening semantics;
-4. implement cash balance + close-cash UX with expected/count/difference/handoff/notes and typed stale errors;
-5. restore source payment-history ordering and classify `INV-ORDER-001`;
-6. execute browser at 375/390/430/768/1024 with success, validation, error and close-cash journeys;
-7. add settle-payment, tenant/RBAC, transfer, positive/negative difference, extra-charge consistency and stale-snapshot tests;
-8. obtain actual PASS from inherited CF-I03/04/05 regressions by fixing/isolating the local runner lifecycle;
-9. update invariant/Pre-Critic evidence so no required item is waived or overclaimed;
-10. publish a fresh substantive artifact A plus orchestration-only boundary B and stop for Independent Critic.
+1. fail-closed first payment/overpayment state;
+2. complete cash snapshot revalidation in the authoritative write;
+3. restore TRANSFER/non-cash, opening and newest-first parity;
+4. implement balance/close UX and typed stale error;
+5. execute expanded adversarial and browser evidence;
+6. refresh invariant and Pre-Critic evidence;
+7. publish artifact A `291ee7ae60ddd3c0abec8ff6b921666f3e86e76f` plus orchestration-only boundary B;
+8. stop for Independent Critic.
 
 Do not begin CF-I07 before CF-I06 Independent Critic PASS. No production deployment, remote D1 mutation, real-data migration, Cloudflare preview deployment or paid transition is authorized.
