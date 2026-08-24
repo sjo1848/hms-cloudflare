@@ -22,6 +22,7 @@ For every migrated source capability:
 - compare required actor/time/audit data;
 - compare workflow/information architecture on required UI surfaces;
 - compare source ordering/ranking/deduplication/synthetic-item/next-item rules where they affect operational behavior;
+- compare enum/value representations across source domain, target DB, API and UI; when serialization differs, define a canonical semantic mapping before using the value in business predicates;
 - record intentional exceptions only if backed by an approved decision.
 
 ### 3. Mutation/concurrency sweep
@@ -59,6 +60,7 @@ For every business operation with conditional writes:
 - mobile workflows prove the material task-entry/focus/close semantics required by the source contract;
 - where source ranking/next-item semantics exist, use deterministic fixtures whose natural identifier/order conflicts with expected priority and assert known expected identities; never derive the expected answer from the target's own first rendered item;
 - where the source synthesizes/derives queue items, prove those items remain visible/contextualized and do not expose invalid actions;
+- when target enum serialization differs from source, include at least one fixture using the target serialized value and prove the same source business predicate/rank/filter fires;
 - per-entity draft isolation/reset is exercised in browser when the Task Contract requires it, rather than inferred only from component state shape;
 - validation/error/success states are observable;
 - mocks are labeled as mocks;
@@ -74,6 +76,7 @@ For each material claim in docs/state:
 If no evidence exists, weaken/remove the claim or add the missing proof.
 
 For ordering/priority claims, evidence must prove the source rule independently; target-self-consistency is not source parity.
+For enum/state claims, evidence must distinguish semantic state from source/target serialized spelling.
 
 ### 8. Full regression and scope audit
 
@@ -97,14 +100,17 @@ Every applicable invariant must be one of:
 
 `UNPROVEN` is equivalent to `FAIL` for artifact publication.
 
-### 10. Publish boundary
+### 10. Non-circular publish boundary
 
 Only after steps 1–9 pass:
 
-- create/publish one immutable artifact;
-- persist exact artifact HEAD;
-- set `external_review.required=true`;
-- set `resume_authorized=false`;
-- stop for External Independent Critic.
+1. publish **artifact commit A** containing substantive implementation/tests/evidence; A does not need to contain its own SHA;
+2. read the exact full remote-resolvable SHA of A;
+3. publish **boundary commit B** containing only orchestration/evidence metadata needed to point to A;
+4. B records exact artifact A, sets `external_review.required=true`, sets `resume_authorized=false`, and sets next action to External Independent Critic;
+5. B must not modify substantive product code;
+6. stop for External Independent Critic, which reviews A plus boundary B.
+
+Do not use `PENDING_IMMUTABLE_HEAD` or a previous artifact SHA as final canonical state. A single self-referential commit cannot satisfy this rule because writing its own SHA would change the SHA.
 
 The pre-Critic gate does not authorize Codex to self-declare substantive PASS.
