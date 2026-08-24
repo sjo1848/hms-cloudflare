@@ -61,6 +61,8 @@ For every business operation with conditional writes:
 - CF-I07 protected admin/network/audit routes must have no direct role-name authorization shortcut outside the canonical capability helper.
 - same-role/same-plan no-ops must be rejected or explicitly no-op with zero audit rows.
 - downgrade evidence must prove the same subject was allowed before and denied after, using the same privileged operation.
+- CF-I08 reporting must assert integer-cent arithmetic, explicit date/state predicates and zero-safe denominators in backend evidence.
+- CF-I08 network aggregation must use server-side binding allow-lists, reconcile exact per-hotel totals and fail truthfully on an unavailable configured store; target-self ordering is not sufficient evidence.
 
 ### 5. UX parity sweep
 

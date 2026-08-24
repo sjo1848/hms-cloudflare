@@ -209,6 +209,30 @@ External Independent Critic reviews artifact A plus canonical boundary state B. 
 
 **Required evidence:** runner cleanup trap and post-run process check.
 
+## INV-CF-I08-001 — Reporting arithmetic is integer-cent and zero-safe
+
+**Applies when:** analytics, revenue, occupancy, ADR or RevPAR is exposed.
+
+**Invariant:** monetary outputs remain integer cents; date/range and state predicates are authoritative backend SQL; zero denominators return zero rather than `NaN`, floating estimates or fabricated values.
+
+**Required evidence:** independently calculable D1 fixtures including cancellation exclusion, empty range and cents that expose rounding errors.
+
+## INV-CF-I08-002 — Network aggregation is server-side, bound and complete
+
+**Applies when:** a network actor requests multi-hotel analytics.
+
+**Invariant:** only the explicit network capability may fan out over active control-plane hotels; each binding is selected from server configuration, every configured hotel must contribute or return a truthful unavailable error, and ranking is deterministic and independently asserted.
+
+**Required evidence:** two real local D1 bindings, exact total/per-hotel reconciliation, ranking fixture and unavailable-binding denial.
+
+## INV-CF-I08-003 — Report date/state semantics are explicit
+
+**Applies when:** report data is queried by date or booking state.
+
+**Invariant:** both range boundaries and inclusion/exclusion state predicates are validated and documented; client-side aggregation cannot redefine them.
+
+**Required evidence:** valid, invalid, empty and cancelled/non-revenue deterministic queries.
+
 ## INV-SCOPE-001 — Accelerated wave does not imply scope blending
 
 **Applies to:** accelerated delivery waves.

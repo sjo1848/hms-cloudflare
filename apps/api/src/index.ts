@@ -16,6 +16,7 @@ import { createHousekeepingRoutes } from "./routes/housekeeping";
 import { createBillingRoutes } from "./routes/billing";
 import { createAdminRoutes } from "./routes/admin";
 import { OperationalRoutingError, resolveOperationalDatabase } from "./routing";
+import { createAnalyticsRoutes } from "./routes/analytics";
 
 const app = new Hono<{ Bindings: Env; Variables: ApiVariables }>();
 
@@ -114,6 +115,7 @@ app.route("/api/v1", createLifecycleRoutes());
 app.route("/api/v1", createHousekeepingRoutes());
 app.route("/api/v1", createBillingRoutes());
 app.route("/api/v1", createAdminRoutes());
+app.route("/api/v1", createAnalyticsRoutes());
 
 app.all("/api/v1/*", (context) =>
   context.json(
