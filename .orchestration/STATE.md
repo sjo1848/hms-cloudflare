@@ -6,9 +6,9 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 INDEPENDENT CRITIC REWORK-2 AUTONOMOUS`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 REWORK-2 ARTIFACT READY FOR INDEPENDENT CRITIC`
 
-Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
+Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized. CF-I04 REWORK-2 is complete locally and is awaiting external review.
 
 ## CANONICAL SOURCES
 
@@ -103,12 +103,15 @@ Task Contract: `.orchestration/contracts/CF-I04.md`.
 - Initial reviewed artifact: `32b5070dbd80b4b4d3667fe45573f8851cb60a7c` → Independent Critic `REWORK`.
 - REWORK-1 artifact: `88c8361bae2148f682947bba1976a41404db9212` → Independent Critic `REWORK`.
 - Current Critic record: `.orchestration/reviews/CF-I04-REWORK-1-CRITIC.md`.
+- REWORK-2 artifact: `22eb064c68e2793ef0d67dd984384f32f5a13873` → local implementation, adversarial QA, browser evidence and full validation complete; Independent Critic pending.
 
 ### REWORK-2 EXECUTION
 
-Runtime status: `RUNNING`; `RUNTIME_CAPABILITY_FALLBACK` is active because this runtime exposes no separate Specialist contexts. Domain/Engineering and QA/Security responsibilities remain separated in the implementation and evidence passes; no multiagency claim is made.
+Runtime status: `READY_TO_RESUME` with `resume_authorized=false` pending Independent Critic; `RUNTIME_CAPABILITY_FALLBACK` is active because this runtime exposes no separate Specialist contexts. Domain/Engineering and QA/Security responsibilities remain separated in the implementation and evidence passes; no multiagency claim is made.
 
 The authorized repair consumes `.orchestration/reviews/CF-I04-REWORK-1-CRITIC.md` and is limited to lifecycle atomicity, deterministic evidence, valid repeated room history and source-reception UX parity.
+
+Terminal boundary: artifact `22eb064c68e2793ef0d67dd984384f32f5a13873` is published on `main`. Independent Critic review is required; no technical PASS, Product Acceptance or CF-I05 advancement is self-declared.
 
 ### What REWORK-1 improved
 
@@ -151,7 +154,9 @@ None. CF-I04 has authorized routine technical/product-parity REWORK.
 
 ## NEXT AUTHORIZED ACTION
 
-Codex autonomously reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I04-REWORK-1-CRITIC.md`, `.orchestration/decisions/PM-AUTONOMY-001.md` and `.orchestration/decisions/CF-UX-PARITY-001.md`, then:
+Independent Critic reads the exact artifact `22eb064c68e2793ef0d67dd984384f32f5a13873` against the contract and canonical evidence. Codex must not continue to CF-I05 before a fresh CF-I04 PASS.
+
+Previously authorized repair sequence completed:
 
 1. implements a D1 transaction guard that aborts inside the batch when booking/room/destination preconditions are stale;
 2. removes the lifetime reassignment-history restriction and preserves legitimate repeated room-history semantics;
@@ -159,8 +164,8 @@ Codex autonomously reads `.orchestration/STATUS.json`, `.orchestration/reviews/C
 4. ports/adapts the CF-I04 Reception Lifecycle surface toward the accepted source HMS case-workspace UX without advancing billing/later scope;
 5. exercises lifecycle UI behavior at 375/390/430/768/1024 and proves observable lifecycle typed-error + recovery/success behavior;
 6. runs full self-adversarial QA, regressions, build, types, Wrangler dry-runs and scope/diff checks;
-7. publishes a fresh immutable CF-I04 artifact with `external_review.required=true`;
-8. stops only at the next Independent Critic boundary or another legitimate stop condition.
+7. published the fresh immutable CF-I04 artifact with `external_review.required=true`;
+8. stopped at the next Independent Critic boundary.
 
 Do not advance to CF-I05 before CF-I04 obtains a fresh Independent Critic PASS.
 
