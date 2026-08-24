@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 ACCELERATED WAVE RUNNING`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 ARTIFACT READY FOR INDEPENDENT CRITIC`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -89,6 +89,22 @@ Accepted scope includes:
 - staged mobile check-in and full lifecycle browser evidence at 375/390/430/768/1024;
 - 16/16 test suite, D1/API regressions, build/types/Wrangler validation.
 
+### CF-I05 — Housekeeping + Maintenance
+Status: `IMPLEMENTED / VALIDATED / AWAITING INDEPENDENT CRITIC`.
+Immutable artifact: `02421a1`.
+Task Contract: `.orchestration/contracts/CF-I05.md`.
+Parity/evidence: `docs/cf-i05-housekeeping-maintenance-parity.md`.
+
+Validated scope includes:
+- source-aligned dirty queue and housekeeping board with departure and maintenance context;
+- Dirty → Cleaning → Available transitions with invalid-state rejection and traceability;
+- maintenance open/resolve workflow, legacy maintenance resolution, priority/reason/assignee/note validation and one-open-case-per-room enforcement;
+- D1 transactional coupling of room state, maintenance case and housekeeping event audit;
+- backend RBAC and tenant-bound API behavior;
+- responsive `/housekeeping` UX and browser evidence at 375/390/430/768/1024;
+- full check/build plus CF-I03, CF-I04 and CF-I05 D1/API regressions;
+- self-critic completed with no scope, security, cost, architecture or Human Gate drift.
+
 ## DELIVERY SPEED FINDING
 
 CF-I04 required four bounded REWORK cycles before PASS. The defect classes were legitimate, but the experience exposes coordination overhead from very small implementation/review loops and late discovery of source-parity details.
@@ -107,7 +123,7 @@ None.
 
 ## CF-I05 EXECUTION
 
-Runtime status: `RUNNING`; `RUNTIME_CAPABILITY_FALLBACK` remains active because this runtime exposes no separate Specialist contexts. Domain/Engineering, Reception/Housekeeping UX and QA/Security responsibilities are separated in the contract, implementation passes and evidence plan without a false multiagency claim.
+Runtime status: `STOPPED AT INDEPENDENT CRITIC BOUNDARY`; `RUNTIME_CAPABILITY_FALLBACK` remains active because this runtime exposes no separate Specialist contexts. Domain/Engineering, Reception/Housekeeping UX and QA/Security responsibilities were separated in the contract, implementation passes and evidence plan without a false multiagency claim.
 
 CF-I05 is one coherent accelerated operational wave covering only Housekeeping + Maintenance. Billing/financial atomicity, users/RBAC administration, hotels/network administration, reports, migration/cutover and paid Cloudflare changes remain outside scope.
 
@@ -121,13 +137,6 @@ None.
 
 ## NEXT AUTHORIZED ACTION
 
-Plan the next delivery scope beginning with CF-I05 using an accelerated-wave model while preserving the existing product, cost, security and parity decisions.
+Stop for the next Independent Critic review of immutable artifact `02421a1`. Do not begin CF-I06 until that boundary is resolved and canonical state authorizes the next increment.
 
-Recommended risk boundaries:
-1. Housekeeping + maintenance may be implemented as one coherent operational wave.
-2. Billing remains a dedicated independent-risk boundary because it introduces financial atomicity, invoices, payments, settlement and cash closure.
-3. Users/RBAC/audit + hotels/network administration remain a dedicated security/cross-tenant boundary.
-4. Analytics/reports + integrated desktop/mobile journeys may be treated as one integration wave after underlying operational domains exist.
-5. Data migration rehearsal + operational readiness + Product Acceptance preparation remain the final dedicated boundary.
-
-No production deployment, remote D1 mutation, real-data migration or paid Cloudflare transition is authorized by this planning state.
+No production deployment, remote D1 mutation, real-data migration or paid Cloudflare transition is authorized by this state.

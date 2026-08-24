@@ -2,21 +2,21 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "BUILD",
-  "runtime_status": "RUNNING",
+  "runtime_status": "READY_TO_RESUME",
   "resume_authorized": false,
-  "active_task": "CF-I05",
+  "active_task": "CF-I05-INDEPENDENT-CRITIC-BOUNDARY",
   "work_branch": "main",
-  "last_completed_task": "CF-I04-INDEPENDENT-CRITIC-PASS",
-  "last_completed_head": "5dc91414301810dba4d5ae6a00f062b8cf59ea7a",
-  "next_action": "PERSIST_CF_I05_COMPLETE_CONTRACT_AND_PARITY_MATRIX",
-  "stop_reason": "CF-I05 accelerated wave is authorized under approved scope; Codex is completing the contract and source-parity matrix before implementation.",
+  "last_completed_task": "CF-I05-ACCELERATED-WAVE-IMPLEMENTATION-VALIDATED",
+  "last_completed_head": "02421a1",
+  "next_action": "INDEPENDENT_CRITIC_REVIEW_CF_I05_ARTIFACT_02421A1",
+  "stop_reason": "CF-I05 coherent artifact is published and awaits the next Independent Critic boundary; CF-I06 is not authorized.",
   "event": {
-    "seq": 37,
-    "id": "CF-I05@WAVE-RUNNING",
-    "type": "RUNTIME_STARTED_INCREMENT"
+    "seq": 38,
+    "id": "CF-I05@ARTIFACT-READY",
+    "type": "IMMUTABLE_ARTIFACT_PUBLISHED_FOR_INDEPENDENT_CRITIC"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": "5dc91414301810dba4d5ae6a00f062b8cf59ea7a",
     "last_verdict": "PASS"
   },
