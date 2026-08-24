@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-24  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 REWORK-3 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 AUTHORIZED`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving product behavior, domain semantics, security, financial integrity and operational safety. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -14,8 +14,8 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 
 - Source: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`.
 - Target: `sjo1848/hms-cloudflare`.
-- Active contract: `.orchestration/contracts/CF-I06.md`.
-- Current Independent Critic: `.orchestration/reviews/CF-I06-REWORK-2-CRITIC.md`.
+- Active contract: `.orchestration/contracts/CF-I07.md`.
+- Last Independent Critic: `.orchestration/reviews/CF-I06-REWORK-3-CRITIC.md`.
 - Invariants: `.orchestration/INVARIANTS.md`.
 - Pre-Critic Gate: `.orchestration/PRECRITIC-GATE.md`.
 - Machine state: `.orchestration/STATUS.json`.
@@ -27,54 +27,60 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - CF-I03 — PASS / CLEAN INTEGRATION PASS — accepted `65ed1e5710a20af97d183f04364b5aa7b605a74a`; integrated `58c84a2564d9a4b85785203ff04fee24fee47213`.
 - CF-I04 — PASS — `5dc91414301810dba4d5ae6a00f062b8cf59ea7a`.
 - CF-I05 Housekeeping + Maintenance — PASS — artifact A `17372d3200b8e88eec116e97672c12589005103d`, boundary B `9a05013c4b38567ff4749a855b40c9fd1cba2314`.
+- CF-I06 Billing — PASS — artifact A `0004990ba60b0349776de139cd04dfc2f30eaa6d`, boundary B `de0dbdc0ed92b60a5fd32faa184484c701711d08`, Independent Critic `.orchestration/reviews/CF-I06-REWORK-3-CRITIC.md`.
 
-Carry-forward debt: source `NoShow` departure exclusion must be resolved before final migration readiness, at latest CF-I09.
+### CF-I06 accepted guarantees
 
-## CF-I06 — BILLING
+- exact integer-cent invoice/payment/extra-charge/cash-closure semantics;
+- concurrent payment does not overpay;
+- close-cash revalidates the authoritative snapshot with inclusive shift opening semantics;
+- close ownership uses a server-only operation token rather than client `x-request-id`;
+- closure audit is trigger-generated in the same D1 insert transaction;
+- `TRANSFER` is source-equivalent non-cash;
+- two real configured operational D1 bindings prove bidirectional tenant isolation;
+- forbidden/unknown roles fail closed for financial writes;
+- positive settlement and durable settlement event metadata are proven;
+- authoritative extra-charge batch rollback is exercised;
+- billing/cash UX works at 375/390/430/768/1024;
+- inherited CF-I03/04/05 regressions pass;
+- no production, remote data, paid resource or cutover entered scope.
 
-Artifact A `0004990ba60b0349776de139cd04dfc2f30eaa6d` is complete and awaits a new Independent Critic boundary B. It is not self-approved.
+## CARRY-FORWARD DEBT
 
-### Accepted repairs from REWORK-2 that must be preserved
+Source `NoShow` booking/departure exclusion is not yet representable in the target booking enum. Resolve explicitly before final migration readiness, at latest CF-I09; imported NoShow rows must not become Housekeeping tasks.
 
-- exactly one canonical handler per billing method/path; temporary `-v2` routes removed;
-- one inclusive `received_at >= opening` rule shared by balance and close-cash;
-- `TRANSFER` included in source-equivalent non-cash subtotal;
-- first shift opening derives from earliest payment when no prior closure exists;
-- closure audit is emitted by D1 trigger in the same closure insert transaction;
-- browser executes charge + payment at 375/390/430/768/1024 and includes overpay, stale-close and successful-close journeys;
-- positive settle-payment response path exists;
-- forbidden/unknown roles are denied billing balance read;
-- fresh CF-I03/04/05 inherited runner PASS is recorded;
-- A→B publication boundary is correct;
-- no CF-I07, production, remote D1, real-data or paid-resource drift.
+## ACTIVE INCREMENT — CF-I07 USERS / RBAC / AUDIT / HOTEL-NETWORK ADMIN
 
-### REWORK-3 resolution evidence
+Contract: `.orchestration/contracts/CF-I07.md`.
 
-- close-cash ownership now uses a server-only operation token; same client `x-request-id` race produces one success, one conflict, one closure and one event;
-- hotel-a and hotel-b use separate configured operational D1 bindings; cross-tenant invoice/payment/extra-charge reads and writes return 404 with zero side effects in both stores;
-- forbidden and unknown roles are denied financial writes with 403 and unchanged financial state;
-- positive settle-payment asserts exact durable payment/event metadata and retry zero-side-effect behavior;
-- a local-only injected NOT NULL failure inside the charge batch proves authoritative rollback of charge, booking total and audit event;
-- invariant and Pre-Critic evidence are corrected to match these executable proofs;
-- focal, browser, inherited, build, type and dry-run checks pass.
+CF-I07 is the primary security/cross-tenant administration boundary and is now authorized.
 
-Full verdict and exit criteria: `.orchestration/reviews/CF-I06-REWORK-2-CRITIC.md`.
+Scope includes:
 
-Diagnosis: `REWORK-3_IMPLEMENTED_AWAITING_INDEPENDENT_CRITIC`.
-Human Gate: `NONE`.
-Blocker: `NONE`.
+- Access-backed identity/membership user management;
+- centralized backend RBAC/capability semantics across migrated modules;
+- user create/invite/register, delete/deactivate and role-management behavior compatible with Cloudflare Access;
+- durable admin/audit read model and exactly-once audit for admin mutations;
+- hotel/control-plane administration using only server-configured operational D1 bindings;
+- explicit network-level authorization for cross-hotel administration;
+- source-equivalent Users and Hotel Network administrative UX, including mobile behavior;
+- full tenant/RBAC/adversarial/browser evidence and fresh inherited CF-I03–CF-I06 regressions.
+
+Cloudflare Access remains the approved perimeter. CF-I07 must not recreate password authentication inside HMS merely to imitate the source.
 
 ## BINDING LEARNED RULES
 
-- client-supplied correlation/tracing ids must not be used as ownership or compare-and-set tokens for exact-winner proof;
-- exact winner must come from the authoritative write result (`changes=1`) or a server-only operation token;
-- when a contract requires real cross-tenant object isolation, unknown/unconfigured binding denial is not equivalent evidence;
-- write-capable surfaces require denied-write RBAC evidence when the contract includes writes;
-- pre-validation rejection does not by itself prove multi-write rollback/atomicity.
+- client-supplied correlation ids are trace metadata only, never authoritative ownership/version/idempotency tokens;
+- exact winner comes from the authoritative write result or a server-only operation token;
+- real cross-tenant isolation requires real distinct configured tenant stores where the contract calls for it;
+- frontend guards never substitute backend capability enforcement;
+- route duplication/shadowing blocks publication;
+- required regression failure or runner interruption is `UNPROVEN`, not PASS;
+- pre-validation rejection is not sufficient evidence for multi-write rollback.
 
 ## DELIVERY SEQUENCE
 
-`CF-I06 → CF-I07 → CF-I08 → CF-I09 → Cloudflare test environment → Human Product Acceptance → production-readiness/release gates`.
+`CF-I07 → CF-I08 → CF-I09 → Cloudflare test environment → Human Product Acceptance → production-readiness/release gates`.
 
 No intermediate Cloudflare preview is planned.
 
@@ -82,27 +88,30 @@ No intermediate Cloudflare preview is planned.
 
 None.
 
+Paid Cloudflare resources, irreversible provisioning/cutover, product-intent changes or final Product Acceptance remain Human Gates if/when reached.
+
 ## PENDING HUMAN ACTIONS
 
-Local `git pull --ff-only` only if the Codex workspace has not consumed the latest remote state. This is a Human Action, not a Human Gate.
+Local repository sync only if the Codex workspace has not consumed the latest remote state. This is a Human Action, not a Human Gate.
 
 ## BLOCKERS
 
-None. CF-I06 REWORK-3 implementation is complete; Independent Critic is the next boundary.
+None.
 
 ## NEXT AUTHORIZED ACTION
 
-Codex consumed `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I06-REWORK-2-CRITIC.md`, the active contract, source financial services/repositories/UI, learned invariants and Pre-Critic Gate and completed:
+Codex autonomously executes CF-I07 under `.orchestration/contracts/CF-I07.md`:
 
-1. make close-cash success depend on the authoritative write result or server-only operation token, never reusable client `x-request-id`;
-2. add deterministic same-`x-request-id` concurrent close race requiring one success, one conflict, one closure and one event;
-3. add second-tenant object isolation read/write fixture with zero side effects;
-4. add forbidden and unknown role financial write-denial assertions with unchanged business/audit state;
-5. assert positive settle-payment exact durable payment/event metadata plus retry zero-side-effect behavior;
-6. add an authoritative extra-charge write-boundary failure proving full rollback;
-7. correct invariant/evidence claims and run the complete required gate/regression suite;
-8. publish fresh artifact A plus orchestration-only boundary B and stop for Independent Critic.
+1. source parity pre-flight for Users, route guards, auth/admin handlers and Hotel Network administration;
+2. explicit Cloudflare Access identity/auth adaptation mapping;
+3. centralized target capability/RBAC matrix;
+4. CONTROL_DB user/membership/admin domain operations with exactly-once audit;
+5. network-level hotel/control-plane administration restricted to server-configured bindings;
+6. adversarial tenant/RBAC/stale/duplicate/admin tests;
+7. source-equivalent responsive Users and Hotel Network admin UX;
+8. full inherited CF-I03/04/05/06 regressions, unit/type/build/Wrangler/route-uniqueness checks;
+9. invariant + Pre-Critic evidence with no FAIL/UNPROVEN;
+10. publish substantive artifact A + orchestration-only boundary B;
+11. stop for Independent Critic or a real Human Gate.
 
-Artifact A `0004990ba60b0349776de139cd04dfc2f30eaa6d` is now awaiting Independent Critic. Do not begin CF-I07 before CF-I06 receives external PASS.
-
-Do not begin CF-I07 before CF-I06 Independent Critic PASS. No production deployment, remote D1 mutation, real-data migration, Cloudflare preview deployment or paid transition is authorized.
+Do not begin CF-I08 before CF-I07 Independent Critic PASS. No production deployment, remote D1 creation/mutation, real-data migration, paid transition or cutover is authorized.
