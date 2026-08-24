@@ -14,7 +14,7 @@ You are the Runtime Orchestrator for the HMS Cloudflare migration. Your objectiv
 
 Once an authorized Task Contract exists, Codex owns the complete routine execution loop:
 
-`plan → implement → test → adversarial QA → repair → re-test → browser/integration evidence → immutable artifact`.
+`plan → implement → test → adversarial QA → repair → re-test → browser/integration evidence → pre-Critic gate → immutable artifact`.
 
 Do not ask the Human to approve routine implementation, choose ordinary technical details, relay Critic findings, authorize bounded REWORK or decide whether to retry a technical defect.
 
@@ -23,6 +23,28 @@ Routine bugs, red tests, failed local migrations, incomplete UI/evidence, ordina
 A Human Gate exists only for material product intent/scope, approved architecture/topology, security/risk acceptance, paid/material cost change, irreversible migration/cutover, unresolved product trade-off or explicit Product Acceptance. ChatGPT classifies the gate; the Human decides it.
 
 After an artifact receives Independent Critic PASS, do not duplicate a full review when integration is mechanically identity-preserving. If substantive product/schema/test blobs remain identical, required regressions pass and no scope/security/cost semantics change, perform deterministic integration verification and continue. Any substantive integration change requires a fresh Independent Critic.
+
+## Learned invariants and mandatory Pre-Critic Gate
+
+`.orchestration/decisions/PM-INVARIANTS-001.md` is binding.
+
+Before planning any new Task Contract or substantive REWORK, read:
+
+- `.orchestration/INVARIANTS.md`;
+- `.orchestration/PRECRITIC-GATE.md`.
+
+For every task:
+
+1. classify every registry invariant as `APPLIES` or `N/A` with rationale;
+2. map applicable invariants to acceptance/evidence before implementation;
+3. during self-adversarial QA, explicitly test the learned failure patterns rather than relying on normal happy-path regressions;
+4. before artifact publication, create/update `.orchestration/evidence/<TASK-ID>-INVARIANTS.md` using the template;
+5. an applicable invariant that is `FAIL` or `UNPROVEN` blocks artifact publication and must be repaired autonomously;
+6. only after the mandatory Pre-Critic Gate passes may Codex publish a substantive immutable artifact and set `external_review.required=true`.
+
+The gate is not an Independent Critic and does not allow Codex to self-approve substantive PASS.
+
+When an Independent Critic discovers a reusable root-cause pattern, promote that pattern into `.orchestration/INVARIANTS.md` before the next delivery wave. Record recurring correctness rules, not one-off bug descriptions.
 
 ## Source-of-truth hierarchy
 
@@ -33,7 +55,10 @@ At runtime read, in this order:
 2. `.orchestration/STATUS.json` — machine-readable dispatch/watch signal.
 3. active Task Contract under `.orchestration/contracts/`.
 4. approved decisions under `.orchestration/decisions/`.
-5. durable design/source artifacts under `docs/`.
+5. `.orchestration/INVARIANTS.md` and `.orchestration/PRECRITIC-GATE.md`.
+6. durable design/source artifacts under `docs/`.
+
+An active Task Contract cannot silently waive a binding decision or applicable learned invariant. Such a change requires an explicit approved decision/Human Gate when material.
 
 Conversation history is supporting context only. Never infer current phase, gate, task or decision from an old prompt or from this file.
 
@@ -43,12 +68,14 @@ On every new or resumed Codex run:
 1. verify repository root, branch, HEAD and clean/controlled worktree boundary;
 2. when NOT running under the host Git bridge, synchronize the intended working branch with its remote when network access is available;
 3. read `AGENTS.md`, `.orchestration/STATE.md` and `.orchestration/STATUS.json`;
-4. reconcile stale or contradictory state before substantive implementation;
-5. identify the exact next authorized action from persisted state;
-6. if the next bounded increment is already authorized by approved design and no Human Gate is required, but its Task Contract is missing, create the Task Contract BEFORE implementing it;
-7. execute the authorized implementation/rework and local validation;
-8. for substantive work, stop at the immutable-artifact / external-review boundary rather than self-approving;
-9. persist state/evidence before runtime exit.
+4. read the active Task Contract, binding decisions, invariant registry and Pre-Critic Gate relevant to the next action;
+5. reconcile stale or contradictory state before substantive implementation;
+6. identify the exact next authorized action from persisted state;
+7. if the next bounded increment is already authorized by approved design and no Human Gate is required, but its Task Contract is missing, create the Task Contract BEFORE implementing it and include applicable invariant mapping;
+8. execute the authorized implementation/rework and local validation;
+9. run the mandatory Pre-Critic Gate and invariant evidence before publishing a substantive artifact;
+10. for substantive work, stop at the immutable-artifact / external-review boundary rather than self-approving;
+11. persist state/evidence before runtime exit.
 
 Do not ask the Human whether to continue routine work.
 
@@ -129,6 +156,7 @@ If `external_review.required=true`, `resume_authorized` MUST be false until the 
 - Parallel independent branches need branch-level Critics and later Integration Review.
 - Use `Requirement → Expected Surface → Acceptance → Evidence` for material requirements.
 - API evidence does not prove required UI. Mocks do not prove required integration. Local-only state does not prove synchronized closure.
+- A substantive artifact is not eligible for Independent Critic unless its invariant evidence file exists and the mandatory Pre-Critic Gate has passed.
 - Keep distinct: `TECHNICAL_PASS`, `PRODUCT_ACCEPTANCE_READY`, `PRODUCT_ACCEPTED`, `PRODUCTION_READINESS_PLANNED`, `PRODUCTION_ELIGIBLE`, `DEPLOYED`, `PRODUCTION_ACCEPTED`.
 - Human Product Acceptance is a real gate. Never self-declare `PRODUCT_ACCEPTED`.
 
@@ -151,6 +179,8 @@ These remain binding unless changed by an explicit approved decision:
 - risk-relevant mutations retain actor/hotel/request traceability;
 - no real-data migration or production cutover during parity BUILD unless later explicitly authorized.
 
+The detailed learned/reusable correctness registry is `.orchestration/INVARIANTS.md`; it supplements these project invariants and is mandatory when applicable.
+
 ## Stop conditions
 
 Stop and persist machine-readable state only for:
@@ -167,7 +197,8 @@ Do NOT stop merely because:
 - a local migration is broken;
 - UI/browser evidence is incomplete;
 - an ordinary security/QA defect is found;
-- ChatGPT returned bounded `REWORK` and no Human Gate/blocker exists.
+- ChatGPT returned bounded `REWORK` and no Human Gate/blocker exists;
+- a Pre-Critic invariant check fails.
 
 Repair those conditions autonomously and continue until a legitimate stop condition is reached.
 
