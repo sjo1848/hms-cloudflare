@@ -6,18 +6,16 @@ Project: HMS Cloudflare
 Updated: 2026-08-24  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-5 ARTIFACT AWAITING INDEPENDENT CRITIC`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 AUTHORIZED`
 
-Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
-
-Conversation history is supporting context only. Canonical repository state, contracts, decisions, reviews and evidence control execution.
+Current objective: migrate the accepted HMS product to Cloudflare while preserving product behavior, domain semantics, security and operational safety. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
 ## CANONICAL SOURCES
 
 - Source: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`.
 - Target: `sjo1848/hms-cloudflare`.
-- Active contract: `.orchestration/contracts/CF-I05.md`.
-- Current Critic: `.orchestration/reviews/CF-I05-REWORK-4-CRITIC.md`.
+- Active contract: `.orchestration/contracts/CF-I06.md`.
+- Last Independent Critic: `.orchestration/reviews/CF-I05-REWORK-5-CRITIC.md`.
 - Invariants: `.orchestration/INVARIANTS.md`.
 - Pre-Critic Gate: `.orchestration/PRECRITIC-GATE.md`.
 - Machine state: `.orchestration/STATUS.json`.
@@ -25,7 +23,7 @@ Conversation history is supporting context only. Canonical repository state, con
 ## ACTIVE DECISIONS
 
 - `CF-ARCH-001`: Cloudflare Access + React/Vite + Workers/Hono/TypeScript + D1; same-origin `/api/v1`; source read-only; parity before expansion.
-- `CF-DATA-001`: CONTROL_DB + one operational D1 per hotel; critical workflows remain inside one hotel D1; `$0/month / Cloudflare Free`; paid transition is Human Gate.
+- `CF-DATA-001`: CONTROL_DB + one operational D1 per hotel; critical workflows stay inside one hotel D1; `$0/month / Cloudflare Free`; paid transition is Human Gate.
 - `CF-UX-PARITY-001`: accepted source HMS controls material workflow/interaction/responsive parity.
 - `PM-AUTONOMY-001`: Human = Product/Risk Authority; ChatGPT = External Controller/Independent Critic; Codex = Runtime Orchestrator; routine REWORK autonomous.
 - `PM-INVARIANTS-001`: learned invariants + mandatory Pre-Critic Gate are binding; no Codex self-PASS.
@@ -36,60 +34,46 @@ Conversation history is supporting context only. Canonical repository state, con
 - CF-I02 — PASS — `bb3a136526c900522394f223206600f543e99e23`.
 - CF-I03 — PASS / CLEAN INTEGRATION PASS — accepted `65ed1e5710a20af97d183f04364b5aa7b605a74a`; integrated `58c84a2564d9a4b85785203ff04fee24fee47213`.
 - CF-I04 — PASS — `5dc91414301810dba4d5ae6a00f062b8cf59ea7a`.
+- CF-I05 Housekeeping + Maintenance — PASS — substantive artifact A `17372d3200b8e88eec116e97672c12589005103d`, publication boundary B `9a05013c4b38567ff4749a855b40c9fd1cba2314`.
 
-## CF-I05 — HOUSEKEEPING + MAINTENANCE
+### CF-I05 accepted guarantees
 
-Artifact history:
-- `02421a19985fa71408e52be2a253b9082292dd78` → REWORK.
-- `14915f79c77ca688cafd5e50da4398b0cf57d113` → REWORK.
-- `462bd0519c7224dc996f23825dbbc8c5afc10aec` → REWORK.
-- `97cd5536efa632bb30536fdfd106b69ee14687fd` → REWORK-4.
-- `6837a61a7b27e5ae0b909d1a436ddff10e0e1b14` → Independent Critic `REWORK-5`.
-- `17372d3200b8e88eec116e97672c12589005103d` → CF-I05 REWORK-5 artifact commit A; boundary commit B follows.
+- source-equivalent operational queue ranking and next-task semantics;
+- orphan departures retained as safe blocked operational tasks;
+- semantic enum normalization (`CHECKED_IN` ↔ source `CheckedIn`) protects ranking behavior;
+- deterministic stale/concurrent cleaning and maintenance behavior, exact-case ABA protection and exactly-once event semantics;
+- legacy maintenance ownership/provenance;
+- tenant routing and backend RBAC;
+- focused mobile workflow and responsive browser evidence at 375/390/430/768/1024;
+- per-room draft isolation;
+- corrected non-circular artifact A + boundary B publication protocol.
 
-### Accepted through artifact `6837a61`
+### Carry-forward debt
 
-- source-equivalent Housekeeping operational ranking is implemented, including maintenance priority, turnover, blocking/state ranks and numeric room tie-break;
-- deterministic browser fixture proves HIGH maintenance `Room 904` outranks numeric `Room 901` and `Siguiente tarea` opens 904;
-- orphan departure `Room 906` is synthesized from `departures_today`, remains visible/contextualized, and exposes no invalid housekeeping mutation;
-- mobile focused-task open/focus/close behavior remains preserved;
-- per-room draft isolation/clear remains proven;
-- stale/concurrent cleaning and maintenance resolution, exact-case ABA correlation, legacy ownership, RBAC, tenant routing and audit behavior remain accepted;
-- no CF-I06, production, remote-D1, real-data or paid-resource scope drift occurred.
+Source `NoShow` departure exclusion is not yet representable in the target booking enum. This must be resolved explicitly before final migration readiness, at latest CF-I09; imported NoShow data must not become Housekeeping tasks.
 
-### Resolved REWORK-5 findings
+## ACTIVE INCREMENT — CF-I06 BILLING
 
-1. **Enum representation parity:** target normalizes `CONFIRMED/CANCELLED/CHECKED_IN/CHECKED_OUT` to source semantics; eligible `CHECKED_IN` Room 907 receives blocked rank 4, while `CONFIRMED` Room 908 remains non-blocked.
-2. **Canonical publication protocol:** artifact A `17372d3` is followed by this orchestration-only boundary B, which records exact A, sets `external_review.required=true` and `resume_authorized=false`, and changes no product code.
+Contract: `.orchestration/contracts/CF-I06.md`.
 
-Diagnosis: `ENUM_REPRESENTATION_PARITY_DEFECT + CANONICAL_STATE_CONVERGENCE_DEFECT`.
-Human Gate: `NONE`.
-Blocker: `NONE`.
+CF-I06 is a separate financial-risk boundary. It covers:
 
-### Non-blocking carry-forward
+- extra charges and booking-total consistency;
+- invoices;
+- partial/full booking payments and settlement;
+- payment history/metadata;
+- current cash/balance summary;
+- cash closures and shift handoff;
+- exact integer cents;
+- stale/concurrent payment and close-cash safety;
+- tenant/RBAC/audit guarantees;
+- source financial workflow/browser parity.
 
-The source Housekeeping board excludes both Cancelled and NoShow departures. The current target booking schema does not yet represent NoShow. Carry this into booking-status/data-migration parity work, at latest CF-I09, so imported NoShow rows cannot become Housekeeping tasks. This does not independently block CF-I05.
-
-## LEARNED-INVARIANT UPDATE
-
-### INV-ENUM-001 — effective now
-
-Source and target enum spellings may differ, but business predicates must operate on canonical semantic values or an explicit normalization layer. A serialization change such as `CheckedIn` → `CHECKED_IN` cannot change ranking, transitions, filters or authorization.
-
-### INV-STATE-001 — corrected non-circular publication protocol
-
-A commit cannot contain its own SHA. Publication is therefore:
-
-1. **Artifact commit A** — substantive product code/tests/evidence.
-2. **Publication-boundary commit B** — orchestration-only commit that records exact A, sets `external_review.required=true`, `resume_authorized=false`, and stops for External Independent Critic.
-
-The Critic reviews A plus B. B must not change substantive product code. This replaces the previous impossible self-SHA requirement.
+Critical invariants include `INV-MONEY-001`, `INV-ATOMIC-001`, `INV-AUDIT-001`, `INV-DOMAIN-001`, `INV-TENANT-001`, `INV-RBAC-001`, `INV-PARITY-001`, `INV-ENUM-001`, `INV-UX-001`, `INV-RESP-001`, `INV-EVID-001`, `INV-STATE-001`, `INV-SCOPE-001`.
 
 ## DELIVERY SEQUENCE
 
-Accelerated waves remain active:
-
-`CF-I05 → CF-I06 → CF-I07 → CF-I08 → CF-I09 → Cloudflare test environment → Human Product Acceptance → production-readiness/release gates`.
+`CF-I06 → CF-I07 → CF-I08 → CF-I09 → Cloudflare test environment → Human Product Acceptance → production-readiness/release gates`.
 
 No intermediate Cloudflare preview is planned.
 
@@ -99,14 +83,26 @@ None.
 
 ## PENDING HUMAN ACTIONS
 
-None after local repository sync.
+Local `git pull --ff-only` is required if the Codex workspace has not yet consumed the latest remote orchestration state. This is a Human Action, not a Human Gate.
 
 ## BLOCKERS
 
-None. REWORK-5 is routine and authorized.
+None.
 
 ## NEXT AUTHORIZED ACTION
 
-Independent Critic reviews artifact commit A `17372d3200b8e88eec116e97672c12589005103d` together with this orchestration-only publication boundary commit B. The Pre-Critic Gate passed with `INV-ENUM-001`, `INV-ORDER-001` and `INV-STATE-001`; CF-I06 remains unauthorized until a fresh CF-I05 PASS.
+Codex reads the canonical state, `.orchestration/contracts/CF-I06.md`, source billing/cash-closure contracts and all learned invariants; then executes CF-I06 autonomously as one coherent financial wave:
 
-Do not begin CF-I06 before a fresh CF-I05 Independent Critic PASS. No production deployment, remote D1 mutation, real-data migration, Cloudflare preview deployment or paid transition is authorized.
+1. source parity pre-flight;
+2. D1 financial schema/domain/API;
+3. exact-cent + atomicity/concurrency tests;
+4. tenant/RBAC/audit tests;
+5. billing/cash workflow UI;
+6. responsive/integrated browser evidence;
+7. full inherited regression;
+8. invariant evidence + Pre-Critic Gate;
+9. publish substantive artifact A;
+10. publish orchestration-only boundary B pointing exactly to A with `external_review.required=true`, `resume_authorized=false`;
+11. stop for Independent Critic.
+
+Do not begin CF-I07 before CF-I06 Independent Critic PASS. No production deployment, remote D1 mutation, real-data migration, Cloudflare preview deployment or paid transition is authorized.
