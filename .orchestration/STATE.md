@@ -6,9 +6,9 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 REWORK-2 ARTIFACT READY FOR INDEPENDENT CRITIC`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 REWORK-3 AUTHORIZED`
 
-Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized. CF-I04 REWORK-2 is complete locally and is awaiting external review.
+Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
 ## CANONICAL SOURCES
 
@@ -22,7 +22,7 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - Autonomous execution decision: `.orchestration/decisions/PM-AUTONOMY-001.md`
 - UX parity decision: `.orchestration/decisions/CF-UX-PARITY-001.md`
 - Active Task Contract: `.orchestration/contracts/CF-I04.md`
-- Current Critic record: `.orchestration/reviews/CF-I04-REWORK-1-CRITIC.md`
+- Current Critic record: `.orchestration/reviews/CF-I04-REWORK-2-CRITIC.md`
 
 Conversation history is supporting context only and is never the sole source of truth.
 
@@ -75,19 +75,18 @@ Conversation history is supporting context only and is never the sole source of 
 
 ### CF-I01 — Platform foundation
 
-Status: `PASS`.
+Status: `PASS`.  
 Fresh Critic PASS artifact: `27515d85d9db0677c4946746fa86374252bff4f5`.
 
 ### CF-I02 — Rooms / guests / holds
 
-Status: `PASS`.
+Status: `PASS`.  
 Accepted artifact: `bb3a136526c900522394f223206600f543e99e23`.
-Evidence included D1 persistence, tenant routing/isolation, API/UI behavior, tests/build/types/Wrangler checks.
 
 ### CF-I03 — Bookings / availability / room-night protection
 
-Status: `PASS / CLEAN INTEGRATION PASS / CLOSED`.
-Accepted artifact: `65ed1e5710a20af97d183f04364b5aa7b605a74a`.
+Status: `PASS / CLEAN INTEGRATION PASS / CLOSED`.  
+Accepted artifact: `65ed1e5710a20af97d183f04364b5aa7b605a74a`.  
 Integrated reviewed head: `58c84a2564d9a4b85785203ff04fee24fee47213`.
 
 Accepted evidence includes booking create/list/detail/update/cancel, date-scoped availability, unique room-night claims, claim FK integrity, overlap rollback, failed-update preservation, hold exclusion, cancellation release, half-open adjacency, tenant routing, UI/browser evidence and full regression/build/type/Wrangler validation.
@@ -98,45 +97,36 @@ Human Gate: `NONE`.
 
 Task Contract: `.orchestration/contracts/CF-I04.md`.
 
-### Artifact history
+### Artifact / Critic history
 
-- Initial reviewed artifact: `32b5070dbd80b4b4d3667fe45573f8851cb60a7c` → Independent Critic `REWORK`.
-- REWORK-1 artifact: `88c8361bae2148f682947bba1976a41404db9212` → Independent Critic `REWORK`.
-- Current Critic record: `.orchestration/reviews/CF-I04-REWORK-1-CRITIC.md`.
-- REWORK-2 artifact: `22eb064c68e2793ef0d67dd984384f32f5a13873` → local implementation, adversarial QA, browser evidence and full validation complete; Independent Critic pending.
+- Initial artifact `32b5070dbd80b4b4d3667fe45573f8851cb60a7c` → `REWORK`.
+- REWORK-1 artifact `88c8361bae2148f682947bba1976a41404db9212` → `REWORK`.
+- REWORK-2 artifact `22eb064c68e2793ef0d67dd984384f32f5a13873` → `REWORK`.
+- Current Critic record: `.orchestration/reviews/CF-I04-REWORK-2-CRITIC.md`.
 
-### REWORK-2 EXECUTION
+### What REWORK-2 materially improved
 
-Runtime status: `READY_TO_RESUME` with `resume_authorized=false` pending Independent Critic; `RUNTIME_CAPABILITY_FALLBACK` is active because this runtime exposes no separate Specialist contexts. Domain/Engineering and QA/Security responsibilities remain separated in the implementation and evidence passes; no multiagency claim is made.
+- final lifecycle-event SQLite triggers now abort D1 batches when checkout/reassignment final room/booking state is inconsistent;
+- lifetime reassignment-event uniqueness was removed;
+- valid repeated room history `A -> B -> A -> C` is regression-tested;
+- deterministic stale-checkout rollback is regression-tested;
+- reception now exposes a case queue/workspace rather than only flat booking cards;
+- browser evidence includes a typed check-in 409 error and recovery;
+- authorization/unknown-binding fail-closed evidence remains present;
+- `RUNTIME_CAPABILITY_FALLBACK` remains accurate.
 
-The authorized repair consumes `.orchestration/reviews/CF-I04-REWORK-1-CRITIC.md` and is limited to lifecycle atomicity, deterministic evidence, valid repeated room history and source-reception UX parity.
+### Current blocking findings — REWORK-3 input
 
-Terminal boundary: artifact `22eb064c68e2793ef0d67dd984384f32f5a13873` is published on `main`. Independent Critic review is required; no technical PASS, Product Acceptance or CF-I05 advancement is self-declared.
+1. **Check-in domain parity:** source HMS stores actual positive `check_in_guests_count`; target reduces this to `guest_count_confirmed: true` and does not persist the actual count.
+2. **Checkout domain parity:** source/Task Contract requires concrete checkout payment policy and conditional closing reference; target reduces this to `payment_policy_accepted: true` and persists no policy/reference.
+3. **Hold-vs-reassignment race:** the final reassignment trigger does not re-check overlapping `room_holds`, so a hold created after preflight but before reassignment batch can coexist with booking claims.
+4. **Deterministic reassignment evidence:** stale-checkout is deterministic, but the specifically required deterministic stale-destination/reassignment rollback test is still absent.
+5. **Mobile UX parity:** source mobile check-in is a stepwise reception task flow; target merely stacks the generic form. This remains a material interaction-model drift under `CF-UX-PARITY-001`.
+6. **Responsive evidence:** at 390/430/768/1024 the browser test proves shell/queue/case reachability, not lifecycle control usability; evidence text overstates full journey coverage at each width.
 
-### What REWORK-1 improved
-
-- stale reassignment side effects are more tightly chained to booking state;
-- named `test:cf-i04` harness exists;
-- concurrent lifecycle requests are exercised;
-- forbidden housekeeping role and unknown binding are exercised fail-closed;
-- check-in browser journey was added;
-- 375/390/430/768/1024 viewports are touched;
-- `RUNTIME_CAPABILITY_FALLBACK` remains explicit and accurate.
-
-### Current blocking findings — REWORK-2
-
-1. **Checkout atomicity remains incomplete.** Booking transition, claim deletion and event insertion can commit even when the room `OCCUPIED -> DIRTY` guard affects zero rows; post-batch `meta.changes` inspection cannot roll back an already successful D1 batch.
-2. **Reassignment destination availability is not atomically revalidated.** Target room status can change after preflight; booking/claims/old-room changes can proceed while target-room occupancy update affects zero rows. Current success check does not require the target-room update to have succeeded.
-3. **Concurrency evidence is not deterministic.** Parallel curl requests accepting broad `{200,409}` outcomes do not force the stale interleavings the contract requires to prove safe.
-4. **UX parity is materially off-canon.** Current target `apps/web/src/App.tsx` is a flat newly invented Rooms/Guests/Bookings interface. Under `CF-UX-PARITY-001`, CF-I04 must port/adapt the lifecycle-relevant accepted source Reception/BookingCaseWorkspace interaction model rather than create a second HMS UX. Do not pull billing/CF-I06 into scope.
-5. **Browser evidence overstates responsive/error coverage.** The lifecycle journey executes at 375 only; the other contracted widths merely wait for the `Bookings` heading. A lifecycle backend error is not exercised and asserted as an observable error/recovery state.
-6. **The lifetime reassignment uniqueness guard is semantically wrong.** Unique `(booking_id,event_type,from_room_id)` blocks a legitimate sequence such as `A -> B -> A -> C`, creating a restriction not present in the accepted lifecycle contract.
-
-Diagnosis: `EXECUTION_DEFECT + EVIDENCE_DEFECT + UX_PARITY_DEFECT`.
-Human Gate: `NONE`.
+Diagnosis: `DOMAIN_PARITY_DEFECT + CONCURRENCY_DEFECT + EVIDENCE_DEFECT + UX_PARITY_DEFECT`.  
+Human Gate: `NONE`.  
 Blocker: `NONE`.
-
-These findings are repairable inside the approved CF-I04 contract and binding parity decisions. If Codex proposes an intentional material UX redesign instead of parity repair, that proposal must be surfaced for Human Gate classification.
 
 ## PENDING HUMAN GATES
 
@@ -150,22 +140,21 @@ None.
 
 ## BLOCKERS
 
-None. CF-I04 has authorized routine technical/product-parity REWORK.
+None. CF-I04 REWORK-3 is authorized routine technical/product-parity repair.
 
 ## NEXT AUTHORIZED ACTION
 
-Independent Critic reads the exact artifact `22eb064c68e2793ef0d67dd984384f32f5a13873` against the contract and canonical evidence. Codex must not continue to CF-I05 before a fresh CF-I04 PASS.
+Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I04-REWORK-2-CRITIC.md`, the CF-I04 Task Contract, source contract inventory and binding decisions, then autonomously:
 
-Previously authorized repair sequence completed:
-
-1. implements a D1 transaction guard that aborts inside the batch when booking/room/destination preconditions are stale;
-2. removes the lifetime reassignment-history restriction and preserves legitimate repeated room-history semantics;
-3. adds deterministic stale-state regressions for checkout and reassignment plus `A -> B -> A -> C`;
-4. ports/adapts the CF-I04 Reception Lifecycle surface toward the accepted source HMS case-workspace UX without advancing billing/later scope;
-5. exercises lifecycle UI behavior at 375/390/430/768/1024 and proves observable lifecycle typed-error + recovery/success behavior;
-6. runs full self-adversarial QA, regressions, build, types, Wrangler dry-runs and scope/diff checks;
-7. published the fresh immutable CF-I04 artifact with `external_review.required=true`;
-8. stopped at the next Independent Critic boundary.
+1. restores actual check-in guest-count semantics and persistence/audit parity;
+2. restores checkout policy/reference semantics without pulling CF-I06 settlement implementation forward;
+3. closes the hold-vs-reassignment transactional race;
+4. adds deterministic stale-reassignment and hold-race regressions with exact final-state assertions;
+5. finishes lifecycle-relevant mobile/source UX parity;
+6. exercises lifecycle-relevant controls at 375/390/430/768/1024 and aligns evidence claims with what is actually tested;
+7. runs full self-adversarial QA and validation;
+8. publishes a fresh immutable CF-I04 artifact with `external_review.required=true`;
+9. stops at the next Independent Critic boundary or another legitimate stop condition.
 
 Do not advance to CF-I05 before CF-I04 obtains a fresh Independent Critic PASS.
 
