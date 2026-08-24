@@ -14,7 +14,7 @@ import { createBookingRoutes } from "./routes/bookings";
 import { createLifecycleRoutes } from "./routes/lifecycle";
 import { createHousekeepingRoutes } from "./routes/housekeeping";
 import { createBillingRoutes } from "./routes/billing";
-import { resolveOperationalDatabase } from "./routing";
+import { OperationalRoutingError, resolveOperationalDatabase } from "./routing";
 
 const app = new Hono<{ Bindings: Env; Variables: ApiVariables }>();
 
@@ -66,7 +66,18 @@ app.use("/api/v1/*", async (context, next) => {
       403,
     );
   }
-  const operationalDatabase = resolveOperationalDatabase(context.env, membership);
+  let operationalDatabase;
+  try {
+    operationalDatabase = resolveOperationalDatabase(context.env, membership);
+  } catch (error) {
+    if (error instanceof OperationalRoutingError) {
+      return context.json(
+        { error: { code: "FORBIDDEN", message: "Operational hotel binding unavailable", requestId: context.get("requestId") } },
+        403,
+      );
+    }
+    throw error;
+  }
   context.set("identity", identity);
   context.set("membership", membership);
   context.set("operationalDatabase", operationalDatabase);
