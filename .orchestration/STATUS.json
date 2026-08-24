@@ -3,24 +3,24 @@
   "project": "HMS Cloudflare",
   "phase": "BUILD",
   "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": false,
-  "active_task": "CF-I08-INDEPENDENT-CRITIC",
+  "resume_authorized": true,
+  "active_task": "CF-I08",
   "work_branch": "main",
-  "last_completed_task": "CF-I08-ARTIFACT-A-PUBLISHED",
+  "last_completed_task": "CF-I08-INDEPENDENT-CRITIC-REWORK-1",
   "last_completed_head": "ed7afe4722650933bc704c1d5f02150cbda82996",
-  "next_action": "INDEPENDENT_CRITIC_AUDIT_CF_I08_ARTIFACT_A",
-  "stop_reason": "Immutable CF-I08 artifact A ed7afe4722650933bc704c1d5f02150cbda82996 is published after the complete Pre-Critic Gate, deterministic analytics/report D1/API focal, two-hotel aggregation, Reports/Network/integrated responsive browser evidence, fresh inherited CF-I03/04/05/06/07 regressions and type/build/Wrangler checks. Await Independent Critic. No Human Gate exists. CF-I09 remains unauthorized until CF-I08 PASS.",
+  "next_action": "CF_I08_AUTONOMOUS_REWORK_1_SOURCE_REPORTING_SEMANTICS_NETWORK_PARITY_INTEGRATED_BROWSER",
+  "stop_reason": "CF-I08 artifact A ed7afe4722650933bc704c1d5f02150cbda82996 with boundary B 6c94e7e8dce4b02d3f2110dca135dd7674a2f794 received External Independent Critic REWORK-1. Codex must consume .orchestration/reviews/CF-I08-CRITIC.md and autonomously restore immutable-source reporting semantics: source dashboard KPI/current-period behavior and fields, optional/default and inclusive report dates including same-day ranges, CANCELLED+NO_SHOW non-revenue handling, daily occupancy series with source state/room denominator rules, source ADR/RevPAR formulas, source-equivalent network per-hotel totals/arithmetic-mean occupancy/output semantics, direct tenant-A to tenant-B report denial, and material Reports/Network plus cross-module browser state continuity. Preserve accepted CF-I07 security/control-plane guarantees and truthful missing-binding failure. Rebuild source-derived evidence, rerun fresh inherited regressions, publish fresh artifact A plus orchestration-only boundary B and stop for Independent Critic. No Human Gate exists. CF-I09 remains unauthorized until CF-I08 PASS.",
   "event": {
-    "seq": 67,
-    "id": "CF-I08@ARTIFACT-A-PUBLISHED",
-    "type": "IMMUTABLE_ARTIFACT_A_PUBLISHED"
+    "seq": 68,
+    "id": "CF-I08@CRITIC-REWORK-1",
+    "type": "INDEPENDENT_CRITIC_REWORK"
   },
   "external_review": {
-    "required": true,
-    "last_audited_head": "fdf9c6f82c3c5066152e49ecba70268d669a640f",
-    "last_verdict": "PASS",
-    "artifact_head": "ed7afe4722650933bc704c1d5f02150cbda82996",
-    "pending_verdict": "INDEPENDENT_CRITIC"
+    "required": false,
+    "last_audited_head": "ed7afe4722650933bc704c1d5f02150cbda82996",
+    "last_verdict": "REWORK_SOURCE_REPORTING_FORMULAS_DATES_OCCUPANCY_NETWORK_EVIDENCE",
+    "artifact_head": null,
+    "pending_verdict": null
   },
   "human_gate": null,
   "blocker": null,
