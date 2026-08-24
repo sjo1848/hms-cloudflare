@@ -3,17 +3,14 @@ import type { Context } from "hono";
 import type { ApiVariables } from "../context";
 import { ApiError } from "../errors";
 import { jsonBody, requiredText } from "../validation";
+import { hasCapability } from "../auth/capabilities";
 
 type LifecycleApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 type Db = ApiVariables["operationalDatabase"];
 type LifecycleBody = Record<string, unknown>;
 
-const capabilities: Record<string, ReadonlySet<string>> = {
-  admin: new Set(["bookings.write"]), ops: new Set(["bookings.write"]), receptionist: new Set(["bookings.write"]), housekeeping: new Set(),
-};
-
 function requireLifecycle(context: Context<{ Bindings: Env; Variables: ApiVariables }>): void {
-  if (!capabilities[context.get("membership").role]?.has("bookings.write")) throw ApiError.forbidden();
+  if (!hasCapability(context.get("membership").role, "bookings.write")) throw ApiError.forbidden();
 }
 
 function requiredConfirmation(body: LifecycleBody, field: string): void {
@@ -104,6 +101,7 @@ export function createLifecycleRoutes(): LifecycleApp {
     for (const field of ["charge_reviewed", "release_confirmed", "handoff_confirmed"]) requiredConfirmation(body, field);
     const policy = requiredText(body.check_out_payment_policy, "check_out_payment_policy", 1, 30);
     if (!["settled", "pending-approved"].includes(policy)) throw ApiError.badRequest("check_out_payment_policy is invalid");
+    if (policy === "pending-approved" && !hasCapability(context.get("membership").role, "bookings.checkout.override")) throw ApiError.forbidden();
     const reference = body.check_out_reference == null ? null : requiredText(body.check_out_reference, "check_out_reference", 3, 120);
     if (policy === "pending-approved" && (!reference || reference.trim().length < 6)) throw ApiError.badRequest("check_out_reference must be at least 6 characters for pending-approved");
     const id = context.req.param("id"); const db = context.get("operationalDatabase"); const current = await booking(db, id);
