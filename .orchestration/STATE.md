@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 ARTIFACT READY FOR INDEPENDENT CRITIC`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-1 AUTHORIZED`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -21,7 +21,7 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - Autonomous execution decision: `.orchestration/decisions/PM-AUTONOMY-001.md`
 - UX parity decision: `.orchestration/decisions/CF-UX-PARITY-001.md`
 - Active Task Contract: `.orchestration/contracts/CF-I05.md`
-- Current Critic record: `.orchestration/reviews/CF-I04-REWORK-4-CRITIC.md`
+- Current Critic record: `.orchestration/reviews/CF-I05-CRITIC.md`
 
 Conversation history is supporting context only and is never the sole source of truth.
 
@@ -59,73 +59,76 @@ Conversation history is supporting context only and is never the sole source of 
 ## VALIDATED RESULTS
 
 ### CF-I01 — Platform foundation
-Status: `PASS`.
+Status: `PASS`.  
 Accepted Critic artifact: `27515d85d9db0677c4946746fa86374252bff4f5`.
 
 ### CF-I02 — Rooms / guests / holds
-Status: `PASS`.
+Status: `PASS`.  
 Accepted artifact: `bb3a136526c900522394f223206600f543e99e23`.
 
 ### CF-I03 — Bookings / availability / room-night protection
-Status: `PASS / CLEAN INTEGRATION PASS / CLOSED`.
-Accepted artifact: `65ed1e5710a20af97d183f04364b5aa7b605a74a`.
+Status: `PASS / CLEAN INTEGRATION PASS / CLOSED`.  
+Accepted artifact: `65ed1e5710a20af97d183f04364b5aa7b605a74a`.  
 Integrated reviewed head: `58c84a2564d9a4b85785203ff04fee24fee47213`.
 
 ### CF-I04 — Reception lifecycle
-Status: `PASS`.
-Accepted artifact: `5dc91414301810dba4d5ae6a00f062b8cf59ea7a`.
-Independent Critic: `.orchestration/reviews/CF-I04-REWORK-4-CRITIC.md`.
+Status: `PASS`.  
+Accepted artifact: `5dc91414301810dba4d5ae6a00f062b8cf59ea7a`.  
+Independent Critic: `.orchestration/reviews/CF-I04-REWORK-4-CRITIC.md`.  
 Human Gate: `NONE`.
 
-Accepted scope includes:
-- real positive check-in guest count and required confirmations;
-- atomic check-in / room occupancy;
-- atomic in-house room reassignment with hold/claim protection;
-- deterministic stale destination and hold-vs-reassignment rollback evidence;
-- valid repeated room history;
-- checkout policy/reference semantics, charge/release/handoff gates, dirty-room transition;
-- lifecycle actor/request/hotel traceability;
-- reception case-workspace UX parity;
-- staged mobile check-in and full lifecycle browser evidence at 375/390/430/768/1024;
-- 16/16 test suite, D1/API regressions, build/types/Wrangler validation.
+Accepted scope includes real check-in guest count, atomic lifecycle transitions, hold/claim-safe reassignment, checkout policy/reference semantics, actor/request/hotel traceability, source-aligned reception workspace/mobile journey and browser evidence at 375/390/430/768/1024.
 
-### CF-I05 — Housekeeping + Maintenance
-Status: `IMPLEMENTED / VALIDATED / AWAITING INDEPENDENT CRITIC`.
-Immutable artifact: `02421a1`.
+## CF-I05 — HOUSEKEEPING + MAINTENANCE
+
 Task Contract: `.orchestration/contracts/CF-I05.md`.
-Parity/evidence: `docs/cf-i05-housekeeping-maintenance-parity.md`.
 
-Validated scope includes:
-- source-aligned dirty queue and housekeeping board with departure and maintenance context;
-- Dirty → Cleaning → Available transitions with invalid-state rejection and traceability;
-- maintenance open/resolve workflow, legacy maintenance resolution, priority/reason/assignee/note validation and one-open-case-per-room enforcement;
-- D1 transactional coupling of room state, maintenance case and housekeeping event audit;
-- backend RBAC and tenant-bound API behavior;
-- responsive `/housekeeping` UX and browser evidence at 375/390/430/768/1024;
-- full check/build plus CF-I03, CF-I04 and CF-I05 D1/API regressions;
-- self-critic completed with no scope, security, cost, architecture or Human Gate drift.
+### Artifact / Critic history
+
+- Initial accelerated artifact `02421a19985fa71408e52be2a253b9082292dd78` → Independent Critic `REWORK`.
+- Current Critic record: `.orchestration/reviews/CF-I05-CRITIC.md`.
+
+### What the initial accelerated wave got right
+
+- schema, API, UX and QA arrived as one coherent artifact rather than multiple external micro-boundaries;
+- dirty queue and board cover eligible room states plus departure and maintenance context;
+- maintenance cases enforce one open case per room and durable resolved-state fields;
+- maintenance open is transactionally coupled to room state/case/event;
+- reason/assignee/priority/resolution validation is present;
+- receptionist is denied by backend housekeeping capability checks;
+- legacy maintenance rooms are explicitly recoverable;
+- generic room metadata PATCH does not expose a status bypass;
+- no CF-I06, paid-resource, production, remote-D1 or real-data scope drift occurred;
+- `RUNTIME_CAPABILITY_FALLBACK` remains accurate.
+
+### Current blocking findings — REWORK-1 input
+
+1. **Concurrent cleaning false success:** stale `DIRTY -> CLEANING` and `CLEANING -> AVAILABLE` requests can have their guarded room UPDATE affect zero rows while the final event insert still succeeds because the trigger checks only the final room state. This can return success and duplicate transition audit events.
+2. **Concurrent maintenance resolution false success:** a stale second resolver can update zero rows but still insert a second `MAINTENANCE_RESOLVE` event because the room/case already satisfy the final trigger state.
+3. **Legacy actor ownership parity:** synthesized legacy maintenance case omits `reported_by_user_id`; the accepted source records the recovery actor as reporter.
+4. **Housekeeping UX parity:** target is a flat grid of inline action cards; source workflow is queue-oriented with selected/focused room workspace and mobile next-task / focused-sheet behavior. This remains material workflow drift under `CF-UX-PARITY-001`.
+5. **Per-room maintenance draft isolation:** reason/priority/owner/resolution state is global to the page and can leak between room forms; resolution text can mirror across multiple maintenance rooms.
+6. **Browser evidence:** current durable evidence has screenshots only at 375/1024, simple width/card assertions at all widths and one mocked Start-cleaning interaction. It does not reproducibly prove start, finish, maintenance open, resolve, validation/error/recovery and per-room draft isolation through the integrated local API.
+
+Diagnosis: `CONCURRENCY_DEFECT + DOMAIN_PARITY_DEFECT + UX_PARITY_DEFECT + EVIDENCE_DEFECT`.  
+Human Gate: `NONE`.  
+Blocker: `NONE`.
 
 ## DELIVERY SPEED FINDING
 
-CF-I04 required four bounded REWORK cycles before PASS. The defect classes were legitimate, but the experience exposes coordination overhead from very small implementation/review loops and late discovery of source-parity details.
+The accelerated wave model is retained. CF-I05 reached one meaningful Independent Critic boundary with a coherent artifact, which is preferable to repeated schema/API/UI micro-boundaries.
 
-Future delivery should accelerate by increasing **pre-flight contract completeness and coherent execution scope**, not by weakening QA or collapsing unrelated high-risk domains.
+Acceleration rule:
+- keep a complete contract and parity matrix before implementation;
+- implement and self-critic the whole bounded wave;
+- surface all discovered defects in one external Critic review where possible;
+- keep financial, security/cross-tenant and migration/cutover domains as separate high-risk boundaries.
 
-Candidate delivery model:
-- group low/medium-risk, tightly coupled implementation work inside larger delivery waves;
-- retain internal deterministic checkpoints rather than external review after every small seam;
-- keep an external Independent Critic at meaningful risk boundaries;
-- financial atomicity, security/cross-tenant administration, and migration/cutover remain separate substantive risk boundaries.
+The goal is fewer external coordination cycles, not weaker QA.
 
 ## PENDING HUMAN GATES
 
 None.
-
-## CF-I05 EXECUTION
-
-Runtime status: `STOPPED AT INDEPENDENT CRITIC BOUNDARY`; `RUNTIME_CAPABILITY_FALLBACK` remains active because this runtime exposes no separate Specialist contexts. Domain/Engineering, Reception/Housekeeping UX and QA/Security responsibilities were separated in the contract, implementation passes and evidence plan without a false multiagency claim.
-
-CF-I05 is one coherent accelerated operational wave covering only Housekeeping + Maintenance. Billing/financial atomicity, users/RBAC administration, hotels/network administration, reports, migration/cutover and paid Cloudflare changes remain outside scope.
 
 ## PENDING HUMAN ACTION
 
@@ -133,10 +136,22 @@ None.
 
 ## BLOCKERS
 
-None.
+None. CF-I05 has bounded autonomous REWORK.
 
 ## NEXT AUTHORIZED ACTION
 
-Stop for the next Independent Critic review of immutable artifact `02421a1`. Do not begin CF-I06 until that boundary is resolved and canonical state authorizes the next increment.
+Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I05-CRITIC.md`, `.orchestration/contracts/CF-I05.md`, source parity inventory and binding decisions, then autonomously as one bounded rework wave:
+
+1. fixes stale/concurrent start-cleaning, finish-cleaning and maintenance-resolution semantics so false success/duplicate transition audit is impossible;
+2. adds deterministic exact-state/event-count concurrency regressions;
+3. restores reporter ownership in synthesized legacy maintenance recovery;
+4. ports/adapts source queue/focused-room Housekeeping interaction model;
+5. isolates maintenance drafts per selected room/case;
+6. adds committed reproducible browser/integration evidence for start, finish, maintenance open and resolve, validation/error/recovery and 375/390/430/768/1024 usability;
+7. runs full CF-I03/CF-I04/CF-I05 regressions, tests, build, types, Wrangler and diff checks;
+8. publishes one fresh immutable CF-I05 artifact with `external_review.required=true`;
+9. stops at the next Independent Critic boundary.
+
+Do not begin CF-I06 before a fresh CF-I05 Independent Critic PASS.
 
 No production deployment, remote D1 mutation, real-data migration or paid Cloudflare transition is authorized by this state.
