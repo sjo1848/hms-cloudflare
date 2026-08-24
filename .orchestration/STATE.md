@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 REWORK-3 IN PROGRESS`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 REWORK-3 ARTIFACT READY FOR INDEPENDENT CRITIC`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -102,6 +102,7 @@ Task Contract: `.orchestration/contracts/CF-I04.md`.
 - Initial artifact `32b5070dbd80b4b4d3667fe45573f8851cb60a7c` → `REWORK`.
 - REWORK-1 artifact `88c8361bae2148f682947bba1976a41404db9212` → `REWORK`.
 - REWORK-2 artifact `22eb064c68e2793ef0d67dd984384f32f5a13873` → `REWORK`.
+- REWORK-3 artifact `cea75f7ebce322e49be16c1167b55efa59cbada6` → local implementation, adversarial QA, browser evidence and full validation complete; Independent Critic pending.
 - Current Critic record: `.orchestration/reviews/CF-I04-REWORK-2-CRITIC.md`.
 
 ### What REWORK-2 materially improved
@@ -120,6 +121,8 @@ Task Contract: `.orchestration/contracts/CF-I04.md`.
 Runtime status: `RUNNING`; `RUNTIME_CAPABILITY_FALLBACK` remains active because this runtime exposes no separate Specialist contexts. Domain/Engineering and QA/Security responsibilities remain separated in implementation and evidence passes; no multiagency claim is made.
 
 Authorized repair is limited to actual check-in count, checkout policy/reference, hold/reassignment atomicity, deterministic evidence and accepted mobile task-flow parity.
+
+Terminal boundary: artifact `cea75f7ebce322e49be16c1167b55efa59cbada6` is published on `main`. Independent Critic review is required; no technical PASS, Product Acceptance or CF-I05 advancement is self-declared.
 
 ### Current blocking findings — REWORK-3 input
 
