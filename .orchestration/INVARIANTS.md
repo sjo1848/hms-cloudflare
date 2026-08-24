@@ -81,6 +81,20 @@ When an Independent Critic finds a defect whose root cause can recur outside the
 
 **Origin:** CF-I04 guest-count and checkout-policy/reference defects.
 
+## INV-ENUM-001 — Enum meaning survives representation changes
+
+**Applies when:** a source and target represent the same domain state/value using different enum names, casing, separators, serialization formats, display labels or storage literals.
+
+**Invariant:** business predicates, ranking, authorization, transitions and filters must operate on canonical semantic values or an explicit source→target normalization layer. Source literals must not be copied into target business logic when target serialization differs. Display labels and storage literals may differ, but their domain meaning must remain equivalent.
+
+**Required evidence:**
+- explicit mapping for every enum value used by the migrated business rule;
+- at least one regression where source and target serialized spellings differ but must trigger the same business predicate;
+- negative assertion for a semantically different value;
+- cross-layer evidence that DB/API/UI serialization does not silently change domain behavior.
+
+**Origin:** CF-I05 REWORK-4 review: source Housekeeping queue used `CheckedIn` while target D1/API emitted `CHECKED_IN`, causing blocked-task ranking to be skipped for an eligible departure.
+
 ## INV-UX-001 — Infrastructure migration cannot silently redesign workflow
 
 **Applies when:** accepted source user journey has a target UI surface.
