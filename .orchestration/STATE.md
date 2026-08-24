@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-24  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 REWORK-2 ARTIFACT PUBLISHED — INDEPENDENT CRITIC PENDING`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 REWORK-3 AUTHORIZED`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving product behavior, domain semantics, security, financial integrity and operational safety. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -15,7 +15,7 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - Source: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`.
 - Target: `sjo1848/hms-cloudflare`.
 - Active contract: `.orchestration/contracts/CF-I07.md`.
-- Current Independent Critic: `.orchestration/reviews/CF-I07-REWORK-1-CRITIC.md`.
+- Current Independent Critic: `.orchestration/reviews/CF-I07-REWORK-2-CRITIC.md`.
 - Invariants: `.orchestration/INVARIANTS.md`.
 - Pre-Critic Gate: `.orchestration/PRECRITIC-GATE.md`.
 - Machine state: `.orchestration/STATUS.json`.
@@ -28,50 +28,54 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - CF-I04 — PASS — `5dc91414301810dba4d5ae6a00f062b8cf59ea7a`.
 - CF-I05 Housekeeping + Maintenance — PASS — artifact A `17372d3200b8e88eec116e97672c12589005103d`, boundary B `9a05013c4b38567ff4749a855b40c9fd1cba2314`.
 - CF-I06 Billing — PASS — artifact A `0004990ba60b0349776de139cd04dfc2f30eaa6d`, boundary B `de0dbdc0ed92b60a5fd32faa184484c701711d08`.
-- CF-I07 artifact A `5ed90137b2b58d69f16cca088b014153bf52eb4a` — Independent Critic REWORK-1.
-- CF-I07 REWORK-1 artifact A `0a1698995e4f4d36e86a0b88c19f06932469fde7`, boundary B `de2279e984da1ad0fc3cc78de877d7900b31e64a` — Independent Critic REWORK-2.
-- CF-I07 REWORK-2 artifact A `87cf6c953e24b9374644f53c636c4d5a8574bea7` — fresh RBAC/audit/no-op/downgrade/tenant-isolation/browser/runner repairs; awaiting Independent Critic.
+- CF-I07 initial artifact `5ed90137b2b58d69f16cca088b014153bf52eb4a` — Independent Critic REWORK-1.
+- CF-I07 REWORK-1 artifact `0a1698995e4f4d36e86a0b88c19f06932469fde7`, boundary `de2279e984da1ad0fc3cc78de877d7900b31e64a` — Independent Critic REWORK-2.
+- CF-I07 REWORK-2 artifact `87cf6c953e24b9374644f53c636c4d5a8574bea7`, boundary `cc13528a8809861aa17011251de6f60466019995` — Independent Critic REWORK-3.
 
-## CF-I07 ACCEPTED FOUNDATION TO PRESERVE
+## CF-I07 ACCEPTED BACKEND/SECURITY FOUNDATION — PRESERVE
 
-The following repairs from REWORK-1 are accepted and must not regress:
+The following are accepted and must not regress during REWORK-3:
 
 - Cloudflare Access remains the authentication perimeter; no HMS password recreation.
-- Active hotel -> operational D1 ownership is unique through a partial unique index.
-- Undeclared and already-consumed operational bindings are rejected.
-- Receptionist cannot list all invoices; ops retains tenant audit read.
-- Lifecycle consumes the central capability helper and `pending-approved` checkout requires admin-only `bookings.checkout.override`.
-- Shared Access identity rows are compatibility-checked and cannot be tenant-locally rewritten/reactivated.
-- Tenant hotel-admin audit reads combine control + lifecycle + housekeeping + financial provenance and exclude global control events.
-- Plan tier domain is `BASIC | PRO | ENTERPRISE` across migration/API/UI.
-- Users detail/open-close and Network plan controls are exercised at 375/390/430/768/1024.
-- Artifact publication A -> B is non-circular and B is orchestration-only.
-- No CF-I08, production, remote D1, paid-resource or cutover scope entered the artifact.
+- Active hotel → operational D1 ownership is unique and already-consumed/undeclared bindings are rejected.
+- Target capability map matches the source-sensitive RBAC canon for the migrated surfaces.
+- `saas_admin` has only the canonical network hotel capabilities and cannot read `/audit/events` without a qualifying hotel capability/membership.
+- receptionist cannot list all invoices; ops retains tenant audit read.
+- lifecycle consumes the central capability authority and `pending-approved` checkout requires admin-only `bookings.checkout.override`.
+- shared Access identity rows cannot be tenant-locally rewritten/reactivated.
+- user role/deactivate and hotel plan mutations use conditional authoritative writes; same-role/same-plan requests reject before semantic audit.
+- real allowed-before/denied-after admin→ops downgrade evidence exists.
+- tenant-A role/deactivate attempts against a tenant-B-only membership fail and preserve tenant-B state with zero tenant-A target audit.
+- tenant hotel-admin audit combines control + operational provenance without global-control leakage.
+- plan tier domain is `BASIC | PRO | ENTERPRISE`.
+- fresh CF-I03/04/05/06 terminal PASS is recorded in the REWORK-2 artifact evidence.
+- no CF-I08, production, remote-D1, paid-resource or cutover scope entered the artifact.
 
-## CF-I07 REWORK-2 BLOCKING FINDINGS — REPAIRED IN ARTIFACT A
+## CF-I07 REWORK-3 — REMAINING BLOCKERS
 
-1. `saas_admin` still bypasses the canonical capability matrix for `/audit/events`: middleware permits the route and the handler grants access by direct `networkRole === "saas_admin"`, even though the source canon gives `saas_admin` only `saas.hotels.read/write`.
-2. Same-role and same-plan requests can still match authoritative rows and emit false `USER_ROLE_CHANGE` / `HOTEL_PLAN_CHANGE` events with no semantic change.
-3. The claimed role-downgrade proof is a false positive: receptionist -> ops was tested, but neither role had `users.write` before the change. It does not prove stale elevated permissions disappear.
-4. The contract-required tenant-A admin attempt to mutate a tenant-B membership by subject/object id is not directly proven with zero side effects.
-5. Browser evidence still lacks create validation/error, deactivate confirmation + actual focus-return assertion, committed role-state synchronization and forbidden route/action journey. Creation success occurs only at 375.
-6. `scripts/cf-i07-regression.sh` clears `worker_pid` before EXIT without terminating the Worker, so a successful run can leak Wrangler and compromise clean sequential inherited regression evidence.
-7. Evidence overclaims `INV-RBAC-001`, `INV-RESP-001` and `INV-EVID-001`; the parity document is internally contradictory about `saas_admin` audit permission.
+Full verdict: `.orchestration/reviews/CF-I07-REWORK-2-CRITIC.md`.
 
-Full verdict and exit criteria: `.orchestration/reviews/CF-I07-REWORK-1-CRITIC.md`; all listed findings are addressed by artifact A and evidenced in `.orchestration/evidence/CF-I07-INVARIANTS.md` and `.orchestration/evidence/CF-I07-PRECRITIC-GATE.md`.
+1. Browser forbidden-RBAC proof is invalid: the browser fixture does not seed `subject-hk` as an active hotel-A housekeeping membership, so `No authorized hotel membership` proves an earlier membership guard, not capability denial.
+2. Browser/Pre-Critic evidence overclaims create success/error, role commit, deactivation confirmation/focus return and forbidden behavior relative to the actual assertions and responsive widths.
+3. `INV-CF-I07-004` remains UNPROVEN because process cleanup issues kill/pkill but does not positively verify the owned Worker/process tree is gone before terminal PASS.
+4. Same-plan 409 behavior is correct, but the promoted no-op invariant requires an exact durable `HOTEL_PLAN_CHANGE` count after the repeated request.
 
-Diagnosis: `NETWORK_AUDIT_RBAC_BYPASS + NOOP_AUDIT_FALSE_EVENT + DOWNGRADE_EVIDENCE_FALSE_POSITIVE + ADMIN_BROWSER_EVIDENCE_GAP + RUNNER_LIFECYCLE_DEFECT`.
+Diagnosis: `AUTHZ_FIXTURE_FALSE_PROOF + RESPONSIVE_UX_EVIDENCE_OVERCLAIM + PROCESS_CLEANUP_UNPROVEN + EXACT_AUDIT_COUNT_GAP`.
 Human Gate: `NONE`.
 Blocker: `NONE`.
 
-## REUSABLE ROOT CAUSES TO PROMOTE DURING REWORK-2
+## REWORK-3 AUTHORIZED WORK
 
-- a capability map is not authoritative if middleware/routes can bypass it with direct role-name shortcuts;
-- audit represents semantic mutations, not merely SQL rows matched; same-value no-op changes produce zero change events;
-- role downgrade evidence must prove `allowed before -> denied after` for the same subject and privileged operation;
-- a runner may claim terminal PASS only after it has cleaned up owned Worker/Vite/process-tree resources.
+Codex must autonomously:
 
-Codex must promote these into `.orchestration/INVARIANTS.md` and/or the mandatory Pre-Critic Gate before republishing CF-I07.
+1. preserve every accepted backend/security repair above;
+2. seed a real Access identity + active hotel-A `housekeeping` membership in browser evidence and prove `/users` is denied by capability rather than missing membership/routing;
+3. make browser assertions explicitly prove the user-visible create success/error or validation state, role mutation + committed value, deactivation confirmation + deterministic focus return, and forbidden UX with coverage matching the contract/evidence wording;
+4. narrow evidence wording where a behavior is intentionally representative rather than per-width;
+5. add bounded process termination verification (`wait`/poll/`kill -0` equivalent) and fail before PASS if an owned Worker/Vite/Playwright process remains;
+6. assert exact durable `HOTEL_PLAN_CHANGE` count after success + same-plan retry;
+7. rerun focal + fresh CF-I03/04/05/06 + browser + type/build/Wrangler checks from a clean sequence;
+8. publish fresh substantive artifact A plus orchestration-only boundary B and stop for Independent Critic.
 
 ## CARRY-FORWARD DEBT
 
@@ -93,23 +97,8 @@ Paid Cloudflare resources, irreversible provisioning/cutover, product-intent cha
 
 Local repository sync only if the Codex workspace has not consumed the latest remote state. This is a Human Action, not a Human Gate.
 
-## BLOCKERS
-
-None. CF-I07 REWORK-2 is routine and authorized.
-
 ## NEXT AUTHORIZED ACTION
 
-Independent Critic audits exact immutable artifact A `87cf6c953e24b9374644f53c636c4d5a8574bea7` against the active contract, review findings, canonical invariants, Pre-Critic evidence, regression and browser evidence. Codex must not begin CF-I08 before CF-I07 PASS.
-
-The completed bounded wave included:
-
-1. remove the `saas_admin` audit shortcut and make protected admin/audit authorization flow only through the canonical capability authority;
-2. make same-role/same-plan requests explicit zero-audit no-ops/rejections while preserving stale/concurrent exact-winner guards;
-3. add a real elevated-role downgrade test proving allowed-before then denied-after for the same Access subject;
-4. add tenant-A -> tenant-B membership role/deactivate attempts with unchanged tenant-B state and zero audit side effects;
-5. complete User admin browser evidence for create success/error, deactivation confirmation, deterministic focus return, committed role display and forbidden UX/backend behavior across representative contracted widths;
-6. fix CF-I07 runner lifecycle and obtain a clean sequential focal + fresh inherited CF-I03/04/05/06 terminal PASS with no leaked owned processes;
-7. correct parity/invariant/Pre-Critic evidence and promote the reusable root causes above into the harness;
-8. publish fresh artifact A `87cf6c953e24b9374644f53c636c4d5a8574bea7` plus orchestration-only boundary B and stop for Independent Critic.
+`CF_I07_AUTONOMOUS_REWORK_3_BROWSER_AUTHZ_FIXTURE_UX_ASSERTIONS_PROCESS_CLEANUP_AND_EXACT_AUDIT_EVIDENCE`
 
 Do not begin CF-I08 before CF-I07 Independent Critic PASS. No production deployment, remote D1 creation/mutation, real-data migration, paid transition or cutover is authorized.
