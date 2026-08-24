@@ -25,5 +25,6 @@ BEGIN
       AND json_extract(NEW.details_json, '$.to_room_id') = b.room_id
       AND new_room.status = 'OCCUPIED' AND old_room.status = 'AVAILABLE'
       AND EXISTS (SELECT 1 FROM room_inventory_nights n WHERE n.booking_id = b.id AND n.room_id = b.room_id)
+      AND NOT EXISTS (SELECT 1 FROM room_holds h WHERE h.room_id = b.room_id AND h.start_date < b.check_out AND h.end_date > b.check_in)
   ) THEN RAISE(ABORT, 'reassignment atomic guard failed') END;
 END;

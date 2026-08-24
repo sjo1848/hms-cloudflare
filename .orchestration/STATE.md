@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 REWORK-3 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 REWORK-3 IN PROGRESS`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -114,6 +114,12 @@ Task Contract: `.orchestration/contracts/CF-I04.md`.
 - browser evidence includes a typed check-in 409 error and recovery;
 - authorization/unknown-binding fail-closed evidence remains present;
 - `RUNTIME_CAPABILITY_FALLBACK` remains accurate.
+
+### REWORK-3 EXECUTION
+
+Runtime status: `RUNNING`; `RUNTIME_CAPABILITY_FALLBACK` remains active because this runtime exposes no separate Specialist contexts. Domain/Engineering and QA/Security responsibilities remain separated in implementation and evidence passes; no multiagency claim is made.
+
+Authorized repair is limited to actual check-in count, checkout policy/reference, hold/reassignment atomicity, deterministic evidence and accepted mobile task-flow parity.
 
 ### Current blocking findings — REWORK-3 input
 

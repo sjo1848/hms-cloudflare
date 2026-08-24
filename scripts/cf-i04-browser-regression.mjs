@@ -23,10 +23,13 @@ async page => {
   await page.getByRole("heading", { name: "Next action: check-in verification" }).waitFor();
   await page.getByRole("button", { name: "Complete check-in" }).click();
   if (calls.some(call => call.url.endsWith("/bookings/booking-a/check-in"))) throw new Error("incomplete checklist submitted");
+  await page.getByLabel("Final guest count").fill("2");
   await page.getByLabel("Guest count confirmed").check();
   await page.getByLabel("Document verified").check();
   await page.getByLabel("Contact confirmed").check();
   await page.getByLabel("Stay confirmed").check();
+  await page.getByRole("button", { name: "Complete check-in" }).click();
+  await page.getByRole("button", { name: "Complete check-in" }).click();
   await page.getByRole("button", { name: "Complete check-in" }).click();
   await page.getByRole("alert").getByText("Booking became unavailable during check-in").waitFor();
   await page.getByRole("button", { name: "Complete check-in" }).click();
