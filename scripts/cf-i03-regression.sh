@@ -4,8 +4,10 @@ set -euo pipefail
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 tmp_dir=$(mktemp -d)
 worker_pid=""
+collect_tree() { local parent="$1" child; printf '%s\n' "$parent"; while read -r child; do [[ -n "$child" ]] && collect_tree "$child"; done < <(pgrep -P "$parent" || true); }
 cleanup() {
-  if [[ -n "$worker_pid" ]]; then kill "$worker_pid" 2>/dev/null || true; fi
+  local pid live; local -a owned=(); [[ -n "$worker_pid" ]] || { rm -rf "$tmp_dir"; return 0; }; while read -r pid; do owned+=("$pid"); done < <(collect_tree "$worker_pid"); for pid in "${owned[@]}"; do kill -TERM "$pid" 2>/dev/null || true; done; for _ in {1..50}; do live=0; for pid in "${owned[@]}"; do kill -0 "$pid" 2>/dev/null && live=1; done; (( live == 0 )) && { wait "$worker_pid" 2>/dev/null || true; worker_pid=""; rm -rf "$tmp_dir"; return 0; }; sleep 0.1; done; for pid in "${owned[@]}"; do kill -KILL "$pid" 2>/dev/null || true; done
+  for _ in {1..20}; do live=0; for pid in "${owned[@]}"; do kill -0 "$pid" 2>/dev/null && live=1; done; (( live == 0 )) && { wait "$worker_pid" 2>/dev/null || true; worker_pid=""; rm -rf "$tmp_dir"; return 0; }; sleep 0.1; done; echo "owned CF-I03 Worker remains after cleanup" >&2; return 1
   rm -rf "$tmp_dir"
 }
 trap cleanup EXIT

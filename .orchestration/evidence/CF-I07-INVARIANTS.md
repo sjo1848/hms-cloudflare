@@ -11,14 +11,14 @@ Artifact scope: Users, RBAC, audit, hotel/network admin and responsive UX. No CF
 | INV-PARITY-001 | PASS | `docs/cf-i07-security-admin-parity.md`; Access identity adaptation preserves membership/admin workflow without local passwords. |
 | INV-ORDER-001 | PASS | Audit query orders `created_at DESC, id DESC`; focal regression verifies newest event and one event per successful mutation. |
 | INV-UX-001 | PASS | Users search/create/role/deactivate and Network list/detail/register/plan/error surfaces in `apps/web/src/App.tsx`. |
-| INV-RESP-001 | PASS | Playwright at 375/390/430/768/1024 executes Users search/detail/open-close/focus and Network property selection/plan mutation at every width; no horizontal overflow. |
-| INV-EVID-001 | PASS | This file, Pre-Critic Gate, source matrix and focal/browser logs are committed with the artifact. |
+| INV-RESP-001 | PASS | Playwright at 375/390/430/768/1024 explicitly asserts create success, visible duplicate error, role commit after refetch, deactivate confirmation/focus return, and Network plan mutation; valid housekeeping membership denial is separately asserted; no horizontal overflow. |
+| INV-EVID-001 | PASS | This file, Pre-Critic Gate, source matrix, executable runners and committed browser screenshot match the executed assertions; no unexecuted browser claim is presented. |
 | INV-SCOPE-001 | PASS | No CF-I08 report completion, paid transition, production/cutover or product acceptance claim. |
 | INV-STATE-001 | PASS | Artifact A followed by orchestration-only boundary B; canonical state points to exact A. |
 | INV-CF-I07-001 | PASS | `saas_admin` `/audit/events` is denied; `/hotels` remains positive; protected route scan finds no direct role-name authorization shortcut. |
-| INV-CF-I07-002 | PASS | Focal runner repeats same role and same plan and asserts 409 with no extra semantic audit events. |
+| INV-CF-I07-002 | PASS | Focal runner repeats same role and same plan, asserts 409, and durably asserts exactly one `HOTEL_PLAN_CHANGE` for the successful transition with no additional event. |
 | INV-CF-I07-003 | PASS | Same subject performs user creation as admin, is downgraded to ops, then receives 403 for the same privileged user-create operation. |
-| INV-CF-I07-004 | PASS | Focal runner cleanup owns Worker process tree; inherited runners execute sequentially with terminal PASS and no owned Worker remains. |
+| INV-CF-I07-004 | PASS | Focal runner recursively captures its Worker tree, waits/polls termination before PASS, and post-run process inspection found no owned Worker; inherited CF-I03 cleanup was hardened and also ended with no Worker. |
 
 ## Executed checks
 
@@ -31,3 +31,4 @@ Artifact scope: Users, RBAC, audit, hotel/network admin and responsive UX. No CF
 - Fresh `npm run test:cf-i05`: PASS (`CF-I05 Housekeeping + Maintenance D1/API regression PASS`).
 - Fresh `npm run test:cf-i06`: PASS (`CF-I06 billing/atomic cents/closure regression PASS`).
 - Fresh `scripts/cf-i07-regression.sh`: PASS with cleanup; includes same-role/plan no-op, saas audit denial, downgrade and tenant-A→tenant-B zero-side-effect assertions.
+- Fresh `scripts/cf-i07-browser-regression.sh`: PASS; every contracted width asserts visible success/error, role persistence and deactivate confirmation/focus, while housekeeping membership is positively established before capability denial.
