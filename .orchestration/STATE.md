@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-24  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 REWORK-3 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 REWORK-3 ARTIFACT PUBLISHED — INDEPENDENT CRITIC PENDING`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving product behavior, domain semantics, security, financial integrity and operational safety. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -31,6 +31,7 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - CF-I07 initial artifact `5ed90137b2b58d69f16cca088b014153bf52eb4a` — Independent Critic REWORK-1.
 - CF-I07 REWORK-1 artifact `0a1698995e4f4d36e86a0b88c19f06932469fde7`, boundary `de2279e984da1ad0fc3cc78de877d7900b31e64a` — Independent Critic REWORK-2.
 - CF-I07 REWORK-2 artifact `87cf6c953e24b9374644f53c636c4d5a8574bea7`, boundary `cc13528a8809861aa17011251de6f60466019995` — Independent Critic REWORK-3.
+- CF-I07 REWORK-3 artifact A `fdf9c6f82c3c5066152e49ecba70268d669a640f` — browser authorization/evidence, process cleanup and exact audit-count closure; awaiting Independent Critic.
 
 ## CF-I07 ACCEPTED BACKEND/SECURITY FOUNDATION — PRESERVE
 
@@ -51,9 +52,9 @@ The following are accepted and must not regress during REWORK-3:
 - fresh CF-I03/04/05/06 terminal PASS is recorded in the REWORK-2 artifact evidence.
 - no CF-I08, production, remote-D1, paid-resource or cutover scope entered the artifact.
 
-## CF-I07 REWORK-3 — REMAINING BLOCKERS
+## CF-I07 REWORK-3 — REMAINING BLOCKERS — REPAIRED IN ARTIFACT A
 
-Full verdict: `.orchestration/reviews/CF-I07-REWORK-2-CRITIC.md`.
+Full verdict: `.orchestration/reviews/CF-I07-REWORK-2-CRITIC.md`; all listed findings are addressed and evidenced in the artifact.
 
 1. Browser forbidden-RBAC proof is invalid: the browser fixture does not seed `subject-hk` as an active hotel-A housekeeping membership, so `No authorized hotel membership` proves an earlier membership guard, not capability denial.
 2. Browser/Pre-Critic evidence overclaims create success/error, role commit, deactivation confirmation/focus return and forbidden behavior relative to the actual assertions and responsive widths.
@@ -99,6 +100,8 @@ Local repository sync only if the Codex workspace has not consumed the latest re
 
 ## NEXT AUTHORIZED ACTION
 
-`CF_I07_AUTONOMOUS_REWORK_3_BROWSER_AUTHZ_FIXTURE_UX_ASSERTIONS_PROCESS_CLEANUP_AND_EXACT_AUDIT_EVIDENCE`
+Independent Critic audits exact immutable artifact A `fdf9c6f82c3c5066152e49ecba70268d669a640f` against the active contract, REWORK-2 review, invariants, Pre-Critic evidence and fresh regression/browser evidence. Codex must not begin CF-I08 before CF-I07 PASS.
+
+Completed REWORK-3 scope: valid housekeeping browser auth fixture and capability denial, explicit responsive UX assertions, recursive owned-process termination verification, exact same-plan durable audit count, fresh focal/browser/inherited regressions and complete build/type/Wrangler gate.
 
 Do not begin CF-I08 before CF-I07 Independent Critic PASS. No production deployment, remote D1 creation/mutation, real-data migration, paid transition or cutover is authorized.
