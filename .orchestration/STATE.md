@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-23  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / NEXT: ACCELERATED CF-I05+ PLANNING`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 ACCELERATED WAVE RUNNING`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -20,7 +20,7 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - Data topology decision: `.orchestration/decisions/CF-DATA-001.md`
 - Autonomous execution decision: `.orchestration/decisions/PM-AUTONOMY-001.md`
 - UX parity decision: `.orchestration/decisions/CF-UX-PARITY-001.md`
-- Last accepted Task Contract: `.orchestration/contracts/CF-I04.md`
+- Active Task Contract: `.orchestration/contracts/CF-I05.md`
 - Current Critic record: `.orchestration/reviews/CF-I04-REWORK-4-CRITIC.md`
 
 Conversation history is supporting context only and is never the sole source of truth.
@@ -104,6 +104,12 @@ Candidate delivery model:
 ## PENDING HUMAN GATES
 
 None.
+
+## CF-I05 EXECUTION
+
+Runtime status: `RUNNING`; `RUNTIME_CAPABILITY_FALLBACK` remains active because this runtime exposes no separate Specialist contexts. Domain/Engineering, Reception/Housekeeping UX and QA/Security responsibilities are separated in the contract, implementation passes and evidence plan without a false multiagency claim.
+
+CF-I05 is one coherent accelerated operational wave covering only Housekeeping + Maintenance. Billing/financial atomicity, users/RBAC administration, hotels/network administration, reports, migration/cutover and paid Cloudflare changes remain outside scope.
 
 ## PENDING HUMAN ACTION
 

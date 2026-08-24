@@ -58,7 +58,7 @@ function roomView(row: RoomRow, hotelId: string) {
     hotel_id: hotelId,
     room_number: row.room_number,
     room_type: row.room_type,
-    status: ({ AVAILABLE: "Available", OCCUPIED: "Occupied", OUT_OF_ORDER: "OutOfOrder" } as Record<string, string>)[row.status] ?? row.status,
+    status: ({ AVAILABLE: "Available", OCCUPIED: "Occupied", DIRTY: "Dirty", CLEANING: "Cleaning", MAINTENANCE: "Maintenance", OUT_OF_ORDER: "OutOfOrder" } as Record<string, string>)[row.status] ?? row.status,
     price_cents: row.price_cents,
   };
 }

@@ -12,6 +12,7 @@ import { ApiError } from "./errors";
 import { createInventoryRoutes } from "./routes/inventory";
 import { createBookingRoutes } from "./routes/bookings";
 import { createLifecycleRoutes } from "./routes/lifecycle";
+import { createHousekeepingRoutes } from "./routes/housekeeping";
 import { resolveOperationalDatabase } from "./routing";
 
 const app = new Hono<{ Bindings: Env; Variables: ApiVariables }>();
@@ -86,6 +87,7 @@ app.get("/api/v1/auth/me", (context) => {
 app.route("/api/v1", createInventoryRoutes());
 app.route("/api/v1", createBookingRoutes());
 app.route("/api/v1", createLifecycleRoutes());
+app.route("/api/v1", createHousekeepingRoutes());
 
 app.all("/api/v1/*", (context) =>
   context.json(

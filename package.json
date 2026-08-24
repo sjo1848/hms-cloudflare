@@ -7,6 +7,7 @@
     "test": "vitest run",
     "test:cf-i03": "bash scripts/cf-i03-regression.sh",
     "test:cf-i04": "bash scripts/cf-i04-regression.sh",
+    "test:cf-i05": "bash scripts/cf-i05-regression.sh",
     "typecheck": "tsc -b",
     "web:build": "vite build --config apps/web/vite.config.ts",
     "types:api": "wrangler types apps/api/worker-configuration.d.ts -c apps/api/wrangler.jsonc",
