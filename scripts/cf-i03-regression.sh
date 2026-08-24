@@ -158,4 +158,34 @@ assert_status "$status" 404
 CI=1 npx wrangler d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT COUNT(*) AS count FROM lifecycle_events WHERE booking_id='$race_id'" --json >"$tmp_dir/security-events.json"
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/security-events.json'))[0].results[0]; if(r.count<2||r.count>4) process.exit(1)"
 
+# Deterministic stale-state guard checks: the event trigger is the final
+# statement in each operation batch and must abort the whole batch, preserving
+# booking, claims, room state and event count.
+CI=1 npx wrangler d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "
+  DELETE FROM lifecycle_events; DELETE FROM room_inventory_nights; DELETE FROM bookings;
+  UPDATE rooms SET status='AVAILABLE';
+  INSERT INTO bookings (id,guest_id,room_id,check_in,check_out,status,total_cents,created_at,updated_at) VALUES ('stale-checkout','guest-a','room-a','2026-11-01','2026-11-03','CHECKED_IN',20000,'2026-01-01','2026-01-01');
+  INSERT INTO room_inventory_nights (room_id,stay_date,booking_id) VALUES ('room-a','2026-11-01','stale-checkout'),('room-a','2026-11-02','stale-checkout');
+  UPDATE rooms SET status='OCCUPIED' WHERE id='room-a';
+" >/dev/null
+if CI=1 npx wrangler d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "
+  BEGIN;
+  UPDATE bookings SET status='CHECKED_OUT' WHERE id='stale-checkout' AND status='CHECKED_IN';
+  DELETE FROM room_inventory_nights WHERE booking_id='stale-checkout';
+  UPDATE rooms SET status='DIRTY' WHERE id='room-a' AND status='AVAILABLE';
+  INSERT INTO lifecycle_events (id,booking_id,event_type,from_room_id,actor_subject,request_id,hotel_id,details_json,created_at) VALUES ('stale-checkout-event','stale-checkout','CHECK_OUT','room-a','subject-a','stale-request','hotel-a','{}','2026-01-01');
+  COMMIT;
+" >/dev/null 2>&1; then echo "stale checkout batch unexpectedly committed" >&2; exit 1; fi
+CI=1 npx wrangler d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT status,room_id FROM bookings WHERE id='stale-checkout'; SELECT COUNT(*) AS claims FROM room_inventory_nights WHERE booking_id='stale-checkout'; SELECT status FROM rooms WHERE id='room-a'; SELECT COUNT(*) AS events FROM lifecycle_events WHERE booking_id='stale-checkout'" --json >"$tmp_dir/stale-checkout.json"
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/stale-checkout.json')).flatMap(x=>x.results); if(r[0].status!=='CHECKED_IN'||r[0].room_id!=='room-a'||r[1].claims!==2||r[2].status!=='OCCUPIED'||r[3].events!==0) process.exit(1)"
+
+# Valid repeated room history remains legal (A -> B -> A -> C).
+CI=1 npx wrangler d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "DELETE FROM lifecycle_events; DELETE FROM room_inventory_nights; DELETE FROM bookings; UPDATE rooms SET status='AVAILABLE';" >/dev/null
+status=$(request -d '{"guest_id":"guest-a","room_id":"room-a","check_in":"2026-12-01","check_out":"2026-12-03"}' "$base/bookings"); assert_status "$status" 201
+history_id=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')).id)")
+status=$(request -X POST -d '{"guest_count_confirmed":true,"document_verified":true,"contact_confirmed":true,"stay_confirmed":true}' "$base/bookings/$history_id/check-in"); assert_status "$status" 200
+for destination in room-b room-a room-c; do status=$(request -X POST -d "{\"room_id\":\"$destination\"}" "$base/bookings/$history_id/reassign"); assert_status "$status" 200; done
+CI=1 npx wrangler d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT COUNT(*) AS count FROM lifecycle_events WHERE booking_id='$history_id' AND event_type='REASSIGN'" --json >"$tmp_dir/repeated-history.json"
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/repeated-history.json'))[0].results[0]; if(r.count!==3) process.exit(1)"
+
 echo "CF-I03 + CF-I04 lifecycle D1/API regression PASS"

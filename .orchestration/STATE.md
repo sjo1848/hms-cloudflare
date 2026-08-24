@@ -104,6 +104,12 @@ Task Contract: `.orchestration/contracts/CF-I04.md`.
 - REWORK-1 artifact: `88c8361bae2148f682947bba1976a41404db9212` → Independent Critic `REWORK`.
 - Current Critic record: `.orchestration/reviews/CF-I04-REWORK-1-CRITIC.md`.
 
+### REWORK-2 EXECUTION
+
+Runtime status: `RUNNING`; `RUNTIME_CAPABILITY_FALLBACK` is active because this runtime exposes no separate Specialist contexts. Domain/Engineering and QA/Security responsibilities remain separated in the implementation and evidence passes; no multiagency claim is made.
+
+The authorized repair consumes `.orchestration/reviews/CF-I04-REWORK-1-CRITIC.md` and is limited to lifecycle atomicity, deterministic evidence, valid repeated room history and source-reception UX parity.
+
 ### What REWORK-1 improved
 
 - stale reassignment side effects are more tightly chained to booking state;
