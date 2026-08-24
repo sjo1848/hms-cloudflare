@@ -21,6 +21,7 @@ For every migrated source capability:
 - compare allowed state transitions;
 - compare required actor/time/audit data;
 - compare workflow/information architecture on required UI surfaces;
+- compare source ordering/ranking/deduplication/synthetic-item/next-item rules where they affect operational behavior;
 - record intentional exceptions only if backed by an approved decision.
 
 ### 3. Mutation/concurrency sweep
@@ -49,12 +50,15 @@ For every business operation with conditional writes:
 - no infrastructure/runtime migration has silently redesigned the journey;
 - mobile and desktop interaction models match the accepted product semantics;
 - source focused-task/open/close/focus behavior is preserved when it is operationally material, even if the visual implementation differs;
+- operational queues/lists preserve source ranking, priority, synthetic/derived work items and next-item selection when those semantics exist;
 - per-entity draft/form state cannot leak across selected cases/rooms/bookings.
 
 ### 6. Browser evidence sweep
 
 - every contracted responsive width executes material controls, not merely page reachability;
 - mobile workflows prove the material task-entry/focus/close semantics required by the source contract;
+- where source ranking/next-item semantics exist, use deterministic fixtures whose natural identifier/order conflicts with expected priority and assert known expected identities; never derive the expected answer from the target's own first rendered item;
+- where the source synthesizes/derives queue items, prove those items remain visible/contextualized and do not expose invalid actions;
 - per-entity draft isolation/reset is exercised in browser when the Task Contract requires it, rather than inferred only from component state shape;
 - validation/error/success states are observable;
 - mocks are labeled as mocks;
@@ -68,6 +72,8 @@ For each material claim in docs/state:
 `claim → exact executable or immutable evidence`
 
 If no evidence exists, weaken/remove the claim or add the missing proof.
+
+For ordering/priority claims, evidence must prove the source rule independently; target-self-consistency is not source parity.
 
 ### 8. Full regression and scope audit
 
