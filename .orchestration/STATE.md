@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-24  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-5 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 REWORK-5 ARTIFACT AWAITING INDEPENDENT CRITIC`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving observable product behavior, domain semantics and material safety guarantees. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -45,6 +45,7 @@ Artifact history:
 - `462bd0519c7224dc996f23825dbbc8c5afc10aec` → REWORK.
 - `97cd5536efa632bb30536fdfd106b69ee14687fd` → REWORK-4.
 - `6837a61a7b27e5ae0b909d1a436ddff10e0e1b14` → Independent Critic `REWORK-5`.
+- `17372d3200b8e88eec116e97672c12589005103d` → CF-I05 REWORK-5 artifact commit A; boundary commit B follows.
 
 ### Accepted through artifact `6837a61`
 
@@ -56,10 +57,10 @@ Artifact history:
 - stale/concurrent cleaning and maintenance resolution, exact-case ABA correlation, legacy ownership, RBAC, tenant routing and audit behavior remain accepted;
 - no CF-I06, production, remote-D1, real-data or paid-resource scope drift occurred.
 
-### Current REWORK-5 blocking findings
+### Resolved REWORK-5 findings
 
-1. **Enum representation parity:** source queue logic uses semantic `CheckedIn`; target D1/API emits `CHECKED_IN`, but target ranking predicate compares the source literal. Eligible checked-in departure tasks can therefore miss blocked rank 4. The orphan test does not expose this because orphan items force `isBlocked=true`.
-2. **Canonical publication protocol:** artifact `6837a61` reached remote main without a separate publication-boundary commit. Its committed STATUS still pointed to `97cd553`, had `external_review.required=false`, and authorized REWORK-4. The previous requirement that a commit contain its own SHA was circular and is now corrected.
+1. **Enum representation parity:** target normalizes `CONFIRMED/CANCELLED/CHECKED_IN/CHECKED_OUT` to source semantics; eligible `CHECKED_IN` Room 907 receives blocked rank 4, while `CONFIRMED` Room 908 remains non-blocked.
+2. **Canonical publication protocol:** artifact A `17372d3` is followed by this orchestration-only boundary B, which records exact A, sets `external_review.required=true` and `resume_authorized=false`, and changes no product code.
 
 Diagnosis: `ENUM_REPRESENTATION_PARITY_DEFECT + CANONICAL_STATE_CONVERGENCE_DEFECT`.
 Human Gate: `NONE`.
@@ -106,15 +107,6 @@ None. REWORK-5 is routine and authorized.
 
 ## NEXT AUTHORIZED ACTION
 
-Codex reads `.orchestration/STATUS.json`, `.orchestration/reviews/CF-I05-REWORK-4-CRITIC.md`, `.orchestration/INVARIANTS.md`, `.orchestration/PRECRITIC-GATE.md`, the active Task Contract and source Housekeeping queue logic; then autonomously in one bounded wave:
-
-1. normalizes source/target booking-status semantics for Housekeeping predicates;
-2. adds deterministic eligible-room `CHECKED_IN` departure evidence proving source blocked rank/order, plus a negative non-checked-in case;
-3. classifies/proves `INV-ENUM-001` and preserves `INV-ORDER-001` evidence;
-4. records NoShow exclusion as carry-forward migration/status parity debt without expanding CF-I05 lifecycle scope;
-5. runs full CF-I03/CF-I04/CF-I05 API+D1/browser regressions, tests, build, types, Wrangler and diff checks;
-6. publishes artifact commit A;
-7. reads exact full SHA A and publishes orchestration-only boundary commit B pointing to A, with `external_review.required=true` and `resume_authorized=false`;
-8. stops for External Independent Critic.
+Independent Critic reviews artifact commit A `17372d3200b8e88eec116e97672c12589005103d` together with this orchestration-only publication boundary commit B. The Pre-Critic Gate passed with `INV-ENUM-001`, `INV-ORDER-001` and `INV-STATE-001`; CF-I06 remains unauthorized until a fresh CF-I05 PASS.
 
 Do not begin CF-I06 before a fresh CF-I05 Independent Critic PASS. No production deployment, remote D1 mutation, real-data migration, Cloudflare preview deployment or paid transition is authorized.

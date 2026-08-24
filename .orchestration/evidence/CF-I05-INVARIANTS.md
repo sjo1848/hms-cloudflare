@@ -1,6 +1,6 @@
 # CF-I05 — Invariant Evidence
 
-Artifact candidate: `artifact commit A; exact SHA is recorded by the orchestration-only publication boundary commit B`
+Artifact candidate: `17372d3200b8e88eec116e97672c12589005103d`
 Task Contract: `.orchestration/contracts/CF-I05.md`  
 Pre-Critic gate: `.orchestration/PRECRITIC-GATE.md`
 

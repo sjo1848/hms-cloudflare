@@ -1,7 +1,7 @@
 # CF-I05 REWORK-5 — Pre-Critic Gate Execution
 
 Gate: `.orchestration/PRECRITIC-GATE.md`  
-Decision: `PASS — artifact commit A plus orchestration-only boundary commit B eligible for External Independent Critic`
+Decision: `PASS — artifact commit A 17372d3200b8e88eec116e97672c12589005103d plus orchestration-only boundary commit B eligible for External Independent Critic`
 
 | Gate step | Result | Evidence |
 |---|---|---|
