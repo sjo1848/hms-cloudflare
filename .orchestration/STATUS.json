@@ -2,25 +2,25 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "BUILD_VALIDATE_READINESS",
-  "runtime_status": "WAITING_EXTERNAL_REVIEW",
-  "resume_authorized": false,
+  "runtime_status": "READY_TO_RESUME",
+  "resume_authorized": true,
   "active_task": "CF-I09",
-  "last_completed_task": "CF-I09-INTERNAL-ADMISSION",
-  "last_completed_head": "a972bca",
+  "last_completed_task": "CF-I09-INDEPENDENT-CRITIC-REWORK-1",
+  "last_completed_head": "a972bca40ed60505bc42f5ae560977886c2972ab",
   "work_branch": "main",
-  "next_action": "EXTERNAL_INDEPENDENT_CRITIC_REVIEW_ARTIFACT_A_a972bca",
-  "stop_reason": "Substantive artifact A is ready; stop at External Independent Critic boundary.",
+  "next_action": "CF_I09_AUTONOMOUS_REWORK_1_SOURCE_SAAS_ADMIN_LEGACY_NULL_ACTORS_MODEL_RECEIPT_EXACT_BOUNDARY",
+  "stop_reason": "CF-I09 artifact A a972bca40ed60505bc42f5ae560977886c2972ab with boundary B 54d8ad2e77b78f4101a14501b7e81ef014c9be2a received External Independent Critic REWORK-1. Codex must consume .orchestration/reviews/CF-I09-CRITIC.md and preserve the accepted migration/reconciliation, replay/partial-failure, local Access/readiness, backup/restore and complete local smoke foundation. Repair source-valid saas_admin mapping, legacy NULL payment receiver and legacy NULL maintenance reporter with truthful unknown provenance; perform the consolidated source historical-nullability/actor sweep; produce truthful Luna-first model/reasoning receipts with separate Internal QA/Critic and Integration Review closure; rerun fresh CF-I09 and inherited CF-I03-CF-I08 evidence; then publish fresh artifact A2 followed by orchestration-only B2 containing the exact full 40-character A2 SHA. No Human Gate exists. No remote/paid/real-data/cutover action is authorized.",
   "event": {
-    "seq": 79,
-    "id": "CF-I09@EXTERNAL-REVIEW-REQUIRED",
-    "type": "EXTERNAL_REVIEW_REQUIRED"
+    "seq": 80,
+    "id": "CF-I09@CRITIC-REWORK-1",
+    "type": "INDEPENDENT_CRITIC_REWORK"
   },
   "external_review": {
-    "required": true,
-    "last_audited_head": "ab0af4d70f05d507e80fb6a518f7eff890c239db",
-    "last_verdict": "PASS",
-    "artifact_head": "a972bca",
-    "pending_verdict": "INDEPENDENT_CRITIC"
+    "required": false,
+    "last_audited_head": "a972bca40ed60505bc42f5ae560977886c2972ab",
+    "last_verdict": "REWORK_SOURCE_ROLE_NULL_ACTOR_PROVENANCE_MODEL_RECEIPT_EXACT_BOUNDARY",
+    "artifact_head": null,
+    "pending_verdict": null
   },
   "human_gate": null,
   "blocker": null,
@@ -28,7 +28,9 @@
     "multi_context_required": true,
     "internal_review_receipt": ".orchestration/evidence/CF-I09-INTERNAL-REVIEW.md",
     "external_critic_after_internal_closure_only": true,
-    "human_routine_relay_forbidden": true
+    "human_routine_relay_forbidden": true,
+    "model_policy": ".orchestration/MODEL-REASONING-POLICY.md",
+    "luna_first": true
   },
   "cost_guard": {
     "target": "$0/month / Cloudflare Free",
