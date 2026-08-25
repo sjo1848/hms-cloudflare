@@ -10,4 +10,11 @@ Source baseline: HMS `4df56a6217caab611f2f5fcbd98bde8386bb5629`, `ReportingServi
 | Network summary | Per-hotel dashboard occupancy/active/ADR/RevPAR, range revenue; arithmetic mean occupancy; totals and rows ordered by revenue | `GET /api/v1/hotels/network-kpis` | two bound D1 fixtures, independent ranking/total assertions |
 | Isolation | Tenant membership selects exactly one operational D1; another hotel identity cannot select it | all hotel reports | Hotel A identity + Hotel B header returns `403` |
 
+## REWORK-2 parity clarifications
+
+- Dashboard alerts remain source-shaped arrays: `booking_id`, `guest_name`, `room_number` and semantic `Confirmed`/`CheckedIn` status; count-only substitutes are not accepted.
+- `start` and `end` defaults are derived independently from the current UTC date, including end-only requests; same-day ranges are valid and inverted ranges are rejected.
+- `NO_SHOW` is excluded from Housekeeping departure/turnover predicates as well as reporting revenue; the focal fixture proves the NoShow room creates no departure or cleaning work.
+- Browser continuity uses a real local maintenance mutation and verifies the resulting `Maintenance` state on the Rooms surface; the fixture normalizes room column ordering before the worker starts.
+
 The target migration adds `NO_SHOW` to the local booking lifecycle schema only to preserve source reporting predicates; it does not perform import, real-data migration or production cutover.

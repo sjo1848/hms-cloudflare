@@ -192,10 +192,11 @@ function HousekeepingReworkLegacyFocused3() {
 
 function HousekeepingRework() {
   const [board, setBoard] = useState<HousekeepingBoard>({ date: "", rooms: [], departures_today: [] });
+  const [boardDate, setBoardDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [loading, setLoading] = useState(true); const [error, setError] = useState(""); const [filter, setFilter] = useState("shift"); const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null); const [drafts, setDrafts] = useState<Record<string, HousekeepingDraft>>({}); const [mobileFocus, setMobileFocus] = useState(false); const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const openerRef = useRef<HTMLButtonElement | null>(null); const taskHeadingRef = useRef<HTMLHeadingElement | null>(null);
-  const load = async () => { setLoading(true); setError(""); try { setBoard(await api<HousekeepingBoard>("/housekeeping/board")); } catch (e) { setError((e as Error).message); } finally { setLoading(false); } };
+  const load = async (date = new URLSearchParams(location.search).get("date") ?? boardDate) => { setLoading(true); setError(""); try { setBoard(await api<HousekeepingBoard>(`/housekeeping/board?date=${date}`)); } catch (e) { setError((e as Error).message); } finally { setLoading(false); } };
   useEffect(() => { void load(); }, []); useEffect(() => { const onResize = () => setIsMobile(window.innerWidth < 768); window.addEventListener("resize", onResize); return () => window.removeEventListener("resize", onResize); }, []);
   const visible = filterHousekeepingQueue(buildHousekeepingQueue(board.rooms, board.departures_today), filter, search);
   useEffect(() => { if (visible.length && !visible.some(room => room.room_id === selectedId)) setSelectedId(visible[0].room_id); }, [visible, selectedId]);

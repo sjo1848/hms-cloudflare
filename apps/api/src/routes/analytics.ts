@@ -11,8 +11,9 @@ type DateRange = { start: string; end: string };
 
 function hotelCapability(context: any, capability: string): void { if (!hasCapability(context.get("membership").role, capability)) throw ApiError.forbidden(); }
 function optionalRange(context: any): DateRange {
-  const end = context.req.query("end") ?? new Date().toISOString().slice(0, 10);
-  const start = context.req.query("start") ?? new Date(Date.parse(`${end}T00:00:00Z`) - 30 * 86400000).toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  const end = context.req.query("end") ?? today;
+  const start = context.req.query("start") ?? new Date(Date.parse(`${today}T00:00:00Z`) - 30 * 86400000).toISOString().slice(0, 10);
   const normalized = { start: isoDate(start, "start"), end: isoDate(end, "end") };
   if (normalized.end < normalized.start) throw ApiError.badRequest("end must be on or after start");
   return normalized;
@@ -32,7 +33,10 @@ async function dashboard(db: Db) {
     (SELECT COUNT(*) FROM bookings WHERE status='CONFIRMED' AND check_in=?2) AS arrivals_count,
     (SELECT COUNT(*) FROM bookings WHERE status='CHECKED_IN' AND check_out=?2) AS departures_count`).bind(month, now).first<any>();
   const occupancyRate = Number(row?.total_rooms ?? 0) === 0 ? 0 : (Number(row.occupied_rooms) * 100) / Number(row.total_rooms);
-  return { revenue_month_cents: Number(row?.revenue_month_cents ?? 0), occupancy_rate: occupancyRate, today_check_ins: Number(row?.today_check_ins ?? 0), active_bookings_count: Number(row?.active_bookings_count ?? 0), arrivals_today_count: Number(row?.arrivals_count ?? 0), departures_today_count: Number(row?.departures_count ?? 0), ...derived(occupancyRate, Number(row?.revenue_month_cents ?? 0), Number(row?.active_bookings_count ?? 0)) };
+  const alerts = await db.prepare(`SELECT b.id AS booking_id, g.full_name AS guest_name, r.room_number, b.status FROM bookings b JOIN guests g ON g.id=b.guest_id JOIN rooms r ON r.id=b.room_id WHERE b.check_in=?1 AND b.status='CONFIRMED' ORDER BY b.id`).bind(now).all<any>();
+  const departures = await db.prepare(`SELECT b.id AS booking_id, g.full_name AS guest_name, r.room_number, b.status FROM bookings b JOIN guests g ON g.id=b.guest_id JOIN rooms r ON r.id=b.room_id WHERE b.check_out=?1 AND b.status='CHECKED_IN' ORDER BY b.id`).bind(now).all<any>();
+  const alert = (value: any) => ({ booking_id: value.booking_id, guest_name: value.guest_name, room_number: value.room_number, status: value.status === "CHECKED_IN" ? "CheckedIn" : "Confirmed" });
+  return { revenue_month_cents: Number(row?.revenue_month_cents ?? 0), occupancy_rate: occupancyRate, today_check_ins: Number(row?.today_check_ins ?? 0), active_bookings_count: Number(row?.active_bookings_count ?? 0), arrivals_today: alerts.results.map(alert), departures_today: departures.results.map(alert), ...derived(occupancyRate, Number(row?.revenue_month_cents ?? 0), Number(row?.active_bookings_count ?? 0)) };
 }
 async function hotelMetrics(db: Db, range: DateRange) {
   const summary = await dashboard(db);

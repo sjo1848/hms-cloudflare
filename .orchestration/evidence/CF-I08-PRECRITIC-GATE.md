@@ -1,4 +1,4 @@
-# CF-I08 REWORK-1 Pre-Critic Gate
+# CF-I08 REWORK-2 Pre-Critic Gate
 
 | Gate | Result | Exact evidence |
 |---|---|---|
@@ -13,5 +13,15 @@
 | Invariants | PASS | `.orchestration/evidence/CF-I08-INVARIANTS.md`; no applicable FAIL/UNPROVEN remains. |
 | Regression/build/static | PASS | Fresh CF-I03/04/05/06/07 focal, CF-I07 browser, `npm run check`, web build, Wrangler dry-run and route/diff checks. |
 | Publication boundary | READY | Publish substantive A, resolve exact SHA, publish orchestration-only B, then stop for Independent Critic. |
+
+## Strengthened REWORK-2 checks
+
+| Check | Result | Exact evidence |
+|---|---|---|
+| Enum expansion cross-module safety | PASS | Housekeeping SQL excludes `CANCELLED` and `NO_SHOW`; focal fixture proves NoShow is absent from departures and turnover. |
+| Dashboard output shape | PASS | `/analytics/kpis` exact assertion proves arrays with booking, guest, room and semantic status fields. |
+| Independent date defaults | PASS | Focal runner exercises no-param, start-only, end-only, same-day and inverted ranges. |
+| Deterministic focal state | PASS | Current-date D1 fixture asserts one exact dashboard result, independent of prior fixed-date rows. |
+| Cross-module continuity | PASS | Browser runner mutates Housekeeping through local API and verifies the resulting room state in Rooms UI. |
 
 Codex does not self-declare product PASS. The next boundary is External Independent Critic; CF-I09 remains unauthorized.

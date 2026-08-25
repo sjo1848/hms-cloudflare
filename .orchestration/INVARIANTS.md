@@ -233,6 +233,22 @@ External Independent Critic reviews artifact A plus canonical boundary state B. 
 
 **Required evidence:** valid, invalid, empty and cancelled/non-revenue deterministic queries.
 
+## INV-CF-I08-004 — Expanded state values require cross-module predicates
+
+**Applies when:** a target schema adds a state such as `NO_SHOW`.
+
+**Invariant:** every source business predicate that filters the expanded state is re-audited across API routes, queues and UI-derived work; output shape and semantic enum mapping remain explicit.
+
+**Required evidence:** cross-module negative fixture plus source-shaped output assertion.
+
+## INV-CF-I08-005 — Clock defaults and continuity evidence are deterministic
+
+**Applies when:** reports default dates or browser evidence crosses operational surfaces.
+
+**Invariant:** omitted range parameters derive independently from one captured current date, and browser evidence uses a real local mutation whose consequence is visible on another target surface.
+
+**Required evidence:** no-param/start-only/end-only tests and API/D1-to-UI continuity journey.
+
 ## INV-SCOPE-001 — Accelerated wave does not imply scope blending
 
 **Applies to:** accelerated delivery waves.

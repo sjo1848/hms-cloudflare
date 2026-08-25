@@ -1,4 +1,4 @@
-# CF-I08 REWORK-1 invariant evidence
+# CF-I08 REWORK-2 invariant evidence
 
 Artifact scope: source-semantic analytics/reporting, `NO_SHOW`-safe local schema, network aggregation, Reports/Network UX and integrated responsive evidence. No CF-I09, production, paid or real-data scope.
 
@@ -14,6 +14,13 @@ Artifact scope: source-semantic analytics/reporting, `NO_SHOW`-safe local schema
 | INV-EVID-001 | PASS | Focal terminal marker `CF-I08 analytics/reports/multi-hotel D1/API regression PASS`; browser terminal marker `CF-I08 responsive/integrated browser regression PASS`; source matrix and screenshot committed. |
 | INV-STATE-001 | PASS | This file and gate are included in substantive artifact A; publication will create orchestration-only boundary B with exact A SHA. |
 | INV-SCOPE-001 | PASS | No CF-I09/import rehearsal, remote D1, paid resource, production deployment, real-data migration or cutover. |
+
+## REWORK-2 closure
+
+- `NO_SHOW` is excluded from Housekeeping departures and the focal API assertion proves no departure or turnover flag for the NoShow room.
+- Dashboard alerts are arrays with source-compatible booking/guest/room/status fields; deterministic current-date fixtures assert exact revenue, occupancy, ADR, RevPAR and alert identities.
+- No-param, start-only, end-only, same-day and inverted report ranges are executable; defaults derive independently from UTC today.
+- Browser continuity performs a real local Housekeeping maintenance mutation and verifies `Maintenance` for room 101 on the Rooms surface.
 
 ## Fresh executable checks
 
