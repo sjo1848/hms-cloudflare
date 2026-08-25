@@ -32,9 +32,16 @@ rejected((x) => {
     id: "99900000-0000-0000-0000-000000000001",
   });
 }, /multiple source invoices/);
-rejected((x) => {
-  x.payment_entries[0].received_by_user_id = null;
-}, /missing receiver/);
+const legacyNullPayment = clone();
+legacyNullPayment.payment_entries[0].received_by_user_id = null;
+const legacyPaymentDigest = validateFixture(legacyNullPayment).source_digest;
+const legacyPaymentSql = buildHotelSql(
+  legacyNullPayment,
+  legacyNullPayment.hotels[0].id,
+  legacyPaymentDigest,
+);
+assert.match(legacyPaymentSql, /legacy-source-user:unknown:payment:19200000-0000-0000-0000-000000000001/);
+assert.match(legacyPaymentSql, /source received_by_user_id NULL in legacy backfill/);
 rejected((x) => {
   x.hotels[0].silently_dropped = true;
 }, /no explicit source-field disposition/);
@@ -61,6 +68,11 @@ rejected((x) => {
 rejected((x) => {
   x.payment_entries[0].payment_method = "CRYPTO";
 }, /payment .* unknown payment method/);
+rejected((x) => {
+  x.target_adaptations.network_admin_user_ids = [
+    "14000000-0000-0000-0000-000000000001",
+  ];
+}, /network adaptation must exactly contain source saas_admin/);
 rejected((x) => {
   x.cash_closures[0].payment_count = 999;
 }, /cash closure .* payment summary mismatch/);
@@ -97,4 +109,12 @@ assert.equal(generated.toLowerCase().includes("password_hash"), false);
 assert.match(generated, /legacy-guest:13000000-0000-0000-0000-000000000001/);
 assert.match(generated, /guest_name_snapshot/);
 assert.match(generated, /source_ip_address/);
+assert.match(generated, /legacy-source-user:unknown:maintenance:26000000-0000-0000-0000-000000000001/);
+assert.match(generated, /migration:checkin:13000000-0000-0000-0000-000000000002/);
+assert.match(generated, /legacy-source-user:unknown:checkin:13000000-0000-0000-0000-000000000002/);
+assert.match(generated, /legacy-source-user:unknown:payment:19200000-0000-0000-0000-000000000001/);
+assert.match(generated, /INSERT INTO network_memberships .*source-user:14000000-0000-0000-0000-000000000003/s);
+assert.equal((buildControlSql(source, digest).match(/INSERT INTO hotel_memberships/g) ?? []).length, 4);
+assert.equal(buildControlSql(source, digest).includes("source-user:14000000-0000-0000-0000-000000000003','10000000"), false);
+assert.equal(buildControlSql(source, digest).includes("source-user:14000000-0000-0000-0000-000000000001','saas_admin'"), false);
 process.stdout.write("CF-I09 migration preflight negative tests: PASS\n");

@@ -70,6 +70,7 @@ const cents = (value, label) => {
   return value;
 };
 const subject = (id) => (id == null ? null : `source-user:${id}`);
+const unknownActor = (kind, id) => `legacy-source-user:unknown:${kind}:${id}`;
 const q = (value) =>
   value == null ? "NULL" : `'${String(value).replaceAll("'", "''")}'`;
 const b = (value) => (value == null ? "NULL" : value ? "1" : "0");
@@ -164,6 +165,17 @@ function validateReferences(fixture) {
   }
   for (const row of fixture.users)
     assert(ENUMS.role[row.role], `user ${row.id} unknown role`);
+  const sourceSaasAdmins = fixture.users
+    .filter((row) => row.role === "saas_admin")
+    .map((row) => row.id)
+    .sort();
+  const adaptedNetworkAdmins = [
+    ...(fixture.target_adaptations?.network_admin_user_ids ?? []),
+  ].sort();
+  assert(
+    canonicalJson(sourceSaasAdmins) === canonicalJson(adaptedNetworkAdmins),
+    "network adaptation must exactly contain source saas_admin users; tenant admin cannot gain network capability",
+  );
   for (const row of fixture.refresh_tokens) {
     assert(
       users.get(row.user_id)?.hotel_id === row.hotel_id,
@@ -231,14 +243,11 @@ function validateReferences(fixture) {
       ENUMS.payment_method[row.payment_method],
       `payment ${row.id} has unknown payment method ${row.payment_method}`,
     );
-    assert(
-      row.received_by_user_id != null,
-      `payment ${row.id} missing receiver cannot be attributed`,
-    );
-    assert(
-      users.get(row.received_by_user_id)?.hotel_id === row.hotel_id,
-      `payment ${row.id} receiver tenant mismatch`,
-    );
+    if (row.received_by_user_id != null)
+      assert(
+        users.get(row.received_by_user_id)?.hotel_id === row.hotel_id,
+        `payment ${row.id} receiver tenant mismatch`,
+      );
   }
   for (const row of fixture.extra_charges) {
     assert(
@@ -495,14 +504,15 @@ export function buildControlSql(fixture, sourceDigest) {
         [accessSubject, email, 1],
       ),
     );
-    lines.push(
-      ins(
-        "hotel_memberships",
-        ["access_subject", "hotel_id", "role", "active"],
-        [accessSubject, user.hotel_id, ENUMS.role[user.role], 1],
-      ),
-    );
-    if (fixture.target_adaptations.network_admin_user_ids.includes(user.id))
+    if (user.role !== "saas_admin")
+      lines.push(
+        ins(
+          "hotel_memberships",
+          ["access_subject", "hotel_id", "role", "active"],
+          [accessSubject, user.hotel_id, ENUMS.role[user.role], 1],
+        ),
+      );
+    if (user.role === "saas_admin")
       lines.push(
         ins(
           "network_memberships",
@@ -696,9 +706,13 @@ export function buildHotelSql(fixture, hotelId, sourceDigest) {
           row.total_price_cents - (chargeTotalByBooking.get(row.id) ?? 0),
           null,
           utc(row.checked_in_at, "checked_in_at", true),
-          subject(row.checked_in_by_user_id),
+          row.checked_in_by_user_id == null
+            ? unknownActor("checkin", row.id)
+            : subject(row.checked_in_by_user_id),
           utc(row.checked_out_at, "checked_out_at", true),
-          subject(row.checked_out_by_user_id),
+          row.checked_out_by_user_id == null
+            ? unknownActor("checkout", row.id)
+            : subject(row.checked_out_by_user_id),
           utc(row.created_at, "created_at"),
           updatedAt(
             row,
@@ -882,7 +896,9 @@ export function buildHotelSql(fixture, hotelId, sourceDigest) {
           ENUMS.payment_method[row.payment_method],
           row.payment_reference,
           row.note,
-          subject(row.received_by_user_id),
+          row.received_by_user_id == null
+            ? unknownActor("payment", row.id)
+            : subject(row.received_by_user_id),
           utc(row.received_at, "received_at"),
         ],
       ),
@@ -904,12 +920,18 @@ export function buildHotelSql(fixture, hotelId, sourceDigest) {
           eventId("payment", row.id),
           "PAYMENT_RECORDED",
           row.booking_id,
-          subject(row.received_by_user_id),
+          row.received_by_user_id == null
+            ? unknownActor("payment", row.id)
+            : subject(row.received_by_user_id),
           eventId("request-payment", row.id),
           hotelId,
           canonicalJson({
             amount_cents: row.amount_cents,
             source_payment_id: row.id,
+            actor_reconstruction:
+              row.received_by_user_id == null
+                ? "source received_by_user_id NULL in legacy backfill; unknown actor retained without attributing migration operator"
+                : null,
           }),
           utc(row.received_at, "received_at"),
         ],
@@ -981,10 +1003,18 @@ export function buildHotelSql(fixture, hotelId, sourceDigest) {
           eventId("checkin", row.id),
           row.id,
           "CHECK_IN",
-          subject(row.checked_in_by_user_id),
+          row.checked_in_by_user_id == null
+            ? unknownActor("checkin", row.id)
+            : subject(row.checked_in_by_user_id),
           eventId("request-checkin", row.id),
           hotelId,
-          canonicalJson({ source_snapshot: true }),
+          canonicalJson({
+            source_snapshot: true,
+            actor_reconstruction:
+              row.checked_in_by_user_id == null
+                ? "source checked_in_by_user_id NULL; unknown actor retained without attributing migration operator"
+                : null,
+          }),
           utc(row.checked_in_at, "checked_in_at"),
           null,
         ],
@@ -1009,10 +1039,18 @@ export function buildHotelSql(fixture, hotelId, sourceDigest) {
           eventId("checkout", row.id),
           row.id,
           "CHECK_OUT",
-          subject(row.checked_out_by_user_id),
+          row.checked_out_by_user_id == null
+            ? unknownActor("checkout", row.id)
+            : subject(row.checked_out_by_user_id),
           eventId("request-checkout", row.id),
           hotelId,
-          canonicalJson({ source_snapshot: true }),
+          canonicalJson({
+            source_snapshot: true,
+            actor_reconstruction:
+              row.checked_out_by_user_id == null
+                ? "source checked_out_by_user_id NULL; unknown actor retained without attributing migration operator"
+                : null,
+          }),
           utc(row.checked_out_at, "checked_out_at"),
           row.room_id,
         ],
@@ -1049,12 +1087,16 @@ export function buildHotelSql(fixture, hotelId, sourceDigest) {
           type,
           from,
           to,
-          subject(actor),
+          actor == null ? unknownActor("maintenance", row.id) : subject(actor),
           eventId("request-maintenance", row.id),
           hotelId,
           canonicalJson({
             source_maintenance_case_id: row.id,
             source_snapshot: true,
+            actor_reconstruction:
+              actor == null
+                ? "source reporter NULL in legacy backfill; unknown actor retained without attributing migration operator"
+                : null,
           }),
           utc(at, "maintenance event timestamp"),
         ],

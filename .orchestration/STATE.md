@@ -8,7 +8,7 @@ Global Project Mode: `DELIVERY`
 Phase: `BUILD / VALIDATE READINESS`  
 Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-1 AUTHORIZED`
 
-Runtime: `READY_TO_RESUME`. No Human Gate. Routine technical REWORK is autonomous work.
+Runtime: `BLOCKED` — repeated local Wrangler/D1 hangs prevent proving full migration reconciliation; backup/restore PASS and code-level/preflight repairs PASS.
 
 Current objective: complete the accepted HMS Cloudflare migration locally with deterministic source-parity migration, reconciliation, backup/restore and operational readiness so the Human can perform complete local Product Acceptance before any remote Cloudflare deployment.
 
@@ -121,7 +121,7 @@ No production, remote D1, real-data migration, paid resource, Access production 
 
 ## PENDING HUMAN GATES
 
-None for CF-I09 REWORK-1.
+Technical blocker: local Wrangler/D1 migration rehearsal hangs during reconcile despite bounded retries; next action is retry with a functioning isolated local runtime. No Human Gate is indicated.
 
 Paid Cloudflare resources, irreversible provisioning/cutover, significant unresolved product/security risk tradeoff, real-data production migration and final Human Product Acceptance remain Human Gates when reached.
 

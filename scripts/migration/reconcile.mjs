@@ -92,7 +92,7 @@ async function main() {
       email: `${row.username}@migration.invalid`,
       active: 1,
     })),
-    exactExists("hotel_memberships", fixture.users, (row) => ({
+    exactExists("hotel_memberships", fixture.users.filter((row) => row.role !== "saas_admin"), (row) => ({
       access_subject: sourceSubject(row.id),
       hotel_id: row.hotel_id,
       role: row.role,
@@ -132,9 +132,8 @@ async function main() {
   const controlExpected = {
     hotels: fixture.hotels.length,
     identities: fixture.users.length,
-    memberships: fixture.users.length,
-    network_memberships:
-      fixture.target_adaptations.network_admin_user_ids.length,
+    memberships: fixture.users.filter((row) => row.role !== "saas_admin").length,
+    network_memberships: fixture.users.filter((row) => row.role === "saas_admin").length,
     metadata: fixture.hotels.length,
     audit_events: fixture.audit_events.length,
     manifest: 1,
@@ -292,7 +291,10 @@ async function main() {
         payment_method: row.payment_method,
         payment_reference: row.payment_reference,
         note: row.note,
-        received_by_user_id: sourceSubject(row.received_by_user_id),
+        received_by_user_id:
+          row.received_by_user_id == null
+            ? `legacy-source-user:unknown:payment:${row.id}`
+            : sourceSubject(row.received_by_user_id),
         received_at: normalizedTime(row.received_at),
       })),
       exactExists("cash_closures", hotelRows("cash_closures"), (row) => ({
@@ -312,11 +314,28 @@ async function main() {
         hotel_id: hotel.id,
         operation_token: `migration:operation-cash:${row.id}`,
       })),
+      exactExists("housekeeping_events", hotelRows("maintenance_cases"), (row) => {
+        const actor = row.status === "OPEN" ? row.reported_by_user_id : row.resolved_by_user_id;
+        return {
+          id: `migration:maintenance:${row.id}`,
+          room_id: row.room_id,
+          maintenance_case_id: row.id,
+          event_type: row.status === "OPEN" ? "MAINTENANCE_OPEN" : "MAINTENANCE_RESOLVE",
+          actor_subject: actor == null ? `legacy-source-user:unknown:maintenance:${row.id}` : sourceSubject(actor),
+          request_id: `migration:request-maintenance:${row.id}`,
+          hotel_id: hotel.id,
+          "json_extract(details_json,'$.source_maintenance_case_id')": row.id,
+          created_at: normalizedTime(row.status === "OPEN" ? row.reported_at : row.resolved_at),
+        };
+      }),
       exactExists("financial_events", hotelRows("payment_entries"), (row) => ({
         id: `migration:payment:${row.id}`,
         event_type: "PAYMENT_RECORDED",
         booking_id: row.booking_id,
-        actor_subject: sourceSubject(row.received_by_user_id),
+        actor_subject:
+          row.received_by_user_id == null
+            ? `legacy-source-user:unknown:payment:${row.id}`
+            : sourceSubject(row.received_by_user_id),
         request_id: `migration:request-payment:${row.id}`,
         hotel_id: hotel.id,
         "json_extract(details_json,'$.amount_cents')": row.amount_cents,

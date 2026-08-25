@@ -3,7 +3,7 @@
   "source_baseline": "4df56a6217caab611f2f5fcbd98bde8386bb5629",
   "imported_at": "2026-08-24T12:00:00.000Z",
   "target_adaptations": {
-    "network_admin_user_ids": ["14000000-0000-0000-0000-000000000001"],
+    "network_admin_user_ids": ["14000000-0000-0000-0000-000000000003"],
     "hotel_routes": {
       "10000000-0000-0000-0000-000000000001": {
         "slug": "hotel-norte",
@@ -59,6 +59,14 @@
       "password_hash": "$synthetic$never-import",
       "role": "receptionist",
       "created_at": "2025-01-03T09:00:00-03:00"
+    },
+    {
+      "id": "14000000-0000-0000-0000-000000000003",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "username": "saas-admin",
+      "password_hash": "$synthetic$never-import",
+      "role": "saas_admin",
+      "created_at": "2025-01-04T09:00:00-03:00"
     },
     {
       "id": "24000000-0000-0000-0000-000000000001",
@@ -214,7 +222,7 @@
       "check_in_contact_confirmed": true,
       "check_in_stay_confirmed": true,
       "checked_in_at": "2026-08-24T12:00:00-03:00",
-      "checked_in_by_user_id": "14000000-0000-0000-0000-000000000002",
+      "checked_in_by_user_id": null,
       "check_out_payment_policy": null,
       "check_out_reference": null,
       "check_out_charges_reviewed": null,
@@ -433,7 +441,7 @@
       "priority": "URGENT",
       "reason": "Aire acondicionado fuera de servicio",
       "assigned_to": "Mantenimiento Sur",
-      "reported_by_user_id": "24000000-0000-0000-0000-000000000001",
+      "reported_by_user_id": null,
       "reported_at": "2026-08-23T09:00:00Z",
       "resolution_note": null,
       "resolved_by_user_id": null,
@@ -500,7 +508,7 @@
       "payment_method": "CASH",
       "payment_reference": "PAY-A-003",
       "note": "Pago checkout",
-      "received_by_user_id": "14000000-0000-0000-0000-000000000002",
+      "received_by_user_id": null,
       "received_at": "2026-08-22T09:30:00Z",
       "created_at": "2026-08-22T09:30:00Z"
     },

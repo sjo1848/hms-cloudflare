@@ -31,6 +31,7 @@ export const ENUMS = Object.freeze({
   },
   role: {
     admin: "admin",
+    saas_admin: "saas_admin",
     ops: "ops",
     receptionist: "receptionist",
     housekeeping: "housekeeping",
@@ -53,7 +54,8 @@ export const FIELD_DISPOSITION = Object.freeze({
   },
   users: {
     id: "migrated-provenance:subject is source-user:<uuid>",
-    hotel_id: "migrated:hotel_memberships.hotel_id",
+    hotel_id:
+      "migrated:hotel_memberships.hotel_id for tenant roles; retained legacy source column for saas_admin without operational membership",
     username: "reconstructed:synthetic Access email local fixture only",
     password_hash:
       "not-applicable:Cloudflare Access substitution; forbidden target value",
@@ -146,7 +148,8 @@ export const FIELD_DISPOSITION = Object.freeze({
     priority: "mapped-enum",
     reason: "migrated",
     assigned_to: "migrated",
-    reported_by_user_id: "mapped:Access subject",
+    reported_by_user_id:
+      "mapped:Access subject; NULL legacy backfill remains unknown and reconstructed event uses unknown-legacy provenance",
     reported_at: "normalized:UTC",
     resolution_note: "migrated",
     resolved_by_user_id: "mapped:Access subject",
@@ -183,7 +186,8 @@ export const FIELD_DISPOSITION = Object.freeze({
     payment_method: "mapped-enum",
     payment_reference: "migrated",
     note: "migrated",
-    received_by_user_id: "mapped:Access subject",
+    received_by_user_id:
+      "mapped:Access subject; NULL legacy backfill uses deterministic unknown-legacy provenance",
     received_at: "normalized:UTC",
     created_at: "not-applicable:target uses received_at as event timestamp",
   },
@@ -218,7 +222,7 @@ export const TARGET_RECONSTRUCTIONS = Object.freeze({
     "explicit target_adaptations.hotel_routes; binding must equal the server-owned BINDINGS allow-list",
   access_email: "source username + @migration.invalid; source has no email",
   network_membership:
-    "explicit fixture target_adaptations.network_admin_user_ids; Access/SaaS adaptation, not a source column",
+    "source saas_admin role maps to network membership only; legacy hotel_id does not grant hotel operational membership",
   booking_updated_at:
     "latest source terminal/late-arrival/check-in/check-out timestamp, else created_at",
   lifecycle_events:
