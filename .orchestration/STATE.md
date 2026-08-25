@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-25  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 REWORK-1 ARTIFACT PUBLISHED — INDEPENDENT CRITIC PENDING`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 REWORK-2 AUTHORIZED`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving product behavior, domain semantics, security, financial integrity and operational safety. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -15,7 +15,8 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - Source: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`.
 - Target: `sjo1848/hms-cloudflare`.
 - Active contract: `.orchestration/contracts/CF-I08.md`.
-- Current Independent Critic: `.orchestration/reviews/CF-I08-CRITIC.md`.
+- Current Independent Critic: `.orchestration/reviews/CF-I08-REWORK-1-CRITIC.md`.
+- Prior CF-I08 Critic: `.orchestration/reviews/CF-I08-CRITIC.md`.
 - Invariants: `.orchestration/INVARIANTS.md`.
 - Pre-Critic Gate: `.orchestration/PRECRITIC-GATE.md`.
 - Machine state: `.orchestration/STATUS.json`.
@@ -29,67 +30,53 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - CF-I05 Housekeeping + Maintenance — PASS — artifact A `17372d3200b8e88eec116e97672c12589005103d`, boundary B `9a05013c4b38567ff4749a855b40c9fd1cba2314`.
 - CF-I06 Billing — PASS — artifact A `0004990ba60b0349776de139cd04dfc2f30eaa6d`, boundary B `de0dbdc0ed92b60a5fd32faa184484c701711d08`.
 - CF-I07 Users / RBAC / Audit / Hotel-Network Admin — PASS — artifact A `fdf9c6f82c3c5066152e49ecba70268d669a640f`, boundary B `c52656fcc311f53be9b584346f2afc9e54796ff9`.
-- CF-I08 Analytics / Reports / Integrated Responsive Product — artifact A `6030be4d63e0a4424d6142bce5bac4e6d9b5f422`; boundary B is this orchestration-only commit — Independent Critic pending.
+- CF-I08 initial artifact `ed7afe4722650933bc704c1d5f02150cbda82996` — Independent Critic REWORK-1.
+- CF-I08 REWORK-1 artifact A `6030be4d63e0a4424d6142bce5bac4e6d9b5f422`, boundary B `e6aabf0256cf33bbc8817f21238ee460f95708a6` — Independent Critic REWORK-2.
 
-## CF-I07 ACCEPTED GUARANTEES — PRESERVE
+## CF-I08 REWORK-1 ACCEPTED REPAIRS — PRESERVE
 
-- Cloudflare Access remains the authentication perimeter; no HMS password recreation.
-- Active hotel → operational D1 ownership is unique; undeclared/already-consumed bindings fail closed.
-- Source-sensitive RBAC is centralized and protected routes cannot bypass capability authority by direct role shortcut.
-- `saas_admin` remains limited to source-canonical network hotel capabilities.
-- receptionist cannot list all invoices; ops retains tenant audit access.
-- pending-approved checkout requires admin-only override capability.
-- shared Access identity rows cannot be tenant-locally rewritten/reactivated.
-- user/admin mutations retain exact-winner and truthful-audit behavior.
-- tenant-A cannot mutate tenant-B-only memberships.
-- tenant audit provenance/scope and plan tiers remain accepted.
-- CF-I07 responsive/admin evidence and runner cleanup remain accepted.
+- Revenue report again uses source inclusive dates, accepts same-day ranges and excludes `CANCELLED` + `NO_SHOW`.
+- Occupancy report again emits the source inclusive daily series using distinct rooms, `CONFIRMED|CHECKED_IN` and all rooms as denominator.
+- Dashboard ADR/RevPAR formulas are restored to source semantics and integer conversion behavior.
+- Network aggregation uses current per-hotel dashboard metrics plus range revenue, arithmetic-mean occupancy and deterministic revenue ranking.
+- Missing configured bindings fail truthfully.
+- Direct Hotel-A identity selecting Hotel-B report is denied.
+- Local booking schema now represents `NO_SHOW` for reporting parity.
+- Artifact publication A -> B is non-circular and B is orchestration-only.
 
-## CF-I08 REWORK-1 — REPAIRED FINDINGS
+## CF-I08 REWORK-2 BLOCKING FINDINGS
 
-Full verdict: `.orchestration/reviews/CF-I08-CRITIC.md`.
+Full verdict: `.orchestration/reviews/CF-I08-REWORK-1-CRITIC.md`.
 
-1. `/analytics/kpis` does not preserve source dashboard semantics: target requires a date range and replaces current-month/today dashboard behavior with range/night metrics; arrivals/departures/today check-ins are omitted.
-2. ADR/RevPAR formulas drift from source. Source uses `ADR = revenue_month / active_bookings` and `RevPAR = occupancy × ADR / 100`; target uses revenue/occupied-nights and revenue/available-nights.
-3. Revenue reporting changes optional/default dates into required dates, inclusive end into exclusive end, rejects source-valid same-day ranges, excludes only `CANCELLED` instead of `CANCELLED + NO_SHOW`, and changes response contract/granularity.
-4. Occupancy reporting replaces the source inclusive daily series (`CONFIRMED|CHECKED_IN`, distinct room/day, all-room denominator) with a range aggregate based on `room_inventory_nights` and non-out-of-order rooms.
-5. Network analytics inherits the wrong range/night metrics and computes weighted network occupancy instead of the source arithmetic mean of per-hotel occupancy; source output field semantics also drift.
-6. Focal tests and parity documentation prove the target-invented formulas against themselves, violating source-derived parity/evidence obligations.
-7. Integrated browser evidence is route reachability/overflow-heavy for inherited modules and does not prove the contract's cross-module state/data continuity; Reports/Network material controls are under-exercised.
-8. Direct tenant-A → tenant-B report isolation is not explicitly proven.
+1. Adding `NO_SHOW` made an existing Housekeeping predicate unsafe: `/housekeeping/board` excludes only `CANCELLED`, so `NO_SHOW` can now become a departure/turnover cleaning item. Source excludes both Cancelled and NoShow.
+2. `/analytics/kpis` still replaces source `arrivals_today[]` / `departures_today[]` booking alerts with count-only fields, losing booking/guest/room/status semantics required by the accepted dashboard contract.
+3. Optional report defaults still drift for an `end`-only request: source defaults start from current date independently; target derives start from supplied end.
+4. Integrated browser evidence remains inherited-route reachability/overflow rather than a real cross-module state/data continuity journey.
+5. Dashboard focal evidence accepts multiple possible revenue values based on wall-clock drift instead of one deterministic source-derived result.
 
-Diagnosis repaired: `REPORTING_SOURCE_SEMANTICS_DRIFT + KPI_FORMULA_DRIFT + DATE_BOUNDARY_DRIFT + OCCUPANCY_MODEL_DRIFT + NETWORK_AGGREGATION_DRIFT + EVIDENCE_SELF_REFERENCE + INTEGRATED_BROWSER_GAP`.
+Diagnosis: `ENUM_EXPANSION_CROSS_MODULE_REGRESSION + DASHBOARD_RESPONSE_SHAPE_DRIFT + OPTIONAL_DATE_DEFAULT_DRIFT + INTEGRATED_STATE_EVIDENCE_GAP + WALL_CLOCK_TEST_NONDETERMINISM`.
+Human Gate: `NONE`.
+Blocker: `NONE` — routine REWORK-2 is authorized.
 
-Human Gate: `NONE`.  
-Blocker: `NONE` — routine rework authorized.
-
-## CF-I08 REWORK-1 AUTHORIZED WORK
+## CF-I08 REWORK-2 AUTHORIZED WORK
 
 Codex must autonomously:
 
-1. derive target expectations directly from the immutable source reporting repository/service/handlers before rewriting tests;
-2. restore source dashboard KPI semantics and fields;
-3. restore report optional/default dates, inclusive end, same-day validity and source non-revenue-state handling;
-4. restore the source daily occupancy series and exact state/room denominator rules;
-5. restore source ADR/RevPAR formulas and integer conversion semantics;
-6. rebuild network aggregation from source-equivalent per-hotel dashboard/report inputs, including arithmetic-mean occupancy and source-compatible output meanings;
-7. make reporting safe for source `NO_SHOW` semantics without prematurely entering CF-I09 real-data migration;
-8. add deterministic fixtures specifically distinguishing the accepted source formulas from the rejected target formulas;
-9. add direct Hotel-A identity → Hotel-B report denial with distinct fixture data;
-10. strengthen Reports/Network browser material actions and at least one deterministic cross-module state/data continuity journey at 375/390/430/768/1024;
-11. rerun fresh inherited CF-I03–CF-I07 plus focal/browser/type/build/Wrangler/route checks;
-12. correct parity/invariant evidence and promote the reporting root causes into the durable harness;
-13. publish fresh substantive artifact A plus orchestration-only boundary B and stop for Independent Critic.
-
-## CARRY-FORWARD DEBT
-
-Source `NoShow` is not yet fully representable in the target booking lifecycle/import model. CF-I08 reporting must nevertheless preserve/fail-safe source non-revenue semantics. Full import representation remains due no later than CF-I09; imported NoShow rows must not become Housekeeping tasks or report revenue/occupancy incorrectly.
+1. preserve every accepted REWORK-1 repair above;
+2. update Housekeeping departure/turnover predicates to exclude `NO_SHOW` and prove a NoShow departure creates no turnover/cleaning work;
+3. restore source-compatible `arrivals_today` and `departures_today` alert arrays in dashboard KPIs, with booking id, guest, room and status;
+4. restore source-independent optional date defaults and test no-param/start-only/end-only/same-day/inverted ranges;
+5. make dashboard fixtures deterministic and assert one exact revenue/occupancy/ADR/RevPAR/arrival/departure result;
+6. add at least one real browser cross-module state/data continuity journey using local API/D1 and user-visible surfaces;
+7. rerun fresh CF-I03–CF-I07 plus CF-I08 focal/browser/type/build/Wrangler/route checks;
+8. correct parity/invariant/Pre-Critic evidence and promote the reusable enum-expansion/default/output-shape lessons into the harness;
+9. publish fresh substantive artifact A plus orchestration-only boundary B and stop for Independent Critic.
 
 ## DELIVERY SEQUENCE
 
-`CF-I08 REWORK-1 → CF-I09 → complete local HMS Product Acceptance → Cloudflare test environment → Cloudflare validation → production-readiness/release gates`.
+`CF-I08 REWORK-2 → CF-I09 → complete local HMS Product Acceptance → Cloudflare test environment → Cloudflare validation → production-readiness/release gates`.
 
-No intermediate partial-product user test is required. After CF-I09, the complete application may be run locally for Human Product Acceptance before remote Cloudflare deployment.
+After CF-I09, the complete application may be run locally for Human Product Acceptance before remote Cloudflare deployment.
 
 ## PENDING HUMAN GATES
 
@@ -103,8 +90,8 @@ Local repository sync only if the Codex workspace has not consumed the latest re
 
 ## NEXT AUTHORIZED ACTION
 
-`CF_I08_AUTONOMOUS_REWORK_1_SOURCE_REPORTING_SEMANTICS_NETWORK_PARITY_INTEGRATED_BROWSER`
+`CF_I08_AUTONOMOUS_REWORK_2_NOSHOW_CROSS_MODULE_DASHBOARD_ALERTS_DATE_DEFAULTS_STATE_CONTINUITY`
 
-Artifact A `6030be4d63e0a4424d6142bce5bac4e6d9b5f422` is published with source-derived reporting implementation, migration, tests, browser evidence and invariant/gate evidence. Boundary B must contain only this state handoff and then stop for Independent Critic.
+Codex reads canonical state plus `.orchestration/reviews/CF-I08-REWORK-1-CRITIC.md`, executes REWORK-2 autonomously, publishes fresh artifact A + orchestration-only boundary B, then stops for Independent Critic.
 
 Do not begin CF-I09 before CF-I08 Independent Critic PASS. No production deployment, remote D1 creation/mutation, real-data migration, paid transition or cutover is authorized.
