@@ -2,6 +2,14 @@ import { describe, expect, it } from "vitest";
 import app from "./index";
 
 describe("API foundation", () => {
+  const database = (result: { ready: number } | null, rejects = false) => ({
+    prepare: () => ({ bind: () => ({ first: async () => {
+      if (rejects) throw new Error("D1 unavailable");
+      return result;
+    } }) }),
+  }) as unknown as D1Database;
+  const readyDatabase = database({ ready: 1 });
+
   it("serves a public health endpoint", async () => {
     const response = await app.request("http://example.test/health");
     expect(response.status).toBe(200);
@@ -17,5 +25,53 @@ describe("API foundation", () => {
       ACCESS_AUDIENCE: "audience",
     });
     expect(response.status).toBe(401);
+  });
+
+  it("reports readiness only after every required D1 is queryable", async () => {
+    const response = await app.request("http://example.test/ready", undefined, {
+      CONTROL_DB: readyDatabase,
+      HOTEL_DEMO_DB: readyDatabase,
+      HOTEL_SECOND_DB: readyDatabase,
+    });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      status: "ready",
+      dependencies: {
+        CONTROL_DB: "ready",
+        HOTEL_DEMO_DB: "ready",
+        HOTEL_SECOND_DB: "ready",
+      },
+    });
+  });
+
+  it("fails readiness truthfully when a required D1 cannot be queried", async () => {
+    const unavailableDatabase = database(null, true);
+    const response = await app.request("http://example.test/ready", undefined, {
+      CONTROL_DB: readyDatabase,
+      HOTEL_DEMO_DB: unavailableDatabase,
+      HOTEL_SECOND_DB: readyDatabase,
+    });
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({
+      status: "not_ready",
+      dependencies: {
+        CONTROL_DB: "ready",
+        HOTEL_DEMO_DB: "unavailable",
+        HOTEL_SECOND_DB: "ready",
+      },
+    });
+  });
+
+  it("rejects a reachable schema-only or partially imported D1 without an APPLIED manifest", async () => {
+    const response = await app.request("http://example.test/ready", undefined, {
+      CONTROL_DB: readyDatabase,
+      HOTEL_DEMO_DB: database(null),
+      HOTEL_SECOND_DB: readyDatabase,
+    });
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({
+      status: "not_ready",
+      dependencies: { HOTEL_DEMO_DB: "unavailable" },
+    });
   });
 });

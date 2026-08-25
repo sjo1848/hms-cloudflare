@@ -16,6 +16,12 @@ cd "$repo_dir"
 CI=1 npx wrangler d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc >/dev/null
 CI=1 npx wrangler d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >/dev/null
 CI=1 npx wrangler d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --command "
+  DELETE FROM control_audit_events;
+  DELETE FROM hotel_memberships;
+  DELETE FROM network_memberships;
+  DELETE FROM hotel_admin_metadata;
+  DELETE FROM access_identity_mappings;
+  DELETE FROM control_hotels;
   INSERT OR REPLACE INTO control_hotels (id,slug,operational_binding,active) VALUES ('hotel-a','hotel-a','HOTEL_DEMO_DB',1);
   INSERT OR REPLACE INTO access_identity_mappings (access_subject,email,active) VALUES ('subject-a','a@example.test',1);
   INSERT OR REPLACE INTO hotel_memberships (access_subject,hotel_id,role,active) VALUES ('subject-a','hotel-a','admin',1);

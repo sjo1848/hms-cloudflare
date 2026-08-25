@@ -31,7 +31,12 @@ export async function resolveAccessIdentity(
   request: Request,
   env: AccessEnvironment,
 ): Promise<AccessIdentity> {
-  if (env.ENVIRONMENT === "development" && env.LOCAL_DEV_AUTH === "true") {
+  // Local auth is additionally restricted to loopback hostnames. This remains
+  // safe under Wrangler, which may populate request.cf even for local requests,
+  // while a remotely deployed Worker cannot satisfy the hostname guard.
+  const hostname = new URL(request.url).hostname;
+  const localHost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+  if (env.ENVIRONMENT === "development" && env.LOCAL_DEV_AUTH === "true" && localHost) {
     const subject = request.headers.get("x-local-access-subject")?.trim();
     const email = request.headers.get("x-local-access-email")?.trim();
     if (!subject || !email) {

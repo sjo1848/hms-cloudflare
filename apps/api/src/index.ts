@@ -44,9 +44,34 @@ app.onError((error, context) => {
 
 app.get("/health", (context) => context.json({ status: "ok" }));
 
-app.get("/ready", (context) => {
-  const ready = Boolean(context.env.CONTROL_DB && context.env.HOTEL_DEMO_DB && context.env.HOTEL_SECOND_DB);
-  return context.json({ status: ready ? "ready" : "not_ready" }, ready ? 200 : 503);
+app.get("/ready", async (context) => {
+  const dependencies = {
+    CONTROL_DB: context.env.CONTROL_DB,
+    HOTEL_DEMO_DB: context.env.HOTEL_DEMO_DB,
+    HOTEL_SECOND_DB: context.env.HOTEL_SECOND_DB,
+  };
+  const checks = await Promise.all(Object.entries(dependencies).map(async ([name, database]) => {
+    if (!database) return [name, "unavailable"] as const;
+    try {
+      // The manifest is inserted last by the deterministic rehearsal. Requiring
+      // both its schema migration and APPLIED row rejects empty, schema-only and
+      // partially imported local stores.
+      const migration = name === "CONTROL_DB" ? "0004_migration_manifest.sql" : "0014_migration_source_parity.sql";
+      const result = await database.prepare(
+        `SELECT 1 AS ready FROM migration_rehearsals
+         WHERE status='APPLIED'
+           AND EXISTS (SELECT 1 FROM d1_migrations WHERE name=?1)
+         LIMIT 1`,
+      ).bind(migration).first<{ ready: number }>();
+      if (result?.ready !== 1) return [name, "unavailable"] as const;
+      return [name, "ready"] as const;
+    } catch {
+      return [name, "unavailable"] as const;
+    }
+  }));
+  const status = Object.fromEntries(checks);
+  const ready = Object.values(status).every((value) => value === "ready");
+  return context.json({ status: ready ? "ready" : "not_ready", dependencies: status }, ready ? 200 : 503);
 });
 
 app.use("/api/v1/*", async (context, next) => {

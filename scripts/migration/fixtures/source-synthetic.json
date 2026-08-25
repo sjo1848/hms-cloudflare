@@ -1,0 +1,573 @@
+{
+  "fixture_id": "cf-i09-synthetic-v1",
+  "source_baseline": "4df56a6217caab611f2f5fcbd98bde8386bb5629",
+  "imported_at": "2026-08-24T12:00:00.000Z",
+  "target_adaptations": {
+    "network_admin_user_ids": ["14000000-0000-0000-0000-000000000001"],
+    "hotel_routes": {
+      "10000000-0000-0000-0000-000000000001": {
+        "slug": "hotel-norte",
+        "binding": "HOTEL_DEMO_DB"
+      },
+      "20000000-0000-0000-0000-000000000002": {
+        "slug": "hotel-sur",
+        "binding": "HOTEL_SECOND_DB"
+      }
+    },
+    "reconciliation_report_range": {
+      "start": "2026-08-20",
+      "end": "2026-08-28"
+    }
+  },
+  "hotels": [
+    {
+      "id": "10000000-0000-0000-0000-000000000001",
+      "name": "Hotel Norte",
+      "address": "Av. Norte 100",
+      "config_json": {
+        "breakfast": true,
+        "timezone": "America/Argentina/Buenos_Aires"
+      },
+      "plan_tier": "PRO",
+      "created_at": "2025-01-01T09:00:00-03:00"
+    },
+    {
+      "id": "20000000-0000-0000-0000-000000000002",
+      "name": "Hotel Sur",
+      "address": "Av. Sur 200",
+      "config_json": {
+        "breakfast": false,
+        "timezone": "America/Argentina/Buenos_Aires"
+      },
+      "plan_tier": "BASIC",
+      "created_at": "2025-02-01T09:00:00-03:00"
+    }
+  ],
+  "users": [
+    {
+      "id": "14000000-0000-0000-0000-000000000001",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "username": "ana-admin",
+      "password_hash": "$synthetic$never-import",
+      "role": "admin",
+      "created_at": "2025-01-02T09:00:00-03:00"
+    },
+    {
+      "id": "14000000-0000-0000-0000-000000000002",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "username": "leo-reception",
+      "password_hash": "$synthetic$never-import",
+      "role": "receptionist",
+      "created_at": "2025-01-03T09:00:00-03:00"
+    },
+    {
+      "id": "24000000-0000-0000-0000-000000000001",
+      "hotel_id": "20000000-0000-0000-0000-000000000002",
+      "username": "sol-ops",
+      "password_hash": "$synthetic$never-import",
+      "role": "ops",
+      "created_at": "2025-02-02T09:00:00-03:00"
+    },
+    {
+      "id": "24000000-0000-0000-0000-000000000002",
+      "hotel_id": "20000000-0000-0000-0000-000000000002",
+      "username": "max-housekeeping",
+      "password_hash": "$synthetic$never-import",
+      "role": "housekeeping",
+      "created_at": "2025-02-03T09:00:00-03:00"
+    }
+  ],
+  "refresh_tokens": [
+    {
+      "id": "14500000-0000-0000-0000-000000000001",
+      "user_id": "14000000-0000-0000-0000-000000000001",
+      "token_hash": "$synthetic$refresh-never-import",
+      "expires_at": "2026-09-01T12:00:00Z",
+      "revoked_at": null,
+      "created_at": "2026-08-01T12:00:00Z",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "session_id": "14600000-0000-0000-0000-000000000001",
+      "device_id": "synthetic-device"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "11000000-0000-0000-0000-000000000001",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "room_number": "101",
+      "room_type": "STANDARD",
+      "status": "AVAILABLE",
+      "price_cents": 10000,
+      "version": 4
+    },
+    {
+      "id": "11000000-0000-0000-0000-000000000002",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "room_number": "102",
+      "room_type": "SUITE",
+      "status": "OCCUPIED",
+      "price_cents": 15000,
+      "version": 7
+    },
+    {
+      "id": "11000000-0000-0000-0000-000000000003",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "room_number": "103",
+      "room_type": "STANDARD",
+      "status": "DIRTY",
+      "price_cents": 9000,
+      "version": 3
+    },
+    {
+      "id": "21000000-0000-0000-0000-000000000001",
+      "hotel_id": "20000000-0000-0000-0000-000000000002",
+      "room_number": "201",
+      "room_type": "STANDARD",
+      "status": "AVAILABLE",
+      "price_cents": 8000,
+      "version": 2
+    },
+    {
+      "id": "21000000-0000-0000-0000-000000000002",
+      "hotel_id": "20000000-0000-0000-0000-000000000002",
+      "room_number": "202",
+      "room_type": "SUITE",
+      "status": "MAINTENANCE",
+      "price_cents": 12000,
+      "version": 5
+    }
+  ],
+  "guests": [
+    {
+      "id": "12000000-0000-0000-0000-000000000001",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "full_name": "Ada Norte",
+      "email": "ada@example.invalid",
+      "phone": "+540001",
+      "created_at": "2026-08-01T10:30:00-03:00"
+    },
+    {
+      "id": "12000000-0000-0000-0000-000000000002",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "full_name": "Bruno Norte",
+      "email": "bruno@example.invalid",
+      "phone": null,
+      "created_at": "2026-08-02T10:30:00-03:00"
+    },
+    {
+      "id": "22000000-0000-0000-0000-000000000001",
+      "hotel_id": "20000000-0000-0000-0000-000000000002",
+      "full_name": "Carla Sur",
+      "email": "carla@example.invalid",
+      "phone": "+540002",
+      "created_at": "2026-08-03T10:30:00-03:00"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "13000000-0000-0000-0000-000000000005",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "room_id": "11000000-0000-0000-0000-000000000001",
+      "guest_id": "12000000-0000-0000-0000-000000000001",
+      "guest_name": "Ada Norte",
+      "check_in": "2026-08-24",
+      "check_out": "2026-08-26",
+      "total_price_cents": 22000,
+      "status": "NO_SHOW",
+      "created_at": "2026-08-01T14:00:00-03:00",
+      "check_in_guests_count": null,
+      "check_in_reference": null,
+      "check_in_document_verified": null,
+      "check_in_contact_confirmed": null,
+      "check_in_stay_confirmed": null,
+      "checked_in_at": null,
+      "checked_in_by_user_id": null,
+      "check_out_payment_policy": null,
+      "check_out_reference": null,
+      "check_out_charges_reviewed": null,
+      "check_out_room_release_confirmed": null,
+      "check_out_housekeeping_handoff": null,
+      "checked_out_at": null,
+      "checked_out_by_user_id": null,
+      "terminal_reason": "Huésped no se presentó",
+      "terminal_recorded_at": "2026-08-24T18:30:00-03:00",
+      "terminal_recorded_by_user_id": "14000000-0000-0000-0000-000000000002",
+      "late_arrival_eta": null,
+      "late_arrival_note": null,
+      "late_arrival_recorded_at": null,
+      "late_arrival_recorded_by_user_id": null
+    },
+    {
+      "id": "13000000-0000-0000-0000-000000000002",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "room_id": "11000000-0000-0000-0000-000000000002",
+      "guest_id": "12000000-0000-0000-0000-000000000002",
+      "guest_name": "Bruno Norte",
+      "check_in": "2026-08-24",
+      "check_out": "2026-08-28",
+      "total_price_cents": 40000,
+      "status": "CHECKED_IN",
+      "created_at": "2026-08-02T14:00:00-03:00",
+      "check_in_guests_count": 2,
+      "check_in_reference": "CI-002",
+      "check_in_document_verified": true,
+      "check_in_contact_confirmed": true,
+      "check_in_stay_confirmed": true,
+      "checked_in_at": "2026-08-24T12:00:00-03:00",
+      "checked_in_by_user_id": "14000000-0000-0000-0000-000000000002",
+      "check_out_payment_policy": null,
+      "check_out_reference": null,
+      "check_out_charges_reviewed": null,
+      "check_out_room_release_confirmed": null,
+      "check_out_housekeeping_handoff": null,
+      "checked_out_at": null,
+      "checked_out_by_user_id": null,
+      "terminal_reason": null,
+      "terminal_recorded_at": null,
+      "terminal_recorded_by_user_id": null,
+      "late_arrival_eta": "2026-08-24T11:30:00-03:00",
+      "late_arrival_note": "Vuelo demorado",
+      "late_arrival_recorded_at": "2026-08-24T08:00:00-03:00",
+      "late_arrival_recorded_by_user_id": "14000000-0000-0000-0000-000000000002"
+    },
+    {
+      "id": "13000000-0000-0000-0000-000000000003",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "room_id": "11000000-0000-0000-0000-000000000003",
+      "guest_id": "12000000-0000-0000-0000-000000000001",
+      "guest_name": "Ada Norte",
+      "check_in": "2026-08-20",
+      "check_out": "2026-08-22",
+      "total_price_cents": 18000,
+      "status": "CHECKED_OUT",
+      "created_at": "2026-07-20T14:00:00-03:00",
+      "check_in_guests_count": 1,
+      "check_in_reference": "CI-003",
+      "check_in_document_verified": true,
+      "check_in_contact_confirmed": true,
+      "check_in_stay_confirmed": true,
+      "checked_in_at": "2026-08-20T12:00:00-03:00",
+      "checked_in_by_user_id": "14000000-0000-0000-0000-000000000002",
+      "check_out_payment_policy": "settled",
+      "check_out_reference": "CO-003",
+      "check_out_charges_reviewed": true,
+      "check_out_room_release_confirmed": true,
+      "check_out_housekeeping_handoff": true,
+      "checked_out_at": "2026-08-22T10:00:00-03:00",
+      "checked_out_by_user_id": "14000000-0000-0000-0000-000000000002",
+      "terminal_reason": null,
+      "terminal_recorded_at": null,
+      "terminal_recorded_by_user_id": null,
+      "late_arrival_eta": null,
+      "late_arrival_note": null,
+      "late_arrival_recorded_at": null,
+      "late_arrival_recorded_by_user_id": null
+    },
+    {
+      "id": "13000000-0000-0000-0000-000000000001",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "room_id": "11000000-0000-0000-0000-000000000001",
+      "guest_id": null,
+      "guest_name": "Legado Sin Ficha",
+      "check_in": "2026-08-25",
+      "check_out": "2026-08-27",
+      "total_price_cents": 21500,
+      "status": "CONFIRMED",
+      "created_at": "2026-08-05T14:00:00-03:00",
+      "check_in_guests_count": null,
+      "check_in_reference": null,
+      "check_in_document_verified": null,
+      "check_in_contact_confirmed": null,
+      "check_in_stay_confirmed": null,
+      "checked_in_at": null,
+      "checked_in_by_user_id": null,
+      "check_out_payment_policy": null,
+      "check_out_reference": null,
+      "check_out_charges_reviewed": null,
+      "check_out_room_release_confirmed": null,
+      "check_out_housekeeping_handoff": null,
+      "checked_out_at": null,
+      "checked_out_by_user_id": null,
+      "terminal_reason": null,
+      "terminal_recorded_at": null,
+      "terminal_recorded_by_user_id": null,
+      "late_arrival_eta": null,
+      "late_arrival_note": null,
+      "late_arrival_recorded_at": null,
+      "late_arrival_recorded_by_user_id": null
+    },
+    {
+      "id": "13000000-0000-0000-0000-000000000004",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "room_id": "11000000-0000-0000-0000-000000000001",
+      "guest_id": "12000000-0000-0000-0000-000000000002",
+      "guest_name": "Bruno Norte",
+      "check_in": "2026-08-25",
+      "check_out": "2026-08-27",
+      "total_price_cents": 21000,
+      "status": "CANCELLED",
+      "created_at": "2026-08-04T14:00:00-03:00",
+      "check_in_guests_count": null,
+      "check_in_reference": null,
+      "check_in_document_verified": null,
+      "check_in_contact_confirmed": null,
+      "check_in_stay_confirmed": null,
+      "checked_in_at": null,
+      "checked_in_by_user_id": null,
+      "check_out_payment_policy": null,
+      "check_out_reference": null,
+      "check_out_charges_reviewed": null,
+      "check_out_room_release_confirmed": null,
+      "check_out_housekeeping_handoff": null,
+      "checked_out_at": null,
+      "checked_out_by_user_id": null,
+      "terminal_reason": "Cancelación solicitada",
+      "terminal_recorded_at": "2026-08-10T14:00:00-03:00",
+      "terminal_recorded_by_user_id": "14000000-0000-0000-0000-000000000002",
+      "late_arrival_eta": null,
+      "late_arrival_note": null,
+      "late_arrival_recorded_at": null,
+      "late_arrival_recorded_by_user_id": null
+    },
+    {
+      "id": "23000000-0000-0000-0000-000000000003",
+      "hotel_id": "20000000-0000-0000-0000-000000000002",
+      "room_id": "21000000-0000-0000-0000-000000000001",
+      "guest_id": "22000000-0000-0000-0000-000000000001",
+      "guest_name": "Carla Sur",
+      "check_in": "2026-08-24",
+      "check_out": "2026-08-25",
+      "total_price_cents": 7000,
+      "status": "NO_SHOW",
+      "created_at": "2026-08-10T14:00:00Z",
+      "check_in_guests_count": null,
+      "check_in_reference": null,
+      "check_in_document_verified": null,
+      "check_in_contact_confirmed": null,
+      "check_in_stay_confirmed": null,
+      "checked_in_at": null,
+      "checked_in_by_user_id": null,
+      "check_out_payment_policy": null,
+      "check_out_reference": null,
+      "check_out_charges_reviewed": null,
+      "check_out_room_release_confirmed": null,
+      "check_out_housekeeping_handoff": null,
+      "checked_out_at": null,
+      "checked_out_by_user_id": null,
+      "terminal_reason": "No show",
+      "terminal_recorded_at": "2026-08-24T20:00:00Z",
+      "terminal_recorded_by_user_id": "24000000-0000-0000-0000-000000000001",
+      "late_arrival_eta": null,
+      "late_arrival_note": null,
+      "late_arrival_recorded_at": null,
+      "late_arrival_recorded_by_user_id": null
+    },
+    {
+      "id": "23000000-0000-0000-0000-000000000001",
+      "hotel_id": "20000000-0000-0000-0000-000000000002",
+      "room_id": "21000000-0000-0000-0000-000000000001",
+      "guest_id": "22000000-0000-0000-0000-000000000001",
+      "guest_name": "Carla Sur",
+      "check_in": "2026-08-26",
+      "check_out": "2026-08-28",
+      "total_price_cents": 16000,
+      "status": "CONFIRMED",
+      "created_at": "2026-08-11T14:00:00Z",
+      "check_in_guests_count": null,
+      "check_in_reference": null,
+      "check_in_document_verified": null,
+      "check_in_contact_confirmed": null,
+      "check_in_stay_confirmed": null,
+      "checked_in_at": null,
+      "checked_in_by_user_id": null,
+      "check_out_payment_policy": null,
+      "check_out_reference": null,
+      "check_out_charges_reviewed": null,
+      "check_out_room_release_confirmed": null,
+      "check_out_housekeeping_handoff": null,
+      "checked_out_at": null,
+      "checked_out_by_user_id": null,
+      "terminal_reason": null,
+      "terminal_recorded_at": null,
+      "terminal_recorded_by_user_id": null,
+      "late_arrival_eta": null,
+      "late_arrival_note": null,
+      "late_arrival_recorded_at": null,
+      "late_arrival_recorded_by_user_id": null
+    }
+  ],
+  "room_holds": [
+    {
+      "id": "15000000-0000-0000-0000-000000000001",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "room_id": "11000000-0000-0000-0000-000000000003",
+      "start_date": "2026-09-01",
+      "end_date": "2026-09-02",
+      "reason": "Inspección preventiva",
+      "created_by_user_id": "14000000-0000-0000-0000-000000000001",
+      "created_at": "2026-08-20T12:00:00-03:00",
+      "hold_type": "MAINTENANCE"
+    }
+  ],
+  "maintenance_cases": [
+    {
+      "id": "16000000-0000-0000-0000-000000000001",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "room_id": "11000000-0000-0000-0000-000000000003",
+      "status": "RESOLVED",
+      "priority": "HIGH",
+      "reason": "Pérdida de agua en baño",
+      "assigned_to": "Mantenimiento Norte",
+      "reported_by_user_id": "14000000-0000-0000-0000-000000000001",
+      "reported_at": "2026-08-21T08:00:00-03:00",
+      "resolution_note": "Válvula reemplazada y probada",
+      "resolved_by_user_id": "14000000-0000-0000-0000-000000000001",
+      "resolved_at": "2026-08-22T08:00:00-03:00",
+      "return_status": "DIRTY"
+    },
+    {
+      "id": "26000000-0000-0000-0000-000000000001",
+      "hotel_id": "20000000-0000-0000-0000-000000000002",
+      "room_id": "21000000-0000-0000-0000-000000000002",
+      "status": "OPEN",
+      "priority": "URGENT",
+      "reason": "Aire acondicionado fuera de servicio",
+      "assigned_to": "Mantenimiento Sur",
+      "reported_by_user_id": "24000000-0000-0000-0000-000000000001",
+      "reported_at": "2026-08-23T09:00:00Z",
+      "resolution_note": null,
+      "resolved_by_user_id": null,
+      "resolved_at": null,
+      "return_status": null
+    }
+  ],
+  "extra_charges": [
+    {
+      "id": "19000000-0000-0000-0000-000000000001",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "booking_id": "13000000-0000-0000-0000-000000000001",
+      "description": "Minibar",
+      "amount_cents": 1500,
+      "category": "MINIBAR",
+      "created_at": "2026-08-25T20:00:00Z"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "19100000-0000-0000-0000-000000000001",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "booking_id": "13000000-0000-0000-0000-000000000001",
+      "amount_cents": 21500,
+      "paid_amount_cents": 0,
+      "status": "PENDING",
+      "payment_method": "CASH",
+      "payment_reference": null,
+      "paid_at": null,
+      "created_at": "2026-08-25T20:05:00Z"
+    },
+    {
+      "id": "19100000-0000-0000-0000-000000000002",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "booking_id": "13000000-0000-0000-0000-000000000003",
+      "amount_cents": 18000,
+      "paid_amount_cents": 18000,
+      "status": "PAID",
+      "payment_method": "CASH",
+      "payment_reference": "PAY-A-003",
+      "paid_at": "2026-08-22T09:30:00Z",
+      "created_at": "2026-08-20T12:00:00Z"
+    },
+    {
+      "id": "29100000-0000-0000-0000-000000000001",
+      "hotel_id": "20000000-0000-0000-0000-000000000002",
+      "booking_id": "23000000-0000-0000-0000-000000000001",
+      "amount_cents": 16000,
+      "paid_amount_cents": 12000,
+      "status": "PENDING",
+      "payment_method": "CARD",
+      "payment_reference": "PAY-B-001",
+      "paid_at": null,
+      "created_at": "2026-08-11T14:00:00Z"
+    }
+  ],
+  "payment_entries": [
+    {
+      "id": "19200000-0000-0000-0000-000000000001",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "invoice_id": "19100000-0000-0000-0000-000000000002",
+      "booking_id": "13000000-0000-0000-0000-000000000003",
+      "amount_cents": 18000,
+      "payment_method": "CASH",
+      "payment_reference": "PAY-A-003",
+      "note": "Pago checkout",
+      "received_by_user_id": "14000000-0000-0000-0000-000000000002",
+      "received_at": "2026-08-22T09:30:00Z",
+      "created_at": "2026-08-22T09:30:00Z"
+    },
+    {
+      "id": "29200000-0000-0000-0000-000000000001",
+      "hotel_id": "20000000-0000-0000-0000-000000000002",
+      "invoice_id": "29100000-0000-0000-0000-000000000001",
+      "booking_id": "23000000-0000-0000-0000-000000000001",
+      "amount_cents": 12000,
+      "payment_method": "CARD",
+      "payment_reference": "PAY-B-001",
+      "note": "Anticipo",
+      "received_by_user_id": "24000000-0000-0000-0000-000000000001",
+      "received_at": "2026-08-12T09:30:00Z",
+      "created_at": "2026-08-12T09:30:00Z"
+    }
+  ],
+  "cash_closures": [
+    {
+      "id": "19300000-0000-0000-0000-000000000001",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "user_id": "14000000-0000-0000-0000-000000000002",
+      "total_amount_cents": 18000,
+      "cash_amount_cents": 18000,
+      "card_amount_cents": 0,
+      "payment_count": 1,
+      "counted_cash_amount_cents": 18000,
+      "cash_difference_cents": 0,
+      "opening_time": "2026-08-22T00:00:00Z",
+      "closing_time": "2026-08-22T23:00:00Z",
+      "handoff_to": "Turno noche",
+      "notes": "Cierre sintético",
+      "created_at": "2026-08-22T23:00:00Z"
+    },
+    {
+      "id": "29300000-0000-0000-0000-000000000001",
+      "hotel_id": "20000000-0000-0000-0000-000000000002",
+      "user_id": "24000000-0000-0000-0000-000000000001",
+      "total_amount_cents": 12000,
+      "cash_amount_cents": 0,
+      "card_amount_cents": 12000,
+      "payment_count": 1,
+      "counted_cash_amount_cents": 0,
+      "cash_difference_cents": 0,
+      "opening_time": "2026-08-12T00:00:00Z",
+      "closing_time": "2026-08-12T23:00:00Z",
+      "handoff_to": "Turno noche",
+      "notes": "Cierre sintético",
+      "created_at": "2026-08-12T23:00:00Z"
+    }
+  ],
+  "audit_events": [
+    {
+      "id": "19500000-0000-0000-0000-000000000001",
+      "hotel_id": "10000000-0000-0000-0000-000000000001",
+      "user_id": "14000000-0000-0000-0000-000000000001",
+      "action": "USER_ROLE_CONFIRMED",
+      "ip_address": "192.0.2.1",
+      "created_at": "2026-08-20T12:00:00Z"
+    },
+    {
+      "id": "29500000-0000-0000-0000-000000000001",
+      "hotel_id": "20000000-0000-0000-0000-000000000002",
+      "user_id": "24000000-0000-0000-0000-000000000001",
+      "action": "PLAN_CONFIRMED",
+      "ip_address": "192.0.2.2",
+      "created_at": "2026-08-20T13:00:00Z"
+    }
+  ]
+}

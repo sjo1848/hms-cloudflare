@@ -27,7 +27,7 @@ describe("Cloudflare Access identity boundary", () => {
 
   it("requires explicit opt-in for local identity headers", async () => {
     const identity = await resolveAccessIdentity(
-      new Request("https://example.test/api/v1/auth/me", {
+      new Request("http://127.0.0.1:8787/api/v1/auth/me", {
         headers: {
           "x-local-access-subject": "local-user",
           "x-local-access-email": "local@example.test",
@@ -50,5 +50,29 @@ describe("Cloudflare Access identity boundary", () => {
         { ENVIRONMENT: "production", LOCAL_DEV_AUTH: "true" },
       ),
     ).rejects.toThrow(AccessAuthenticationError);
+  });
+
+  it("does not enable local auth on a non-loopback host even with development vars", async () => {
+    const request = new Request("https://example.test/api/v1/auth/me", {
+      headers: {
+        "x-local-access-subject": "local-user",
+        "x-local-access-email": "local@example.test",
+      },
+    });
+    Object.defineProperty(request, "cf", { value: { colo: "EZE" } });
+    await expect(resolveAccessIdentity(request, { ENVIRONMENT: "development", LOCAL_DEV_AUTH: "true" }))
+      .rejects.toThrow(AccessAuthenticationError);
+  });
+
+  it("accepts loopback local auth even when Wrangler supplies request.cf", async () => {
+    const request = new Request("http://127.0.0.1:8787/api/v1/auth/me", {
+      headers: {
+        "x-local-access-subject": "local-user",
+        "x-local-access-email": "local@example.test",
+      },
+    });
+    Object.defineProperty(request, "cf", { value: { colo: "EZE" } });
+    await expect(resolveAccessIdentity(request, { ENVIRONMENT: "development", LOCAL_DEV_AUTH: "true" }))
+      .resolves.toEqual({ subject: "local-user", email: "local@example.test" });
   });
 });

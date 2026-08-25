@@ -13,3 +13,7 @@ body { margin: 0; } main { max-width: 1120px; margin: 0 auto; padding: 48px 24px
 @media (max-width: 900px) { nav { flex-wrap:wrap; gap:10px; } }
 @media (max-width: 767px) { .kpi-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); } .report-controls label, .report-controls input, .report-controls button { width:100%; box-sizing:border-box; } }
 @media (max-width: 767px) { .admin-user-detail { position:fixed; inset:auto 0 0; z-index:10; max-height:80vh; overflow:auto; border-radius:16px 16px 0 0; box-shadow:0 -8px 30px rgba(23,33,27,.22); margin:0; } }
+/* Development-only synthetic identity selector for local acceptance. */
+.local-dev-identity { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; margin: 0 0 1rem; padding: .75rem 1rem; border: 1px dashed #94a3b8; border-radius: .5rem; background: #f8fafc; }
+.local-dev-identity label { display: flex; gap: .5rem; align-items: center; }
+.local-dev-identity small { color: #475569; }

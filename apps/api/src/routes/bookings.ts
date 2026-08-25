@@ -43,8 +43,16 @@ export function assertBookingUpdateApplied(result: BookingUpdateResult): void {
   if (result.meta.changes !== 1) throw ApiError.conflict("Booking became unavailable during update");
 }
 
+export function bookingStatusView(value: string): string {
+  return ({ CONFIRMED: "Confirmed", CANCELLED: "Cancelled", CHECKED_IN: "CheckedIn", CHECKED_OUT: "CheckedOut", NO_SHOW: "NoShow" } as Record<string, string>)[value] ?? value;
+}
+
+export function isBookingListStatus(value: string): boolean {
+  return ["CONFIRMED", "CANCELLED", "CHECKED_IN", "CHECKED_OUT", "NO_SHOW"].includes(value.toUpperCase());
+}
+
 function view(row: BookingRow, hotelId: string) {
-  const status = ({ CONFIRMED: "Confirmed", CANCELLED: "Cancelled", CHECKED_IN: "CheckedIn", CHECKED_OUT: "CheckedOut" } as Record<string, string>)[row.status] ?? row.status;
+  const status = bookingStatusView(row.status);
   return {
     id: row.id, hotel_id: hotelId, guest_id: row.guest_id, guest_name: row.guest_name, guest_email: row.guest_email,
     room_id: row.room_id, room_number: row.room_number, room_type: row.room_type, check_in: row.check_in, check_out: row.check_out,
@@ -87,7 +95,7 @@ export function createBookingRoutes(): BookingApp {
   app.get("/bookings", async (context) => {
     requireCapability(context, "bookings.read");
     const status = context.req.query("status");
-    if (status && !["CONFIRMED", "CANCELLED"].includes(status.toUpperCase())) throw ApiError.badRequest("status is invalid");
+    if (status && !isBookingListStatus(status)) throw ApiError.badRequest("status is invalid");
     const start = context.req.query("start"); const end = context.req.query("end");
     const range = start || end ? dateRange(start, end) : null;
     const limitInput = context.req.query("limit"); const limit = limitInput == null ? 100 : Number(limitInput);
