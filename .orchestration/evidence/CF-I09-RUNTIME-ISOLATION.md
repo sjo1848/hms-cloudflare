@@ -18,5 +18,8 @@ Recorded 2026-08-25 before any Artifact A2 publication.
 - Fresh D1 persist directory, full `rehearse.mjs` across CONTROL_DB + HOTEL_DEMO_DB + HOTEL_SECOND_DB: PASS in 46 seconds under Wrangler 4.125.0.
 - No Wrangler version bisect was started because the current version passes the minimal and isolated full rehearsal. The earlier hang is therefore being investigated as shared-persistence/process contention, not yet attributed to Wrangler.
 - Full `test-rehearsal.sh` with a clean temporary persist directory and a 600-second outer timeout: PASS (preflight, timezone, clean/replay/partial/reconcile determinism and migration Vitest 2/2).
+- `npm run check`, `npm run types:check`, `npm run web:build`: PASS (24 tests, generated types and production build).
+- Inherited CF-I03, CF-I04, CF-I05, CF-I06, CF-I07 and CF-I08 API regressions: PASS.
+- The first integrated smoke attempt exposed a stale acceptance expectation: the browser used an ordinary hotel admin for network-only routes. The acceptance profile now explicitly includes `Network · SaaS Admin`; a clean browser rerun remains required before Artifact A2.
 
 No remote, paid, production, or real-data operation was performed.

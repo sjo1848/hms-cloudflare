@@ -8,7 +8,7 @@
   "last_completed_task": "CF-I09-INDEPENDENT-CRITIC-REWORK-1",
   "last_completed_head": "a972bca40ed60505bc42f5ae560977886c2972ab",
   "work_branch": "main",
-  "next_action": "RUN_CF_I09_FULL_READINESS_SMOKE_AND_INHERITED_REGRESSIONS_AFTER_ISOLATED_RUNTIME_PASS",
+  "next_action": "RERUN_CF_I09_BROWSER_SMOKE_WITH_EXPLICIT_SAAS_ADMIN_PROFILE_THEN_PRECRITIC_GATE",
   "stop_reason": null,
   "event": {
     "seq": 83,
