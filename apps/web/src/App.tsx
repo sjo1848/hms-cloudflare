@@ -16,6 +16,7 @@ const localDevProfiles: LocalDevProfile[] = localAcceptanceEnabled ? [
   { label: "Hotel Norte · Reception", subject: "source-user:14000000-0000-0000-0000-000000000002", email: "leo-reception@migration.invalid", hotelId: "10000000-0000-0000-0000-000000000001" },
   { label: "Hotel Sur · Operations", subject: "source-user:24000000-0000-0000-0000-000000000001", email: "sol-ops@migration.invalid", hotelId: "20000000-0000-0000-0000-000000000002" },
   { label: "Hotel Sur · Housekeeping", subject: "source-user:24000000-0000-0000-0000-000000000002", email: "max-housekeeping@migration.invalid", hotelId: "20000000-0000-0000-0000-000000000002" },
+  { label: "Network · SaaS Admin", subject: "source-user:14000000-0000-0000-0000-000000000003", email: "saas-admin@migration.invalid", hotelId: "10000000-0000-0000-0000-000000000001" },
 ] : [];
 let activeLocalDevProfile = localDevProfiles[0];
 
