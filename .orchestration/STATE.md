@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-25  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 REWORK-3 ARTIFACT PUBLISHED — INDEPENDENT CRITIC PENDING`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 REWORK-4 AUTHORIZED`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving product behavior, domain semantics, security, financial integrity and operational safety. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -15,8 +15,8 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - Source: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`.
 - Target: `sjo1848/hms-cloudflare`.
 - Active contract: `.orchestration/contracts/CF-I08.md`.
-- Current Independent Critic: `.orchestration/reviews/CF-I08-REWORK-2-CRITIC.md`.
-- Binding REWORK-3 Pre-Critic supplement: `.orchestration/PRECRITIC-CF-I08-REWORK-3.md`.
+- Current Independent Critic: `.orchestration/reviews/CF-I08-REWORK-3-CRITIC.md`.
+- Prior Critic: `.orchestration/reviews/CF-I08-REWORK-2-CRITIC.md`.
 - Invariants: `.orchestration/INVARIANTS.md`.
 - Canonical Pre-Critic Gate: `.orchestration/PRECRITIC-GATE.md`.
 - Machine state: `.orchestration/STATUS.json`.
@@ -33,55 +33,54 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - CF-I08 initial artifact `ed7afe4722650933bc704c1d5f02150cbda82996` — Independent Critic REWORK-1.
 - CF-I08 REWORK-1 artifact A `6030be4d63e0a4424d6142bce5bac4e6d9b5f422`, boundary B `e6aabf0256cf33bbc8817f21238ee460f95708a6` — Independent Critic REWORK-2.
 - CF-I08 REWORK-2 artifact A `2fb282eafcc578e8f99d7d64c7205d07c197ce0f`, boundary B `655471550b6536efcd7a61be7f4a506032139ed3` — Independent Critic REWORK-3.
-- CF-I08 REWORK-3 artifact A `fe174524851e5d2f64baced1001a70466cfc300e` — fresh inherited/focal/browser/build evidence complete; awaiting boundary B publication.
+- CF-I08 REWORK-3 artifact A `fe174524851e5d2f64baced1001a70466cfc300e`, boundary B `1d64d1553d7a087e03bad05f960a83360fb43f27` — Independent Critic REWORK-4.
 
 ## CF-I08 ACCEPTED FUNCTIONAL FOUNDATION — PRESERVE
 
-The following repairs are accepted and must not regress during REWORK-3:
-
 - revenue reports preserve source inclusive date semantics, same-day ranges and `CANCELLED` + `NO_SHOW` non-revenue exclusion;
 - occupancy reports preserve the source inclusive daily series, distinct-room numerator, `CONFIRMED|CHECKED_IN` inclusion and all-room denominator;
-- dashboard ADR/RevPAR formulas match the immutable source and remain integer-cent/zero-safe;
+- dashboard ADR/RevPAR formulas match immutable source semantics and remain integer-cent/zero-safe;
 - network aggregation uses source-equivalent per-hotel dashboard metrics, range revenue, arithmetic-mean occupancy and deterministic revenue ranking;
 - missing configured operational bindings fail truthfully;
 - direct Hotel-A identity selecting Hotel-B report data is denied;
 - local booking schema represents `NO_SHOW` for parity;
 - Housekeeping excludes `NO_SHOW` from departure/turnover work;
-- `/analytics/kpis` returns source-compatible `arrivals_today[]` and `departures_today[]` booking alerts with booking/guest/room/status fields;
-- optional report dates are implemented independently from UTC today;
-- browser continuity performs a real Housekeeping maintenance mutation and observes `Maintenance` on the Rooms surface;
+- `/analytics/kpis` returns source-compatible `arrivals_today[]` and `departures_today[]` alerts;
+- optional report dates are independently derived from UTC today;
+- dashboard month-boundary focal expectations are source-derived;
+- end-only default-window evidence distinguishes today-based source defaults from opposite-boundary derivation;
+- CF-I03 cleanup is full-schema/FK aware and fresh inherited CF-I03/04/05/06/07 PASS is reported for the REWORK-3 artifact;
+- Reports and Network material controls execute at 375/390/430/768/1024;
 - publication A→B remains non-circular and B changes orchestration metadata only.
 
-## CF-I08 REWORK-3 BLOCKING FINDINGS
+## CF-I08 REWORK-4 BLOCKING FINDINGS
 
-Full verdict: `.orchestration/reviews/CF-I08-REWORK-2-CRITIC.md`.
+Full verdict: `.orchestration/reviews/CF-I08-REWORK-3-CRITIC.md`.
 
-1. Contracted responsive coverage regressed: the published browser script executes Reports/integrated navigation only at 375 and Network only at 1024. The contract requires material integrated evidence at `375 / 390 / 430 / 768 / 1024`.
-2. Required fresh inherited regression is UNPROVEN: canonical publication state records CF-I03 fixture cleanup failed on foreign-key ordering before assertions. The contract requires fresh CF-I03/04/05/06/07 PASS.
-3. Evidence files overclaim all-five-width browser PASS and fresh inherited PASS despite the executable/canonical result above.
-4. Dashboard current-month focal is calendar-fragile: its hard-coded 12000 revenue expectation is wrong on the first UTC day of a month because the departure booking's check-in is then in the previous month.
-5. No-param/start-only/end-only tests currently assert HTTP 200 but do not prove the effective independent source default window; implementation appears corrected but executable semantic proof is incomplete.
+1. REWORK-3 required integrated navigation/state observation at every contracted width. The current browser runner executes Reports and Network controls at all five widths, but the real Housekeeping→Rooms state continuity is observed only once after the Reports loop, at 1024; representative inherited-module navigation at each width is absent.
+2. Evidence files overstate integrated all-width coverage, blocking `INV-RESP-001` and `INV-EVID-001`.
+3. Optional date defaults are only partially proven semantically: end-only has a discriminating result assertion, while no-param and start-only still assert only HTTP 200 instead of their effective source window/result.
 
-Diagnosis: `RESPONSIVE_WIDTH_COVERAGE_REGRESSION + INHERITED_REGRESSION_UNPROVEN + EVIDENCE_CANON_CONTRADICTION + MONTH_BOUNDARY_TEST_FRAGILITY + DATE_DEFAULT_EVIDENCE_GAP`.
+Diagnosis: `INTEGRATED_RESPONSIVE_EVIDENCE_GAP + OPTIONAL_DEFAULT_WINDOW_PARTIAL_PROOF + EVIDENCE_OVERCLAIM`.
 Human Gate: `NONE`.
-Blocker: `NONE` — routine REWORK-3 is authorized.
+Blocker: `NONE` — routine REWORK-4 authorized.
 
-## CF-I08 REWORK-3 AUTHORIZED WORK
+## CF-I08 REWORK-4 AUTHORIZED WORK
 
 Codex must autonomously:
 
-1. preserve every accepted functional repair above;
-2. restore material Reports, Network and integrated state/navigation browser execution at 375, 390, 430, 768 and 1024; retain one real cross-module mutation and prove persisted state through the integrated UI;
-3. repair CF-I03 fixture cleanup so it respects the full current downstream schema/foreign keys, then obtain fresh terminal PASS for required CF-I03/04/05/06/07 regressions;
-4. make dashboard current-month focal expectations source-derived and valid across UTC month boundaries;
-5. make optional no-param/start-only/end-only tests prove the actual default window/result, not status alone;
-6. correct `.orchestration/evidence/CF-I08-INVARIANTS.md` and `CF-I08-PRECRITIC-GATE.md` so they match the final completed execution exactly;
-7. run fresh CF-I08 focal/browser plus unit/type/build/Wrangler/route/diff checks;
+1. preserve every accepted functional and REWORK-3 repair above;
+2. use 375/390/430/768/1024 for Reports and Network material controls and representative integrated navigation/state observation at each width;
+3. retain one deterministic real Housekeeping→Rooms mutation and prove the persisted `Maintenance` state is visible through Rooms at every contracted width;
+4. add deterministic result assertions for no-param, start-only and end-only default-window semantics;
+5. retain fresh required inherited CF-I03/04/05/06/07 terminal PASS and fresh CF-I08 focal/browser PASS;
+6. correct invariant/Pre-Critic evidence so no all-width/integration/default claim exceeds executable proof;
+7. run unit/type/build/Wrangler/route/diff checks fresh;
 8. publish a fresh substantive artifact A plus orchestration-only boundary B and stop for Independent Critic.
 
 ## DELIVERY SEQUENCE
 
-`CF-I08 REWORK-3 → CF-I09 → complete local HMS Product Acceptance → Cloudflare test environment → Cloudflare validation → production-readiness/release gates`.
+`CF-I08 REWORK-4 → CF-I09 → complete local HMS Product Acceptance → Cloudflare test environment → Cloudflare validation → production-readiness/release gates`.
 
 After CF-I09, the complete application may be run locally for Human Product Acceptance before remote Cloudflare deployment.
 
@@ -97,6 +96,6 @@ Local repository sync only if the Codex workspace has not consumed the latest re
 
 ## NEXT AUTHORIZED ACTION
 
-`INDEPENDENT_CRITIC_AUDIT_CF_I08_REWORK_3_ARTIFACT_fe17452`
+`CF_I08_AUTONOMOUS_REWORK_4_INTEGRATED_ALL_WIDTHS_AND_DEFAULT_WINDOW_PROOF`
 
 Do not begin CF-I09 before CF-I08 Independent Critic PASS. No production deployment, remote D1 creation/mutation, real-data migration, paid transition or cutover is authorized.
