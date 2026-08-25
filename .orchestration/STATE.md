@@ -8,7 +8,7 @@ Global Project Mode: `DELIVERY`
 Phase: `BUILD / VALIDATE READINESS`  
 Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-1 AUTHORIZED`
 
-Runtime: `RUNNING` — isolated clean-persist Wrangler/D1 rehearsal and full migration focal PASS; continuing readiness and inherited regressions.
+Runtime: `READY_TO_RESUME` — isolated clean-persist Wrangler/D1 rehearsal, backup/restore, full migration focal and inherited API regressions PASS; browser SaaS profile evidence remains authorized next work.
 
 Current objective: complete the accepted HMS Cloudflare migration locally with deterministic source-parity migration, reconciliation, backup/restore and operational readiness so the Human can perform complete local Product Acceptance before any remote Cloudflare deployment.
 
