@@ -8,7 +8,7 @@ Global Project Mode: `DELIVERY`
 Phase: `BUILD / VALIDATE READINESS`  
 Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-1 AUTHORIZED`
 
-Runtime: `READY_TO_RESUME` — isolated clean-persist Wrangler/D1 rehearsal, backup/restore, full migration focal and inherited API regressions PASS; browser SaaS profile evidence remains authorized next work.
+Runtime: `WAITING_EXTERNAL_REVIEW` — CF-I09 REWORK-1 A2 is complete and awaits Independent Critic review.
 
 Current objective: complete the accepted HMS Cloudflare migration locally with deterministic source-parity migration, reconciliation, backup/restore and operational readiness so the Human can perform complete local Product Acceptance before any remote Cloudflare deployment.
 
@@ -121,12 +121,12 @@ No production, remote D1, real-data migration, paid resource, Access production 
 
 ## PENDING HUMAN GATES
 
-No blocker. Shared-persistence/process contention was isolated; clean temporary persistence resolves it. Full migration and inherited API checks pass. Next: rerun browser smoke with explicit `saas_admin` network profile, then complete Pre-Critic Gate.
+No blocker. Full migration, backup/restore, local Worker/D1/Playwright smoke, inherited regressions and Pre-Critic evidence pass. External Independent Critic is the next boundary.
 
 Paid Cloudflare resources, irreversible provisioning/cutover, significant unresolved product/security risk tradeoff, real-data production migration and final Human Product Acceptance remain Human Gates when reached.
 
 ## NEXT AUTHORIZED ACTION
 
-`CF_I09_AUTONOMOUS_REWORK_1_SOURCE_SAAS_ADMIN_LEGACY_NULL_ACTORS_MODEL_RECEIPT_EXACT_BOUNDARY`
+`CF-I09_A2=e483e6b3d973491caa7eb25d119e41d5804f2ae0 → External Independent Critic`
 
 Codex consumes `.orchestration/reviews/CF-I09-CRITIC.md`, performs internal multi-context repair/review until admission gates pass, publishes one mature fresh A2+B2, and stops for External Independent Critic. Human relay is not required.
