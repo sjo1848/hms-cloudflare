@@ -3,24 +3,24 @@
   "project": "HMS Cloudflare",
   "phase": "BUILD",
   "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": true,
+  "resume_authorized": false,
   "active_task": "CF-I08",
-  "last_completed_task": "CF-I08-REWORK-1-INDEPENDENT-CRITIC-REWORK-2",
-  "last_completed_head": "6030be4d63e0a4424d6142bce5bac4e6d9b5f422",
+  "last_completed_task": "CF-I08-REWORK-2-ARTIFACT-A",
+  "last_completed_head": "2fb282eafcc578e8f99d7d64c7205d07c197ce0f",
   "work_branch": "main",
-  "next_action": "CF_I08_AUTONOMOUS_REWORK_2_NOSHOW_CROSS_MODULE_DASHBOARD_ALERTS_DATE_DEFAULTS_STATE_CONTINUITY",
-  "stop_reason": "CF-I08 REWORK-1 artifact A 6030be4d63e0a4424d6142bce5bac4e6d9b5f422 with boundary B e6aabf0256cf33bbc8817f21238ee460f95708a6 received External Independent Critic REWORK-2. Codex must consume .orchestration/reviews/CF-I08-REWORK-1-CRITIC.md. Preserve accepted inclusive revenue/daily occupancy/source ADR-RevPAR/network arithmetic-mean/direct-tenant-denial repairs. Fix the newly executable NO_SHOW Housekeeping turnover regression, restore source DashboardKpis arrivals_today/departures_today alert arrays, restore independent source optional date defaults including end-only behavior, replace non-deterministic wall-clock dashboard assertions, and add a real cross-module browser state/data continuity journey. Rerun fresh inherited/focal/browser/build/type/Wrangler/route checks, publish fresh artifact A plus orchestration-only boundary B, and stop for Independent Critic. No Human Gate exists. CF-I09 remains unauthorized until CF-I08 PASS.",
+  "next_action": "INDEPENDENT_CRITIC_AUDIT_CF_I08_REWORK_2_ARTIFACT_2fb282e",
+  "stop_reason": "CF-I08 REWORK-2 substantive artifact A 2fb282eafcc578e8f99d7d64c7205d07c197ce0f is published. Independent Critic must audit the exact artifact and canonical evidence. No Human Gate exists; CF-I09 remains unauthorized until CF-I08 PASS.",
   "event": {
-    "seq": 71,
-    "id": "CF-I08@CRITIC-REWORK-2",
-    "type": "INDEPENDENT_CRITIC_REWORK"
+    "seq": 72,
+    "id": "CF-I08@ARTIFACT-A-2fb282e",
+    "type": "SUBSTANTIVE_ARTIFACT_PUBLISHED"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": "6030be4d63e0a4424d6142bce5bac4e6d9b5f422",
     "last_verdict": "REWORK_NOSHOW_CROSS_MODULE_DASHBOARD_SHAPE_DATE_DEFAULTS_INTEGRATION_EVIDENCE",
-    "artifact_head": null,
-    "pending_verdict": null
+    "artifact_head": "2fb282eafcc578e8f99d7d64c7205d07c197ce0f",
+    "pending_verdict": "INDEPENDENT_CRITIC_REVIEW_REQUIRED"
   },
   "human_gate": null,
   "blocker": null,

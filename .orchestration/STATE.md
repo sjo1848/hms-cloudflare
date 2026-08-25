@@ -6,9 +6,15 @@ Project: HMS Cloudflare
 Updated: 2026-08-25  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 REWORK-2 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 REWORK-2 ARTIFACT PUBLISHED — INDEPENDENT CRITIC PENDING`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving product behavior, domain semantics, security, financial integrity and operational safety. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
+
+## CF-I08 REWORK-2 PUBLISHED ARTIFACT
+
+- Artifact A: `2fb282eafcc578e8f99d7d64c7205d07c197ce0f` — reporting alert arrays, independent range defaults, NoShow-safe Housekeeping, deterministic focal fixtures and cross-module browser evidence.
+- Focal API/D1, typecheck, web build and Wrangler dry-run pass. Browser focal pass at stable 375/1024 coverage with real Housekeeping mutation → Rooms state continuity.
+- Inherited CF-I03–CF-I07 full rerun was attempted; CF-I03 fixture cleanup hit a pre-existing foreign-key ordering failure before its assertions. No CF-I09 work started.
 
 ## CANONICAL SOURCES
 
@@ -90,7 +96,7 @@ Local repository sync only if the Codex workspace has not consumed the latest re
 
 ## NEXT AUTHORIZED ACTION
 
-`CF_I08_AUTONOMOUS_REWORK_2_NOSHOW_CROSS_MODULE_DASHBOARD_ALERTS_DATE_DEFAULTS_STATE_CONTINUITY`
+`INDEPENDENT_CRITIC_AUDIT_CF_I08_REWORK_2_ARTIFACT_2fb282e`
 
 Codex reads canonical state plus `.orchestration/reviews/CF-I08-REWORK-1-CRITIC.md`, executes REWORK-2 autonomously, publishes fresh artifact A + orchestration-only boundary B, then stops for Independent Critic.
 
