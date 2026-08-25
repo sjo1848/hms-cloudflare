@@ -21,6 +21,13 @@ CI=1 npx wrangler d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --com
   INSERT OR REPLACE INTO hotel_memberships (access_subject,hotel_id,role,active) VALUES ('subject-a','hotel-a','admin',1);
 " >/dev/null
 CI=1 npx wrangler d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "
+  DELETE FROM payment_entries;
+  DELETE FROM financial_events;
+  DELETE FROM invoices;
+  DELETE FROM extra_charges;
+  DELETE FROM cash_closures;
+  DELETE FROM housekeeping_events;
+  DELETE FROM maintenance_cases;
   DELETE FROM lifecycle_events;
   DELETE FROM room_inventory_nights;
   DELETE FROM bookings;
@@ -117,6 +124,8 @@ assert_status "$status" 200
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.status!=='CheckedOut') process.exit(1)"
 
 CI=1 npx wrangler d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "
+  DELETE FROM payment_entries; DELETE FROM financial_events; DELETE FROM invoices; DELETE FROM extra_charges; DELETE FROM cash_closures;
+  DELETE FROM housekeeping_events; DELETE FROM maintenance_cases;
   DELETE FROM lifecycle_events;
   DELETE FROM room_inventory_nights;
   DELETE FROM bookings;
@@ -189,7 +198,7 @@ CI=1 npx wrangler d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/stale-checkout.json')).flatMap(x=>x.results); if(r[0].status!=='CHECKED_IN'||r[0].room_id!=='room-a'||r[1].claims!==2||r[2].status!=='OCCUPIED'||r[3].events!==0) process.exit(1)"
 
 # Valid repeated room history remains legal (A -> B -> A -> C).
-CI=1 npx wrangler d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "DELETE FROM lifecycle_events; DELETE FROM room_inventory_nights; DELETE FROM bookings; UPDATE rooms SET status='AVAILABLE';" >/dev/null
+CI=1 npx wrangler d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "DELETE FROM payment_entries; DELETE FROM financial_events; DELETE FROM invoices; DELETE FROM extra_charges; DELETE FROM cash_closures; DELETE FROM housekeeping_events; DELETE FROM maintenance_cases; DELETE FROM lifecycle_events; DELETE FROM room_inventory_nights; DELETE FROM bookings; UPDATE rooms SET status='AVAILABLE';" >/dev/null
 status=$(request -d '{"guest_id":"guest-a","room_id":"room-a","check_in":"2026-12-01","check_out":"2026-12-03"}' "$base/bookings"); assert_status "$status" 201
 history_id=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')).id)")
 status=$(request -X POST -d '{"check_in_guests_count":2,"document_verified":true,"contact_confirmed":true,"stay_confirmed":true}' "$base/bookings/$history_id/check-in"); assert_status "$status" 200

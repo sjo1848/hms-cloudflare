@@ -1,4 +1,4 @@
-# CF-I08 REWORK-2 Pre-Critic Gate
+# CF-I08 REWORK-3 Pre-Critic Gate
 
 | Gate | Result | Exact evidence |
 |---|---|---|
@@ -23,5 +23,10 @@
 | Independent date defaults | PASS | Focal runner exercises no-param, start-only, end-only, same-day and inverted ranges. |
 | Deterministic focal state | PASS | Current-date D1 fixture asserts one exact dashboard result, independent of prior fixed-date rows. |
 | Cross-module continuity | PASS | Browser runner mutates Housekeeping through local API and verifies the resulting room state in Rooms UI. |
+
+| Contracted responsive widths | PASS | Fresh browser execution covers 375, 390, 430, 768 and 1024 for Reports and Network controls, with Rooms continuity after the real mutation. |
+| Fresh inherited regressions | PASS | Fresh terminal markers CF-I03/04, CF-I05, CF-I06 and CF-I07 all completed after FK-aware cleanup. |
+| Month-boundary dashboard | PASS | Focal expected revenue/ADR/RevPAR derive from whether yesterday is on or before the current UTC month start. |
+| Effective default window | PASS | End-only fixture includes an old row outside today-30 but inside supplied-end-30 and asserts only the source-independent result. |
 
 Codex does not self-declare product PASS. The next boundary is External Independent Critic; CF-I09 remains unauthorized.

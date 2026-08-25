@@ -1,4 +1,4 @@
-# CF-I08 REWORK-2 invariant evidence
+# CF-I08 REWORK-3 invariant evidence
 
 Artifact scope: source-semantic analytics/reporting, `NO_SHOW`-safe local schema, network aggregation, Reports/Network UX and integrated responsive evidence. No CF-I09, production, paid or real-data scope.
 
@@ -10,17 +10,19 @@ Artifact scope: source-semantic analytics/reporting, `NO_SHOW`-safe local schema
 | INV-PARITY-001 | PASS | Source-to-target matrix maps exact dashboard, date, state, occupancy, formula and network semantics; focal fixture includes `NO_SHOW`. |
 | INV-ORDER-001 | PASS | Network fixture independently asserts Hotel B then Hotel A from known revenues; rows are sorted by authoritative revenue, not target-self expected order. |
 | INV-ENUM-001 | PASS | `NO_SHOW` is an explicit target schema value and report predicates use semantic `CANCELLED`/`NO_SHOW` exclusion plus `CONFIRMED`/`CHECKED_IN` occupancy inclusion. |
-| INV-RESP-001 | PASS | Fresh CF-I08 browser runner passes Reports/Network material controls and integrated navigation at 375/390/430/768/1024. |
+| INV-RESP-001 | PASS | Fresh CF-I08 browser runner executes Reports and Network material controls at 375/390/430/768/1024 and verifies the real Housekeeping mutation → Rooms state continuity. |
 | INV-EVID-001 | PASS | Focal terminal marker `CF-I08 analytics/reports/multi-hotel D1/API regression PASS`; browser terminal marker `CF-I08 responsive/integrated browser regression PASS`; source matrix and screenshot committed. |
 | INV-STATE-001 | PASS | This file and gate are included in substantive artifact A; publication will create orchestration-only boundary B with exact A SHA. |
 | INV-SCOPE-001 | PASS | No CF-I09/import rehearsal, remote D1, paid resource, production deployment, real-data migration or cutover. |
 
-## REWORK-2 closure
+## REWORK-3 closure
 
 - `NO_SHOW` is excluded from Housekeeping departures and the focal API assertion proves no departure or turnover flag for the NoShow room.
 - Dashboard alerts are arrays with source-compatible booking/guest/room/status fields; deterministic current-date fixtures assert exact revenue, occupancy, ADR, RevPAR and alert identities.
 - No-param, start-only, end-only, same-day and inverted report ranges are executable; defaults derive independently from UTC today.
 - Browser continuity performs a real local Housekeeping maintenance mutation and verifies `Maintenance` for room 101 on the Rooms surface.
+- Fresh inherited terminal markers: CF-I03/04, CF-I05, CF-I06 and CF-I07 all PASS; no required regression remains UNPROVEN.
+- Dashboard expected revenue is derived from the UTC month start, including first-day-of-month behavior; end-only default evidence uses dates that distinguish today-based from supplied-end-based derivation.
 
 ## Fresh executable checks
 
