@@ -8,6 +8,8 @@ Global Project Mode: `DELIVERY`
 Phase: `BUILD / VALIDATE READINESS`  
 Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 ACTIVE+AUTHORIZED`
 
+Runtime: `WAITING_EXTERNAL_REVIEW` — CF-I09 artifact A is published; boundary B records the external Independent Critic stop.
+
 Current objective: complete the accepted HMS Cloudflare migration locally with deterministic data-migration rehearsal, reconciliation, backup/restore and operational readiness so the Human can perform complete local Product Acceptance before any remote Cloudflare deployment.
 
 ## CANONICAL SOURCES
@@ -61,6 +63,8 @@ If the runtime cannot create true subagents, it must truthfully use isolated rev
 Routine technical REWORK is work, not permission and does not involve the Human. The Human remains Product/Risk Authority only.
 
 ## ACTIVE INCREMENT — CF-I09
+
+Artifact A: `a972bca` (internal evidence and invariant gate admitted).
 
 Contract: `.orchestration/contracts/CF-I09.md`.
 

@@ -2,25 +2,25 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "BUILD_VALIDATE_READINESS",
-  "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": true,
+  "runtime_status": "WAITING_EXTERNAL_REVIEW",
+  "resume_authorized": false,
   "active_task": "CF-I09",
-  "last_completed_task": "CF-I08-INDEPENDENT-CRITIC-PASS",
-  "last_completed_head": "ab0af4d70f05d507e80fb6a518f7eff890c239db",
+  "last_completed_task": "CF-I09-INTERNAL-ADMISSION",
+  "last_completed_head": "a972bca",
   "work_branch": "main",
-  "next_action": "CF_I09_MULTI_CONTEXT_MIGRATION_REHEARSAL_RECONCILIATION_BACKUP_RESTORE_LOCAL_READINESS",
-  "stop_reason": "CF-I08 REWORK-4 artifact A ab0af4d70f05d507e80fb6a518f7eff890c239db with boundary B 0bd005850da7019162a87172c68b5daff139bbed received External Independent Critic PASS. CF-I09 is authorized under .orchestration/contracts/CF-I09.md plus binding .orchestration/MULTIAGENT-EXECUTION.md and .orchestration/PRECRITIC-MULTIAGENT.md. Codex must use Orchestrator decomposition, separate Implementer and Internal QA/Critic contexts, automatic internal rework, Integration Review, full regression/evidence gates and a CF-I09-INTERNAL-REVIEW receipt before publication. No Human Gate exists for local migration/readiness work. No production, remote D1, paid resource, real-data migration or cutover is authorized. After CF-I09 External Critic PASS, stop for complete local Human Product Acceptance before any Cloudflare remote deployment.",
+  "next_action": "EXTERNAL_INDEPENDENT_CRITIC_REVIEW_ARTIFACT_A_a972bca",
+  "stop_reason": "Substantive artifact A is ready; stop at External Independent Critic boundary.",
   "event": {
-    "seq": 77,
-    "id": "CF-I09@AUTHORIZED-MULTI-CONTEXT",
-    "type": "TASK_AUTHORIZED"
+    "seq": 79,
+    "id": "CF-I09@EXTERNAL-REVIEW-REQUIRED",
+    "type": "EXTERNAL_REVIEW_REQUIRED"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": "ab0af4d70f05d507e80fb6a518f7eff890c239db",
     "last_verdict": "PASS",
-    "artifact_head": null,
-    "pending_verdict": null
+    "artifact_head": "a972bca",
+    "pending_verdict": "INDEPENDENT_CRITIC"
   },
   "human_gate": null,
   "blocker": null,
