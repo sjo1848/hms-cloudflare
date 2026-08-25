@@ -11,7 +11,7 @@
   if (await page.getByText("101", { exact: true }).count()) throw new Error("Hotel Norte room remained after switching to Hotel Sur profile");
   await page.getByLabel("Local acceptance profile").selectOption({ label: "Network · SaaS Admin" });
   await page.waitForTimeout(500);
-  await page.goto("http://127.0.0.1:4174/network");
+  await page.getByRole("link", { name: "Network" }).click();
   await page.getByRole("heading", { name: "Hotel network" }).waitFor();
   await page.getByText("Hotel Norte", { exact: true }).first().waitFor();
   await page.getByText("Hotel Sur", { exact: true }).first().waitFor();

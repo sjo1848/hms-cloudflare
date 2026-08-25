@@ -20,6 +20,6 @@ Recorded 2026-08-25 before any Artifact A2 publication.
 - Full `test-rehearsal.sh` with a clean temporary persist directory and a 600-second outer timeout: PASS (preflight, timezone, clean/replay/partial/reconcile determinism and migration Vitest 2/2).
 - `npm run check`, `npm run types:check`, `npm run web:build`: PASS (24 tests, generated types and production build).
 - Inherited CF-I03, CF-I04, CF-I05, CF-I06, CF-I07 and CF-I08 API regressions: PASS.
-- The first integrated smoke attempt exposed a stale acceptance expectation: the browser used an ordinary hotel admin for network-only routes. The acceptance profile now explicitly includes `Network · SaaS Admin`; a clean browser rerun remains required before Artifact A2.
+- The first integrated smoke attempt exposed a stale acceptance expectation: the browser used an ordinary hotel admin for network-only routes. The acceptance profile now explicitly includes `Network · SaaS Admin`, persists the selected local profile across navigation, and the clean browser/API smoke rerun passes.
 
 No remote, paid, production, or real-data operation was performed.

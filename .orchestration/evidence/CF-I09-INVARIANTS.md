@@ -1,6 +1,6 @@
 # CF-I09 invariant evidence
 
-Candidate: working tree after CF-I09 rework; source baseline `4df56a6217caab611f2f5fcbd98bde8386bb5629`.
+Candidate: CF-I09 REWORK-1 closure candidate; source baseline `4df56a6217caab611f2f5fcbd98bde8386bb5629`.
 
 | Invariant | Classification | Evidence |
 |---|---|---|
@@ -15,7 +15,7 @@ Candidate: working tree after CF-I09 rework; source baseline `4df56a6217caab611f
 | INV-ORDER-001 | N/A | CF-I09 has no new queue/next-item ranking requirement. |
 | INV-RESP-001 | APPLIES / PASS | CF-I09 Playwright smoke plus CF-I08 browser widths 375–1024. |
 | INV-EVID-001 | APPLIES / PASS | This file, internal receipt, executable runner receipts and pre-Critic gate. |
-| INV-LEGACY-001 | APPLIES / PASS | Legacy guest reconstruction/provenance and source mapping exact rows. |
+| INV-LEGACY-001 | APPLIES / PASS | Legacy guest/payment/maintenance/lifecycle reconstruction, deterministic unknown actors and source-nullable audit. |
 | INV-MONEY-001 | APPLIES / PASS | Final booking totals, charge trigger neutralization, payments/closure exact cents. |
 | INV-STATE-001 | APPLIES / PASS | Two-commit A/B publication plan; boundary metadata only in B. |
 | INV-CF-I07-001 | APPLIES / PASS | Inherited CF-I07 focal and browser regression PASS. |

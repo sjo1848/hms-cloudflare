@@ -18,7 +18,8 @@ const localDevProfiles: LocalDevProfile[] = localAcceptanceEnabled ? [
   { label: "Hotel Sur · Housekeeping", subject: "source-user:24000000-0000-0000-0000-000000000002", email: "max-housekeeping@migration.invalid", hotelId: "20000000-0000-0000-0000-000000000002" },
   { label: "Network · SaaS Admin", subject: "source-user:14000000-0000-0000-0000-000000000003", email: "saas-admin@migration.invalid", hotelId: "10000000-0000-0000-0000-000000000001" },
 ] : [];
-let activeLocalDevProfile = localDevProfiles[0];
+const initialLocalProfileIndex = typeof window === "undefined" ? 0 : Number(window.localStorage.getItem("hms-local-acceptance-profile") ?? 0);
+let activeLocalDevProfile = localDevProfiles[initialLocalProfileIndex] ?? localDevProfiles[0];
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
@@ -251,7 +252,8 @@ function HousekeepingReworkLegacyFocused() {
 
 function LocalDevIdentitySelector({ onChange }: { onChange: () => void }) {
   if (!localAcceptanceEnabled) return null;
-  return <aside className="local-dev-identity" aria-label="Local acceptance identity"><strong>Local acceptance identity</strong><label>Profile <select aria-label="Local acceptance profile" defaultValue="0" onChange={event => { activeLocalDevProfile = localDevProfiles[Number(event.target.value)]; onChange(); }}>{localDevProfiles.map((profile, index) => <option value={index} key={profile.subject}>{profile.label}</option>)}</select></label><small>Synthetic fixture only · not persisted</small></aside>;
+  const selected = Math.max(0, localDevProfiles.indexOf(activeLocalDevProfile));
+  return <aside className="local-dev-identity" aria-label="Local acceptance identity"><strong>Local acceptance identity</strong><label>Profile <select aria-label="Local acceptance profile" value={String(selected)} onChange={event => { const index = Number(event.target.value); activeLocalDevProfile = localDevProfiles[index]; window.localStorage.setItem("hms-local-acceptance-profile", String(index)); onChange(); }}>{localDevProfiles.map((profile, index) => <option value={index} key={profile.subject}>{profile.label}</option>)}</select></label><small>Synthetic fixture only · not persisted</small></aside>;
 }
 
 export function App() { const [identityVersion, setIdentityVersion] = useState(0); const page = location.pathname.startsWith("/guests") ? "guests" : location.pathname.startsWith("/rooms") ? "rooms" : location.pathname.startsWith("/housekeeping") ? "housekeeping" : location.pathname.startsWith("/users") ? "users" : location.pathname.startsWith("/network") ? "network" : location.pathname.startsWith("/reports") ? "reports" : "bookings"; return <main><header><div><p className="eyebrow">HMS Elite</p><h1>Hotel operations</h1></div><nav><a className={page === "bookings" ? "active" : ""} href="/bookings">Reception</a><a className={page === "rooms" ? "active" : ""} href="/rooms">Rooms</a><a className={page === "guests" ? "active" : ""} href="/guests">Guests</a><a className={page === "housekeeping" ? "active" : ""} href="/housekeeping">Housekeeping</a><a className={page === "users" ? "active" : ""} href="/users">Users</a><a className={page === "reports" ? "active" : ""} href="/reports">Reports</a><a className={page === "network" ? "active" : ""} href="/network">Network</a></nav></header><LocalDevIdentitySelector onChange={() => setIdentityVersion(value => value + 1)} /><div key={identityVersion}>{page === "rooms" ? <Rooms /> : page === "guests" ? <Guests /> : page === "housekeeping" ? <HousekeepingRework /> : page === "users" ? <UsersAdmin /> : page === "network" ? <NetworkAdmin /> : page === "reports" ? <Reports /> : <><Bookings /><BillingPanel /><CashBalancePanel /></>}</div></main>; }
