@@ -1,4 +1,4 @@
-# CF-I08 REWORK-3 Pre-Critic Gate
+# CF-I08 REWORK-4 Pre-Critic Gate
 
 | Gate | Result | Exact evidence |
 |---|---|---|
@@ -28,5 +28,7 @@
 | Fresh inherited regressions | PASS | Fresh terminal markers CF-I03/04, CF-I05, CF-I06 and CF-I07 all completed after FK-aware cleanup. |
 | Month-boundary dashboard | PASS | Focal expected revenue/ADR/RevPAR derive from whether yesterday is on or before the current UTC month start. |
 | Effective default window | PASS | End-only fixture includes an old row outside today-30 but inside supplied-end-30 and asserts only the source-independent result. |
+| No-param and start-only default windows | PASS | Focal assertions verify both rows in the today-30 window and the single row from the supplied start through UTC today. |
+| Integrated all-width state | PASS | One real maintenance mutation is followed by Rooms `Maintenance` assertions at 375, 390, 430, 768 and 1024, with overflow checks. |
 
 Codex does not self-declare product PASS. The next boundary is External Independent Critic; CF-I09 remains unauthorized.

@@ -1,4 +1,4 @@
-# CF-I08 REWORK-3 invariant evidence
+# CF-I08 REWORK-4 invariant evidence
 
 Artifact scope: source-semantic analytics/reporting, `NO_SHOW`-safe local schema, network aggregation, Reports/Network UX and integrated responsive evidence. No CF-I09, production, paid or real-data scope.
 
@@ -15,7 +15,7 @@ Artifact scope: source-semantic analytics/reporting, `NO_SHOW`-safe local schema
 | INV-STATE-001 | PASS | This file and gate are included in substantive artifact A; publication will create orchestration-only boundary B with exact A SHA. |
 | INV-SCOPE-001 | PASS | No CF-I09/import rehearsal, remote D1, paid resource, production deployment, real-data migration or cutover. |
 
-## REWORK-3 closure
+## REWORK-4 closure
 
 - `NO_SHOW` is excluded from Housekeeping departures and the focal API assertion proves no departure or turnover flag for the NoShow room.
 - Dashboard alerts are arrays with source-compatible booking/guest/room/status fields; deterministic current-date fixtures assert exact revenue, occupancy, ADR, RevPAR and alert identities.
@@ -23,6 +23,8 @@ Artifact scope: source-semantic analytics/reporting, `NO_SHOW`-safe local schema
 - Browser continuity performs a real local Housekeeping maintenance mutation and verifies `Maintenance` for room 101 on the Rooms surface.
 - Fresh inherited terminal markers: CF-I03/04, CF-I05, CF-I06 and CF-I07 all PASS; no required regression remains UNPROVEN.
 - Dashboard expected revenue is derived from the UTC month start, including first-day-of-month behavior; end-only default evidence uses dates that distinguish today-based from supplied-end-based derivation.
+- The same persisted Housekeeping `Maintenance` state is observed through Rooms at every contracted width; Reports and Network material controls also execute at every width.
+- No-param, start-only and end-only reports each assert deterministic returned rows against independently derived UTC-today windows.
 
 ## Fresh executable checks
 

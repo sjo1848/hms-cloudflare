@@ -21,8 +21,11 @@
     return { status: mutation.status, stage: "housekeeping-maintenance", body: await mutation.json() };
   });
   if (continuity.status !== 201 || continuity.body.room_id !== "room-a1" || continuity.body.status !== "Open") throw new Error(`cross-module mutation failed: ${JSON.stringify(continuity)}`);
-  await page.goto("http://127.0.0.1:4174/rooms"); await page.getByRole("heading", { name: "Rooms" }).waitFor();
-  await page.getByText("101", { exact: true }).waitFor(); await page.getByText("Maintenance", { exact: true }).waitFor();
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 812 }); if (width === widths[0]) { await page.goto("http://127.0.0.1:4174/rooms"); await page.getByRole("heading", { name: "Rooms" }).waitFor(); }
+    await page.getByText("101", { exact: true }).waitFor(); await page.getByText("Maintenance", { exact: true }).waitFor();
+    if (await page.evaluate(() => document.documentElement.scrollWidth) > width) throw new Error(`integrated Rooms overflow ${width}`);
+  }
   await page.setExtraHTTPHeaders({ "x-local-access-subject": "subject-network", "x-local-access-email": "network@test" });
   for (const width of widths) {
     await page.setViewportSize({ width, height: 812 }); if (width === widths[0]) { await page.goto("http://127.0.0.1:4174/network"); await page.getByRole("heading", { name: "Hotel network" }).waitFor(); }
