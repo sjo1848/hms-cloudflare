@@ -2,21 +2,21 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "BUILD_VALIDATE_READINESS",
-  "runtime_status": "BLOCKED",
+  "runtime_status": "RUNNING",
   "resume_authorized": false,
   "active_task": "CF-I09",
   "last_completed_task": "CF-I09-INDEPENDENT-CRITIC-REWORK-1",
   "last_completed_head": "a972bca40ed60505bc42f5ae560977886c2972ab",
   "work_branch": "main",
-  "next_action": "RETRY_CF_I09_MIGRATION_REHEARSAL_WITH_FUNCTIONAL_LOCAL_WRANGLER_D1_RUNTIME",
-  "stop_reason": "Repeated local Wrangler/D1 rehearsal hangs prevent proving full migration reconciliation; backup/restore PASS, code-level repairs and preflight PASS.",
+  "next_action": "RUN_CF_I09_FULL_READINESS_SMOKE_AND_INHERITED_REGRESSIONS_AFTER_ISOLATED_RUNTIME_PASS",
+  "stop_reason": null,
   "event": {
-    "seq": 82,
-    "id": "CF-I09@REWORK-1-BLOCKED-LOCAL-RUNTIME",
-    "type": "BLOCKED"
+    "seq": 83,
+    "id": "CF-I09@REWORK-1-RUNTIME-ISOLATED-PASS",
+    "type": "RUNTIME_ISOLATION_PASS"
   },
   "external_review": {
-    "required": true,
+    "required": false,
     "last_audited_head": "a972bca40ed60505bc42f5ae560977886c2972ab",
     "last_verdict": "REWORK_SOURCE_ROLE_NULL_ACTOR_PROVENANCE_MODEL_RECEIPT_EXACT_BOUNDARY",
     "artifact_head": null,
