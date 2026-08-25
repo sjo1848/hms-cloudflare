@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-25  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 REWORK-3 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 REWORK-3 ARTIFACT PUBLISHED — INDEPENDENT CRITIC PENDING`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving product behavior, domain semantics, security, financial integrity and operational safety. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -33,6 +33,7 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - CF-I08 initial artifact `ed7afe4722650933bc704c1d5f02150cbda82996` — Independent Critic REWORK-1.
 - CF-I08 REWORK-1 artifact A `6030be4d63e0a4424d6142bce5bac4e6d9b5f422`, boundary B `e6aabf0256cf33bbc8817f21238ee460f95708a6` — Independent Critic REWORK-2.
 - CF-I08 REWORK-2 artifact A `2fb282eafcc578e8f99d7d64c7205d07c197ce0f`, boundary B `655471550b6536efcd7a61be7f4a506032139ed3` — Independent Critic REWORK-3.
+- CF-I08 REWORK-3 artifact A `fe174524851e5d2f64baced1001a70466cfc300e` — fresh inherited/focal/browser/build evidence complete; awaiting boundary B publication.
 
 ## CF-I08 ACCEPTED FUNCTIONAL FOUNDATION — PRESERVE
 
@@ -96,6 +97,6 @@ Local repository sync only if the Codex workspace has not consumed the latest re
 
 ## NEXT AUTHORIZED ACTION
 
-`CF_I08_AUTONOMOUS_REWORK_3_FULL_WIDTHS_FRESH_INHERITED_PASS_AND_EVIDENCE_CLOSURE`
+`INDEPENDENT_CRITIC_AUDIT_CF_I08_REWORK_3_ARTIFACT_fe17452`
 
 Do not begin CF-I09 before CF-I08 Independent Critic PASS. No production deployment, remote D1 creation/mutation, real-data migration, paid transition or cutover is authorized.
