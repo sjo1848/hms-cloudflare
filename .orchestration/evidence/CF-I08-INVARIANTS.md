@@ -1,25 +1,23 @@
-# CF-I08 Invariant Evidence
+# CF-I08 REWORK-1 invariant evidence
 
-Artifact scope: analytics KPIs, revenue/occupancy reports, authoritative multi-hotel aggregation, Reports/Network UX and integrated responsive navigation. No CF-I09, migration, production or paid scope.
+Artifact scope: source-semantic analytics/reporting, `NO_SHOW`-safe local schema, network aggregation, Reports/Network UX and integrated responsive evidence. No CF-I09, production, paid or real-data scope.
 
 | Invariant | Result | Evidence |
 |---|---|---|
-| INV-MONEY-001 | PASS | Focal fixtures assert exact integer-cent revenue `12345`, ADR `6173` and RevPAR `206`; no floating-point API fields are used. |
-| INV-TENANT-001 | PASS | Hotel reports route through the selected active membership D1; network fan-out uses server-side configured bindings only; tenant admin network request is denied. |
-| INV-RBAC-001 | PASS | Admin/ops report reads pass, housekeeping report read returns capability denial, and network KPIs require `saas.hotels.read`. |
-| INV-PARITY-001 | PASS | `docs/cf-i08-analytics-reporting-parity.md` maps source routes, date/state inclusion, formulas, ordering and zero behavior. |
-| INV-ORDER-001 | PASS | Revenue rows order by date; network rows are independently asserted as Hotel B then Hotel A by descending revenue. |
-| INV-RESP-001 | PASS | Playwright runs Reports, Network and integrated module navigation at 375/390/430/768/1024 with overflow assertions. |
-| INV-EVID-001 | PASS | Executable focal/browser runners, source matrix, evidence files and committed screenshot match the claims. |
-| INV-STATE-001 | PASS | Publication uses substantive artifact A followed by orchestration-only boundary B. |
-| INV-SCOPE-001 | PASS | No CF-I09 migration/readiness, production, remote D1, paid resource, real-data or cutover action. |
+| INV-MONEY-001 | PASS | Revenue/ADR/RevPAR remain integer cents; focal source-derived fixture asserts `12345` and zero-safe denominators. |
+| INV-TENANT-001 | PASS | Membership-selected operational D1; direct Hotel-A identity with Hotel-B selection returns `403`; network binding is server allow-list only. |
+| INV-RBAC-001 | PASS | Fresh CF-I07 regression PASS; admin/ops report reads pass; housekeeping Reports denial is browser-visible; network capability is distinct. |
+| INV-PARITY-001 | PASS | Source-to-target matrix maps exact dashboard, date, state, occupancy, formula and network semantics; focal fixture includes `NO_SHOW`. |
+| INV-ORDER-001 | PASS | Network fixture independently asserts Hotel B then Hotel A from known revenues; rows are sorted by authoritative revenue, not target-self expected order. |
+| INV-ENUM-001 | PASS | `NO_SHOW` is an explicit target schema value and report predicates use semantic `CANCELLED`/`NO_SHOW` exclusion plus `CONFIRMED`/`CHECKED_IN` occupancy inclusion. |
+| INV-RESP-001 | PASS | Fresh CF-I08 browser runner passes Reports/Network material controls and integrated navigation at 375/390/430/768/1024. |
+| INV-EVID-001 | PASS | Focal terminal marker `CF-I08 analytics/reports/multi-hotel D1/API regression PASS`; browser terminal marker `CF-I08 responsive/integrated browser regression PASS`; source matrix and screenshot committed. |
+| INV-STATE-001 | PASS | This file and gate are included in substantive artifact A; publication will create orchestration-only boundary B with exact A SHA. |
+| INV-SCOPE-001 | PASS | No CF-I09/import rehearsal, remote D1, paid resource, production deployment, real-data migration or cutover. |
 
-## Executed checks
+## Fresh executable checks
 
-- `scripts/cf-i08-regression.sh`: PASS; deterministic two-hotel D1/API, zero range, invalid range, cancellation exclusion, RBAC, tenant isolation, ranking and unavailable binding.
-- `scripts/cf-i08-browser-regression.sh`: PASS; Reports/Network/integrated module navigation at all contracted widths and housekeeping denial.
-- `npm run typecheck`: PASS.
-- `npm run web:build`: PASS.
-- `npm run check`: PASS (17 unit tests).
-- `npm run wrangler:dry-run`: PASS for API and web Workers.
-- Fresh inherited CF-I03/04: PASS; CF-I05: PASS; CF-I06: PASS; CF-I07 focal and browser: PASS; no owned Worker/Vite process remains after the successful runners.
+- `scripts/cf-i08-regression.sh`: PASS, `RC:0` — source dashboard, inclusive 31-day occupancy series, same-day revenue range, `NO_SHOW` exclusion, RBAC, direct tenant isolation, network totals/ranking and unavailable binding.
+- `scripts/cf-i08-browser-regression.sh`: PASS — Reports/Network controls, integrated routes, responsive overflow and housekeeping denial at all contracted widths; screenshot `output/playwright/cf-i08-integrated.png`.
+- Fresh inherited: `cf-i03`/`cf-i04` lifecycle D1/API PASS, `cf-i05` Housekeeping/Maintenance PASS, `cf-i06` Billing PASS, `cf-i07` RBAC/users/audit/network PASS, `cf-i07-browser` PASS.
+- `npm run check`: PASS (17 tests); `npm run web:build`: PASS; `npm run wrangler:dry-run`: PASS; canonical route grep and `git diff --check`: PASS.

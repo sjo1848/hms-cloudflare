@@ -7,9 +7,11 @@
     await page.getByRole("heading", { name: "Reports" }).waitFor();
     await page.getByRole("button", { name: "Refresh report" }).click();
     await page.getByText("Revenue", { exact: true }).waitFor();
-    await page.getByText("Occupancy", { exact: true }).waitFor();
-    await page.getByText("ADR", { exact: true }).waitFor();
-    await page.getByText("RevPAR", { exact: true }).waitFor();
+    await page.getByText("Occupancy days", { exact: true }).waitFor();
+    await page.getByText("Daily occupancy", { exact: true }).waitFor();
+    await page.getByLabel("Report start").fill("2026-09-02");
+    await page.getByLabel("Report end").fill("2026-09-02");
+    await page.getByRole("button", { name: "Refresh report" }).click();
     const reportOverflow = await page.evaluate(() => [...document.querySelectorAll("*")].map(el => ({ tag: el.tagName, cls: (el.getAttribute("class") || "").slice(0,40), right: Math.round(el.getBoundingClientRect().right), width: Math.round(el.getBoundingClientRect().width) })).filter(x => x.right > innerWidth + 1).slice(-8));
     if (await page.evaluate(() => document.documentElement.scrollWidth) > width) throw new Error(`reports overflow ${width}: ${JSON.stringify(reportOverflow)}`);
     for (const [path, heading] of [["/bookings", "Booking case workspace"], ["/rooms", "Rooms"], ["/guests", "Guests"], ["/housekeeping", "Housekeeping board"], ["/users", "Users administration"]]) {
@@ -21,6 +23,10 @@
   for (const width of widths) {
     await page.setViewportSize({ width, height: 812 }); await page.goto("http://127.0.0.1:4174/network"); await page.getByRole("heading", { name: "Hotel network" }).waitFor();
     await page.getByText("Total hotels", { exact: true }).waitFor(); await page.getByText("Revenue ranking", { exact: true }).waitFor(); await page.getByText("Hotel A", { exact: true }).first().waitFor(); await page.getByText("Hotel B", { exact: true }).first().waitFor();
+    await page.getByLabel("Network report start").fill("2026-09-02");
+    await page.getByLabel("Network report end").fill("2026-09-02");
+    await page.getByRole("button", { name: "Refresh analytics" }).click();
+    await page.getByText("Hotel B", { exact: true }).last().waitFor();
     if (await page.evaluate(() => document.documentElement.scrollWidth) > width) throw new Error(`network overflow ${width}`);
   }
   await page.setExtraHTTPHeaders({ "x-local-access-subject": "subject-hk", "x-local-access-email": "hk@test", "x-hotel-id": "hotel-a" }); await page.goto("http://127.0.0.1:4174/reports"); await page.getByRole("alert").filter({ hasText: "Capability required" }).waitFor();

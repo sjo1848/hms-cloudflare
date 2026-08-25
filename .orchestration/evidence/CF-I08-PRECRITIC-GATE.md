@@ -1,14 +1,17 @@
-# CF-I08 Pre-Critic Gate
+# CF-I08 REWORK-1 Pre-Critic Gate
 
-| Gate | Result | Evidence |
+| Gate | Result | Exact evidence |
 |---|---|---|
-| Contract and scope exact | PASS | `.orchestration/contracts/CF-I08.md`; no CF-I09 or production scope. |
-| Source semantics matrix | PASS | `docs/cf-i08-analytics-reporting-parity.md`; formulas/date/state/order/zero behavior are explicit. |
-| Backend authority and RBAC | PASS | Central capabilities; hotel reports use membership D1; network uses server-side configured fan-out; focal allow/deny matrix passes. |
-| Financial/report integrity | PASS | Exact cents, cancelled exclusion, zero-safe formulas, invalid-range rejection and deterministic per-hotel totals are asserted. |
-| Multi-hotel isolation | PASS | Two real local D1 bindings aggregate to exact totals/ranking; unknown binding returns truthful 503; client cannot choose binding. |
-| Responsive/integrated UX | PASS | Browser runner asserts Reports/Network controls and navigation through bookings, rooms, guests, housekeeping and users at all contracted widths. |
-| Static/build/route checks | PASS | Typecheck, 17-test check, web build, route uniqueness and Wrangler dry-run pass; fresh inherited CF-I03/04/05/06/07 focal/browser regressions pass. |
-| Independent review boundary | READY | Publish artifact A plus orchestration-only B; Codex does not self-PASS. |
+| Contract/scope | PASS | `.orchestration/contracts/CF-I08.md`; no CF-I09, production or Human Gate scope entered. |
+| Source semantics | PASS | `docs/cf-i08-analytics-reporting-parity.md`; immutable HMS source queries/formulas were read before test expectations. |
+| Dashboard KPI parity | PASS | Focal `/analytics/kpis` proves current dashboard shape, month revenue, active states, today fields, all-room occupancy and source ADR/RevPAR derivation. |
+| Revenue parity | PASS | Optional/default path, same-day validity, inclusive end and `CANCELLED` + `NO_SHOW` exclusion are executable. |
+| Occupancy parity | PASS | Inclusive daily series, distinct-room numerator, `CONFIRMED`/`CHECKED_IN` predicate and all-room denominator are executable. |
+| Network parity | PASS | Two configured local D1s, source dashboard-derived per-hotel metrics, arithmetic mean occupancy, exact totals/ranking and truthful unavailable binding. |
+| Security/isolation | PASS | Fresh inherited RBAC regression plus direct Hotel-A identity → Hotel-B report denial; browser proves housekeeping denial. |
+| Responsive/integrated UX | PASS | Fresh CF-I08 browser PASS at 375/390/430/768/1024 with material controls, cross-module navigation and screenshot. |
+| Invariants | PASS | `.orchestration/evidence/CF-I08-INVARIANTS.md`; no applicable FAIL/UNPROVEN remains. |
+| Regression/build/static | PASS | Fresh CF-I03/04/05/06/07 focal, CF-I07 browser, `npm run check`, web build, Wrangler dry-run and route/diff checks. |
+| Publication boundary | READY | Publish substantive A, resolve exact SHA, publish orchestration-only B, then stop for Independent Critic. |
 
-Required stop: publish one substantive artifact and one orchestration-only boundary, then await Independent Critic. Do not begin CF-I09.
+Codex does not self-declare product PASS. The next boundary is External Independent Critic; CF-I09 remains unauthorized.

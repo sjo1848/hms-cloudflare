@@ -2,18 +2,18 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "BUILD",
-  "runtime_status": "READY_TO_RESUME",
-  "resume_authorized": true,
-  "active_task": "CF-I08",
+  "runtime_status": "RUNNING",
+  "resume_authorized": false,
+  "active_task": "CF-I08-REWORK-1-VALIDATION-PUBLICATION",
   "work_branch": "main",
   "last_completed_task": "CF-I08-INDEPENDENT-CRITIC-REWORK-1",
   "last_completed_head": "ed7afe4722650933bc704c1d5f02150cbda82996",
-  "next_action": "CF_I08_AUTONOMOUS_REWORK_1_SOURCE_REPORTING_SEMANTICS_NETWORK_PARITY_INTEGRATED_BROWSER",
+  "next_action": "PUBLISH_CF_I08_REWORK_1_ARTIFACT_A_THEN_ORCHESTRATION_ONLY_BOUNDARY_B_STOP_INDEPENDENT_CRITIC",
   "stop_reason": "CF-I08 artifact A ed7afe4722650933bc704c1d5f02150cbda82996 with boundary B 6c94e7e8dce4b02d3f2110dca135dd7674a2f794 received External Independent Critic REWORK-1. Codex must consume .orchestration/reviews/CF-I08-CRITIC.md and autonomously restore immutable-source reporting semantics: source dashboard KPI/current-period behavior and fields, optional/default and inclusive report dates including same-day ranges, CANCELLED+NO_SHOW non-revenue handling, daily occupancy series with source state/room denominator rules, source ADR/RevPAR formulas, source-equivalent network per-hotel totals/arithmetic-mean occupancy/output semantics, direct tenant-A to tenant-B report denial, and material Reports/Network plus cross-module browser state continuity. Preserve accepted CF-I07 security/control-plane guarantees and truthful missing-binding failure. Rebuild source-derived evidence, rerun fresh inherited regressions, publish fresh artifact A plus orchestration-only boundary B and stop for Independent Critic. No Human Gate exists. CF-I09 remains unauthorized until CF-I08 PASS.",
   "event": {
-    "seq": 68,
-    "id": "CF-I08@CRITIC-REWORK-1",
-    "type": "INDEPENDENT_CRITIC_REWORK"
+    "seq": 69,
+    "id": "CF-I08@REWORK-1-READY-PUBLICATION",
+    "type": "REWORK_READY_FOR_PUBLICATION"
   },
   "external_review": {
     "required": false,

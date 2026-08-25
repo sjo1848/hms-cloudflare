@@ -1,14 +1,13 @@
-# CF-I08 Analytics and Reporting Parity
+# CF-I08 reporting parity matrix
 
-Source baseline: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`  
-Target increment: CF-I08, parity BUILD only.
+Source baseline: HMS `4df56a6217caab611f2f5fcbd98bde8386bb5629`, `ReportingService`, `postgres_booking.rs`, reporting handlers and `HotelNetworkPage`.
 
-| Source contract | Target surface | Mapping / acceptance | Evidence |
+| Requirement | Source rule | Target surface | Executable evidence |
 |---|---|---|---|
-| Dashboard KPI summary | `GET /api/v1/analytics/kpis` | Explicit `[start,end)` dates; cancelled bookings excluded; revenue is integer `total_cents`; occupied nights come from room-night claims; zero denominators return zero. | `scripts/cf-i08-regression.sh` |
-| Revenue report | `GET /api/v1/reports/revenue` | Validated ISO date range; booking arrival date in `[start,end)`; cancelled rows excluded; daily deterministic ordering; integer cents and empty rows allowed. | `scripts/cf-i08-regression.sh`, Reports UI |
-| Occupancy report | `GET /api/v1/reports/occupancy` | Available nights = non-out-of-order rooms × range days; occupied nights = non-cancelled room-night claims; occupancy is percentage; ADR = rounded revenue / occupied nights; RevPAR = rounded revenue / available nights. | `scripts/cf-i08-regression.sh` |
-| Network KPI aggregation | `GET /api/v1/hotels/network-kpis` | Network capability only; server reads configured active hotels and their bound D1s; totals equal per-hotel rows; rows sort by descending revenue then slug; unavailable binding returns 503. | `scripts/cf-i08-regression.sh`, Network UI |
-| Reports/network UX | `/reports`, `/network` | Date controls, KPI cards, ranking, property drill-down, loading/error/success rendering and no horizontal overflow at 375/390/430/768/1024. | `scripts/cf-i08-browser-regression.sh`, committed screenshot |
+| Dashboard KPIs | Current month revenue excludes `CANCELLED`/`NO_SHOW`; today's confirmed check-ins; active `CONFIRMED`/`CHECKED_IN`; today's distinct-room occupancy over all rooms; arrivals/departures; ADR = revenue/active bookings; RevPAR = occupancy × ADR / 100, integer truncation | `GET /api/v1/analytics/kpis` | `scripts/cf-i08-regression.sh` + source-derived SQL in `apps/api/src/routes/analytics.ts` |
+| Revenue report | Optional defaults `today-30`/`today`; inclusive `check_in >= start AND <= end`; excludes `CANCELLED` and `NO_SHOW`; ascending daily rows `{date,revenue_cents}` | `GET /api/v1/reports/revenue` | same-day, inclusive-end, cancellation and NoShow fixtures |
+| Occupancy report | Inclusive daily series; distinct rooms with `CONFIRMED`/`CHECKED_IN`; `check_in <= day < check_out`; denominator all rooms | `GET /api/v1/reports/occupancy` | daily 30-row fixture and state negative cases |
+| Network summary | Per-hotel dashboard occupancy/active/ADR/RevPAR, range revenue; arithmetic mean occupancy; totals and rows ordered by revenue | `GET /api/v1/hotels/network-kpis` | two bound D1 fixtures, independent ranking/total assertions |
+| Isolation | Tenant membership selects exactly one operational D1; another hotel identity cannot select it | all hotel reports | Hotel A identity + Hotel B header returns `403` |
 
-The target deliberately keeps money in integer cents. Percentages are numeric percentages rounded to two decimals; zero denominators are `0`, never `NaN` or an invented estimate. Network aggregation never accepts a client-supplied binding and never silently drops an unavailable configured hotel.
+The target migration adds `NO_SHOW` to the local booking lifecycle schema only to preserve source reporting predicates; it does not perform import, real-data migration or production cutover.
