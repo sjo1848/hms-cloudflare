@@ -2,25 +2,25 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "BUILD",
-  "runtime_status": "RUNNING",
+  "runtime_status": "READY_TO_RESUME",
   "resume_authorized": false,
-  "active_task": "CF-I08-REWORK-1-VALIDATION-PUBLICATION",
+  "active_task": "CF-I08-INDEPENDENT-CRITIC",
+  "last_completed_task": "CF-I08-REWORK-1-ARTIFACT-A",
+  "last_completed_head": "6030be4d63e0a4424d6142bce5bac4e6d9b5f422",
   "work_branch": "main",
-  "last_completed_task": "CF-I08-INDEPENDENT-CRITIC-REWORK-1",
-  "last_completed_head": "ed7afe4722650933bc704c1d5f02150cbda82996",
-  "next_action": "PUBLISH_CF_I08_REWORK_1_ARTIFACT_A_THEN_ORCHESTRATION_ONLY_BOUNDARY_B_STOP_INDEPENDENT_CRITIC",
-  "stop_reason": "CF-I08 artifact A ed7afe4722650933bc704c1d5f02150cbda82996 with boundary B 6c94e7e8dce4b02d3f2110dca135dd7674a2f794 received External Independent Critic REWORK-1. Codex must consume .orchestration/reviews/CF-I08-CRITIC.md and autonomously restore immutable-source reporting semantics: source dashboard KPI/current-period behavior and fields, optional/default and inclusive report dates including same-day ranges, CANCELLED+NO_SHOW non-revenue handling, daily occupancy series with source state/room denominator rules, source ADR/RevPAR formulas, source-equivalent network per-hotel totals/arithmetic-mean occupancy/output semantics, direct tenant-A to tenant-B report denial, and material Reports/Network plus cross-module browser state continuity. Preserve accepted CF-I07 security/control-plane guarantees and truthful missing-binding failure. Rebuild source-derived evidence, rerun fresh inherited regressions, publish fresh artifact A plus orchestration-only boundary B and stop for Independent Critic. No Human Gate exists. CF-I09 remains unauthorized until CF-I08 PASS.",
+  "next_action": "EXTERNAL_INDEPENDENT_CRITIC_REVIEW_CF_I08_ARTIFACT_A_6030be4d63e0a4424d6142bce5bac4e6d9b5f422",
+  "stop_reason": "Fresh substantive CF-I08 REWORK-1 artifact A 6030be4d63e0a4424d6142bce5bac4e6d9b5f422 is published after source-derived focal/API, browser, inherited, build, route and invariant gates. Boundary B is orchestration-only and blocks on External Independent Critic. No Human Gate exists. CF-I09 remains unauthorized until CF-I08 PASS.",
   "event": {
-    "seq": 69,
-    "id": "CF-I08@REWORK-1-READY-PUBLICATION",
-    "type": "REWORK_READY_FOR_PUBLICATION"
+    "seq": 70,
+    "id": "CF-I08@ARTIFACT-A-6030be4",
+    "type": "IMMUTABLE_ARTIFACT_B_PUBLISHED"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": "ed7afe4722650933bc704c1d5f02150cbda82996",
     "last_verdict": "REWORK_SOURCE_REPORTING_FORMULAS_DATES_OCCUPANCY_NETWORK_EVIDENCE",
-    "artifact_head": null,
-    "pending_verdict": null
+    "artifact_head": "6030be4d63e0a4424d6142bce5bac4e6d9b5f422",
+    "pending_verdict": "INDEPENDENT_CRITIC_REQUIRED"
   },
   "human_gate": null,
   "blocker": null,

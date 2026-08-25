@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-25  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 REWORK-1 READY FOR PUBLICATION`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 REWORK-1 ARTIFACT PUBLISHED — INDEPENDENT CRITIC PENDING`
 
 Current objective: migrate the accepted HMS product to Cloudflare while preserving product behavior, domain semantics, security, financial integrity and operational safety. Migration is parity-first; no product-feature expansion or silent UX redesign is authorized.
 
@@ -29,7 +29,7 @@ Current objective: migrate the accepted HMS product to Cloudflare while preservi
 - CF-I05 Housekeeping + Maintenance — PASS — artifact A `17372d3200b8e88eec116e97672c12589005103d`, boundary B `9a05013c4b38567ff4749a855b40c9fd1cba2314`.
 - CF-I06 Billing — PASS — artifact A `0004990ba60b0349776de139cd04dfc2f30eaa6d`, boundary B `de0dbdc0ed92b60a5fd32faa184484c701711d08`.
 - CF-I07 Users / RBAC / Audit / Hotel-Network Admin — PASS — artifact A `fdf9c6f82c3c5066152e49ecba70268d669a640f`, boundary B `c52656fcc311f53be9b584346f2afc9e54796ff9`.
-- CF-I08 Analytics / Reports / Integrated Responsive Product — prior artifact A `ed7afe4722650933bc704c1d5f02150cbda82996` — Independent Critic `REWORK-1`; repaired substantive artifact is ready for publication.
+- CF-I08 Analytics / Reports / Integrated Responsive Product — artifact A `6030be4d63e0a4424d6142bce5bac4e6d9b5f422`; boundary B is this orchestration-only commit — Independent Critic pending.
 
 ## CF-I07 ACCEPTED GUARANTEES — PRESERVE
 
@@ -105,6 +105,6 @@ Local repository sync only if the Codex workspace has not consumed the latest re
 
 `CF_I08_AUTONOMOUS_REWORK_1_SOURCE_REPORTING_SEMANTICS_NETWORK_PARITY_INTEGRATED_BROWSER`
 
-Codex has consumed the critique, repaired CF-I08 from immutable source reporting handlers/repositories, passed focal/inherited/browser/build gates and must publish fresh artifact A + orchestration-only boundary B, then stop for Independent Critic.
+Artifact A `6030be4d63e0a4424d6142bce5bac4e6d9b5f422` is published with source-derived reporting implementation, migration, tests, browser evidence and invariant/gate evidence. Boundary B must contain only this state handoff and then stop for Independent Critic.
 
 Do not begin CF-I09 before CF-I08 Independent Critic PASS. No production deployment, remote D1 creation/mutation, real-data migration, paid transition or cutover is authorized.
