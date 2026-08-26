@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { AccessAuthenticationError, resolveAccessIdentity } from "./access";
 
+const stagingEnv = { ENVIRONMENT: "staging", STAGING_ACCEPTANCE_AUTH: "true" } as const;
+const stagingHeaders = {
+  "x-hms-staging-gateway": "access-gated-web",
+  "x-staging-access-subject": "source-user:14000000-0000-0000-0000-000000000001",
+  "x-staging-access-email": "ana-admin@migration.invalid",
+} as const;
+
 describe("Cloudflare Access identity boundary", () => {
   it("fails closed when the Access assertion is absent", async () => {
     await expect(
@@ -76,44 +83,44 @@ describe("Cloudflare Access identity boundary", () => {
       .resolves.toEqual({ subject: "local-user", email: "local@example.test" });
   });
 
-  it("accepts the explicit staging bridge only in staging", async () => {
-    const request = new Request("https://hms-cloudflare-web-staging.sjo1848.workers.dev/api/v1/auth/me", {
-      headers: {
-        "x-hms-staging-gateway": "access-gated-web",
-        "x-staging-access-subject": "source-user:test",
-        "x-staging-access-email": "tester@migration.invalid",
-      },
+  it("accepts only the fixed staging acceptance identity", async () => {
+    await expect(resolveAccessIdentity(
+      new Request("https://hms-cloudflare-web-staging.sjo1848.workers.dev/api/v1/auth/me", { headers: stagingHeaders }),
+      stagingEnv,
+    )).resolves.toEqual({
+      subject: "source-user:14000000-0000-0000-0000-000000000001",
+      email: "ana-admin@migration.invalid",
     });
-    await expect(resolveAccessIdentity(request, {
-      ENVIRONMENT: "staging",
-      STAGING_ACCEPTANCE_AUTH: "true",
-    })).resolves.toEqual({ subject: "source-user:test", email: "tester@migration.invalid" });
+  });
+
+  it("rejects an altered staging subject or email", async () => {
+    for (const headers of [
+      { ...stagingHeaders, "x-staging-access-subject": "source-user:attacker" },
+      { ...stagingHeaders, "x-staging-access-email": "attacker@migration.invalid" },
+    ]) {
+      await expect(resolveAccessIdentity(
+        new Request("https://example.test/api/v1/auth/me", { headers }),
+        stagingEnv,
+      )).rejects.toThrow(AccessAuthenticationError);
+    }
   });
 
   it("rejects staging bridge headers when the gateway marker is missing", async () => {
-    const request = new Request("https://example.test/api/v1/auth/me", {
-      headers: {
-        "x-staging-access-subject": "source-user:test",
-        "x-staging-access-email": "tester@migration.invalid",
-      },
-    });
-    await expect(resolveAccessIdentity(request, {
-      ENVIRONMENT: "staging",
-      STAGING_ACCEPTANCE_AUTH: "true",
-    })).rejects.toThrow(AccessAuthenticationError);
+    await expect(resolveAccessIdentity(
+      new Request("https://example.test/api/v1/auth/me", {
+        headers: {
+          "x-staging-access-subject": stagingHeaders["x-staging-access-subject"],
+          "x-staging-access-email": stagingHeaders["x-staging-access-email"],
+        },
+      }),
+      stagingEnv,
+    )).rejects.toThrow(AccessAuthenticationError);
   });
 
   it("rejects staging bridge headers in production", async () => {
-    const request = new Request("https://example.test/api/v1/auth/me", {
-      headers: {
-        "x-hms-staging-gateway": "access-gated-web",
-        "x-staging-access-subject": "source-user:test",
-        "x-staging-access-email": "tester@migration.invalid",
-      },
-    });
-    await expect(resolveAccessIdentity(request, {
-      ENVIRONMENT: "production",
-      STAGING_ACCEPTANCE_AUTH: "true",
-    })).rejects.toThrow(AccessAuthenticationError);
+    await expect(resolveAccessIdentity(
+      new Request("https://example.test/api/v1/auth/me", { headers: stagingHeaders }),
+      { ENVIRONMENT: "production", STAGING_ACCEPTANCE_AUTH: "true" },
+    )).rejects.toThrow(AccessAuthenticationError);
   });
 });
