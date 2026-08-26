@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 
 type Room = { id: string; room_number: string; room_type: string; status: string; price_cents: number };
 type Guest = { id: string; full_name: string; email: string; phone: string | null };
@@ -260,9 +260,33 @@ const navigation = [["bookings", "/bookings", "Recepción", "Llegadas, salidas y
 
 export function App() {
   const [identityVersion, setIdentityVersion] = useState(0); const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mobileNavRef = useRef<HTMLDialogElement | null>(null); const mobileMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
   const page = location.pathname.startsWith("/guests") ? "guests" : location.pathname.startsWith("/rooms") ? "rooms" : location.pathname.startsWith("/housekeeping") ? "housekeeping" : location.pathname.startsWith("/users") ? "users" : location.pathname.startsWith("/network") ? "network" : location.pathname.startsWith("/reports") ? "reports" : "bookings";
   const activeLabel = navigation.find(([key]) => key === page)?.[2] ?? "Recepción";
+  const activeHotelLabel = activeLocalDevProfile?.hotelId === "20000000-0000-0000-0000-000000000002" ? "Hotel Sur" : "Hotel Norte";
   const content = page === "rooms" ? <Rooms /> : page === "guests" ? <Guests /> : page === "housekeeping" ? <HousekeepingRework /> : page === "users" ? <UsersAdmin /> : page === "network" ? <NetworkAdmin /> : page === "reports" ? <Reports /> : <><Bookings /><BillingPanel /><CashBalancePanel /></>;
   const navLinks = (close = false) => navigation.map(([key, href, label, description]) => <a key={key} className={page === key ? "active" : ""} href={href} onClick={close ? () => setMobileNavOpen(false) : undefined}><strong>{label}</strong><small>{description}</small></a>);
-  return <div className="app-shell"><aside className="desktop-sidebar" aria-label="Navegación principal"><a className="brand" href="/bookings"><span className="brand-mark">H</span><span><strong>HMS</strong><small>Elite</small></span></a><p className="nav-label">Operación</p><nav>{navLinks()}</nav><div className="sidebar-footer"><span className="status-dot" /> Staging · Access activo</div></aside><main className="app-main"><header className="app-header"><div className="mobile-heading"><button className="menu-trigger" type="button" aria-label="Abrir navegación" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}>☰</button><div><p className="eyebrow">HMS Elite</p><h1>{activeLabel}</h1></div></div><div className="desktop-heading"><p className="eyebrow">Hotel operations</p><h1>{activeLabel}</h1></div><span className="header-context">Hotel Norte · Operación</span></header><div className="app-content"><LocalDevIdentitySelector onChange={() => setIdentityVersion(value => value + 1)} /><div key={identityVersion}>{content}</div></div></main>{mobileNavOpen && <dialog className="mobile-nav" open aria-label="Navegación móvil"><div className="mobile-nav-heading"><a className="brand" href="/bookings"><span className="brand-mark">H</span><span><strong>HMS</strong><small>Elite</small></span></a><button type="button" className="close-nav" aria-label="Cerrar navegación" onClick={() => setMobileNavOpen(false)}>×</button></div><nav>{navLinks(true)}</nav><p className="sidebar-footer"><span className="status-dot" /> Staging · Access activo</p></dialog>}</div>;
+  useLayoutEffect(() => {
+    const dialog = mobileNavRef.current;
+    if (!dialog) return;
+    if (mobileNavOpen) {
+      if (!dialog.open) dialog.showModal();
+      const firstFocusable = dialog.querySelector<HTMLElement>("a, button");
+      firstFocusable?.focus();
+      const onCancel = (event: Event) => { event.preventDefault(); setMobileNavOpen(false); };
+      dialog.addEventListener("cancel", onCancel);
+      return () => dialog.removeEventListener("cancel", onCancel);
+    }
+    if (dialog.open) dialog.close();
+    mobileMenuTriggerRef.current?.focus();
+  }, [mobileNavOpen]);
+  function trapMobileNavFocus(event: KeyboardEvent<HTMLDialogElement>) {
+    if (event.key !== "Tab") return;
+    const focusable = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("a, button")).filter(element => !element.hasAttribute("disabled"));
+    if (!focusable.length) return;
+    const first = focusable[0]; const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
+  return <div className="app-shell"><aside className="desktop-sidebar" aria-label="Navegación principal"><a className="brand" href="/bookings"><span className="brand-mark">H</span><span><strong>HMS</strong><small>Elite</small></span></a><p className="nav-label">Operación</p><nav>{navLinks()}</nav><div className="sidebar-footer"><span className="status-dot" /> Staging · Access activo</div></aside><main className="app-main"><header className="app-header"><div className="mobile-heading"><button ref={mobileMenuTriggerRef} className="menu-trigger" type="button" aria-label="Abrir navegación" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}>☰</button><div><p className="eyebrow">HMS Elite</p><h1>{activeLabel}</h1></div></div><div className="desktop-heading"><p className="eyebrow">Hotel operations</p><h1>{activeLabel}</h1></div><span className="header-context">{activeHotelLabel} · Operación</span></header><div className="app-content"><LocalDevIdentitySelector onChange={() => setIdentityVersion(value => value + 1)} /><div key={identityVersion}>{content}</div></div></main>{mobileNavOpen && <dialog ref={mobileNavRef} className="mobile-nav" aria-label="Navegación móvil" onKeyDown={trapMobileNavFocus}><div className="mobile-nav-heading"><a className="brand" href="/bookings"><span className="brand-mark">H</span><span><strong>HMS</strong><small>Elite</small></span></a><button type="button" className="close-nav" aria-label="Cerrar navegación" onClick={() => setMobileNavOpen(false)}>×</button></div><nav>{navLinks(true)}</nav><p className="sidebar-footer"><span className="status-dot" /> {activeHotelLabel} · Access activo</p></dialog>}</div>;
 }
