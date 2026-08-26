@@ -66,7 +66,7 @@ cf_i09_wait_http() {
 cf_i09_assert_managed_path() {
   local candidate="$1"
   case "$candidate" in
-    "$CF_I09_REPO_DIR/apps/api/.wrangler/state/v3/d1"|"$CF_I09_RUNTIME_DIR"/*) ;;
+    "$CF_I09_REPO_DIR/apps/api/.wrangler/state"/*|"$CF_I09_RUNTIME_DIR"/*) ;;
     *) cf_i09_die "refusing filesystem mutation outside managed local paths: $candidate" ;;
   esac
 }

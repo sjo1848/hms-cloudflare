@@ -1,6 +1,6 @@
 # CF-I09 invariant evidence
 
-Candidate: CF-I09 REWORK-3 closure candidate; source baseline `4df56a6217caab611f2f5fcbd98bde8386bb5629`.
+Candidate: CF-I09 REWORK-4 closure candidate; source baseline `4df56a6217caab611f2f5fcbd98bde8386bb5629`.
 
 | Invariant | Classification | Evidence |
 |---|---|---|
@@ -30,3 +30,9 @@ Candidate: CF-I09 REWORK-3 closure candidate; source baseline `4df56a6217caab611
 | INV-SCOPE-001 | APPLIES / PASS | No deploy, remote, paid, real-data or cutover action; `git diff` scope audit. |
 
 All applicable invariants are PASS or N/A; no invariant evidence is UNPROVEN.
+
+REWORK-4 runtime proof: `test-rehearsal.sh`, backup/restore rehearsal, complete
+local Worker+D1 smoke, and two fresh `local-start.sh --reset` → `/ready` → stop
+runs completed under bounded timeouts. Reset rehearses in clean temporary
+binding-local stores, materializes the same SQLite files used by the Worker,
+and verifies all three bindings; no owned processes remained after stop.

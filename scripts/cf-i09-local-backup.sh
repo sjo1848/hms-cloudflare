@@ -12,6 +12,16 @@ backup_dir=$(cd "$backup_dir" && pwd)
 
 cf_i09_reconcile "$backup_dir/reconciliation.json"
 for database in "${CF_I09_DATABASES[@]}"; do
+  case "$database" in
+    CONTROL_DB) db_file=a36f84ea60804f30bb0c7f7cad9f5336a6cca0165abdab8b9241d93dbf0b6006.sqlite ;;
+    HOTEL_DEMO_DB) db_file=3dd27f64a8e6b7092b4dc42ea2a5f93d01d65d27a0f4927b2e4bc344a6a2f6f6.sqlite ;;
+    HOTEL_SECOND_DB) db_file=374ae31b0276edfb52cf0c3fe3f8b1712cac94c97c4f163773aedbe6cbf2938e.sqlite ;;
+  esac
+  source_db="$CF_I09_PERSIST_DIR/v3/d1/miniflare-D1DatabaseObject/$db_file"
+  [[ -f "$source_db" ]] || cf_i09_die "local D1 database file is missing for $database"
+  cp -- "$source_db" "$backup_dir/$database.sqlite"
+  printf -- '-- SQLite file backup; SQL companion retained for manifest compatibility.\n' > "$backup_dir/$database.sql"
+  continue
   : > "$backup_dir/$database.sql"
   printf 'PRAGMA foreign_keys=OFF;\n' >> "$backup_dir/$database.sql"
   if [[ "$database" == CONTROL_DB ]]; then
@@ -33,6 +43,6 @@ for database in "${CF_I09_DATABASES[@]}"; do
 done
 (
   cd "$backup_dir"
-  sha256sum CONTROL_DB.sql HOTEL_DEMO_DB.sql HOTEL_SECOND_DB.sql reconciliation.json > manifest.sha256
+  sha256sum CONTROL_DB.sql HOTEL_DEMO_DB.sql HOTEL_SECOND_DB.sql CONTROL_DB.sqlite HOTEL_DEMO_DB.sqlite HOTEL_SECOND_DB.sqlite reconciliation.json > manifest.sha256
 )
 printf 'CF-I09 local D1 backup PASS: %s\n' "$backup_dir"

@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync, readdirSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
@@ -12,6 +12,16 @@ const configs = {
   CONTROL_DB: resolve("apps/api/wrangler.control-local.jsonc"),
   HOTEL_DEMO_DB: resolve("apps/api/wrangler.hotel-local.jsonc"),
   HOTEL_SECOND_DB: resolve("apps/api/wrangler.hotel-second-local.jsonc"),
+};
+const databaseFiles = {
+  CONTROL_DB: "a36f84ea60804f30bb0c7f7cad9f5336a6cca0165abdab8b9241d93dbf0b6006.sqlite",
+  HOTEL_DEMO_DB: "3dd27f64a8e6b7092b4dc42ea2a5f93d01d65d27a0f4927b2e4bc344a6a2f6f6.sqlite",
+  HOTEL_SECOND_DB: "374ae31b0276edfb52cf0c3fe3f8b1712cac94c97c4f163773aedbe6cbf2938e.sqlite",
+};
+const migrations = {
+  CONTROL_DB: "apps/api/schema/control-migrations",
+  HOTEL_DEMO_DB: "apps/api/schema/hotel-migrations",
+  HOTEL_SECOND_DB: "apps/api/schema/hotel-migrations",
 };
 
 // Miniflare's local persistence lock is process-wide for a directory.  A
@@ -39,21 +49,42 @@ export function wranglerRun(args, { capture = false } = {}) {
 }
 
 export function applyMigrations(binding, persistTo) {
-  wranglerRun(["d1", "migrations", "apply", binding, "--persist-to", persistPath(binding, persistTo)]);
+  // Applying migrations through three sequential Wrangler/Miniflare
+  // processes is the known 4.125 shared-persistence hang. D1's local store
+  // is SQLite, so apply the checked-in migration files directly and leave
+  // Wrangler only for the single-process Worker runtime.
+  const root = persistPath(binding, persistTo);
+  const dbRoot = join(root, "v3", "d1", "miniflare-D1DatabaseObject");
+  mkdirSync(dbRoot, { recursive: true });
+  const db = new DatabaseSync(join(dbRoot, databaseFiles[binding]));
+  db.exec("CREATE TABLE IF NOT EXISTS d1_migrations (id INTEGER PRIMARY KEY, name TEXT NOT NULL, applied_at TEXT NOT NULL)");
+  const applied = new Set(db.prepare("SELECT id FROM d1_migrations").all().map((row) => Number(row.id)));
+  const files = readdirSync(resolve(migrations[binding])).filter((name) => /^\d+_.*\.sql$/.test(name)).sort();
+  for (const name of files) {
+    const id = Number(name.slice(0, 4));
+    if (applied.has(id)) continue;
+    db.exec(readFileSync(resolve(migrations[binding], name), "utf8"));
+    db.prepare("INSERT INTO d1_migrations (id,name,applied_at) VALUES (?,?,datetime('now'))").run(id, name);
+  }
+  db.close();
 }
 
 export function executeFile(binding, persistTo, file) {
   const dbRoot = join(persistPath(binding, persistTo), "v3", "d1", "miniflare-D1DatabaseObject");
   try {
-    const sqlite = readdirSync(dbRoot).find((name) => name.endsWith(".sqlite") && name !== "metadata.sqlite");
+    const sqlite = databaseFiles[binding] ?? readdirSync(dbRoot).find((name) => name.endsWith(".sqlite") && name !== "metadata.sqlite");
     if (sqlite) {
       const db = new DatabaseSync(join(dbRoot, sqlite));
       db.exec(readFileSync(file, "utf8"));
       db.close();
       return;
     }
-  } catch {
-    // Fall through to Wrangler when the local database has not initialized.
+  } catch (error) {
+    if (error?.code === "ERR_INVALID_ARG_TYPE" || error?.code === "ENOENT") {
+      // Fall through to Wrangler when the local database has not initialized.
+    } else {
+      throw error;
+    }
   }
   wranglerRun(["d1", "execute", binding, "--persist-to", persistPath(binding, persistTo), "--file", file, "--yes"]);
 }
@@ -65,7 +96,7 @@ export function query(binding, persistTo, sql) {
   // shim otherwise hangs on the second captured query).
   const dbRoot = join(persistPath(binding, persistTo), "v3", "d1", "miniflare-D1DatabaseObject");
   try {
-    const file = readdirSync(dbRoot).find((name) => name.endsWith(".sqlite") && name !== "metadata.sqlite");
+    const file = databaseFiles[binding] ?? readdirSync(dbRoot).find((name) => name.endsWith(".sqlite") && name !== "metadata.sqlite");
     if (file) {
       const db = new DatabaseSync(join(dbRoot, file));
       const results = db.prepare(sql).all();

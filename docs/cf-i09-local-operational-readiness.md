@@ -8,7 +8,7 @@ This runbook operates the complete HMS candidate locally for technical smoke and
 - Install repository dependencies with `npm install`.
 - Run commands from the repository root.
 - API: `http://127.0.0.1:8787`; frontend: `http://127.0.0.1:4174`.
-- Local D1 persistence: `apps/api/.wrangler/state`; runtime PIDs, logs, reset snapshots, and backups: `.hms-local` (Git-ignored). Wrangler resolves `d1 export --local` relative to the selected API config, so every CF-I09 command deliberately uses that same directory.
+- Local D1 persistence: `apps/api/.wrangler/state`; runtime PIDs, logs, reset snapshots, and backups: `.hms-local` (Git-ignored). Reset/rehearsal first uses a clean temporary per-binding store (avoiding Wrangler 4.125 shared-process locks), then materializes the same three SQLite files into this Worker root. No command uses remote D1.
 - `LOCAL_DEV_AUTH=true` is passed only to the explicitly local `wrangler dev --local` process. The checked-in configuration remains `LOCAL_DEV_AUTH=false`, and production continues to require Cloudflare Access.
 - Source passwords, Access assertions, tokens, and production-only secrets are neither required nor imported.
 
@@ -30,7 +30,7 @@ Reset/reseed and machine reconciliation while stopped:
 scripts/cf-i09-local-reset.sh
 ```
 
-The reset retains the previous D1 directory below `.hms-local/resets/`, runs `scripts/migration/rehearse.mjs --persist-to apps/api/.wrangler/state`, and requires the machine reconciliation to pass. It never contacts remote D1.
+The reset retains the previous D1 directory below `.hms-local/resets/`, runs the deterministic migration against a clean temporary store, materializes the three binding databases into `apps/api/.wrangler/state`, and requires machine reconciliation to pass. Direct SQLite migration application avoids the known Wrangler 4.125 repeated-D1 hang; a bounded timeout is a failure, never a successful workaround.
 
 Start a freshly reset complete product:
 
@@ -78,7 +78,7 @@ It then cleanly stops and resets/reconciles the fixture again, so transient smok
 
 ## Local backup and restore
 
-Create a reconciled local SQL export of all three D1 databases while the runtime is stopped:
+Create a reconciled local backup of all three D1 databases while the runtime is stopped:
 
 ```bash
 scripts/cf-i09-local-backup.sh
@@ -90,7 +90,7 @@ The output path is printed. To select one explicitly:
 scripts/cf-i09-local-backup.sh .hms-local/backups/manual-baseline
 ```
 
-Each backup contains `CONTROL_DB.sql`, `HOTEL_DEMO_DB.sql`, `HOTEL_SECOND_DB.sql`, the baseline machine reconciliation, and `manifest.sha256`. Export uses Wrangler `d1 export --local`; no `--remote` path exists in these scripts.
+Each backup contains the three SQL companion files, immutable local SQLite database copies, the baseline machine reconciliation, and `manifest.sha256`. No `--remote` path exists in these scripts.
 
 Restore a stopped runtime from that directory:
 
@@ -98,7 +98,7 @@ Restore a stopped runtime from that directory:
 scripts/cf-i09-local-restore.sh .hms-local/backups/manual-baseline
 ```
 
-Restore verifies checksums before mutation, moves the current local D1 state to `.hms-local/restore-rollbacks/`, imports all three SQL exports using `d1 execute --local`, reruns reconciliation, and requires byte-identical reconciliation against the baseline. If an import fails, the partial restored state is quarantined and the previous local D1 state is reinstated.
+Restore verifies checksums before mutation, moves the current local D1 state to `.hms-local/restore-rollbacks/`, restores all three local SQLite copies, reruns reconciliation, and requires byte-identical reconciliation against the baseline. If restore fails, the previous local D1 state is reinstated.
 
 Execute the complete baseline → export → intentional three-DB mutation → restore → exact reconciliation rehearsal:
 
