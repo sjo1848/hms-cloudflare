@@ -6,9 +6,9 @@ Project: HMS Cloudflare
 Updated: 2026-08-26
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD / VALIDATE READINESS`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-2 A3 PUBLISHED / WAITING EXTERNAL REVIEW`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-3 AUTHORIZED`
 
-Runtime: `WAITING_EXTERNAL_REVIEW` — Artifact A3 is published and boundary B3 records its exact SHA. No Human Gate or technical blocker.
+Runtime: `READY_TO_RESUME` — External Independent Critic reviewed CF-I09 Artifact A3 and returned REWORK-3. No Human Gate and no external blocker.
 
 Current objective: complete the accepted HMS Cloudflare migration locally with deterministic source-parity migration, reconciliation, backup/restore and operational readiness so the Human can perform complete local Product Acceptance before any remote Cloudflare deployment.
 
@@ -37,6 +37,7 @@ Current objective: complete the accepted HMS Cloudflare migration locally with d
 - CF-I08 Analytics / Reports / Integrated Responsive Product — PASS — artifact A `ab0af4d70f05d507e80fb6a518f7eff890c239db`, boundary B `0bd005850da7019162a87172c68b5daff139bbed`.
 - CF-I09 Artifact A1 `a972bca40ed60505bc42f5ae560977886c2972ab`, boundary B1 `54d8ad2e77b78f4101a14501b7e81ef014c9be2a` — Independent Critic **REWORK-1**.
 - CF-I09 Artifact A2 `e483e6b3d973491caa7eb25d119e41d5804f2ae0`, boundary B2 `f9c510c8c2bd6f5bdfc72a9f757e40a149e768e4` — External Independent Critic **REWORK-2**.
+- CF-I09 Artifact A3 `58ac2c5758795ae1b8257a8c313b31842e157993`, boundary B3 `b0a8ea321a29ccf31d91375e42ef8f709ad47664` — External Independent Critic **REWORK-3**.
 
 ## CF-I08 ACCEPTED GUARANTEES — PRESERVE
 
@@ -53,31 +54,32 @@ Current objective: complete the accepted HMS Cloudflare migration locally with d
 
 ## CF-I09 ACCEPTED FOUNDATION — PRESERVE
 
-A1/A2 establish a strong local-only migration/readiness foundation. REWORK-2 must preserve:
+A1/A2/A3 establish a strong local-only migration/readiness foundation. REWORK-3 must preserve:
 
 - source→CONTROL_DB/per-hotel-D1 rehearsal with explicit two-binding routing;
 - UUID/TEXT, integer-cent, DATE/UTC/JSON normalization and explicit source-field disposition;
 - `NO_SHOW` migration/report/Housekeeping safety;
 - replay refusal before business mutation, partial-run failure handling and deterministic reconciliation;
-- exact reconciliation beyond row counts, including references, money, events, tenant ownership and reporting outputs;
 - local Access bypass restricted to development + explicit opt-in + loopback;
 - `/ready`, reset/start/stop and local-only backup/restore with post-restore reconciliation;
-- full local Worker+D1/Playwright product smoke and fresh inherited CF-I03–CF-I08 regressions;
-- source-valid `saas_admin` represented as network-only membership, not tenant admin promotion;
+- full local Worker+D1/Playwright product smoke and inherited CF-I03–CF-I08 regression coverage;
+- source-valid `saas_admin` represented as network-only membership, with network ALLOW and explicit tenant-operation `403` DENY;
 - legacy NULL payment and maintenance actor provenance preserved without false attribution;
-- truthful model/reasoning receipt and exact A2 publication SHA;
-- explicit SaaS browser profile persistence;
+- booking `checked_in_by` / `checked_out_by` NULL snapshot parity preserved;
+- lifecycle unknown actors emitted only when a real source lifecycle timestamp requires reconstruction into a non-null target event actor;
+- corrected source `0001`–`0030` nullable/legacy actor/identity audit;
+- bounded local three-D1 persistence workaround without product topology changes;
+- truthful model/reasoning receipt and exact full-SHA A/B publication boundary;
 - no remote, paid, real-data, production or cutover scope.
 
-## CF-I09 REWORK-2 BLOCKING FINDINGS
+## CF-I09 REWORK-3 BLOCKING FINDING
 
 Full verdict: `.orchestration/reviews/CF-I09-CRITIC.md`.
 
-1. **Booking NULL actor snapshot parity — P1.** Source `checked_in_by_user_id` / `checked_out_by_user_id` are nullable and target booking snapshot columns are nullable, but A2 writes unknown sentinels into the booking snapshot. Preserve NULL exactly there. Unknown sentinel is only for a reconstructed lifecycle event that actually occurred and whose target event actor is NOT NULL. Add exact reconciliation for booking lifecycle actor snapshot columns and fixture/preflight coverage for event/no-event + NULL/real actor combinations.
-2. **Source nullable-actor audit inaccurate — P2.** The claimed `0001–0030` sweep misclassifies source migration families. Correct it from the actual source migrations, including nullable room-hold creator in 0020, check-in/out actors in 0022, terminal/late-arrival actors in 0026, maintenance legacy reporter in 0028, audit actor, payments and every other applicable actor/identity surface.
-3. **`saas_admin` tenant-operation DENY evidence missing — P2.** Keep positive network ALLOW and structural no-hotel-membership proof, and add explicit behavioral `403` for migrated `saas_admin` attempting a representative hotel-operational route with hotel context.
+1. **Lifecycle exact reconciliation gap — P2.** A3 correctly migrates nullable booking actor snapshots and reconstructs lifecycle events, but `reconcile.mjs` does not exact-compare booking `checked_in_at` / `checked_out_at`, and reconstructed `lifecycle_events` are validated only by aggregate count rather than exact identity/actor/timestamp/request/hotel/provenance fields. The focal migration Vitest does not close this gap. A wrong lifecycle actor/timestamp can therefore preserve row counts and still pass current reconciliation.
+2. **Evidence overclaim.** Internal review says actor columns reconcile exactly and reports zero P0/P1/P2, while executable proof is weaker. `INV-EVID-001` therefore remains unproven until the lifecycle exactness checks and adversarial failure proof exist.
 
-Diagnosis: `BOOKING_NULL_ACTOR_SNAPSHOT_PARITY_GAP + SOURCE_NULLABILITY_AUDIT_INACCURATE + SAAS_ADMIN_TENANT_DENY_EVIDENCE_MISSING`.
+Diagnosis: `LIFECYCLE_EXACT_RECONCILIATION_GAP + EVIDENCE_OVERCLAIM`.
 
 ## METHOD / TOKEN POLICY — BINDING
 
@@ -98,42 +100,36 @@ Model policy is Luna-first:
 
 Receipt must record actual execution truthfully. Human routine relay is forbidden.
 
-## REWORK-2 EXIT
+## REWORK-3 EXIT
 
 Codex must autonomously:
 
-1. preserve all accepted A2 repairs and prior CF-I09 foundation;
-2. preserve NULL exactly in booking snapshot lifecycle actor columns and restrict unknown sentinel use to real reconstructed lifecycle events requiring non-null actors;
-3. add exact actor snapshot reconciliation and deterministic positive/negative fixture/preflight coverage;
-4. correct the exhaustive source `0001`–`0030` nullable/legacy actor/identity sweep against actual source migrations;
-5. add explicit migrated `saas_admin` hotel-operation DENY behavior while preserving network ALLOW;
-6. rerun migration/reconciliation, replay/partial failure, backup/restore and complete local Worker+D1/Playwright smoke;
-7. rerun fresh inherited CF-I03–CF-I08 plus type/unit/build/Wrangler/route/diff/scope checks;
-8. complete fresh Internal QA/Critic + Integration Review with zero open P0/P1/P2 and truthful model receipts;
-9. correct invariant/Pre-Critic evidence so no PASS exceeds executable proof;
-10. publish fresh substantive artifact A3 followed by orchestration-only B3 containing exact full A3 SHA;
-11. stop in `WAITING_EXTERNAL_REVIEW` for the next External Independent Critic.
+1. preserve all accepted A3 repairs and prior CF-I09 foundation;
+2. exact-reconcile booking `checked_in_at` / `checked_out_at` together with their nullable actor snapshots;
+3. exact-reconcile every reconstructed lifecycle event expected from the fixture, including event ID, booking ID, event type, actor subject, request ID, hotel ID, timestamp, room/from-room semantics and material provenance;
+4. add adversarial executable proof that reconciliation fails when a lifecycle snapshot timestamp or lifecycle event actor/timestamp is tampered while counts remain unchanged;
+5. rerun focal migration/reconciliation, replay/partial failure and backup/restore against the repaired reconciliation;
+6. rerun fresh contracted inherited CF-I03–CF-I08, local Worker+D1/Playwright smoke, unit/type/build/Wrangler/route/diff/scope checks after the reconciliation change;
+7. complete fresh separate Internal QA/Critic + Integration Review with zero open P0/P1/P2 only after explicitly attempting to falsify lifecycle exactness;
+8. correct invariant/Pre-Critic/internal-review claims so no PASS exceeds executable proof;
+9. publish fresh substantive Artifact A4 followed by orchestration-only Boundary B4 containing the exact full A4 SHA;
+10. stop in `WAITING_EXTERNAL_REVIEW` for the next External Independent Critic;
+11. no Human Gate, remote/paid Cloudflare action, real-data migration, production or cutover.
 
 ## DELIVERY SEQUENCE
 
-`CF-I09 REWORK-2 → External Independent Critic → complete local HMS Human Product Acceptance → Cloudflare test environment → Cloudflare validation → production-readiness/release gates`.
+`CF-I09 REWORK-3 → External Independent Critic → complete local HMS Human Product Acceptance → Cloudflare test environment → Cloudflare validation → production-readiness/release gates`.
 
 No production, remote D1, real-data migration, paid resource, Access production policy, DNS or cutover action is authorized.
 
 ## PENDING HUMAN GATES
 
-None. REWORK-2 is ordinary autonomous technical repair. No blocker is accepted.
+None. REWORK-3 is ordinary autonomous technical repair. No external blocker is accepted.
 
 Paid Cloudflare resources, irreversible provisioning/cutover, significant unresolved product/security risk tradeoff, real-data production migration and final Human Product Acceptance remain Human Gates only when actually reached.
 
 ## NEXT AUTHORIZED ACTION
 
-`EXTERNAL_INDEPENDENT_CRITIC_REVIEW_CF_I09_A3`
+`CF_I09_AUTONOMOUS_REWORK_3_LIFECYCLE_EXACT_RECONCILIATION`
 
-## ARTIFACT A3 / BOUNDARY B3
-
-- Artifact A3: `58ac2c5758795ae1b8257a8c313b31842e157993`
-- Boundary B3 records the exact full A3 SHA and contains orchestration metadata only.
-- External Independent Critic review is required before further substantive work.
-
-Codex consumes the canonical critic/state, performs autonomous REWORK-2 through Internal QA/Critic, Integration Review, full regression and Pre-Critic closure, publishes one mature fresh A3+B3, then stops for External Independent Critic. Human relay is not required.
+Codex consumes the canonical External Critic verdict and state, repairs lifecycle exact reconciliation and evidence autonomously through the full internal gate, publishes one mature fresh A4+B4, and stops for External Independent Critic. Human routine relay is not required.
