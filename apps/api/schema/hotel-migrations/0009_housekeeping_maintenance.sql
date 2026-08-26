@@ -47,15 +47,15 @@ CREATE INDEX IF NOT EXISTS idx_housekeeping_events_room_created
 CREATE TRIGGER IF NOT EXISTS housekeeping_event_state_guard
 BEFORE INSERT ON housekeeping_events
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT (CASE WHEN NOT EXISTS (
     SELECT 1 FROM rooms WHERE id = NEW.room_id AND status = NEW.to_status
-  ) THEN RAISE(ABORT, 'housekeeping room transition guard failed') END;
-  SELECT CASE WHEN NEW.event_type = 'CLEANING_START' AND (NEW.from_status <> 'DIRTY' OR NEW.to_status <> 'CLEANING')
-    THEN RAISE(ABORT, 'invalid cleaning start transition') END;
-  SELECT CASE WHEN NEW.event_type = 'CLEANING_FINISH' AND (NEW.from_status <> 'CLEANING' OR NEW.to_status <> 'AVAILABLE')
-    THEN RAISE(ABORT, 'invalid cleaning finish transition') END;
-  SELECT CASE WHEN NEW.event_type = 'MAINTENANCE_OPEN' AND (NEW.to_status <> 'MAINTENANCE' OR NEW.maintenance_case_id IS NULL OR NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE id = NEW.maintenance_case_id AND room_id = NEW.room_id AND status = 'OPEN'))
-    THEN RAISE(ABORT, 'invalid maintenance open transition') END;
-  SELECT CASE WHEN NEW.event_type = 'MAINTENANCE_RESOLVE' AND (NEW.from_status <> 'MAINTENANCE' OR NEW.to_status <> 'DIRTY' OR NEW.maintenance_case_id IS NULL OR NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE id = NEW.maintenance_case_id AND room_id = NEW.room_id AND status = 'RESOLVED' AND return_status = 'DIRTY'))
-    THEN RAISE(ABORT, 'invalid maintenance resolve transition') END;
+  ) THEN RAISE(ABORT, 'housekeeping room transition guard failed') END);
+  SELECT (CASE WHEN NEW.event_type = 'CLEANING_START' AND (NEW.from_status <> 'DIRTY' OR NEW.to_status <> 'CLEANING')
+    THEN RAISE(ABORT, 'invalid cleaning start transition') END);
+  SELECT (CASE WHEN NEW.event_type = 'CLEANING_FINISH' AND (NEW.from_status <> 'CLEANING' OR NEW.to_status <> 'AVAILABLE')
+    THEN RAISE(ABORT, 'invalid cleaning finish transition') END);
+  SELECT (CASE WHEN NEW.event_type = 'MAINTENANCE_OPEN' AND (NEW.to_status <> 'MAINTENANCE' OR NEW.maintenance_case_id IS NULL OR NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE id = NEW.maintenance_case_id AND room_id = NEW.room_id AND status = 'OPEN'))
+    THEN RAISE(ABORT, 'invalid maintenance open transition') END);
+  SELECT (CASE WHEN NEW.event_type = 'MAINTENANCE_RESOLVE' AND (NEW.from_status <> 'MAINTENANCE' OR NEW.to_status <> 'DIRTY' OR NEW.maintenance_case_id IS NULL OR NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE id = NEW.maintenance_case_id AND room_id = NEW.room_id AND status = 'RESOLVED' AND return_status = 'DIRTY'))
+    THEN RAISE(ABORT, 'invalid maintenance resolve transition') END);
 END;
