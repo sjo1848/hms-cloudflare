@@ -8,6 +8,7 @@ PYTHON_BIN="${PYTHON_BIN:-$(command -v python3 || true)}"
 FLOCK_BIN="${FLOCK_BIN:-$(command -v flock || true)}"
 COOLDOWN_SECONDS="${HMS_DISPATCH_COOLDOWN_SECONDS:-1800}"
 MAX_ATTEMPTS="${HMS_DISPATCH_MAX_ATTEMPTS:-2}"
+MAX_CHECKPOINTS="${HMS_DISPATCH_MAX_CHECKPOINTS:-20}"
 
 log() { printf '[hms-dispatch] %s\n' "$*"; }
 
@@ -59,49 +60,41 @@ fi
 readarray -t STATUS_FIELDS < <(
   STATUS_JSON="$STATUS_JSON" "$PYTHON_BIN" - <<'PY'
 import hashlib, json, os
-
 def fail(msg):
     print(f"ERROR:{msg}")
     raise SystemExit(0)
-
-raw = os.environ["STATUS_JSON"]
+raw=os.environ["STATUS_JSON"]
 try:
-    data = json.loads(raw)
+    data=json.loads(raw)
 except Exception as exc:
     fail(f"invalid json: {exc}")
-
-if not isinstance(data, dict):
-    fail("root must be object")
-if type(data.get("schema_version")) is not int or data["schema_version"] != 1:
-    fail("unsupported schema_version")
-if not isinstance(data.get("runtime_status"), str) or not data["runtime_status"]:
-    fail("runtime_status must be non-empty string")
-if type(data.get("resume_authorized")) is not bool:
-    fail("resume_authorized must be boolean")
-external = data.get("external_review")
-if not isinstance(external, dict) or type(external.get("required")) is not bool:
-    fail("external_review.required must be boolean")
-if "human_gate" not in data or "blocker" not in data:
-    fail("human_gate and blocker keys must be present")
-event = data.get("event")
-if not isinstance(event, dict):
-    fail("event must be object")
-if not isinstance(event.get("id"), str) or not event["id"]:
-    fail("event.id must be non-empty string")
-if type(event.get("seq")) is not int or event["seq"] <= 0:
-    fail("event.seq must be positive integer")
-if not isinstance(data.get("next_action"), str) or not data["next_action"]:
-    fail("next_action must be non-empty string")
-
+external=data.get("external_review")
+event=data.get("event")
+if not isinstance(data,dict) or data.get("schema_version") != 1:
+    fail("invalid schema")
+if not isinstance(external,dict) or not isinstance(event,dict):
+    fail("invalid orchestration shape")
+required=[
+    data.get("runtime_status"),
+    data.get("resume_authorized"),
+    external.get("required"),
+    event.get("id"),
+    event.get("seq"),
+    data.get("next_action"),
+]
+if not isinstance(required[0],str) or type(required[1]) is not bool or type(required[2]) is not bool:
+    fail("invalid runtime fields")
+if not isinstance(required[3],str) or type(required[4]) is not int or required[4] <= 0 or not isinstance(required[5],str):
+    fail("invalid event fields")
 print(data["runtime_status"])
 print("true" if data["resume_authorized"] else "false")
 print("true" if external["required"] else "false")
-print("null" if data["human_gate"] is None else "set")
-print("null" if data["blocker"] is None else "set")
+print("null" if data.get("human_gate") is None else "set")
+print("null" if data.get("blocker") is None else "set")
 print(event["id"])
 print(str(event["seq"]))
 print(data["next_action"])
-print(hashlib.sha256(raw.encode("utf-8")).hexdigest())
+print(hashlib.sha256(raw.encode()).hexdigest())
 PY
 )
 
@@ -120,106 +113,69 @@ EVENT_SEQ="${STATUS_FIELDS[6]:-0}"
 NEXT_ACTION="${STATUS_FIELDS[7]:-}"
 STATUS_HASH="${STATUS_FIELDS[8]:-}"
 
-if [[ -z "$EVENT_ID" || ! "$EVENT_SEQ" =~ ^[0-9]+$ || "$EVENT_SEQ" -le 0 || -z "$NEXT_ACTION" || ! "$STATUS_HASH" =~ ^[0-9a-f]{64}$ ]]; then
-  log "missing/invalid event, next_action, or status fingerprint; refusing ambiguous state"
+if [[ "$RUNTIME_STATUS" != "READY_TO_RESUME" || "$RESUME_AUTHORIZED" != "true" ||
+      "$EXTERNAL_REVIEW_REQUIRED" != "false" || "$HUMAN_GATE_STATE" != "null" ||
+      "$BLOCKER_STATE" != "null" ]]; then
+  log "canonical state does not authorize unattended resume"
   exit 0
 fi
 
 OBSERVED_FILE="$STATE_HOME/highest-observed-event"
-LAST_OBSERVED_SEQ=0
-LAST_OBSERVED_EVENT=""
-LAST_OBSERVED_HASH=""
 if [[ -f "$OBSERVED_FILE" ]]; then
-  if ! IFS=$'\t' read -r LAST_OBSERVED_SEQ LAST_OBSERVED_EVENT LAST_OBSERVED_HASH < "$OBSERVED_FILE"; then
-    log "cannot parse highest-observed-event; refusing automatic dispatch"
+  IFS=$'\t' read -r OLD_SEQ OLD_EVENT OLD_HASH < "$OBSERVED_FILE" || {
+    log "cannot parse highest-observed-event"; exit 0;
+  }
+  if (( EVENT_SEQ < OLD_SEQ )); then
+    log "event.seq=$EVENT_SEQ is older than highest observed seq=$OLD_SEQ; refusing rollback"
     exit 0
   fi
-  if [[ ! "$LAST_OBSERVED_SEQ" =~ ^[0-9]+$ || ! "$LAST_OBSERVED_HASH" =~ ^[0-9a-f]{64}$ ]]; then
-    log "invalid highest-observed-event; refusing automatic dispatch"
+  if (( EVENT_SEQ == OLD_SEQ )) && [[ "$EVENT_ID" != "$OLD_EVENT" || "$STATUS_HASH" != "$OLD_HASH" ]]; then
+    log "event seq=$EVENT_SEQ changed identity/state without seq advance; refusing"
     exit 0
   fi
 fi
-
-if (( EVENT_SEQ < LAST_OBSERVED_SEQ )); then
-  log "event.seq=$EVENT_SEQ is older than highest observed seq=$LAST_OBSERVED_SEQ; refusing rollback"
-  exit 0
-fi
-if (( EVENT_SEQ == LAST_OBSERVED_SEQ && LAST_OBSERVED_SEQ > 0 )); then
-  if [[ "$EVENT_ID" != "$LAST_OBSERVED_EVENT" || "$STATUS_HASH" != "$LAST_OBSERVED_HASH" ]]; then
-    log "event seq=$EVENT_SEQ was previously observed with different identity/state; refusing mutation without seq advance"
-    exit 0
-  fi
-else
-  printf '%s\t%s\t%s\n' "$EVENT_SEQ" "$EVENT_ID" "$STATUS_HASH" > "$OBSERVED_FILE"
-fi
-
-if [[ "$RUNTIME_STATUS" != "READY_TO_RESUME" ]]; then
-  log "runtime_status=$RUNTIME_STATUS; no automatic resume"
-  exit 0
-fi
-if [[ "$RESUME_AUTHORIZED" != "true" ]]; then
-  log "resume_authorized=false; waiting for canonical authorization"
-  exit 0
-fi
-if [[ "$EXTERNAL_REVIEW_REQUIRED" != "false" ]]; then
-  log "external review state is not explicitly false; dispatcher will not bypass it"
-  exit 0
-fi
-if [[ "$HUMAN_GATE_STATE" != "null" || "$BLOCKER_STATE" != "null" ]]; then
-  log "Human Gate or blocker present; dispatcher will not launch Codex"
-  exit 0
-fi
+printf '%s\t%s\t%s\n' "$EVENT_SEQ" "$EVENT_ID" "$STATUS_HASH" > "$OBSERVED_FILE"
 
 SUCCESS_FILE="$STATE_HOME/success-state"
-ATTEMPT_FILE="$STATE_HOME/attempt-state"
-LAST_SUCCESS_SEQ=0
-LAST_SUCCESS_EVENT=""
 if [[ -f "$SUCCESS_FILE" ]]; then
-  if ! IFS=$'\t' read -r LAST_SUCCESS_SEQ LAST_SUCCESS_EVENT < "$SUCCESS_FILE"; then
-    log "cannot parse success-state; refusing automatic dispatch"
+  IFS=$'\t' read -r LAST_SUCCESS_SEQ LAST_SUCCESS_EVENT < "$SUCCESS_FILE" || {
+    log "cannot parse success-state"; exit 0;
+  }
+  if [[ "$LAST_SUCCESS_SEQ" =~ ^[0-9]+$ ]] && (( EVENT_SEQ <= LAST_SUCCESS_SEQ )); then
+    log "event.seq=$EVENT_SEQ is not newer than last terminal success seq=$LAST_SUCCESS_SEQ"
     exit 0
   fi
-  if [[ ! "$LAST_SUCCESS_SEQ" =~ ^[0-9]+$ ]]; then
-    log "invalid success-state sequence; refusing automatic dispatch"
-    exit 0
-  fi
-fi
-if (( EVENT_SEQ <= LAST_SUCCESS_SEQ )); then
-  log "event.seq=$EVENT_SEQ is not newer than last successful seq=$LAST_SUCCESS_SEQ; refusing replay"
-  exit 0
 fi
 
+ATTEMPT_FILE="$STATE_HOME/attempt-state"
 NOW="$(date +%s)"
 ATTEMPTS=0
 LAST_TS=0
 LAST_EVENT=""
 LAST_ATTEMPT_SEQ=0
 if [[ -f "$ATTEMPT_FILE" ]]; then
-  if ! IFS=$'\t' read -r LAST_EVENT LAST_ATTEMPT_SEQ ATTEMPTS LAST_TS < "$ATTEMPT_FILE"; then
-    log "cannot parse attempt-state; refusing automatic dispatch"
-    exit 0
-  fi
-  if [[ ! "$LAST_ATTEMPT_SEQ" =~ ^[0-9]+$ || ! "$ATTEMPTS" =~ ^[0-9]+$ || ! "$LAST_TS" =~ ^[0-9]+$ ]]; then
-    log "invalid attempt-state; refusing automatic dispatch"
-    exit 0
-  fi
+  IFS=$'\t' read -r LAST_EVENT LAST_ATTEMPT_SEQ ATTEMPTS LAST_TS < "$ATTEMPT_FILE" || {
+    log "cannot parse attempt-state"; exit 0;
+  }
 fi
 if [[ "$LAST_EVENT" != "$EVENT_ID" || "$LAST_ATTEMPT_SEQ" != "$EVENT_SEQ" ]]; then
   ATTEMPTS=0
   LAST_TS=0
 fi
 if (( ATTEMPTS >= MAX_ATTEMPTS )); then
-  log "retry budget exhausted for event $EVENT_ID seq=$EVENT_SEQ; manual diagnosis required"
+  log "failure retry budget exhausted for event $EVENT_ID seq=$EVENT_SEQ"
   exit 0
 fi
 if (( LAST_TS > 0 && NOW - LAST_TS < COOLDOWN_SECONDS )); then
-  log "cooldown active for event $EVENT_ID; skipping"
+  log "failure cooldown active for event $EVENT_ID; skipping"
   exit 0
 fi
 
+HANDOFF_FILE="$STATE_HOME/published-handoff"
+rm -f "$HANDOFF_FILE"
 ATTEMPTS=$((ATTEMPTS + 1))
 printf '%s\t%s\t%s\t%s\n' "$EVENT_ID" "$EVENT_SEQ" "$ATTEMPTS" "$NOW" > "$ATTEMPT_FILE"
-log "dispatching Codex for event=$EVENT_ID seq=$EVENT_SEQ next_action=$NEXT_ACTION attempt=$ATTEMPTS/$MAX_ATTEMPTS"
+log "dispatching event=$EVENT_ID seq=$EVENT_SEQ next_action=$NEXT_ACTION attempt=$ATTEMPTS/$MAX_ATTEMPTS"
 
 set +e
 HMS_EXPECTED_MAIN_HEAD="$CANONICAL_HEAD" \
@@ -229,12 +185,51 @@ HMS_EXPECTED_EVENT_SEQ="$EVENT_SEQ" \
 RC=$?
 set -e
 
-if [[ $RC -eq 0 ]]; then
-  printf '%s\t%s\n' "$EVENT_SEQ" "$EVENT_ID" > "$SUCCESS_FILE"
+if [[ $RC -ne 0 ]]; then
+  log "managed Codex runner failed with status $RC; retry allowed after cooldown"
+  exit "$RC"
+fi
+
+if [[ ! -f "$HANDOFF_FILE" ]]; then
+  log "managed runner returned success without a durable handoff; treating as failure"
+  exit 60
+fi
+
+IFS=$'\t' read -r H_SEQ H_EVENT H_CANONICAL H_BRANCH H_PAYLOAD H_KIND < "$HANDOFF_FILE" || {
+  log "cannot parse managed handoff"; exit 61;
+}
+if [[ "$H_SEQ" != "$EVENT_SEQ" || "$H_EVENT" != "$EVENT_ID" ||
+      ! "$H_CANONICAL" =~ ^[0-9a-f]{40}$ || ! "$H_PAYLOAD" =~ ^[0-9a-f]{40}$ ||
+      ! "$H_BRANCH" =~ ^runtime/ ]]; then
+  log "managed handoff does not match dispatched event"
+  exit 62
+fi
+
+if [[ "$H_KIND" == "RESUMABLE_CHECKPOINT" ]]; then
+  CHECKPOINT_FILE="$STATE_HOME/checkpoint-state"
+  COUNT=0
+  C_EVENT=""
+  C_SEQ=0
+  if [[ -f "$CHECKPOINT_FILE" ]]; then
+    IFS=$'\t' read -r C_EVENT C_SEQ COUNT < "$CHECKPOINT_FILE" || {
+      log "cannot parse checkpoint-state"; exit 63;
+    }
+  fi
+  if [[ "$C_EVENT" != "$EVENT_ID" || "$C_SEQ" != "$EVENT_SEQ" ]]; then
+    COUNT=0
+  fi
+  COUNT=$((COUNT + 1))
+  printf '%s\t%s\t%s\n' "$EVENT_ID" "$EVENT_SEQ" "$COUNT" > "$CHECKPOINT_FILE"
   rm -f "$ATTEMPT_FILE"
-  log "Codex dispatch completed successfully for $EVENT_ID"
+  if (( COUNT >= MAX_CHECKPOINTS )); then
+    log "runtime checkpoint budget exhausted ($COUNT/$MAX_CHECKPOINTS) for event $EVENT_ID; preserving checkpoint $H_PAYLOAD"
+    exit 0
+  fi
+  log "runtime checkpoint $COUNT/$MAX_CHECKPOINTS persisted at $H_PAYLOAD; same event will resume automatically"
   exit 0
 fi
 
-log "Codex dispatch failed with status $RC; retry allowed after cooldown if canonical state still authorizes it"
-exit "$RC"
+printf '%s\t%s\n' "$EVENT_SEQ" "$EVENT_ID" > "$SUCCESS_FILE"
+rm -f "$ATTEMPT_FILE" "$STATE_HOME/checkpoint-state"
+log "terminal managed handoff completed kind=$H_KIND payload=$H_PAYLOAD canonical=$H_CANONICAL"
+exit 0

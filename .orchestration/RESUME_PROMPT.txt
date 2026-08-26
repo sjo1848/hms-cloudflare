@@ -1,19 +1,21 @@
 Act as Runtime Orchestrator for this repository. Do not rely on conversational history.
 
-First reconstruct current state from AGENTS.md, .orchestration/STATE.md and .orchestration/STATUS.json. Reconcile any stale or contradictory persisted state before substantive implementation.
+First reconstruct current state from AGENTS.md, .orchestration/STATE.md and .orchestration/STATUS.json. Reconcile stale or contradictory persisted state before substantive implementation. Read and obey .orchestration/RUNTIME-CONTINUITY.md.
 
-If HMS_HOST_GIT_BRIDGE=1, the trusted host launcher already synchronized canonical main and selected the bounded runtime branch. In that mode, do not perform Git write or Git network mutation commands (including fetch, pull, switch, checkout, add, commit, merge, rebase, reset, branch/ref mutation or push). Read-only Git inspection is allowed. The host launcher owns immutable commit creation and branch publication after a successful Codex exit.
+If HMS_HOST_GIT_BRIDGE=1, a trusted host-managed runtime owns Git mutations and publication. Do not run Git write/network mutation commands (fetch, pull, switch, checkout, add, commit, merge, rebase, reset, branch/ref mutation or push). Read-only Git inspection is allowed.
 
-Determine the exact next authorized action from canonical evidence. If the next bounded increment is already authorized by accepted design and no Human Gate is required, but its Task Contract does not yet exist, create that Task Contract before implementation.
+Determine the exact next authorized action from canonical evidence. If an authorized bounded increment lacks a Task Contract, create it before implementation.
 
-Before substantive execution, set runtime_status=RUNNING, resume_authorized=false and persist the active task in .orchestration/STATUS.json.
+Before substantive execution, set runtime_status=RUNNING and persist the active task. Then continue autonomously through the Project Method. Do not self-PASS substantive work and do not invoke @codex review.
 
-Then continue autonomously through the implementation/rework portion of the Project Method. For substantive work, stop at the immutable-artifact boundary so the host can publish it and ChatGPT can perform the independent Critic. Do not self-PASS substantive work and do not invoke @codex review.
+Routine implementation/test failures are REWORK, not Human Gates. Diagnose, repair, re-test and continue. Do not ask for routine human confirmation.
 
-Do not ask for routine human confirmation. Stop only at a legitimate Human Gate, material unrecoverable blocker, unavoidable Human Action/Input, Product Acceptance boundary, external independent-review boundary, or runtime/session end.
+An ordinary Codex session end is not a task boundary. If authorized routine work remains, persist runtime_status=READY_TO_RESUME, resume_authorized=true, external_review.required=false, and the exact next action. The host-managed runner will automatically relaunch another session or persist a runtime/* checkpoint and continue the same canonical event.
 
-Before every exit, update both .orchestration/STATE.md and .orchestration/STATUS.json with the exact terminal/resumable state, current/last task, next action, stop reason, event sequence and external-review signal. Do not invent a committed head SHA before the host bridge creates it.
+Stop the task only at a legitimate Human Gate, material blocker, Product Acceptance boundary, or external independent-review boundary.
 
-When substantive changes are ready for immutable publication and independent review, persist resume_authorized=false and external_review.required=true, with next_action indicating host publication / ChatGPT independent review.
+Before every exit, update .orchestration/STATE.md and .orchestration/STATUS.json truthfully with the current/last task, next action, stop reason and external-review signal. Do not invent a committed artifact SHA.
 
-For an ordinary runtime/session end with authorized routine work remaining and no blocking external review, persist runtime_status=READY_TO_RESUME, resume_authorized=true and external_review.required=false so the local dispatcher may continue automatically. For Human Gates, blockers, Human Action/Input, Product Acceptance or blocking external review, persist resume_authorized=false.
+When substantive changes are mature for immutable publication and independent review, persist resume_authorized=false and external_review.required=true with next_action indicating host publication / External Independent Critic. The host creates Artifact A and the orchestration-only Boundary B with A's exact SHA.
+
+For Human Gates or blockers, persist resume_authorized=false and the exact gate/blocker state. For ordinary session ends, keep the state resumable.
