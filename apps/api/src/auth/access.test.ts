@@ -83,14 +83,11 @@ describe("Cloudflare Access identity boundary", () => {
       .resolves.toEqual({ subject: "local-user", email: "local@example.test" });
   });
 
-  it("accepts only the fixed staging acceptance identity", async () => {
+  it("rejects the fixed staging bridge identity without a verified Access assertion", async () => {
     await expect(resolveAccessIdentity(
       new Request("https://hms-cloudflare-web-staging.sjo1848.workers.dev/api/v1/auth/me", { headers: stagingHeaders }),
       stagingEnv,
-    )).resolves.toEqual({
-      subject: "source-user:14000000-0000-0000-0000-000000000001",
-      email: "ana-admin@migration.invalid",
-    });
+    )).rejects.toThrow(AccessAuthenticationError);
   });
 
   it("rejects an altered staging subject or email", async () => {
