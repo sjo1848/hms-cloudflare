@@ -9,10 +9,10 @@
   "last_completed_head": "e483e6b3d973491caa7eb25d119e41d5804f2ae0",
   "work_branch": "main",
   "next_action": "CF_I09_REWORK_2_RESOLVE_THREE_BINDING_PERSISTENCE_HANG_THEN_FULL_REHEARSAL",
-  "stop_reason": "session end with routine runtime diagnosis still authorized",
+  "stop_reason": "bounded runtime diagnosis continues; no final blocker accepted",
   "event": {
-    "seq": 90,
-    "id": "CF-I09@REWORK-2-RUNTIME-DIAGNOSIS-CONTINUES",
+    "seq": 91,
+    "id": "CF-I09@REWORK-2-RUNTIME-DIAGNOSIS-2026-08-26",
     "type": "READY_TO_RESUME"
   },
   "external_review": {

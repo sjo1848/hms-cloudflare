@@ -27,7 +27,7 @@ No remote, paid, production, or real-data operation was performed.
 ## REWORK-2 bounded diagnosis (2026-08-25)
 
 - Fresh single-binding `d1 migrations apply` plus `SELECT 1` remains PASS under Wrangler 4.125.0.
-- Fresh three-binding migration applies complete, but a third sequential `d1 execute` against the same shared `--persist-to` directory can hang beyond 15–45 seconds after the first two queries. The process tree is terminated by the bounded timeout; no owned processes remain afterward.
+- Fresh three-binding runs are non-deterministic under the installed runtime: one minimal direct sequence completed the three migration applies, while the Node rehearsal and a clean 120-second run hung at the third `d1 migrations apply` (other runs hung at the third query) against the same shared `--persist-to` directory. Each process tree is terminated by the bounded timeout; no owned processes remain afterward.
 - The same behavior reproduces with direct `node_modules/.bin/wrangler` invocations, so it is not caused by the migration SQL or the Node wrapper alone. It is isolated to shared Miniflare persistence across three D1 bindings in the installed runtime.
 - Node `v24.18.0`, npm `12.0.2`, Wrangler `4.125.0`, Miniflare `5.20260820.0-alpha`, workerd `1.20260820.1` were recorded from the active installation. `npx wrangler@4.124.0` and `@4.126.0` could not be fetched within a 30-second bounded attempt, so no version claim is made.
 - This diagnostic is not treated as a final project blocker yet; artifact publication remains withheld until the focal rehearsal has executable proof or an equivalent runtime/configuration workaround.
