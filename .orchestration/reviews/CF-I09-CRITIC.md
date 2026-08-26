@@ -1,133 +1,101 @@
 # CF-I09 — External Independent Critic
 
+## Review 1 — Artifact A1
+
 Artifact A: `a972bca40ed60505bc42f5ae560977886c2972ab`  
 Boundary B: `54d8ad2e77b78f4101a14501b7e81ef014c9be2a`  
 Verdict: **REWORK-1**  
 Human Gate: **NONE**
 
-## Publication boundary
+### Accepted foundation
 
-The commit topology is correct: B is the direct child of A and B changes only `.orchestration/STATE.md` and `.orchestration/STATUS.json`.
+Preserve the strong local-only migration/rehearsal foundation established by A1: source→CONTROL_DB/per-hotel-D1 routing, explicit mapping/enums, cents/date/UTC/JSON handling, NO_SHOW semantics, replay/partial-run controls, exact reconciliation, local Access guard, readiness, backup/restore, integrated local Worker+D1 smoke, inherited CF-I03–CF-I08 regression intent, and zero remote/paid/real-data/cutover scope.
 
-However canonical metadata records only the abbreviated `a972bca` rather than the exact full artifact SHA. `INV-STATE-001` requires the exact full remote-resolvable A SHA in canonical publication metadata. This is a blocking admission/evidence defect, not a product-code defect.
+### REWORK-1 findings
 
-## Accepted CF-I09 foundation — preserve
-
-The following parts of A are substantively strong and must not regress during REWORK-1:
-
-- local-only source→CONTROL_DB/per-hotel-D1 rehearsal with server-owned two-binding routing;
-- exhaustive fixture-key disposition and explicit enum mapping structure;
-- UUID/TEXT, integer-cents, DATE/UTC and JSON normalization;
-- `NO_SHOW` representation and exclusion from inventory/report/Housekeeping semantics;
-- clean rehearsal, replay refusal before business mutation, injected partial-run failure and reconciliation refusal;
-- reconciliation beyond row counts: exact IDs/rows, FK integrity, money totals, invoice/payment/closure consistency, event ownership, tenant leakage checks and source-equivalent reporting metrics;
-- local Access bypass restricted to development + explicit opt-in + loopback hostname;
-- readiness requiring all three local D1 stores plus applied migration manifest;
-- local reset/start/stop and local-only backup/restore rehearsal with checksums and post-restore reconciliation;
-- real local Worker+D1 integrated smoke covering two hotels, tenant denial, Rooms/Guests/Bookings/lifecycle, Housekeeping/Maintenance, Billing/cash, Users/RBAC, reports/analytics and network reads;
-- fresh inherited CF-I03–CF-I08 regression intent;
-- no remote D1, paid resource, production, real-data or cutover action.
-
-## Blocking findings
-
-### 1. Valid source `saas_admin` role is absent from the migration model — P1
-
-The immutable source RBAC canon includes five roles: `admin`, `saas_admin`, `ops`, `receptionist`, `housekeeping`. `saas_admin` has only `saas.hotels.read` / `saas.hotels.write`. The source demo seed also inserts a real `saas_admin` user.
-
-Artifact A's `ENUMS.role` omits `saas_admin`; `validateFixture()` therefore rejects a source-valid SaaS administrator. The synthetic fixture avoids this by using a source `admin` and separately listing that same user in `target_adaptations.network_admin_user_ids`, which grants network membership to a tenant admin instead of proving source-role migration.
-
-This is not source-semantic parity. CF-I09 must support source-valid `saas_admin` explicitly.
-
-Required repair:
-
-- add a deterministic source fixture with a source `saas_admin` user;
-- map the source `saas_admin` role to the accepted target network membership semantics;
-- do **not** grant ordinary hotel capabilities merely because the legacy source row carries a non-null `hotel_id` required by the old schema; source RBAC meaning is authoritative;
-- prove source `admin` remains hotel-scoped and does not gain SaaS/network capability unless an explicitly separate target adaptation is justified by the contract;
-- reconcile exact identity, hotel-membership and network-membership counts/ownership;
-- run allowed/denied behavior proving the migrated `saas_admin` has network capability and lacks tenant operational capability.
-
-### 2. Valid legacy payments with unknown receiver are rejected — P1
-
-Source migration `0024_payment_entries_and_cash_shift.sql` defines `payment_entries.received_by_user_id` as nullable and explicitly backfills paid invoices into `payment_entries` **without** `received_by_user_id`. Therefore a valid database at the pinned source baseline can contain a payment whose receiver is unknown.
-
-Artifact A's preflight deliberately rejects `received_by_user_id = null` (`missing receiver cannot be attributed`). The target `payment_entries.received_by_user_id` is `TEXT NOT NULL`, so simply preserving SQL NULL is not possible without a target adaptation.
-
-Required repair:
-
-- add a source-derived fixture representing the exact legacy backfill case: paid invoice/payment with `received_by_user_id = NULL`;
-- migrate it truthfully without inventing a real user and without attributing it to the migration operator;
-- use an explicit unknown/legacy actor representation or an equally truthful target adaptation, with provenance sufficient to distinguish it from a real Access subject;
-- ensure the related reconstructed financial event uses the same truthful provenance semantics;
-- reconcile exact payment/invoice cents and actor/provenance fields;
-- preserve normal non-null receiver mapping for ordinary source payments.
-
-### 3. Source legacy maintenance can have an unknown reporter, but reconstructed target event requires an actor — P1
-
-Source migration `0028_maintenance_legacy_backfill.sql` intentionally drops `NOT NULL` from `maintenance_cases.reported_by_user_id` and backfills rooms already in `MAINTENANCE` with `reported_by_user_id = NULL`.
-
-Artifact A's validation permits that NULL maintenance reporter, and the target `maintenance_cases` table also permits it. But `buildHotelSql()` reconstructs a `MAINTENANCE_OPEN` housekeeping event using `subject(reported_by_user_id)`, while target `housekeeping_events.actor_subject` is `NOT NULL`. A source-valid legacy maintenance row can therefore fail target import or force false attribution if repaired naively.
-
-Required repair:
-
-- add the exact source-legacy maintenance case to the deterministic fixture;
-- preserve NULL/unknown reporter truth on the maintenance case;
-- for any reconstructed target event that requires a non-null actor, use explicit unknown-legacy provenance rather than a real/migration user, or explicitly omit/reclassify the reconstructed event if that is the source-faithful adaptation;
-- reconcile event/case provenance and Housekeeping state after migration.
-
-### 4. Binding model/multi-context receipt is incomplete — P2 admission failure
-
-The artifact parent already contains the binding Luna-first model policy and multi-context admission gate. Before artifact A, `.orchestration/evidence/CF-I09-INTERNAL-REVIEW.md` was required to record:
-
-`role/context → lane → actual model family → reasoning tier → escalation reason (if any) → outcome`
-
-The published receipt lists lanes and test results, but no actual model-family/reasoning assignment and no truthful escalation chain. Given the explicit token/credit guard, this cannot be inferred after the fact or silently waived.
-
-Required repair:
-
-- recover truthful runtime receipts/history where available;
-- record actual context/role identifiers plus actual model family and reasoning tier;
-- if exact prior assignments cannot be proven, say so truthfully and perform fresh bounded Internal QA/Critic and Integration Review phases under the current Luna-first policy rather than fabricating history;
-- any Terra use must show the prior bounded Luna attempt/result; any Sol use additionally requires the bounded Terra attempt/result;
-- zero open P0/P1/P2 must be re-established after the migration repairs above.
-
-### 5. Canonical A SHA and evidence claims must be exact — P2 admission failure
-
-Boundary B is structurally clean but `STATUS.json` / `STATE.md` use the abbreviated `a972bca`. The invariant and Pre-Critic evidence nevertheless claim publication-state PASS.
-
-Required repair:
-
-- new substantive artifact A2 must be followed by one orchestration-only B2;
-- B2 must record A2's exact full 40-character SHA in canonical state (`last_completed_head`, `external_review.artifact_head` and corresponding STATE reference);
-- invariant and Pre-Critic evidence must not claim `INV-STATE-001`, multi-context admission or source-parity PASS until the executable proof actually satisfies them.
-
-## Required source-nullability / historical-provenance sweep
-
-The payment and maintenance defects have the same root cause: target runtime fields are stricter than legitimate historical source rows. During REWORK-1, perform one consolidated audit of source migrations `0001`–`0030` for nullable/legacy/backfilled actor or identity fields that feed target `NOT NULL` actor/identity columns. Do not wait for the External Critic to discover the next instance one-by-one.
-
-At minimum cover:
-
-- `payment_entries.received_by_user_id` legacy NULL;
-- `maintenance_cases.reported_by_user_id` legacy NULL;
-- already-accepted nullable audit actor behavior;
-- nullable room-hold creator and any other source-valid historical actor field that reaches a stricter target event/audit column;
-- source `saas_admin` role semantics independently from tenant `hotel_id` storage legacy.
-
-The general rule is: **unknown historical actor remains unknown**. Do not reject valid source history solely because the new runtime requires a principal, and do not fabricate attribution to the migration operator or a real user.
-
-## REWORK-1 exit criteria
-
-1. Preserve all accepted CF-I09 foundation listed above.
-2. Source-valid `saas_admin` migration is represented, reconciled and behaviorally tested with source-exact capabilities.
-3. Source-valid legacy NULL payment receiver migrates with truthful unknown provenance and exact cents/events.
-4. Source-valid legacy NULL maintenance reporter migrates without false actor attribution and with coherent target case/event state.
-5. Consolidated source historical-nullability/provenance sweep is documented and executable for all applicable mappings.
-6. Migration/reconciliation, replay/partial failure, backup/restore and complete local Worker+D1 smoke pass after the repairs.
-7. Fresh inherited CF-I03–CF-I08 plus type/unit/build/Wrangler/route/diff checks pass.
-8. `CF-I09-INTERNAL-REVIEW.md` contains truthful model-family + reasoning receipts and separate Internal QA/Critic + Integration Review closure under the binding Luna-first policy.
-9. No open P0/P1/P2 remains; any P3 debt is explicit and does not undermine contracted proof.
-10. Correct invariant/Pre-Critic evidence so no claim exceeds executable proof.
-11. Publish fresh substantive artifact A2, then orchestration-only boundary B2 containing the exact full A2 SHA, and stop for External Independent Critic.
-12. No Human Gate, remote Cloudflare resource, paid transition, real-data migration or cutover is introduced.
+1. **P1 — source `saas_admin` missing.** Migrate the real source role as network-only; do not promote an ordinary tenant admin.
+2. **P1 — nullable legacy payment receiver rejected.** Preserve unknown historical receiver truthfully without attributing a real/migration user.
+3. **P1 — nullable legacy maintenance reporter conflicts with target event actor.** Preserve unknown reporter truthfully and use explicit unknown provenance when a reconstructed event requires an actor.
+4. **P2 — multi-context/model receipt incomplete.** Record truthful role/context → lane → actual model family → reasoning → escalation → outcome.
+5. **P2 — abbreviated artifact boundary.** Fresh A2/B2 must use the exact full 40-character artifact SHA.
+6. Perform one consolidated source migrations `0001`–`0030` nullable/legacy actor/identity sweep.
 
 Diagnosis: `SOURCE_ROLE_PARITY_GAP + LEGACY_NULL_ACTOR_MIGRATION_GAP + HISTORICAL_PROVENANCE_GAP + MULTICONTEXT_MODEL_RECEIPT_MISSING + ABBREVIATED_ARTIFACT_BOUNDARY`.
+
+---
+
+## Review 2 — Artifact A2
+
+Artifact A2: `e483e6b3d973491caa7eb25d119e41d5804f2ae0`  
+Boundary B2: `f9c510c8c2bd6f5bdfc72a9f757e40a149e768e4`  
+Verdict: **REWORK-2**  
+Human Gate: **NONE**
+
+### Publication boundary — PASS
+
+B2 is the direct child of A2, changes only `.orchestration/STATE.md` and `.orchestration/STATUS.json`, and records the exact full A2 SHA. The publication-boundary defect from REWORK-1 is closed.
+
+### REWORK-1 findings closed in A2
+
+- Source `saas_admin` is represented explicitly and maps to `network_memberships` without hotel operational membership.
+- Legacy NULL payment receiver uses deterministic unknown-legacy provenance rather than a real/migration actor.
+- Legacy NULL maintenance reporter preserves unknown truth and reconstructed housekeeping event provenance.
+- Internal review receipt now records truthful model/reasoning assignments without fabricating the orchestrator model family.
+- Browser acceptance includes an explicit `Network · SaaS Admin` profile and persists the profile across navigation.
+- Full 40-character A2 SHA is present in B2 canonical metadata.
+
+These repairs must be preserved.
+
+### Blocking findings
+
+#### 1. P1 — booking snapshot actor parity is still wrong
+
+The pinned source migration `0022_booking_operational_fields.sql` defines `checked_in_by_user_id` and `checked_out_by_user_id` as nullable. The accepted D1 booking schema likewise permits `checked_in_by` / `checked_out_by` to remain NULL.
+
+A2 nevertheless maps a NULL source booking actor to deterministic `legacy-source-user:unknown:checkin:<booking-id>` / `...checkout:<booking-id>` values in the **booking snapshot itself**, including rows where no check-in/check-out occurred.
+
+That is not source parity. A deterministic unknown sentinel is justified only for a reconstructed `lifecycle_events.actor_subject` when an actual historical lifecycle event exists and the target event actor is NOT NULL. It must not invent a principal in a nullable booking snapshot column.
+
+Required repair:
+
+- preserve source NULL as target NULL in `bookings.checked_in_by` / `bookings.checked_out_by`;
+- use unknown-legacy sentinel/provenance only for reconstructed lifecycle events whose timestamp proves the historical event occurred and whose target actor column is NOT NULL;
+- add exact reconciliation for booking `checked_in_by` / `checked_out_by` so this class of parity defect cannot pass silently;
+- add deterministic fixture/preflight coverage for: no lifecycle event + NULL actor, lifecycle event + NULL actor, and lifecycle event + real actor.
+
+#### 2. P2 — the declared exhaustive source nullable-actor sweep is factually incomplete/inaccurate
+
+`docs/cf-i09-source-nullable-actor-audit.md` states that migrations `0001–0023` have no relevant nullable actor surface and associates booking lifecycle actors with `0028`. That is incorrect at the pinned source baseline:
+
+- `0020_room_holds.sql` defines nullable `room_holds.created_by_user_id`;
+- `0022_booking_operational_fields.sql` introduces nullable check-in/check-out actor columns;
+- `0026_booking_arrival_exceptions.sql` introduces nullable terminal/late-arrival actor columns;
+- `0028_maintenance_legacy_backfill.sql` changes maintenance reporter nullability/backfill; it does not introduce the booking lifecycle actor columns.
+
+The consolidated audit must be corrected from the actual source migrations, not merely from fixture behavior. Every actor/identity surface from `0001`–`0030` must be explicitly classified as nullable/non-null, mapped/omitted/reconstructed, and tested where it feeds a stricter target principal/event column.
+
+#### 3. P2 — `saas_admin` positive authorization is proven, explicit tenant-operation DENY is not
+
+A2 proves that the migrated `saas_admin` can read network `/hotels` / network KPIs and proves that the source role receives no hotel membership. That is strong structural evidence.
+
+However REWORK-1 explicitly required allowed **and denied** behavior. The integrated smoke contains a cross-hotel `403` for a tenant admin, but no explicit request showing the migrated `saas_admin` is denied a hotel-operational route such as `/rooms` when a hotel id is supplied.
+
+Required repair:
+
+- add one explicit behavioral assertion: migrated `saas_admin` + hotel context → representative tenant operational route → `403`;
+- retain the positive network read assertion and exact membership reconciliation.
+
+### REWORK-2 exit criteria
+
+1. Preserve every A2 repair already accepted above.
+2. Booking nullable snapshot actors preserve NULL exactly; lifecycle-event unknown sentinels are emitted only for real historical lifecycle events requiring a non-null target actor.
+3. Reconciliation compares booking lifecycle actor snapshot columns exactly.
+4. Correct the source `0001`–`0030` nullable/legacy actor audit against the actual migration files, including 0020, 0022, 0026, 0028 and any other applicable actor/identity surface.
+5. Add explicit behavioral DENY proving `saas_admin` lacks tenant operational capability while retaining network ALLOW proof.
+6. Rerun focal migration/reconciliation, replay/partial failure, backup/restore, full local Worker+D1/Playwright smoke, inherited CF-I03–CF-I08, type/unit/build/Wrangler/route/diff/scope checks.
+7. Fresh Internal QA/Critic + Integration Review; zero open P0/P1/P2.
+8. Correct invariant and Pre-Critic claims so no PASS exceeds executable proof.
+9. Publish fresh substantive A3, followed by orchestration-only B3 containing the exact full 40-character A3 SHA, then stop in `WAITING_EXTERNAL_REVIEW`.
+10. No Human Gate, remote/paid Cloudflare action, real-data migration, production or cutover.
+
+Diagnosis: `BOOKING_NULL_ACTOR_SNAPSHOT_PARITY_GAP + SOURCE_NULLABILITY_AUDIT_INACCURATE + SAAS_ADMIN_TENANT_DENY_EVIDENCE_MISSING`.
