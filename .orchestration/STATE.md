@@ -5,12 +5,12 @@
 Project: HMS Cloudflare  
 Updated: 2026-08-26  
 Global Project Mode: `DELIVERY`  
-Phase: `LOCAL PRODUCT ACCEPTANCE`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 A5 PASS / HUMAN PRODUCT ACCEPTANCE REQUIRED`
+Phase: `CF-UX-MOBILE-001 BOUNDED REWORK`  
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 A5 PASS / REMOTE HUMAN PRODUCT ACCEPTANCE PLANNED`
 
-Runtime: `HUMAN_GATE` — CF-I09 REWORK-4 Artifact A5 passed External Independent Critic. Automatic Codex resume is disabled. The next decision belongs to the Human as Product/Risk Authority.
+Runtime: `RUNNING` — The Human authorized remote Product Acceptance over one deliberate staging deployment. Routine bounded UX rework may proceed; no intermediate deploy is authorized.
 
-Current objective: run and exercise the complete accepted HMS candidate locally using the repaired deterministic three-D1 bootstrap before authorizing any remote Cloudflare test environment, production action, real-data migration or cutover.
+Current objective: complete and validate CF-UX-MOBILE-001, then make one deliberate staging deployment for remote Human Product Acceptance. Production, paid resources, real-data migration and cutover remain unauthorized.
 
 ## CANONICAL SOURCES
 
@@ -45,52 +45,27 @@ A5 preserves the previously accepted source parity, lifecycle exactness, tenant/
 - Internal QA records focal rehearsal, backup/restore, real Worker+D1/browser smoke and two bounded reset/start/ready/stop repetitions with zero owned descendants;
 - no remote D1, paid resource, production, real-data migration, DNS/Access production action or cutover occurred.
 
-## HUMAN PRODUCT ACCEPTANCE GATE — ACTIVE
+## HUMAN PRODUCT ACCEPTANCE GATE — REMOTE EXECUTION AUTHORIZED
 
-This is a real Human Gate. Technical work must not auto-resume around it.
+The Human has explicitly authorized Product Acceptance remotely because local computer access is unavailable.
 
-Sync first:
+Before the remote gate:
+- finish the bounded CF-UX-MOBILE-001 repair;
+- pass CI, invariant evidence, Pre-Critic and Independent Critic;
+- perform exactly one deliberate Cloudflare staging deployment;
+- do not deploy intermediate commits.
 
-```bash
-git pull --ff-only
-```
+Remote acceptance must exercise the candidate through the deployed staging URL and return one of:
+- `ACCEPT` — authorize the next separately defined stage.
+- `REWORK` — record concrete product/UX/functional defects for autonomous repair.
 
-Then run the checked-in local acceptance preparation from repository root:
-
-```bash
-npm install
-bash scripts/migration/test-rehearsal.sh
-scripts/cf-i09-local-backup-restore-rehearsal.sh
-node scripts/cf-i09-local-smoke.mjs
-scripts/cf-i09-local-start.sh --reset
-```
-
-The final command must leave the clean reconciled candidate running at:
-
-- Frontend: `http://127.0.0.1:4174`
-- API: `http://127.0.0.1:8787`
-
-Human Product Acceptance should exercise the visible complete product and return one of:
-
-- `ACCEPT` — local HMS product accepted; authorize planning of the Cloudflare test environment as the next separate stage.
-- `REWORK` — record concrete product/UX/functional defects and return them to autonomous technical repair before any remote stage.
-
-When acceptance is finished:
-
-```bash
-scripts/cf-i09-local-stop.sh
-```
-
-If bootstrap fails again, Product Acceptance does not begin; report the exact failing command/output and reopen technical REWORK rather than accepting readiness.
+This decision is recorded in `.orchestration/decisions/HUMAN-REMOTE-ACCEPTANCE-001.md`. It does not accept the product, authorize production, authorize paid Cloudflare resources, alter Access or waive technical review gates.
 
 ## DELIVERY SEQUENCE
 
-`CF-I09 A5 PASS → HUMAN LOCAL PRODUCT ACCEPTANCE → Cloudflare test environment authorization → Cloudflare validation → production-readiness/release gates`.
-
-Remote Cloudflare provisioning/deployment, remote D1 mutation, paid resources, real-data migration, production Access/DNS changes and cutover remain unauthorized.
+`CF-UX-MOBILE-001 bounded REWORK → CI/Pre-Critic → Independent Critic PASS → one staging deploy → REMOTE HUMAN PRODUCT ACCEPTANCE → next gate`.
 
 ## NEXT AUTHORIZED ACTION
 
-`HUMAN_LOCAL_PRODUCT_ACCEPTANCE_CF_I09_A5_ACCEPTED_CANDIDATE`
+`CF-UX-MOBILE-001_REWORK_PR9_FINDINGS_AND_PRECRITIC`
 
-No Codex autonomous resume is authorized while this Human Gate is active.
