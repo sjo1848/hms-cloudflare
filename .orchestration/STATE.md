@@ -6,7 +6,7 @@ Project: HMS Cloudflare
 Updated: 2026-08-26
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD / VALIDATE READINESS`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-3 READY FOR A4`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-3 A4 PUBLISHED / WAITING EXTERNAL REVIEW`
 
 Runtime: `RUNNING` — REWORK-3 lifecycle exactness repairs and adversarial validation are complete; preparing A4. No Human Gate or blocker.
 
@@ -133,3 +133,9 @@ Paid Cloudflare resources, irreversible provisioning/cutover, significant unreso
 `CF_I09_PUBLISH_ARTIFACT_A4_THEN_BOUNDARY_B4_EXTERNAL_REVIEW`
 
 Codex consumes the canonical External Critic verdict and state, repairs lifecycle exact reconciliation and evidence autonomously through the full internal gate, publishes one mature fresh A4+B4, and stops for External Independent Critic. Human routine relay is not required.
+
+## Artifact A4 / Boundary B4
+
+- Artifact A4: `fcb4dd464e8d34f80c27c034e48ec9bc62c912f3`
+- Boundary B4 records the exact full A4 SHA and changes orchestration metadata only.
+- External Independent Critic review is required before further substantive work.
