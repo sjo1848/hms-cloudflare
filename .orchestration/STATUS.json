@@ -1,33 +1,28 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "phase": "LOCAL_PRODUCT_ACCEPTANCE",
-  "runtime_status": "HUMAN_GATE",
-  "resume_authorized": false,
-  "active_task": "HMS-LOCAL-PRODUCT-ACCEPTANCE",
-  "last_completed_task": "CF-I09-INDEPENDENT-CRITIC-PASS",
+  "phase": "BUILD_VALIDATE_READINESS",
+  "runtime_status": "READY_TO_RESUME",
+  "resume_authorized": true,
+  "active_task": "CF-I09-REWORK-4",
+  "last_completed_task": "CF-I09-POST-PASS-LOCAL-ACCEPTANCE-REWORK-4",
   "last_completed_head": "fcb4dd464e8d34f80c27c034e48ec9bc62c912f3",
   "work_branch": "main",
-  "next_action": "HUMAN_LOCAL_PRODUCT_ACCEPTANCE_CF_I09_ACCEPTED_CANDIDATE",
-  "stop_reason": "CF-I09 technical PASS is complete. The complete local HMS candidate now requires Human Product Acceptance before any remote Cloudflare stage.",
+  "next_action": "CF_I09_AUTONOMOUS_REWORK_4_ACCEPTANCE_RUNTIME_PERSISTENCE_RESET_START_SMOKE",
+  "stop_reason": null,
   "event": {
-    "seq": 96,
-    "id": "CF-I09@INDEPENDENT-CRITIC-PASS-A4",
-    "type": "HUMAN_GATE"
+    "seq": 97,
+    "id": "CF-I09@POST-PASS-REWORK-4-ACCEPTANCE-RUNTIME",
+    "type": "READY_TO_RESUME"
   },
   "external_review": {
     "required": false,
     "last_audited_head": "fcb4dd464e8d34f80c27c034e48ec9bc62c912f3",
-    "last_verdict": "PASS",
-    "artifact_head": "fcb4dd464e8d34f80c27c034e48ec9bc62c912f3",
+    "last_verdict": "REWORK_ACCEPTANCE_RUNTIME_PERSISTENCE_MODE_MISMATCH_SHARED_D1_RESET_HANG",
+    "artifact_head": null,
     "pending_verdict": null
   },
-  "human_gate": {
-    "type": "PRODUCT_ACCEPTANCE",
-    "scope": "LOCAL_HMS",
-    "reason": "CF-I09 technical PASS; Human must exercise the complete local product before any remote Cloudflare test/deployment stage.",
-    "required_action": "Run the repeatable local acceptance sequence, test the complete product, then record ACCEPT or REWORK."
-  },
+  "human_gate": null,
   "blocker": null,
   "method": {
     "multi_context_required": true,
