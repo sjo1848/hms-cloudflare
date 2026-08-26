@@ -6,11 +6,11 @@ Project: HMS Cloudflare
 Updated: 2026-08-26  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD / VALIDATE READINESS`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 POST-PASS REWORK-4 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-4 ARTIFACT A5 PUBLISHED`
 
-Runtime: `READY_TO_RESUME` — first real local Human Product Acceptance preparation exposed a technical reset/start failure before product testing could begin. Human Gate is withdrawn. No external blocker.
+Runtime: `WAITING_EXTERNAL_REVIEW` — REWORK-4 acceptance runtime repaired and A5 published; awaiting Independent Critic.
 
-Current objective: repair the actual checked-in local acceptance runtime so reset/reseed, reconciliation, backup/restore, Worker+D1 smoke and local startup all use one coherent deterministic three-D1 persistence topology and complete without the known Wrangler 4.125 shared-persistence hang.
+Current objective: obtain Independent Critic review of exact Artifact A5 and boundary B5 before Human Local Product Acceptance.
 
 ## CANONICAL SOURCES
 
@@ -65,6 +65,6 @@ Codex must autonomously:
 
 ## NEXT AUTHORIZED ACTION
 
-`CF_I09_AUTONOMOUS_REWORK_4_ACCEPTANCE_RUNTIME_PERSISTENCE_RESET_START_SMOKE`
+`CF_I09_EXTERNAL_INDEPENDENT_CRITIC_REVIEW_A5`
 
-Human routine relay is forbidden. Human Product Acceptance remains deferred until the repaired exact acceptance bootstrap has technical PASS.
+Human routine relay is forbidden. Human Product Acceptance remains deferred until external review of A5 passes.
