@@ -6,9 +6,9 @@ Project: HMS Cloudflare
 Updated: 2026-08-26
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD / VALIDATE READINESS`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-2 READY FOR A3`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-2 A3 PUBLISHED / WAITING EXTERNAL REVIEW`
 
-Runtime: `RUNNING` — REWORK-2 repairs and validation are complete; preparing substantive Artifact A3 and publication boundary B3. No Human Gate or blocker.
+Runtime: `WAITING_EXTERNAL_REVIEW` — Artifact A3 is published and boundary B3 records its exact SHA. No Human Gate or technical blocker.
 
 Current objective: complete the accepted HMS Cloudflare migration locally with deterministic source-parity migration, reconciliation, backup/restore and operational readiness so the Human can perform complete local Product Acceptance before any remote Cloudflare deployment.
 
@@ -128,6 +128,12 @@ Paid Cloudflare resources, irreversible provisioning/cutover, significant unreso
 
 ## NEXT AUTHORIZED ACTION
 
-`CF_I09_PUBLISH_ARTIFACT_A3_THEN_BOUNDARY_B3_EXTERNAL_REVIEW`
+`EXTERNAL_INDEPENDENT_CRITIC_REVIEW_CF_I09_A3`
+
+## ARTIFACT A3 / BOUNDARY B3
+
+- Artifact A3: `58ac2c5758795ae1b8257a8c313b31842e157993`
+- Boundary B3 records the exact full A3 SHA and contains orchestration metadata only.
+- External Independent Critic review is required before further substantive work.
 
 Codex consumes the canonical critic/state, performs autonomous REWORK-2 through Internal QA/Critic, Integration Review, full regression and Pre-Critic closure, publishes one mature fresh A3+B3, then stops for External Independent Critic. Human relay is not required.
