@@ -75,4 +75,45 @@ describe("Cloudflare Access identity boundary", () => {
     await expect(resolveAccessIdentity(request, { ENVIRONMENT: "development", LOCAL_DEV_AUTH: "true" }))
       .resolves.toEqual({ subject: "local-user", email: "local@example.test" });
   });
+
+  it("accepts the explicit staging bridge only in staging", async () => {
+    const request = new Request("https://hms-cloudflare-web-staging.sjo1848.workers.dev/api/v1/auth/me", {
+      headers: {
+        "x-hms-staging-gateway": "access-gated-web",
+        "x-staging-access-subject": "source-user:test",
+        "x-staging-access-email": "tester@migration.invalid",
+      },
+    });
+    await expect(resolveAccessIdentity(request, {
+      ENVIRONMENT: "staging",
+      STAGING_ACCEPTANCE_AUTH: "true",
+    })).resolves.toEqual({ subject: "source-user:test", email: "tester@migration.invalid" });
+  });
+
+  it("rejects staging bridge headers when the gateway marker is missing", async () => {
+    const request = new Request("https://example.test/api/v1/auth/me", {
+      headers: {
+        "x-staging-access-subject": "source-user:test",
+        "x-staging-access-email": "tester@migration.invalid",
+      },
+    });
+    await expect(resolveAccessIdentity(request, {
+      ENVIRONMENT: "staging",
+      STAGING_ACCEPTANCE_AUTH: "true",
+    })).rejects.toThrow(AccessAuthenticationError);
+  });
+
+  it("rejects staging bridge headers in production", async () => {
+    const request = new Request("https://example.test/api/v1/auth/me", {
+      headers: {
+        "x-hms-staging-gateway": "access-gated-web",
+        "x-staging-access-subject": "source-user:test",
+        "x-staging-access-email": "tester@migration.invalid",
+      },
+    });
+    await expect(resolveAccessIdentity(request, {
+      ENVIRONMENT: "production",
+      STAGING_ACCEPTANCE_AUTH: "true",
+    })).rejects.toThrow(AccessAuthenticationError);
+  });
 });

@@ -10,6 +10,7 @@ type AccessEnvironment = {
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUDIENCE?: string;
   LOCAL_DEV_AUTH?: string;
+  STAGING_ACCEPTANCE_AUTH?: string;
 };
 
 export class AccessAuthenticationError extends Error {
@@ -22,18 +23,14 @@ export class AccessAuthenticationError extends Error {
 }
 
 /**
- * The production trust boundary is Cloudflare Access. The Worker still requires
- * both the Access assertion and identity headers, and refuses to infer identity
- * from a client-provided hotel identifier. Local auth is opt-in and disabled by
- * the checked-in development configuration.
+ * Production authentication is Cloudflare Access JWT validation. Local acceptance
+ * remains loopback-only. Staging acceptance has a separate explicit bridge that
+ * is valid only when the private API is invoked by the Access-gated web Worker.
  */
 export async function resolveAccessIdentity(
   request: Request,
   env: AccessEnvironment,
 ): Promise<AccessIdentity> {
-  // Local auth is additionally restricted to loopback hostnames. This remains
-  // safe under Wrangler, which may populate request.cf even for local requests,
-  // while a remotely deployed Worker cannot satisfy the hostname guard.
   const hostname = new URL(request.url).hostname;
   const localHost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
   if (env.ENVIRONMENT === "development" && env.LOCAL_DEV_AUTH === "true" && localHost) {
@@ -41,6 +38,19 @@ export async function resolveAccessIdentity(
     const email = request.headers.get("x-local-access-email")?.trim();
     if (!subject || !email) {
       throw new AccessAuthenticationError();
+    }
+    return { subject, email };
+  }
+
+  if (
+    env.ENVIRONMENT === "staging" &&
+    env.STAGING_ACCEPTANCE_AUTH === "true" &&
+    request.headers.get("x-hms-staging-gateway")?.trim() === "access-gated-web"
+  ) {
+    const subject = request.headers.get("x-staging-access-subject")?.trim();
+    const email = request.headers.get("x-staging-access-email")?.trim();
+    if (!subject || !email) {
+      throw new AccessAuthenticationError("Staging acceptance identity required");
     }
     return { subject, email };
   }

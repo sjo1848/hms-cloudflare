@@ -26,6 +26,7 @@ const config = {
     ACCESS_TEAM_DOMAIN: accessTeamDomain,
     ACCESS_AUDIENCE: accessAudience,
     LOCAL_DEV_AUTH: "false",
+    STAGING_ACCEPTANCE_AUTH: "true",
   },
   d1_databases: [
     {
@@ -55,6 +56,6 @@ await writeFile(
   { mode: 0o600 },
 );
 
-if (accessTeamDomain === "https://pending.invalid" || accessAudience === "pending-access-audience") {
-  process.stderr.write("STAGING_ACCESS_PENDING: deploy can complete, but authenticated product testing requires CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUDIENCE repository variables plus a Cloudflare Access policy on the web Worker.\n");
-}
+process.stderr.write(
+  "STAGING_ACCEPTANCE_BRIDGE: API remains private; authenticated product testing requires Cloudflare Access on hms-cloudflare-web-staging.\n",
+);
