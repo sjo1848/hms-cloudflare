@@ -9,3 +9,5 @@ dist/
 *.tsbuildinfo
 .playwright-cli/
 .hms-local/
+.staging-seed/
+apps/api/wrangler.staging.generated.jsonc
