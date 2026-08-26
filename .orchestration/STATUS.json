@@ -4,15 +4,15 @@
   "phase": "BUILD_VALIDATE_READINESS",
   "runtime_status": "READY_TO_RESUME",
   "resume_authorized": true,
-  "active_task": "CF-I09",
+  "active_task": "CF-I09-REWORK-2",
   "last_completed_task": "CF-I09-INDEPENDENT-CRITIC-REWORK-2",
   "last_completed_head": "e483e6b3d973491caa7eb25d119e41d5804f2ae0",
   "work_branch": "main",
-  "next_action": "CF_I09_AUTONOMOUS_REWORK_2_BOOKING_NULL_ACTOR_SNAPSHOT_SOURCE_NULLABILITY_SWEEP_SAAS_ADMIN_TENANT_DENY",
-  "stop_reason": null,
+  "next_action": "CF_I09_REWORK_2_RUNTIME_DIAGNOSIS_THEN_FULL_REHEARSAL_AND_A3",
+  "stop_reason": "bounded runtime diagnosis remains; routine work authorized",
   "event": {
-    "seq": 86,
-    "id": "CF-I09@INDEPENDENT-CRITIC-REWORK-2",
+    "seq": 88,
+    "id": "CF-I09@REWORK-2-DIAGNOSTIC-READY",
     "type": "READY_TO_RESUME"
   },
   "external_review": {

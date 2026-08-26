@@ -242,6 +242,7 @@ async function main() {
           row.check_in_stay_confirmed == null
             ? null
             : Number(row.check_in_stay_confirmed),
+        checked_in_by: sourceSubject(row.checked_in_by_user_id),
         check_out_charges_reviewed:
           row.check_out_charges_reviewed == null
             ? null
@@ -254,6 +255,7 @@ async function main() {
           row.check_out_housekeeping_handoff == null
             ? null
             : Number(row.check_out_housekeeping_handoff),
+        checked_out_by: sourceSubject(row.checked_out_by_user_id),
         terminal_reason: row.terminal_reason,
         terminal_recorded_at: normalizedTime(row.terminal_recorded_at),
         terminal_recorded_by: sourceSubject(row.terminal_recorded_by_user_id),

@@ -24,7 +24,8 @@
     "codex:resume": "bash scripts/codex-resume.sh",
     "runtime:dispatch": "bash scripts/hms-runtime-watch.sh",
     "runtime:install": "bash scripts/install-hms-runtime-watch.sh",
-    "runtime:uninstall": "bash scripts/uninstall-hms-runtime-watch.sh"
+    "runtime:uninstall": "bash scripts/uninstall-hms-runtime-watch.sh",
+    "migration:audit-nullable-actors": "node scripts/migration/nullable-actor-audit.mjs"
   },
   "dependencies": {
     "hono": "^4.9.8",

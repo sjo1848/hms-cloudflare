@@ -70,6 +70,7 @@ The smoke resets and starts the complete local product, discovers the synthetic 
 - housekeeping clean cycle and maintenance open/resolve/clean cycle;
 - tenant user/RBAC membership creation/readback;
 - billing balance, revenue report, analytics, network hotels/KPIs;
+- migrated `saas_admin` network `ALLOW` plus explicit hotel-context operational `DENY` (`403`);
 - frontend routes for all accepted product surfaces.
 - real Chromium use of the development-only closed profile selector, Hotel Norte/Hotel Sur room isolation, and the network surface.
 

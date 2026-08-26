@@ -7,7 +7,10 @@ const config = resolve("apps/api/wrangler.jsonc");
 export function wranglerRun(args, { capture = false } = {}) {
   const result = spawnSync(wrangler, [...args, "--local", "--config", config], {
     encoding: "utf8",
-    stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit",
+    // Keep Wrangler's very verbose migration progress off the parent stream.
+    // This also prevents the synchronous runner from deadlocking on a full
+    // inherited PTY/pipe while Miniflare is still flushing its local state.
+    stdio: capture ? ["ignore", "pipe", "pipe"] : "ignore",
   });
   if (result.status !== 0) throw new Error(`WRANGLER_LOCAL_FAILED: ${args.slice(0, 4).join(" ")}${capture ? `: ${result.stderr.trim()}` : ""}`);
   return result.stdout;

@@ -67,6 +67,9 @@ try {
     WHERE n.active=1 AND i.active=1 AND n.role='saas_admin' ORDER BY n.access_subject LIMIT 1`);
   assert(networks.length === 1, "smoke requires one migrated saas_admin identity");
   const network = networks[0];
+  const networkHotelMemberships = queryControl(`SELECT COUNT(*) AS count FROM hotel_memberships
+    WHERE access_subject='${network.access_subject}' AND active=1`);
+  assert(Number(networkHotelMemberships[0]?.count ?? -1) === 0, "saas_admin unexpectedly has an operational hotel membership");
 
   const meA = await request(first, first.hotel_id, "/auth/me");
   const meB = await request(second, second.hotel_id, "/auth/me");
@@ -133,6 +136,10 @@ try {
   const hotels = await request(network, null, "/hotels");
   const networkKpis = await request(network, null, `/hotels/network-kpis?start=${today}&end=${tomorrow}`);
   assert(hotels.length >= 2 && networkKpis.total_hotels >= 2, "network read did not include both hotels");
+  // A migrated saas_admin has network scope only. Keep the positive network
+  // proof above and exercise the backend tenant boundary with hotel context:
+  // a legacy/source hotel_id must never grant operational access.
+  await request(network, first.hotel_id, "/rooms", {}, 403);
 
   for (const route of ["/rooms", "/guests", "/bookings", "/housekeeping", "/billing", "/users", "/reports", "/network"]) {
     const response = await fetch(`http://127.0.0.1:4174${route}`);

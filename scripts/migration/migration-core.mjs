@@ -707,11 +707,11 @@ export function buildHotelSql(fixture, hotelId, sourceDigest) {
           null,
           utc(row.checked_in_at, "checked_in_at", true),
           row.checked_in_by_user_id == null
-            ? unknownActor("checkin", row.id)
+            ? null
             : subject(row.checked_in_by_user_id),
           utc(row.checked_out_at, "checked_out_at", true),
           row.checked_out_by_user_id == null
-            ? unknownActor("checkout", row.id)
+            ? null
             : subject(row.checked_out_by_user_id),
           utc(row.created_at, "created_at"),
           updatedAt(

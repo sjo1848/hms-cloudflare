@@ -1,6 +1,6 @@
 # CF-I09 invariant evidence
 
-Candidate: CF-I09 REWORK-1 closure candidate; source baseline `4df56a6217caab611f2f5fcbd98bde8386bb5629`.
+Candidate: CF-I09 REWORK-2 working evidence; source baseline `4df56a6217caab611f2f5fcbd98bde8386bb5629`.
 
 | Invariant | Classification | Evidence |
 |---|---|---|
@@ -9,13 +9,13 @@ Candidate: CF-I09 REWORK-1 closure candidate; source baseline `4df56a6217caab611
 | INV-DOMAIN-001 | APPLIES / PASS | Real smoke check-in, reassignment, checkout, housekeeping and cash close. |
 | INV-TENANT-001 | APPLIES / PASS | Two-hotel exact reconciliation; smoke cross-hotel denial and browser profile switching. |
 | INV-RBAC-001 | APPLIES / PASS | Access unit tests, CF-I03–08 and smoke identity/membership checks. |
-| INV-PARITY-001 | APPLIES / PASS | `docs/cf-i09-source-target-mapping.md`; source-derived fixture and exact reconciliation. |
+| INV-PARITY-001 | APPLIES / PASS | `docs/cf-i09-source-target-mapping.md`; source-derived fixture, exact reconciliation and booking actor snapshot NULL checks. |
 | INV-ENUM-001 | APPLIES / PASS | NO_SHOW mapping focal and `apps/api/src/migration-booking-status.test.ts` (2/2). |
 | INV-UX-001 | APPLIES / PASS | Playwright smoke selector/profile/network workflow; CF-I08 browser widths. |
 | INV-ORDER-001 | N/A | CF-I09 has no new queue/next-item ranking requirement. |
 | INV-RESP-001 | APPLIES / PASS | CF-I09 Playwright smoke plus CF-I08 browser widths 375–1024. |
-| INV-EVID-001 | APPLIES / PASS | This file, internal receipt, executable runner receipts and pre-Critic gate. |
-| INV-LEGACY-001 | APPLIES / PASS | Legacy guest/payment/maintenance/lifecycle reconstruction, deterministic unknown actors and source-nullable audit. |
+| INV-EVID-001 | APPLIES / UNPROVEN | This file and executable unit/static receipts pass; focal three-binding rehearsal is still under bounded runtime diagnosis, so publication evidence is not yet complete. |
+| INV-LEGACY-001 | APPLIES / PASS | Legacy guest/payment/maintenance/lifecycle reconstruction, deterministic event-only unknown actors, booking snapshot NULL parity and source-nullable audit. |
 | INV-MONEY-001 | APPLIES / PASS | Final booking totals, charge trigger neutralization, payments/closure exact cents. |
 | INV-STATE-001 | APPLIES / PASS | Two-commit A/B publication plan; boundary metadata only in B. |
 | INV-CF-I07-001 | APPLIES / PASS | Inherited CF-I07 focal and browser regression PASS. |
@@ -29,4 +29,4 @@ Candidate: CF-I09 REWORK-1 closure candidate; source baseline `4df56a6217caab611
 | INV-CF-I08-005 | APPLIES / PASS | TZ-independent SQL hash plus deterministic dashboard/reconcile evidence. |
 | INV-SCOPE-001 | APPLIES / PASS | No deploy, remote, paid, real-data or cutover action; `git diff` scope audit. |
 
-No applicable invariant is FAIL or UNPROVEN.
+Publication is withheld while INV-EVID-001 remains UNPROVEN; no artifact A3/B3 has been published.

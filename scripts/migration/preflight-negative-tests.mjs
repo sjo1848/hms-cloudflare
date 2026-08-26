@@ -113,6 +113,23 @@ assert.match(generated, /legacy-source-user:unknown:maintenance:26000000-0000-00
 assert.match(generated, /migration:checkin:13000000-0000-0000-0000-000000000002/);
 assert.match(generated, /legacy-source-user:unknown:checkin:13000000-0000-0000-0000-000000000002/);
 assert.match(generated, /legacy-source-user:unknown:payment:19200000-0000-0000-0000-000000000001/);
+const bookingLines = buildHotelSql(source, source.hotels[0].id, digest).split("\n").filter((line) => line.startsWith("INSERT INTO bookings"));
+const bookingLine = (id) => bookingLines.find((line) => line.includes(`VALUES ('${id}'`));
+// no event + NULL (001), event + NULL (002), event + real actor (003)
+assert.equal(bookingLines.length, source.bookings.filter((row) => row.hotel_id === source.hotels[0].id).length);
+assert.match(bookingLine("13000000-0000-0000-0000-000000000001"), /'2026-08-25','2026-08-27','CONFIRMED','20000',NULL,NULL,NULL,NULL/);
+assert.equal(
+  bookingLine("13000000-0000-0000-0000-000000000002").includes(
+    "'2026-08-24T15:00:00.000Z',NULL,NULL,NULL",
+  ),
+  true,
+);
+assert.match(bookingLine("13000000-0000-0000-0000-000000000003"), /'2026-08-20T15:00:00\.000Z','source-user:14000000-0000-0000-0000-000000000002','2026-08-22T13:00:00\.000Z','source-user:14000000-0000-0000-0000-000000000002'/);
+const noEventRealActor = clone();
+noEventRealActor.bookings.find((row) => row.id === "13000000-0000-0000-0000-000000000001").checked_in_by_user_id = "14000000-0000-0000-0000-000000000002";
+const noEventRealSql = buildHotelSql(noEventRealActor, noEventRealActor.hotels[0].id, validateFixture(noEventRealActor).source_digest);
+assert.match(noEventRealSql, /VALUES \('13000000-0000-0000-0000-000000000001'.*'source-user:14000000-0000-0000-0000-000000000002'/);
+assert.equal(noEventRealSql.includes("legacy-source-user:unknown:checkin:13000000-0000-0000-0000-000000000001"), false);
 assert.match(generated, /INSERT INTO network_memberships .*source-user:14000000-0000-0000-0000-000000000003/s);
 assert.equal((buildControlSql(source, digest).match(/INSERT INTO hotel_memberships/g) ?? []).length, 4);
 assert.equal(buildControlSql(source, digest).includes("source-user:14000000-0000-0000-0000-000000000003','10000000"), false);

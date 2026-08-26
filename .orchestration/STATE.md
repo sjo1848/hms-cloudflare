@@ -6,9 +6,9 @@ Project: HMS Cloudflare
 Updated: 2026-08-25  
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD / VALIDATE READINESS`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-2 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-2 IN PROGRESS`
 
-Runtime: `READY_TO_RESUME` — External Independent Critic reviewed CF-I09 Artifact A2 and returned REWORK-2. No Human Gate and no external blocker.
+Runtime: `READY_TO_RESUME` — External Independent Critic reviewed CF-I09 Artifact A2 and returned REWORK-2. Code repairs are present; focal three-binding rehearsal has a bounded shared-persistence runtime hang under diagnosis. No Human Gate and no final blocker accepted.
 
 Current objective: complete the accepted HMS Cloudflare migration locally with deterministic source-parity migration, reconciliation, backup/restore and operational readiness so the Human can perform complete local Product Acceptance before any remote Cloudflare deployment.
 
@@ -128,6 +128,6 @@ Paid Cloudflare resources, irreversible provisioning/cutover, significant unreso
 
 ## NEXT AUTHORIZED ACTION
 
-`CF_I09_AUTONOMOUS_REWORK_2_BOOKING_NULL_ACTOR_SNAPSHOT_SOURCE_NULLABILITY_SWEEP_SAAS_ADMIN_TENANT_DENY`
+`CF_I09_REWORK_2_RUNTIME_DIAGNOSIS_THEN_FULL_REHEARSAL_AND_A3`
 
 Codex consumes the canonical critic/state, performs autonomous REWORK-2 through Internal QA/Critic, Integration Review, full regression and Pre-Critic closure, publishes one mature fresh A3+B3, then stops for External Independent Critic. Human relay is not required.

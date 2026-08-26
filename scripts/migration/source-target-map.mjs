@@ -113,14 +113,16 @@ export const FIELD_DISPOSITION = Object.freeze({
     check_in_contact_confirmed: "migrated 0/1 snapshot",
     check_in_stay_confirmed: "migrated 0/1 snapshot",
     checked_in_at: "normalized:UTC",
-    checked_in_by_user_id: "mapped:source user UUID to Access subject",
+    checked_in_by_user_id:
+      "mapped:source user UUID to Access subject; NULL preserved in nullable booking snapshot (event reconstruction may use unknown sentinel only when checked_in_at proves an event)",
     check_out_payment_policy: "migrated",
     check_out_reference: "migrated",
     check_out_charges_reviewed: "migrated 0/1 snapshot",
     check_out_room_release_confirmed: "migrated 0/1 snapshot",
     check_out_housekeeping_handoff: "migrated 0/1 snapshot",
     checked_out_at: "normalized:UTC",
-    checked_out_by_user_id: "mapped:Access subject",
+    checked_out_by_user_id:
+      "mapped:Access subject; NULL preserved in nullable booking snapshot (event reconstruction may use unknown sentinel only when checked_out_at proves an event)",
     terminal_reason: "migrated snapshot",
     terminal_recorded_at: "normalized:UTC",
     terminal_recorded_by_user_id: "mapped:Access subject",
