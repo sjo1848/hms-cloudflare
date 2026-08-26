@@ -13,6 +13,11 @@ type AccessEnvironment = {
   STAGING_ACCEPTANCE_AUTH?: string;
 };
 
+const stagingAcceptanceIdentity = {
+  subject: "source-user:14000000-0000-0000-0000-000000000001",
+  email: "ana-admin@migration.invalid",
+} as const;
+
 export class AccessAuthenticationError extends Error {
   public readonly status = 401;
 
@@ -24,8 +29,8 @@ export class AccessAuthenticationError extends Error {
 
 /**
  * Production authentication is Cloudflare Access JWT validation. Local acceptance
- * remains loopback-only. Staging acceptance has a separate explicit bridge that
- * is valid only when the private API is invoked by the Access-gated web Worker.
+ * remains loopback-only. Staging acceptance is a fixed synthetic identity that
+ * can only be used through the private API bridge of the Access-gated Web Worker.
  */
 export async function resolveAccessIdentity(
   request: Request,
@@ -49,10 +54,13 @@ export async function resolveAccessIdentity(
   ) {
     const subject = request.headers.get("x-staging-access-subject")?.trim();
     const email = request.headers.get("x-staging-access-email")?.trim();
-    if (!subject || !email) {
-      throw new AccessAuthenticationError("Staging acceptance identity required");
+    if (
+      subject !== stagingAcceptanceIdentity.subject ||
+      email !== stagingAcceptanceIdentity.email
+    ) {
+      throw new AccessAuthenticationError("Invalid staging acceptance identity");
     }
-    return { subject, email };
+    return stagingAcceptanceIdentity;
   }
 
   const assertion = request.headers.get("Cf-Access-Jwt-Assertion")?.trim();
