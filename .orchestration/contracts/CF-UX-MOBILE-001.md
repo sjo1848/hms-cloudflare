@@ -18,6 +18,7 @@ Rebuild the shared application shell and Reception surface so their visual langu
 - All existing routes, APIs, staging authentication, tenant identity headers, business actions, statuses and synthetic fixture behavior.
 - Existing Reception, Rooms, Guests, Housekeeping, Users, Reports and Network feature availability.
 - HMS Elite is the visual and interaction canon; shadcn is an implementation primitive, not a visual reset.
+- Registry classification and evidence: `.orchestration/evidence/CF-UX-MOBILE-001-INVARIANTS.md`.
 
 ## Forbidden
 - No product/domain/API changes, no production/cutover, no real-data migration, no Access redesign, no paid Cloudflare resources.
@@ -35,4 +36,4 @@ Rebuild the shared application shell and Reception surface so their visual langu
 The implementer may choose the minimal shadcn subset and CSS composition needed for the evidence. New primitives require a direct usability/accessibility or maintenance reason.
 
 ## Human gates
-None before staging evidence. Product acceptance after staging remains a human decision.
+The Human authorized remote Product Acceptance because local computer access is unavailable. This does not waive CI, invariant evidence, Pre-Critic or Independent Critic. Exactly one deliberate staging deployment is allowed for the remote acceptance; the Human then returns `ACCEPT` or `REWORK`.
