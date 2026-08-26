@@ -34,13 +34,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify Cloudflare credentials
+      - name: Verify Cloudflare credentials and D1 access
         shell: bash
         run: |
           set -euo pipefail
           test -n "$CLOUDFLARE_API_TOKEN"
           test -n "$CLOUDFLARE_ACCOUNT_ID"
           npx wrangler whoami
+          if ! npx wrangler d1 list --json >/dev/null; then
+            echo "Cloudflare token is valid but lacks D1 access. Add Account > D1 > Write/Edit to the token and retry." >&2
+            exit 1
+          fi
 
       - name: Create or reuse staging D1 databases
         shell: bash
@@ -48,20 +52,33 @@ jobs:
           set -euo pipefail
           ensure_db() {
             local name="$1" rows id
-            rows="$(npx wrangler d1 list --json)"
+            if ! rows="$(npx wrangler d1 list --json)"; then
+              echo "Unable to list D1 databases for $name." >&2
+              return 1
+            fi
             id="$(printf '%s' "$rows" | node -e 'const fs=require("fs"); const rows=JSON.parse(fs.readFileSync(0,"utf8")); const row=rows.find(x=>x.name===process.argv[1]); if(row) process.stdout.write(row.uuid||row.id||"");' "$name")"
             if [[ -z "$id" ]]; then
-              npx wrangler d1 create "$name" >&2
-              rows="$(npx wrangler d1 list --json)"
+              if ! npx wrangler d1 create "$name" >&2; then
+                echo "Unable to create D1 database $name. Token requires Account > D1 > Write/Edit." >&2
+                return 1
+              fi
+              if ! rows="$(npx wrangler d1 list --json)"; then
+                return 1
+              fi
               id="$(printf '%s' "$rows" | node -e 'const fs=require("fs"); const rows=JSON.parse(fs.readFileSync(0,"utf8")); const row=rows.find(x=>x.name===process.argv[1]); if(!row) process.exit(2); process.stdout.write(row.uuid||row.id||"");' "$name")"
             fi
-            test -n "$id"
+            [[ -n "$id" ]] || { echo "D1 database id missing for $name" >&2; return 1; }
             printf '%s' "$id"
           }
 
-          echo "CONTROL_DB_ID=$(ensure_db hms-control-staging)" >> "$GITHUB_ENV"
-          echo "HOTEL_DEMO_DB_ID=$(ensure_db hms-hotel-demo-staging)" >> "$GITHUB_ENV"
-          echo "HOTEL_SECOND_DB_ID=$(ensure_db hms-hotel-second-staging)" >> "$GITHUB_ENV"
+          CONTROL_DB_ID="$(ensure_db hms-control-staging)"
+          HOTEL_DEMO_DB_ID="$(ensure_db hms-hotel-demo-staging)"
+          HOTEL_SECOND_DB_ID="$(ensure_db hms-hotel-second-staging)"
+          {
+            echo "CONTROL_DB_ID=$CONTROL_DB_ID"
+            echo "HOTEL_DEMO_DB_ID=$HOTEL_DEMO_DB_ID"
+            echo "HOTEL_SECOND_DB_ID=$HOTEL_SECOND_DB_ID"
+          } >> "$GITHUB_ENV"
 
       - name: Render account-specific API configuration
         run: node scripts/cloudflare/render-staging-config.mjs
