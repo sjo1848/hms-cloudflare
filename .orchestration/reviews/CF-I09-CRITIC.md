@@ -99,3 +99,55 @@ Required repair:
 10. No Human Gate, remote/paid Cloudflare action, real-data migration, production or cutover.
 
 Diagnosis: `BOOKING_NULL_ACTOR_SNAPSHOT_PARITY_GAP + SOURCE_NULLABILITY_AUDIT_INACCURATE + SAAS_ADMIN_TENANT_DENY_EVIDENCE_MISSING`.
+
+---
+
+## Review 3 — Artifact A3
+
+Artifact A3: `58ac2c5758795ae1b8257a8c313b31842e157993`  
+Boundary B3: `b0a8ea321a29ccf31d91375e42ef8f709ad47664`  
+Verdict: **REWORK-3**  
+Human Gate: **NONE**
+
+### Publication boundary — PASS
+
+B3 is exactly one commit after A3, changes only `.orchestration/STATE.md` and `.orchestration/STATUS.json`, records the exact full 40-character A3 SHA, sets `WAITING_EXTERNAL_REVIEW`, `resume_authorized=false`, and requires External Independent Critic review. The A/B publication boundary is valid.
+
+### REWORK-2 findings closed in A3
+
+- `bookings.checked_in_by` / `checked_out_by` now preserve source NULL exactly.
+- Unknown legacy check-in/check-out actor sentinels are emitted only for reconstructed lifecycle events whose source timestamps prove those events occurred.
+- Deterministic preflight covers no-event + NULL actor, event + NULL actor, event + real actor, and no-event + real actor without inventing an event sentinel.
+- The source nullable/legacy actor audit is corrected against the pinned `0001`–`0030` source migration lineage, including 0001, 0020, 0022, 0024, 0026, 0027 and 0028.
+- Migrated `saas_admin` retains network ALLOW, has zero hotel membership, and is explicitly denied `/rooms` with hotel context (`403`).
+- The three-binding local rehearsal workaround is bounded to local tooling and does not change product D1 routing/topology.
+
+These repairs are accepted and MUST be preserved.
+
+### Blocking finding
+
+#### P2 — lifecycle reconciliation is still not exact enough to prove the repaired parity
+
+A3 correctly generates nullable booking actor snapshots and deterministic reconstructed lifecycle events. However the executable reconciliation does not fully verify those semantics:
+
+- the exact `bookings` reconciliation includes `checked_in_by` / `checked_out_by` but omits `checked_in_at` / `checked_out_at`;
+- reconstructed `lifecycle_events` are not exact-reconciled by row identity/fields; the aggregate reconciliation checks only `COUNT(*)` for lifecycle events;
+- the focal migration Vitest covers imported booking status/`NO_SHOW`, not lifecycle snapshot/event parity.
+
+Therefore a target could contain a wrong check-in/check-out timestamp, lifecycle actor, event timestamp, request/hotel identity or event provenance while preserving the same event count and still satisfy the current focal reconciliation. That is incompatible with CF-I09's exact machine-checkable reconciliation requirement and with the REWORK-2 evidence intent.
+
+The internal review receipt also states that actor columns reconcile exactly and that zero P0/P1/P2 findings remain; that claim is stronger than the executable proof and must be corrected under `INV-EVID-001`.
+
+### Required REWORK-3 repair
+
+1. Preserve every A3 repair accepted above.
+2. Add `checked_in_at` and `checked_out_at` to exact booking reconciliation alongside the actor snapshots.
+3. Exact-reconcile every reconstructed lifecycle event that should exist from the fixture, including at minimum deterministic event ID, booking ID, event type, actor subject, request ID, hotel ID, created timestamp, room/from-room semantics, and material provenance fields.
+4. Add at least one adversarial executable regression proving reconciliation fails when a migrated lifecycle snapshot timestamp or reconstructed lifecycle event actor/timestamp is tampered while row counts remain unchanged.
+5. Rerun focal migration/reconciliation, replay/partial-failure and backup/restore against the repaired reconciliation; rerun the contracted fresh inherited CF-I03–CF-I08, local Worker+D1/Playwright smoke, unit/type/build/Wrangler/route/diff/scope checks as required by CF-I09 after the change.
+6. Fresh Internal QA/Critic + Integration Review must explicitly falsify the lifecycle exactness claim and close with zero P0/P1/P2 only after the new executable negative proof passes.
+7. Correct invariant/evidence receipts so no PASS exceeds executable proof.
+8. Publish fresh substantive A4 followed by orchestration-only B4 containing the exact full A4 SHA, then stop in `WAITING_EXTERNAL_REVIEW`.
+9. No Human Gate, remote/paid action, production, real-data migration or cutover.
+
+Diagnosis: `LIFECYCLE_EXACT_RECONCILIATION_GAP + EVIDENCE_OVERCLAIM`.
