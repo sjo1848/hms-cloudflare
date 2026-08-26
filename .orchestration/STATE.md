@@ -5,66 +5,92 @@
 Project: HMS Cloudflare  
 Updated: 2026-08-26  
 Global Project Mode: `DELIVERY`  
-Phase: `BUILD / VALIDATE READINESS`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-4 ARTIFACT A5 PUBLISHED`
+Phase: `LOCAL PRODUCT ACCEPTANCE`  
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 A5 PASS / HUMAN PRODUCT ACCEPTANCE REQUIRED`
 
-Runtime: `WAITING_EXTERNAL_REVIEW` — REWORK-4 acceptance runtime repaired and A5 published; awaiting Independent Critic.
+Runtime: `HUMAN_GATE` — CF-I09 REWORK-4 Artifact A5 passed External Independent Critic. Automatic Codex resume is disabled. The next decision belongs to the Human as Product/Risk Authority.
 
-Current objective: obtain Independent Critic review of exact Artifact A5 and boundary B5 before Human Local Product Acceptance.
+Current objective: run and exercise the complete accepted HMS candidate locally using the repaired deterministic three-D1 bootstrap before authorizing any remote Cloudflare test environment, production action, real-data migration or cutover.
 
 ## CANONICAL SOURCES
 
 - Source baseline: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`.
 - Target: `sjo1848/hms-cloudflare`.
 - CF-I09 contract: `.orchestration/contracts/CF-I09.md`.
-- Prior A4 technical review: `.orchestration/reviews/CF-I09-A4-CRITIC.md`.
-- Current post-PASS verdict: `.orchestration/reviews/CF-I09-POST-PASS-REWORK-4.md`.
+- CF-I09 A5 Independent Critic: `.orchestration/reviews/CF-I09-A5-CRITIC.md`.
+- Prior post-PASS REWORK-4 diagnosis: `.orchestration/reviews/CF-I09-POST-PASS-REWORK-4.md`.
 - Local acceptance runbook: `docs/cf-i09-local-operational-readiness.md`.
 - Machine state: `.orchestration/STATUS.json`.
 - Method: `.orchestration/MULTIAGENT-EXECUTION.md`, `.orchestration/PRECRITIC-MULTIAGENT.md`, `.orchestration/PRECRITIC-GATE.md`.
 
-## VALIDATED RESULTS PRESERVED
+## VALIDATED RESULTS
 
 - CF-I01 through CF-I08 remain accepted.
 - CF-I09 A1/B1 — REWORK-1.
 - CF-I09 A2/B2 — REWORK-2.
 - CF-I09 A3/B3 — REWORK-3.
-- CF-I09 A4 `fcb4dd464e8d34f80c27c034e48ec9bc62c912f3` / B4 `5d315de8ed6cccb585b16929e56e7371f819bd5e` closed lifecycle/source/RBAC parity findings.
-- A4's prior readiness PASS is reopened only because new real acceptance-bootstrap execution evidence disproved the claimed local startup/readiness path.
+- CF-I09 A4 `fcb4dd464e8d34f80c27c034e48ec9bc62c912f3` / B4 `5d315de8ed6cccb585b16929e56e7371f819bd5e` closed lifecycle/source/RBAC parity findings, but its local readiness PASS was later reopened by real Human bootstrap evidence.
+- CF-I09 A5 `f18b35cfc6b48970f2b8842758fa025126f33407` / B5 `2b110e411a896fcd95bc839b25d7487a2f74c4bb` — **External Independent Critic PASS**. Review: `.orchestration/reviews/CF-I09-A5-CRITIC.md`.
 
-## REWORK-4 DIAGNOSIS
+## CF-I09 A5 ACCEPTED GUARANTEES
 
-The focal rehearsal and actual Human acceptance runtime use different persistence modes:
+A5 preserves the previously accepted source parity, lifecycle exactness, tenant/RBAC, money, replay/failure and local-only scope, and additionally closes the actual Human acceptance runtime defect:
 
-- `scripts/migration/test-rehearsal.sh` enables `CF_I09_ISOLATED_PERSISTENCE=1`, avoiding shared three-D1 lock contention.
-- `scripts/cf-i09-local-reset.sh` invokes the same rehearsal against `apps/api/.wrangler/state` without that mode, returning all bindings to the known shared persistence root.
-- Real acceptance execution therefore hangs during reset; backup/restore, smoke and `local-start --reset` cannot proceed.
+- reset/rehearsal uses clean temporary per-binding persistence under bounded timeout;
+- checked-in D1 migration SQL is applied directly to the local SQLite stores, avoiding the known Wrangler 4.125 repeated three-D1 migration-process hang;
+- the completed CONTROL_DB, HOTEL_DEMO_DB and HOTEL_SECOND_DB are materialized into the normal shared Worker persistence root before reconciliation/startup;
+- Worker startup therefore uses the same migrated database bytes produced by reset;
+- backup/restore preserves checksummed local SQLite copies and no longer reintroduces sequential Wrangler migration/import calls;
+- reconciliation remains exact after restore;
+- Internal QA records focal rehearsal, backup/restore, real Worker+D1/browser smoke and two bounded reset/start/ready/stop repetitions with zero owned descendants;
+- no remote D1, paid resource, production, real-data migration, DNS/Access production action or cutover occurred.
 
-Diagnosis: `ACCEPTANCE_RUNTIME_PERSISTENCE_MODE_MISMATCH + SHARED_D1_RESET_HANG + LOCAL_READINESS_EVIDENCE_OVERCLAIM`.
+## HUMAN PRODUCT ACCEPTANCE GATE — ACTIVE
 
-## REWORK-4 EXIT
+This is a real Human Gate. Technical work must not auto-resume around it.
 
-Codex must autonomously:
+Sync first:
 
-1. preserve all accepted A4 source parity, lifecycle exactness, tenant/RBAC, money and replay/failure guarantees;
-2. repair the actual local acceptance persistence/runtime topology, not merely the isolated focal test;
-3. ensure reset, reconciliation, Worker startup, backup/export/restore, smoke and Human browsing use the same intended CONTROL_DB + HOTEL_DEMO_DB + HOTEL_SECOND_DB state;
-4. eliminate or deterministically bypass the Wrangler 4.125 shared-persistence hang without remote resources or production-topology changes;
-5. add bounded regression where a hanging reset is a test failure, never a successful workaround;
-6. execute the exact acceptance sequence fresh: focal rehearsal → backup/restore rehearsal → complete Worker+D1/browser smoke → `local-start --reset` → `/ready` + frontend + three-D1 verification → clean stop;
-7. repeat reset/start/stop enough to prove no stale-process/lock dependency;
-8. rerun contracted inherited CF-I03–CF-I08 plus unit/type/build/Wrangler/static/scope checks;
-9. complete fresh Internal QA/Critic + Integration Review explicitly attempting to reproduce the original hang;
-10. update runbook/invariant/Pre-Critic evidence so readiness claims match the exact Human path;
-11. publish fresh substantive A5 then orchestration-only B5 with exact A5 SHA and stop `WAITING_EXTERNAL_REVIEW`;
-12. no Human Gate, remote D1, paid resource, production, real-data migration, DNS/Access production change or cutover.
+```bash
+git pull --ff-only
+```
+
+Then run the checked-in local acceptance preparation from repository root:
+
+```bash
+npm install
+bash scripts/migration/test-rehearsal.sh
+scripts/cf-i09-local-backup-restore-rehearsal.sh
+node scripts/cf-i09-local-smoke.mjs
+scripts/cf-i09-local-start.sh --reset
+```
+
+The final command must leave the clean reconciled candidate running at:
+
+- Frontend: `http://127.0.0.1:4174`
+- API: `http://127.0.0.1:8787`
+
+Human Product Acceptance should exercise the visible complete product and return one of:
+
+- `ACCEPT` — local HMS product accepted; authorize planning of the Cloudflare test environment as the next separate stage.
+- `REWORK` — record concrete product/UX/functional defects and return them to autonomous technical repair before any remote stage.
+
+When acceptance is finished:
+
+```bash
+scripts/cf-i09-local-stop.sh
+```
+
+If bootstrap fails again, Product Acceptance does not begin; report the exact failing command/output and reopen technical REWORK rather than accepting readiness.
 
 ## DELIVERY SEQUENCE
 
-`CF-I09 REWORK-4 → External Independent Critic → Human Local Product Acceptance → Cloudflare test environment authorization → Cloudflare validation → production-readiness/release gates`.
+`CF-I09 A5 PASS → HUMAN LOCAL PRODUCT ACCEPTANCE → Cloudflare test environment authorization → Cloudflare validation → production-readiness/release gates`.
+
+Remote Cloudflare provisioning/deployment, remote D1 mutation, paid resources, real-data migration, production Access/DNS changes and cutover remain unauthorized.
 
 ## NEXT AUTHORIZED ACTION
 
-`CF_I09_EXTERNAL_INDEPENDENT_CRITIC_REVIEW_A5`
+`HUMAN_LOCAL_PRODUCT_ACCEPTANCE_CF_I09_A5_ACCEPTED_CANDIDATE`
 
-Human routine relay is forbidden. Human Product Acceptance remains deferred until external review of A5 passes.
+No Codex autonomous resume is authorized while this Human Gate is active.
