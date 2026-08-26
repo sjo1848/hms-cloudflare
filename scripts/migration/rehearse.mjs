@@ -41,4 +41,4 @@ async function main() {
   process.stdout.write(`${JSON.stringify({ status: "APPLIED", rehearsal_id: REHEARSAL_ID, source_digest: sourceDigest, bindings })}\n`);
 }
 
-main().catch((error) => { process.stderr.write(`${error.message}\n`); process.exitCode = 1; });
+main().then(() => process.exit(0)).catch((error) => { process.stderr.write(`${error.message}\n`); process.exit(1); });

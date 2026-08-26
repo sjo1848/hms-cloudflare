@@ -1,0 +1,13 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "hms-cloudflare-api-control-local",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [{
+    "binding": "CONTROL_DB",
+    "database_name": "hms-control-local",
+    "database_id": "00000000-0000-0000-0000-000000000001",
+    "migrations_dir": "schema/control-migrations"
+  }]
+}

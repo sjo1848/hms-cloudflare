@@ -3,6 +3,11 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$repo_root"
+# Isolate each D1 binding under the caller-owned root. Wrangler 4.125's
+# shared Miniflare persistence can retain a process-wide lock across repeated
+# child invocations; this keeps the focal runner deterministic without
+# changing the local product runtime layout.
+export CF_I09_ISOLATED_PERSISTENCE=1
 test_state="$(mktemp -d)"
 failure_state="$(mktemp -d)"
 test_output="$(mktemp -d)"

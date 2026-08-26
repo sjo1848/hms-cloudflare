@@ -426,7 +426,7 @@ async function main() {
     `${JSON.stringify({ status: "RECONCILED", rehearsal_id: REHEARSAL_ID, source_baseline: SOURCE_BASELINE, source_digest: digest, control: controlActual, hotels: results }, null, 2)}\n`,
   );
 }
-main().catch((error) => {
+main().then(() => process.exit(0)).catch((error) => {
   process.stderr.write(`${error.message}\n`);
-  process.exitCode = 1;
+  process.exit(1);
 });
