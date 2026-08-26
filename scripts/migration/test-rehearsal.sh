@@ -24,6 +24,7 @@ node scripts/migration/rehearse.mjs --persist-to "$test_state" >"$test_output/re
 node scripts/migration/reconcile.mjs --persist-to "$test_state" >"$test_output/reconcile-1.json"
 node scripts/migration/reconcile.mjs --persist-to "$test_state" >"$test_output/reconcile-2.json"
 cmp "$test_output/reconcile-1.json" "$test_output/reconcile-2.json"
+node scripts/migration/reconcile-negative-tests.mjs "$test_state"
 
 if node scripts/migration/rehearse.mjs --persist-to "$test_state" >"$test_output/replay.log" 2>&1; then
   echo "replay unexpectedly succeeded" >&2

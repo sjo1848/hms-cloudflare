@@ -6,9 +6,9 @@ Project: HMS Cloudflare
 Updated: 2026-08-26
 Global Project Mode: `DELIVERY`  
 Phase: `BUILD / VALIDATE READINESS`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-3 AUTHORIZED`
+Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 REWORK-3 READY FOR A4`
 
-Runtime: `READY_TO_RESUME` — External Independent Critic reviewed CF-I09 Artifact A3 and returned REWORK-3. No Human Gate and no external blocker.
+Runtime: `RUNNING` — REWORK-3 lifecycle exactness repairs and adversarial validation are complete; preparing A4. No Human Gate or blocker.
 
 Current objective: complete the accepted HMS Cloudflare migration locally with deterministic source-parity migration, reconciliation, backup/restore and operational readiness so the Human can perform complete local Product Acceptance before any remote Cloudflare deployment.
 
@@ -130,6 +130,6 @@ Paid Cloudflare resources, irreversible provisioning/cutover, significant unreso
 
 ## NEXT AUTHORIZED ACTION
 
-`CF_I09_AUTONOMOUS_REWORK_3_LIFECYCLE_EXACT_RECONCILIATION`
+`CF_I09_PUBLISH_ARTIFACT_A4_THEN_BOUNDARY_B4_EXTERNAL_REVIEW`
 
 Codex consumes the canonical External Critic verdict and state, repairs lifecycle exact reconciliation and evidence autonomously through the full internal gate, publishes one mature fresh A4+B4, and stops for External Independent Critic. Human routine relay is not required.

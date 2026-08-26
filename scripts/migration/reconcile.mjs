@@ -243,6 +243,7 @@ async function main() {
             ? null
             : Number(row.check_in_stay_confirmed),
         checked_in_by: sourceSubject(row.checked_in_by_user_id),
+        checked_in_at: normalizedTime(row.checked_in_at),
         check_out_charges_reviewed:
           row.check_out_charges_reviewed == null
             ? null
@@ -256,6 +257,7 @@ async function main() {
             ? null
             : Number(row.check_out_housekeeping_handoff),
         checked_out_by: sourceSubject(row.checked_out_by_user_id),
+        checked_out_at: normalizedTime(row.checked_out_at),
         terminal_reason: row.terminal_reason,
         terminal_recorded_at: normalizedTime(row.terminal_recorded_at),
         terminal_recorded_by: sourceSubject(row.terminal_recorded_by_user_id),
@@ -266,6 +268,56 @@ async function main() {
           row.late_arrival_recorded_by_user_id,
         ),
       })),
+      exactExists(
+        "lifecycle_events",
+        hotelRows("bookings").flatMap((row) => {
+          const events = [];
+          if (row.checked_in_at)
+            events.push({
+              id: `migration:checkin:${row.id}`,
+              booking_id: row.id,
+              event_type: "CHECK_IN",
+              actor_subject:
+                row.checked_in_by_user_id == null
+                  ? `legacy-source-user:unknown:checkin:${row.id}`
+                  : sourceSubject(row.checked_in_by_user_id),
+              request_id: `migration:request-checkin:${row.id}`,
+              hotel_id: hotel.id,
+              details_json: canonicalJson({
+                source_snapshot: true,
+                actor_reconstruction:
+                  row.checked_in_by_user_id == null
+                    ? "source checked_in_by_user_id NULL; unknown actor retained without attributing migration operator"
+                    : null,
+              }),
+              created_at: normalizedTime(row.checked_in_at),
+              from_room_id: null,
+            });
+          if (row.checked_out_at)
+            events.push({
+              id: `migration:checkout:${row.id}`,
+              booking_id: row.id,
+              event_type: "CHECK_OUT",
+              actor_subject:
+                row.checked_out_by_user_id == null
+                  ? `legacy-source-user:unknown:checkout:${row.id}`
+                  : sourceSubject(row.checked_out_by_user_id),
+              request_id: `migration:request-checkout:${row.id}`,
+              hotel_id: hotel.id,
+              details_json: canonicalJson({
+                source_snapshot: true,
+                actor_reconstruction:
+                  row.checked_out_by_user_id == null
+                    ? "source checked_out_by_user_id NULL; unknown actor retained without attributing migration operator"
+                    : null,
+              }),
+              created_at: normalizedTime(row.checked_out_at),
+              from_room_id: row.room_id,
+            });
+          return events;
+        }),
+        (row) => row,
+      ),
       exactExists("extra_charges", hotelRows("extra_charges"), (row) => ({
         id: row.id,
         booking_id: row.booking_id,
