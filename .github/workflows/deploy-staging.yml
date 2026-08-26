@@ -1,0 +1,127 @@
+name: Deploy HMS staging
+
+on:
+  push:
+    branches:
+      - deploy/staging
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hms-cloudflare-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CF_ACCESS_TEAM_DOMAIN: ${{ vars.CF_ACCESS_TEAM_DOMAIN }}
+      CF_ACCESS_AUDIENCE: ${{ vars.CF_ACCESS_AUDIENCE }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify Cloudflare credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx wrangler whoami
+
+      - name: Create or reuse staging D1 databases
+        shell: bash
+        run: |
+          set -euo pipefail
+          ensure_db() {
+            local name="$1" rows id
+            rows="$(npx wrangler d1 list --json)"
+            id="$(printf '%s' "$rows" | node -e 'const fs=require("fs"); const rows=JSON.parse(fs.readFileSync(0,"utf8")); const row=rows.find(x=>x.name===process.argv[1]); if(row) process.stdout.write(row.uuid||row.id||"");' "$name")"
+            if [[ -z "$id" ]]; then
+              npx wrangler d1 create "$name" >&2
+              rows="$(npx wrangler d1 list --json)"
+              id="$(printf '%s' "$rows" | node -e 'const fs=require("fs"); const rows=JSON.parse(fs.readFileSync(0,"utf8")); const row=rows.find(x=>x.name===process.argv[1]); if(!row) process.exit(2); process.stdout.write(row.uuid||row.id||"");' "$name")"
+            fi
+            test -n "$id"
+            printf '%s' "$id"
+          }
+
+          echo "CONTROL_DB_ID=$(ensure_db hms-control-staging)" >> "$GITHUB_ENV"
+          echo "HOTEL_DEMO_DB_ID=$(ensure_db hms-hotel-demo-staging)" >> "$GITHUB_ENV"
+          echo "HOTEL_SECOND_DB_ID=$(ensure_db hms-hotel-second-staging)" >> "$GITHUB_ENV"
+
+      - name: Render account-specific API configuration
+        run: node scripts/cloudflare/render-staging-config.mjs
+
+      - name: Apply remote D1 migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          config=apps/api/wrangler.staging.generated.jsonc
+          npx wrangler d1 migrations apply CONTROL_DB --remote --config "$config"
+          npx wrangler d1 migrations apply HOTEL_DEMO_DB --remote --config "$config"
+          npx wrangler d1 migrations apply HOTEL_SECOND_DB --remote --config "$config"
+
+      - name: Seed pristine staging data once
+        shell: bash
+        run: |
+          set -euo pipefail
+          config=apps/api/wrangler.staging.generated.jsonc
+          count_rehearsals() {
+            local binding="$1" payload
+            payload="$(npx wrangler d1 execute "$binding" --remote --config "$config" --command "SELECT COUNT(*) AS count FROM migration_rehearsals" --json)"
+            printf '%s' "$payload" | node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(0,"utf8")); const n=Number(p?.[0]?.results?.[0]?.count ?? -1); if(!Number.isInteger(n)||n<0) process.exit(2); process.stdout.write(String(n));'
+          }
+
+          control="$(count_rehearsals CONTROL_DB)"
+          hotel_a="$(count_rehearsals HOTEL_DEMO_DB)"
+          hotel_b="$(count_rehearsals HOTEL_SECOND_DB)"
+
+          if [[ "$control" == 0 && "$hotel_a" == 0 && "$hotel_b" == 0 ]]; then
+            node scripts/cloudflare/render-staging-seed.mjs .staging-seed
+            npx wrangler d1 execute CONTROL_DB --remote --config "$config" --file .staging-seed/CONTROL_DB.sql --yes
+            npx wrangler d1 execute HOTEL_DEMO_DB --remote --config "$config" --file .staging-seed/HOTEL_DEMO_DB.sql --yes
+            npx wrangler d1 execute HOTEL_SECOND_DB --remote --config "$config" --file .staging-seed/HOTEL_SECOND_DB.sql --yes
+          elif [[ "$control" -ge 1 && "$hotel_a" -ge 1 && "$hotel_b" -ge 1 ]]; then
+            echo "Staging fixture already initialized; preserving remote test state."
+          else
+            echo "Refusing deploy: staging D1 seed state is partial ($control/$hotel_a/$hotel_b)." >&2
+            exit 1
+          fi
+
+      - name: Validate and deploy API Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --dry-run --config apps/api/wrangler.staging.generated.jsonc
+          npx wrangler deploy --config apps/api/wrangler.staging.generated.jsonc
+
+      - name: Build web application
+        run: npm run web:build
+
+      - name: Validate and deploy web Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --dry-run --config apps/web/wrangler.staging.jsonc
+          npx wrangler deploy --config apps/web/wrangler.staging.jsonc
+
+      - name: Staging handoff
+        run: |
+          echo "Staging deploy complete."
+          if [[ -z "${CF_ACCESS_TEAM_DOMAIN:-}" || -z "${CF_ACCESS_AUDIENCE:-}" ]]; then
+            echo "Cloudflare Access is still pending. Protect hms-cloudflare-web-staging and then set CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUDIENCE repository variables before the authenticated acceptance run."
+          fi
