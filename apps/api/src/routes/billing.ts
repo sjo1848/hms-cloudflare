@@ -59,9 +59,9 @@ async function recordPayment(c: Ctx, id: string, body: Body, settle: boolean) {
   const invoiceId = crypto.randomUUID();
   const invoice = await db.prepare("SELECT id, amount_cents, paid_amount_cents FROM invoices WHERE booking_id = ?1").bind(id).first<{ id: string; amount_cents: number; paid_amount_cents: number }>();
   const target = amount ?? (invoice ? invoice.amount_cents - invoice.paid_amount_cents : booking.total_cents);
-  const prior = await db.prepare("SELECT amount_cents, payment_method, payment_reference FROM payment_entries WHERE operation_token = ?1").bind(operationToken).first<{ amount_cents: number; payment_method: string; payment_reference: string | null }>();
+  const prior = await db.prepare("SELECT booking_id, amount_cents, payment_method, payment_reference, note FROM payment_entries WHERE operation_token = ?1").bind(operationToken).first<{ booking_id: string; amount_cents: number; payment_method: string; payment_reference: string | null; note: string | null }>();
   if (prior) {
-    if (prior.amount_cents !== target || prior.payment_method !== pm || prior.payment_reference !== reference) throw ApiError.conflict("Payment operation token was reused with different details");
+    if (prior.booking_id !== id || prior.amount_cents !== target || prior.payment_method !== pm || prior.payment_reference !== reference || prior.note !== note) throw ApiError.conflict("Payment operation token was reused with different details");
     return { ok: true, amount_cents: prior.amount_cents, invoice: await invoiceView(db, id) };
   }
   if (!Number.isSafeInteger(target) || target <= 0) throw ApiError.conflict("Booking is already settled");
