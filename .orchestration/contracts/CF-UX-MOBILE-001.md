@@ -38,3 +38,10 @@ The implementer may choose the minimal shadcn subset and CSS composition needed 
 
 ## Human gates
 The Human authorized remote Product Acceptance because local computer access is unavailable. This does not waive CI, invariant evidence, Pre-Critic or Independent Critic. Exactly one deliberate staging deployment is allowed for the remote acceptance; the Human then returns ACCEPT or REWORK.
+
+## Registry classification
+
+| Invariant group | Classification | Rationale |
+|---|---|---|
+| INV-ATOMIC-001, INV-AUDIT-001, INV-DOMAIN-001, INV-ENUM-001, INV-LEGACY-001, INV-MONEY-001, INV-CF-I07-001..004, INV-CF-I08-001..005 | N/A | This batch changes shell/Reception presentation and interaction only; it does not add domain mutations, audit writes, enum predicates, recovery, money, capability authority, admin writes or reporting/network semantics. |
+| INV-TENANT-001, INV-RBAC-001, INV-PARITY-001, INV-UX-001, INV-ORDER-001, INV-RESP-001, INV-EVID-001, INV-STATE-001, INV-SCOPE-001 | APPLIES | The batch displays tenant context, preserves protected workflows and queue order, changes responsive interaction, and requires explicit artifact/evidence boundary checks. Concrete proof is recorded in `.orchestration/evidence/CF-UX-MOBILE-001-INVARIANTS.md`. |
