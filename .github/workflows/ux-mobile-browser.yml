@@ -6,13 +6,15 @@ on:
       - "apps/web/**"
       - "apps/api/**"
       - "scripts/cf-i05-browser-regression*"
-      - ".orchestration/contracts/CF-UX-MOBILE-001.md"
-      - ".orchestration/evidence/CF-UX-MOBILE-001-INVARIANTS.md"
+      - "scripts/cf-ux-rooms-guests-browser.playwright.js"
+      - "scripts/cf-ux-mobile-browser-ci.mjs"
+      - ".orchestration/contracts/CF-UX-MOBILE-002.md"
+      - ".orchestration/evidence/CF-UX-MOBILE-002-INVARIANTS.md"
+      - ".orchestration/STATE.md"
+      - ".orchestration/STATUS.json"
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   browser:
     runs-on: ubuntu-latest
@@ -30,6 +32,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cf-ux-mobile-browser-evidence
-          path: |
-            output/playwright
+          path: output/playwright
           if-no-files-found: ignore
