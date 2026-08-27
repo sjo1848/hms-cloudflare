@@ -5,17 +5,29 @@ repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 tmp_dir=$(mktemp -d)
 api_pid=""
 web_pid=""
+status=0
 cleanup() {
   if [[ -n "$web_pid" ]]; then kill "$web_pid" 2>/dev/null || true; fi
   if [[ -n "$api_pid" ]]; then pkill -TERM -P "$api_pid" 2>/dev/null || true; kill "$api_pid" 2>/dev/null || true; fi
 }
-trap cleanup EXIT
+on_exit() {
+  status=$?
+  if [[ "$status" != "0" ]]; then
+    echo "CF-I05 browser regression failed (status $status)"
+    [[ -f "$tmp_dir/migrations.log" ]] && { echo "=== migrations log ==="; cat "$tmp_dir/migrations.log"; }
+    [[ -f "$tmp_dir/api.log" ]] && { echo "=== API log ==="; cat "$tmp_dir/api.log"; }
+    [[ -f "$tmp_dir/web.log" ]] && { echo "=== Web log ==="; cat "$tmp_dir/web.log"; }
+  fi
+  cleanup
+  exit "$status"
+}
+trap on_exit EXIT
 cd "$repo_dir"
 wrangler="$repo_dir/node_modules/.bin/wrangler"
 
-CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc >/dev/null
-CI=1 "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >/dev/null
-CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --command "UPDATE hotel_memberships SET role='housekeeping' WHERE access_subject='subject-a' AND hotel_id='hotel-a';" >/dev/null
+CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc >"$tmp_dir/migrations.log" 2>&1
+CI=1 "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >>"$tmp_dir/migrations.log" 2>&1
+CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --command "UPDATE hotel_memberships SET role='housekeeping' WHERE access_subject='subject-a' AND hotel_id='hotel-a';" >>"$tmp_dir/migrations.log" 2>&1
 CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "
   DELETE FROM housekeeping_events; DELETE FROM maintenance_cases; DELETE FROM bookings; DELETE FROM rooms WHERE id IN ('browser-a','browser-b','browser-c','browser-d','browser-e','browser-f','browser-g','browser-h');
   INSERT OR REPLACE INTO rooms (id,room_number,room_type,status,price_cents) VALUES
@@ -32,7 +44,7 @@ CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --c
   INSERT OR REPLACE INTO bookings (id,guest_id,room_id,check_in,check_out,status,total_cents,created_at,updated_at)
     VALUES ('browser-booking-g','browser-guest-g','browser-g','2026-08-20',date('now'),'CHECKED_IN',17000,'2026-08-20T00:00:00Z','2026-08-20T00:00:00Z'),
       ('browser-booking-h','browser-guest-h','browser-h','2026-08-20',date('now'),'CONFIRMED',18000,'2026-08-20T00:00:00Z','2026-08-20T00:00:00Z');
-" >/dev/null
+" >>"$tmp_dir/migrations.log" 2>&1
 
 "$wrangler" dev --local --ip 127.0.0.1 --port 8787 --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >"$tmp_dir/api.log" 2>&1 & api_pid=$!
 api_ready=0
@@ -45,10 +57,6 @@ if [[ "$web_ready" != "1" ]]; then echo "Web did not become ready"; cat "$tmp_di
 
 if [[ "${CI_BROWSER_STANDARD:-0}" == "1" ]]; then
   if ! node scripts/cf-ux-mobile-browser-ci.mjs; then
-    echo "=== API log ==="
-    cat "$tmp_dir/api.log" || true
-    echo "=== Web log ==="
-    cat "$tmp_dir/web.log" || true
     exit 1
   fi
 else
