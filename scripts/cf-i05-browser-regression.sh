@@ -35,9 +35,13 @@ CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --c
 " >/dev/null
 
 "$wrangler" dev --local --ip 127.0.0.1 --port 8787 --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >"$tmp_dir/api.log" 2>&1 & api_pid=$!
-for _ in {1..30}; do curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1 && break; sleep 1; done
-"$repo_dir/node_modules/.bin/vite" --host 127.0.0.1 --port 4174 --config apps/web/vite.config.ts >"$tmp_dir/web.log" 2>&1 & web_pid=$!
-for _ in {1..30}; do curl -fsS http://127.0.0.1:4174/housekeeping >/dev/null 2>&1 && break; sleep 1; done
+api_ready=0
+for _ in {1..30}; do if curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1; then api_ready=1; break; fi; sleep 1; done
+if [[ "$api_ready" != "1" ]]; then echo "API did not become ready"; cat "$tmp_dir/api.log"; exit 1; fi
+VITE_LOCAL_ACCEPTANCE_AUTH=true "$repo_dir/node_modules/.bin/vite" --host 127.0.0.1 --port 4174 --config apps/web/vite.config.ts >"$tmp_dir/web.log" 2>&1 & web_pid=$!
+web_ready=0
+for _ in {1..30}; do if curl -fsS http://127.0.0.1:4174/housekeeping >/dev/null 2>&1; then web_ready=1; break; fi; sleep 1; done
+if [[ "$web_ready" != "1" ]]; then echo "Web did not become ready"; cat "$tmp_dir/web.log"; exit 1; fi
 
 if [[ "${CI_BROWSER_STANDARD:-0}" == "1" ]]; then
   if ! node scripts/cf-ux-mobile-browser-ci.mjs; then
