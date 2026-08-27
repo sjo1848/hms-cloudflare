@@ -23,6 +23,7 @@ on_exit() {
 }
 trap on_exit EXIT
 cd "$repo_dir"
+mkdir -p output/playwright
 wrangler="$repo_dir/node_modules/.bin/wrangler"
 
 CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc >"$tmp_dir/migrations.log" 2>&1
