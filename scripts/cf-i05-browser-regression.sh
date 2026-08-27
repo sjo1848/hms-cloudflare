@@ -34,7 +34,7 @@ CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --comm
   INSERT OR REPLACE INTO control_hotels (id,slug,operational_binding,active) VALUES ('hotel-a','hotel-a','HOTEL_DEMO_DB',1);
   INSERT OR REPLACE INTO access_identity_mappings (access_subject,email,active) VALUES ('source-user:subject-a','a@example.test',1);
   INSERT OR REPLACE INTO hotel_memberships (access_subject,hotel_id,role,active) VALUES ('source-user:subject-a','hotel-a','housekeeping',1);
-  INSERT OR REPLACE INTO hotel_admin_metadata (hotel_id,name) VALUES ('hotel-a','Hotel Norte');
+  INSERT OR REPLACE INTO hotel_admin_metadata (hotel_id,name,plan_tier) VALUES ('hotel-a','Hotel Norte','BASIC');
 " >>"$tmp_dir/migrations.log" 2>&1
 CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "
   DELETE FROM housekeeping_events; DELETE FROM maintenance_cases; DELETE FROM bookings; DELETE FROM rooms WHERE id IN ('browser-a','browser-b','browser-c','browser-d','browser-e','browser-f','browser-g','browser-h');
