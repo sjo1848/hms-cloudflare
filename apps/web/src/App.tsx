@@ -76,7 +76,7 @@ function Rooms() {
     setSelected(room);
     setDetailLoading(true);
     setError("");
-    try { setHolds(await api<Hold[]>(\`/rooms/\${room.id}/holds\`)); }
+    try { setHolds(await api<Hold[]>(`/rooms/${room.id}/holds`)); }
     catch (e) { setError((e as Error).message); }
     finally { setDetailLoading(false); }
   }
@@ -89,7 +89,7 @@ function Rooms() {
     const price = window.prompt("Price in cents", String(room.price_cents));
     if (!price) return;
     try {
-      await api(\`/rooms/\${room.id}\`, {
+      await api(`/rooms/${room.id}`, {
         method: "PATCH",
         body: JSON.stringify({ room_number: roomNumber, room_type: roomType, price_cents: Number(price) })
       });
@@ -105,7 +105,7 @@ function Rooms() {
     setError("");
     const data = new FormData(event.currentTarget as HTMLFormElement);
     try {
-      await api(\`/rooms/\${selected.id}/holds\`, {
+      await api(`/rooms/${selected.id}/holds`, {
         method: "POST",
         body: JSON.stringify({ start_date: data.get("start"), end_date: data.get("end"), hold_type: "Other", reason: data.get("reason") })
       });
@@ -119,12 +119,12 @@ function Rooms() {
     if (!selected) return;
     setError("");
     try {
-      await api(\`/rooms/\${selected.id}/holds/\${holdId}\`, { method: "DELETE" });
+      await api(`/rooms/${selected.id}/holds/${holdId}`, { method: "DELETE" });
       await openRoom(selected);
     } catch (e) { setError((e as Error).message); }
   }
 
-  const visible = rooms.filter(room => \`\${room.room_number} \${room.room_type} \${room.status}\`.toLowerCase().includes(filter.toLowerCase()));
+  const visible = rooms.filter(room => `${room.room_number} ${room.room_type} ${room.status}`.toLowerCase().includes(filter.toLowerCase()));
 
   return <section className="resource-workspace">
     <div className="workspace-heading">
@@ -146,13 +146,13 @@ function Rooms() {
       <div className="resource-list" aria-label="Rooms list">{visible.map(room => <article className={selected?.id === room.id ? "resource-card selected" : "resource-card"} key={room.id}>
         <button type="button" className="resource-card-select" onClick={() => void openRoom(room)} aria-pressed={selected?.id === room.id}>
           <span className="resource-card-title">Room {room.room_number}</span><span className="status-badge">{room.status}</span>
-          <span className="resource-card-meta">{room.room_type} · \${(room.price_cents / 100).toFixed(2)}</span>
+          <span className="resource-card-meta">{room.room_type} · ${(room.price_cents / 100).toFixed(2)}</span>
         </button>
         <button type="button" className="secondary-button" onClick={() => void editRoom(room)}>Edit</button>
       </article>)}</div>
       <aside className="resource-detail" aria-label="Selected room">
         {!selected && <div className="state-panel state-empty"><strong>Select a room</strong><span>Choose a room to review its holds.</span></div>}
-        {selected && <><div className="resource-detail-heading"><div><p className="eyebrow">Selected room</p><h3>Room {selected.room_number}</h3><p className="muted">{selected.room_type} · \${(selected.price_cents / 100).toFixed(2)}</p></div><span className="status-badge">{selected.status}</span></div>
+        {selected && <><div className="resource-detail-heading"><div><p className="eyebrow">Selected room</p><h3>Room {selected.room_number}</h3><p className="muted">{selected.room_type} · ${(selected.price_cents / 100).toFixed(2)}</p></div><span className="status-badge">{selected.status}</span></div>
           <form className="resource-subform" onSubmit={addHold}><h4>Operational hold</h4><div className="form-grid"><label>Start<input required name="start" type="date" /></label><label>End<input required name="end" type="date" /></label><label className="form-span"><span>Reason</span><input required name="reason" minLength={4} placeholder="Maintenance or reservation hold" /></label></div><button type="submit" disabled={holdSaving}>{holdSaving ? "Saving…" : "Add hold"}</button></form>
           {detailLoading && <p className="muted" role="status">Loading holds…</p>}
           {!detailLoading && holds.length === 0 && <p className="muted">No operational holds for this room.</p>}
@@ -195,7 +195,7 @@ function Guests() {
     finally { setSaving(false); }
   }
 
-  const visible = guests.filter(guest => \`\${guest.full_name} \${guest.email} \${guest.phone ?? ""}\`.toLowerCase().includes(filter.toLowerCase()));
+  const visible = guests.filter(guest => `${guest.full_name} ${guest.email} ${guest.phone ?? ""}`.toLowerCase().includes(filter.toLowerCase()));
 
   return <section className="resource-workspace">
     <div className="workspace-heading">
