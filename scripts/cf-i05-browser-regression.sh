@@ -57,7 +57,7 @@ for _ in {1..30}; do if curl -fsS http://127.0.0.1:4174/housekeeping >/dev/null 
 if [[ "$web_ready" != "1" ]]; then echo "Web did not become ready"; cat "$tmp_dir/web.log"; exit 1; fi
 
 if [[ "${CI_BROWSER_STANDARD:-0}" == "1" ]]; then
-  if ! node scripts/cf-ux-mobile-browser-ci.mjs; then
+  if ! node scripts/cf-ux-mobile-browser-ci.mjs 2>&1 | tee output/playwright/browser.log; then
     exit 1
   fi
 else
