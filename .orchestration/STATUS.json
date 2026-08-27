@@ -5,10 +5,10 @@
   "runtime_status": "RUNNING",
   "resume_authorized": false,
   "active_task": "CF-UX-MOBILE-001-REWORK",
-  "last_completed_task": "CF-I09-REWORK-4-INDEPENDENT-CRITIC-PASS",
-  "last_completed_head": "f18b35cfc6b48970f2b8842758fa025126f33407",
-  "work_branch": "main",
-  "next_action": "CF-UX-MOBILE-001_REWORK_PR9_FINDINGS_AND_PRECRITIC",
+  "last_completed_task": "CF-UX-MOBILE-001-INTERNAL-REVIEW-PASS",
+  "last_completed_head": "e7dedbf006fd767c342bbb8ff2a8a043961b14c0",
+  "work_branch": "ux-mobile-hms-elite",
+  "next_action": "CF-UX-MOBILE-001_EXTERNAL_INDEPENDENT_CRITIC",
   "stop_reason": "Human authorized remote Product Acceptance over one deliberate staging deployment; intermediate deploys remain forbidden.",
   "event": {
     "seq": 100,
@@ -17,10 +17,10 @@
   },
   "external_review": {
     "required": true,
-    "last_audited_head": "f18b35cfc6b48970f2b8842758fa025126f33407",
-    "last_verdict": "PASS",
-    "artifact_head": "f18b35cfc6b48970f2b8842758fa025126f33407",
-    "pending_verdict": "CF-UX-MOBILE-001-REWORK"
+    "last_audited_head": "e7dedbf006fd767c342bbb8ff2a8a043961b14c0",
+    "last_verdict": "PENDING",
+    "artifact_head": "e7dedbf006fd767c342bbb8ff2a8a043961b14c0",
+    "pending_verdict": "CF-UX-MOBILE-001"
   },
   "human_gate": {
     "type": "PRODUCT_ACCEPTANCE",
@@ -31,7 +31,7 @@
   "blocker": null,
   "method": {
     "multi_context_required": true,
-    "internal_review_receipt": ".orchestration/evidence/CF-I09-INTERNAL-REVIEW.md",
+    "internal_review_receipt": ".orchestration/evidence/CF-UX-MOBILE-001-INTERNAL-REVIEW.md",
     "external_critic_after_internal_closure_only": true,
     "human_routine_relay_forbidden": true,
     "model_policy": ".orchestration/MODEL-REASONING-POLICY.md",
