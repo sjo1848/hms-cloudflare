@@ -44,7 +44,9 @@
 
   await page.goto("http://127.0.0.1:4174/housekeeping");
   await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
-  const boardEvidence = await page.evaluate(async () => fetch("/api/v1/housekeeping/board").then(response => response.json()));
+  const authStatus = await page.evaluate(async () => { const response = await fetch("/api/v1/auth/me"); return { status: response.status, body: await response.text() }; });
+  if (authStatus.status !== 200) throw new Error(`local acceptance auth failed: ${JSON.stringify(authStatus)}`);
+  const boardEvidence = await page.evaluate(async () => { const response = await fetch("/api/v1/housekeeping/board"); const body = await response.text(); if (!response.ok) throw new Error(`housekeeping board failed ${response.status}: ${body}`); return JSON.parse(body); });
   if (boardEvidence.rooms.some(room => room.room_id === "browser-f")) throw new Error("orphan fixture unexpectedly appeared in eligible board rooms");
   if (!boardEvidence.departures_today.some(departure => departure.room_id === "browser-f" && departure.guest_name === "Orphan Departure Guest")) throw new Error("orphan departure fixture missing from departures_today");
   const checkedInDeparture = boardEvidence.departures_today.find(departure => departure.room_id === "browser-g");
