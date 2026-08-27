@@ -54,15 +54,18 @@ async function recordPayment(c: Ctx, id: string, body: Body, settle: boolean) {
   const pm = paymentMethod(body.payment_method);
   const reference = body.payment_reference == null ? null : requiredText(body.payment_reference, "payment_reference", 1, 120);
   const note = body.note == null ? null : requiredText(body.note, "note", 1, 250);
+  const operationToken = body.operation_token == null ? crypto.randomUUID() : requiredText(body.operation_token, "operation_token", 8, 120);
   const now = new Date().toISOString();
   const invoiceId = crypto.randomUUID();
   const invoice = await db.prepare("SELECT id, amount_cents, paid_amount_cents FROM invoices WHERE booking_id = ?1").bind(id).first<{ id: string; amount_cents: number; paid_amount_cents: number }>();
   const target = amount ?? (invoice ? invoice.amount_cents - invoice.paid_amount_cents : booking.total_cents);
+  const prior = await db.prepare("SELECT amount_cents FROM payment_entries WHERE operation_token = ?1").bind(operationToken).first<{ amount_cents: number }>();
+  if (prior) return { ok: true, amount_cents: prior.amount_cents, invoice: await invoiceView(db, id) };
   if (!Number.isSafeInteger(target) || target <= 0) throw ApiError.conflict("Booking is already settled");
   try {
     const results = await db.batch([
       db.prepare("INSERT INTO invoices (id,booking_id,amount_cents,created_at) SELECT ?1,?2,total_cents,?4 FROM bookings WHERE id=?2 AND NOT EXISTS (SELECT 1 FROM invoices WHERE booking_id=?2) AND total_cents>=?3").bind(invoice?.id ?? invoiceId, id, target, now),
-      db.prepare("INSERT INTO payment_entries (id,invoice_id,booking_id,amount_cents,payment_method,payment_reference,note,received_by_user_id,received_at) SELECT ?1,id,?2,?3,?4,?5,?6,?7,?8 FROM invoices WHERE booking_id=?2 AND status='PENDING' AND paid_amount_cents + ?3 <= amount_cents").bind(crypto.randomUUID(), id, target, pm, reference, note, c.get("identity").subject, now),
+      db.prepare("INSERT INTO payment_entries (id,invoice_id,booking_id,amount_cents,payment_method,payment_reference,note,received_by_user_id,received_at,operation_token) SELECT ?1,id,?2,?3,?4,?5,?6,?7,?8,?9 FROM invoices WHERE booking_id=?2 AND status='PENDING' AND paid_amount_cents + ?3 <= amount_cents").bind(crypto.randomUUID(), id, target, pm, reference, note, c.get("identity").subject, now, operationToken),
       db.prepare("UPDATE invoices SET paid_amount_cents=paid_amount_cents+?2, status=CASE WHEN paid_amount_cents+?2=amount_cents THEN 'PAID' ELSE 'PENDING' END, payment_method=?3, payment_reference=?4, paid_at=CASE WHEN paid_amount_cents+?2=amount_cents THEN ?5 ELSE paid_at END WHERE booking_id=?1 AND status='PENDING' AND paid_amount_cents+?2<=amount_cents AND changes()=1").bind(id, target, pm, reference, now),
       db.prepare("INSERT INTO financial_events (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at) SELECT ?1,?2,?3,?4,?5,?6,?7,?8 WHERE changes()=1").bind(crypto.randomUUID(), settle ? "SETTLE_PAYMENT" : "PAYMENT", id, c.get("identity").subject, c.get("requestId"), c.get("membership").hotelId, JSON.stringify({ amount_cents: target, payment_method: pm, payment_reference: reference }), now),
     ]);
