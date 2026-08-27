@@ -4,7 +4,7 @@
     "x-local-access-email": "a@example.test",
     "x-hotel-id": "hotel-a",
   });
-  const widths = [375, 390, 430, 768, 1024];
+  const widths = [375, 390, 430, 768, 1024, 1366];
   const results = [];
   const apiStatuses = [];
   page.on("response", response => { if (response.url().includes("/api/v1/housekeeping/")) apiStatuses.push({ url: response.url(), status: response.status() }); });
