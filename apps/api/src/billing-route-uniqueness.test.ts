@@ -20,4 +20,10 @@ describe("billing route contract", () => {
     expect(paths.some(path => path.endsWith("-v2"))).toBe(false);
     expect(new Set(paths).size).toBe(paths.length - 2);
   });
+  it("binds idempotency to booking and the complete payment payload", () => {
+    const source = readFileSync(new URL("./routes/billing.ts", import.meta.url), "utf8");
+    expect(source).toContain("SELECT booking_id, amount_cents, payment_method, payment_reference, note FROM payment_entries WHERE operation_token = ?1");
+    expect(source).toContain("prior.booking_id !== id");
+    expect(source).toContain("prior.note !== note");
+  });
 });
