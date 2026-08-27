@@ -39,9 +39,13 @@ for _ in {1..30}; do curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1 && b
 "$repo_dir/node_modules/.bin/vite" --host 127.0.0.1 --port 4174 --config apps/web/vite.config.ts >"$tmp_dir/web.log" 2>&1 & web_pid=$!
 for _ in {1..30}; do curl -fsS http://127.0.0.1:4174/housekeeping >/dev/null 2>&1 && break; sleep 1; done
 
-codex_home=${CODEX_HOME:-$HOME/.codex}
-pwcli="$codex_home/skills/playwright/scripts/playwright_cli.sh"
-bash "$pwcli" -s cf-i05-integrated open about:blank >/dev/null
-bash "$pwcli" -s cf-i05-integrated run-code --filename scripts/cf-i05-browser-regression.playwright.js
-bash "$pwcli" -s cf-i05-integrated close >/dev/null
-echo "CF-I05 integrated browser regression PASS"
+if [[ "${CI_BROWSER_STANDARD:-0}" == "1" ]]; then
+  node scripts/cf-ux-mobile-browser-ci.mjs
+else
+  codex_home=${CODEX_HOME:-$HOME/.codex}
+  pwcli="$codex_home/skills/playwright/scripts/playwright_cli.sh"
+  bash "$pwcli" -s cf-i05-integrated open about:blank >/dev/null
+  bash "$pwcli" -s cf-i05-integrated run-code --filename scripts/cf-i05-browser-regression.playwright.js
+  bash "$pwcli" -s cf-i05-integrated close >/dev/null
+  echo "CF-I05 integrated browser regression PASS"
+fi
