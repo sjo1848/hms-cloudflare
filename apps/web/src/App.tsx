@@ -258,7 +258,7 @@ function LocalDevIdentitySelector({ onChange }: { onChange: () => void }) {
 
 const navigation = [["bookings", "/bookings", "Recepción", "Llegadas, salidas y cobros"], ["rooms", "/rooms", "Habitaciones", "Inventario y disponibilidad"], ["guests", "/guests", "Huéspedes", "Fichas y contactos"], ["housekeeping", "/housekeeping", "Housekeeping", "Limpieza y handoff"], ["reports", "/reports", "Reportes", "Ocupación e ingresos"], ["users", "/users", "Usuarios", "Accesos y roles"], ["network", "/network", "Red", "Operación multi-hotel"]] as const;
 
-type ActiveAuth = { hotel_id: string | null };
+type ActiveAuth = { hotel_id: string | null; hotel_name: string | null };
 const hotelLabels: Record<string, string> = {
   "10000000-0000-0000-0000-000000000001": "Hotel Norte",
   "20000000-0000-0000-0000-000000000002": "Hotel Sur",
@@ -270,7 +270,7 @@ export function App() {
   const page = location.pathname.startsWith("/guests") ? "guests" : location.pathname.startsWith("/rooms") ? "rooms" : location.pathname.startsWith("/housekeeping") ? "housekeeping" : location.pathname.startsWith("/users") ? "users" : location.pathname.startsWith("/network") ? "network" : location.pathname.startsWith("/reports") ? "reports" : "bookings";
   const activeLabel = navigation.find(([key]) => key === page)?.[2] ?? "Recepción";
   function closeMobileNav() { setMobileNavOpen(false); requestAnimationFrame(() => mobileMenuTriggerRef.current?.focus()); }
-  useEffect(() => { const requestId = ++activeHotelRequestRef.current; void api<ActiveAuth>("/auth/me").then(({ hotel_id }) => { if (requestId === activeHotelRequestRef.current) setActiveHotelLabel(hotelLabels[hotel_id ?? ""] ?? "Hotel"); }); }, [identityVersion]);
+  useEffect(() => { const requestId = ++activeHotelRequestRef.current; void api<ActiveAuth>("/auth/me").then(({ hotel_id, hotel_name }) => { if (requestId === activeHotelRequestRef.current) setActiveHotelLabel(hotel_name ?? hotelLabels[hotel_id ?? ""] ?? "Hotel"); }); }, [identityVersion]);
   useEffect(() => { if (!mobileNavOpen) return; const closeOnDesktop = () => { if (window.innerWidth > 900) closeMobileNav(); }; window.addEventListener("resize", closeOnDesktop); return () => window.removeEventListener("resize", closeOnDesktop); }, [mobileNavOpen]);
   const content = page === "rooms" ? <Rooms /> : page === "guests" ? <Guests /> : page === "housekeeping" ? <HousekeepingRework /> : page === "users" ? <UsersAdmin /> : page === "network" ? <NetworkAdmin /> : page === "reports" ? <Reports /> : <><Bookings /><BillingPanel /><CashBalancePanel /></>;
   const navLinks = (close = false) => navigation.map(([key, href, label, description]) => <a key={key} className={page === key ? "active" : ""} href={href} onClick={close ? closeMobileNav : undefined}><strong>{label}</strong><small>{description}</small></a>);
