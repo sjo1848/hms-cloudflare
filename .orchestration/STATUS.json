@@ -1,37 +1,37 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "phase": "LOCAL_PRODUCT_ACCEPTANCE",
-  "runtime_status": "HUMAN_GATE",
+  "phase": "CF_UX_MOBILE_001_REWORK",
+  "runtime_status": "RUNNING",
   "resume_authorized": false,
-  "active_task": "HMS-LOCAL-PRODUCT-ACCEPTANCE",
-  "last_completed_task": "CF-I09-REWORK-4-INDEPENDENT-CRITIC-PASS",
-  "last_completed_head": "f18b35cfc6b48970f2b8842758fa025126f33407",
-  "work_branch": "main",
-  "next_action": "HUMAN_LOCAL_PRODUCT_ACCEPTANCE_CF_I09_A5_ACCEPTED_CANDIDATE",
-  "stop_reason": "CF-I09 A5 technical PASS closes the local acceptance runtime persistence defect. The complete local HMS candidate now requires Human Product Acceptance before any remote Cloudflare stage.",
+  "active_task": "CF-UX-MOBILE-001-REWORK",
+  "last_completed_task": "CF-UX-MOBILE-001-INTERNAL-REVIEW-PASS",
+  "last_completed_head": "1cc88cb0f9ecfa0d47c6f2828013c3191764323c",
+  "work_branch": "ux-mobile-hms-elite",
+  "next_action": "CF-UX-MOBILE-001_EXTERNAL_INDEPENDENT_CRITIC",
+  "stop_reason": "Human authorized remote Product Acceptance over one deliberate staging deployment; intermediate deploys remain forbidden.",
   "event": {
-    "seq": 99,
-    "id": "CF-I09@A5-INDEPENDENT-CRITIC-PASS",
-    "type": "HUMAN_GATE"
+    "seq": 100,
+    "id": "HUMAN-REMOTE-ACCEPTANCE-001",
+    "type": "HUMAN_DECISION"
   },
   "external_review": {
-    "required": false,
-    "last_audited_head": "f18b35cfc6b48970f2b8842758fa025126f33407",
-    "last_verdict": "PASS",
-    "artifact_head": "f18b35cfc6b48970f2b8842758fa025126f33407",
-    "pending_verdict": null
+    "required": true,
+    "last_audited_head": "1cc88cb0f9ecfa0d47c6f2828013c3191764323c",
+    "last_verdict": "PENDING",
+    "artifact_head": "1cc88cb0f9ecfa0d47c6f2828013c3191764323c",
+    "pending_verdict": "CF-UX-MOBILE-001"
   },
   "human_gate": {
     "type": "PRODUCT_ACCEPTANCE",
-    "scope": "LOCAL_HMS",
-    "reason": "CF-I09 A5 technical PASS; repaired reset/start/backup/restore/smoke path is ready for Human Product Acceptance.",
-    "required_action": "Pull the accepted candidate, run the repeatable local acceptance bootstrap, exercise the complete product, then record ACCEPT or REWORK."
+    "scope": "REMOTE_STAGING",
+    "reason": "Human cannot access the development computer; acceptance will occur on one deliberate staging deployment.",
+    "required_action": "Complete CF-UX-MOBILE-001 technical gates, deploy once to staging, exercise the candidate remotely, and record ACCEPT or REWORK."
   },
   "blocker": null,
   "method": {
     "multi_context_required": true,
-    "internal_review_receipt": ".orchestration/evidence/CF-I09-INTERNAL-REVIEW.md",
+    "internal_review_receipt": ".orchestration/evidence/CF-UX-MOBILE-001-INTERNAL-REVIEW.md",
     "external_critic_after_internal_closure_only": true,
     "human_routine_relay_forbidden": true,
     "model_policy": ".orchestration/MODEL-REASONING-POLICY.md",

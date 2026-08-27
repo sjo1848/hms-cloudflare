@@ -1,0 +1,35 @@
+name: ux-mobile-browser
+
+on:
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - "apps/api/**"
+      - "scripts/cf-i05-browser-regression*"
+      - ".orchestration/contracts/CF-UX-MOBILE-001.md"
+      - ".orchestration/evidence/CF-UX-MOBILE-001-INVARIANTS.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save playwright@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - run: CI_BROWSER_STANDARD=1 bash scripts/cf-i05-browser-regression.sh
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cf-ux-mobile-browser-evidence
+          path: |
+            output/playwright
+          if-no-files-found: ignore

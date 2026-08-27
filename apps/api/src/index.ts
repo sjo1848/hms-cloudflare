@@ -120,14 +120,20 @@ app.use("/api/v1/*", async (context, next) => {
   await next();
 });
 
-app.get("/api/v1/auth/me", (context) => {
+app.get("/api/v1/auth/me", async (context) => {
   const identity = context.get("identity");
   const membership = context.get("membership");
   const networkRole = context.get("networkRole");
+  const hotel = membership
+    ? await context.env.CONTROL_DB.prepare(
+        "SELECT metadata.name AS name FROM control_hotels AS hotel JOIN hotel_admin_metadata AS metadata ON metadata.hotel_id=hotel.id WHERE hotel.id=?1 AND hotel.active=1 LIMIT 1",
+      ).bind(membership.hotelId).first<{ name: string }>()
+    : null;
   return context.json({
     subject: identity.subject,
     email: identity.email,
     hotel_id: membership?.hotelId ?? null,
+    hotel_name: hotel?.name ?? null,
     role: membership?.role ?? null,
     operational_binding: membership?.operationalBinding ?? null,
     network_role: networkRole ?? null,

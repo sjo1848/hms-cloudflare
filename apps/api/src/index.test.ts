@@ -74,4 +74,24 @@ describe("API foundation", () => {
       dependencies: { HOTEL_DEMO_DB: "unavailable" },
     });
   });
+  it("returns the authoritative hotel name from control-plane metadata", async () => {
+    const control = {
+      prepare: (query: string) => ({
+        bind: (...values: string[]) => ({
+          first: async () => query.includes("network_memberships") ? null : { name: "Hotel Norte" },
+          all: async () => ({ results: [{ hotel_id: "hotel-a", role: "receptionist", email: "a@example.test", operational_binding: "HOTEL_DEMO_DB" }] }),
+        }),
+      }),
+    } as unknown as D1Database;
+    const response = await app.request("http://127.0.0.1/api/v1/auth/me", { headers: { "x-local-access-subject": "subject-a", "x-local-access-email": "a@example.test", "x-hotel-id": "hotel-a" } }, {
+      ENVIRONMENT: "development",
+      LOCAL_DEV_AUTH: "true",
+      CONTROL_DB: control,
+      HOTEL_DEMO_DB: control,
+      HOTEL_SECOND_DB: control,
+    },);
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ hotel_id: "hotel-a", hotel_name: "Hotel Norte" });
+  });
+
 });
