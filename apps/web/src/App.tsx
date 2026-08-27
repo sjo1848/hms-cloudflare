@@ -42,7 +42,7 @@ function Rooms() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [holdSaving, setHoldSaving] = useState(false);
-  const [holdsRequestId, setHoldsRequestId] = useState(0);
+  const holdsRequestIdRef = useRef(0);
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
   const [filter, setFilter] = useState("");
@@ -74,19 +74,18 @@ function Rooms() {
   }
 
   async function openRoom(room: Room) {
-    const requestId = holdsRequestId + 1;
-    setHoldsRequestId(requestId);
+    const requestId = ++holdsRequestIdRef.current;
     setSelected(room);
     setHolds([]);
     setDetailLoading(true);
     setError("");
     try {
       const nextHolds = await api<Hold[]>(`/rooms/${room.id}/holds`);
-      if (requestId === holdsRequestId + 1) setHolds(nextHolds);
+      if (requestId === holdsRequestIdRef.current) setHolds(nextHolds);
     } catch (e) {
-      if (requestId === holdsRequestId + 1) setError((e as Error).message);
+      if (requestId === holdsRequestIdRef.current) setError((e as Error).message);
     } finally {
-      if (requestId === holdsRequestId + 1) setDetailLoading(false);
+      if (requestId === holdsRequestIdRef.current) setDetailLoading(false);
     }
   }
 
