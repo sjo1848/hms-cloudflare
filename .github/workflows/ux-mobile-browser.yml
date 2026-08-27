@@ -32,6 +32,4 @@ jobs:
           name: cf-ux-mobile-browser-evidence
           path: |
             output/playwright
-            /tmp/**/api.log
-            /tmp/**/web.log
           if-no-files-found: ignore
