@@ -48,6 +48,7 @@
 .optional { color: #6a7787; font-size: .8rem; }
 .guest-detail { margin-top: 18px; }
 @media (max-width: 760px) {
+  .resource-form input, .resource-form select { width: 100%; min-width: 0; }
   .resource-layout { grid-template-columns: 1fr; }
   .resource-detail { order: -1; }
   .resource-form { display: grid; grid-template-columns: 1fr 1fr; }
