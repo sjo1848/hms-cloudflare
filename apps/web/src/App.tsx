@@ -265,7 +265,7 @@ const hotelLabels: Record<string, string> = {
 };
 
 export function App() {
-  const [identityVersion, setIdentityVersion] = useState(0); const [mobileNavOpen, setMobileNavOpen] = useState(false); const [activeHotelLabel, setActiveHotelLabel] = useState("Hotel Norte");
+  const [identityVersion, setIdentityVersion] = useState(0); const [mobileNavOpen, setMobileNavOpen] = useState(false); const [activeHotelLabel, setActiveHotelLabel] = useState("Cargando…");
   const mobileNavRef = useRef<HTMLDialogElement | null>(null); const mobileMenuTriggerRef = useRef<HTMLButtonElement | null>(null); const activeHotelRequestRef = useRef(0);
   const page = location.pathname.startsWith("/guests") ? "guests" : location.pathname.startsWith("/rooms") ? "rooms" : location.pathname.startsWith("/housekeeping") ? "housekeeping" : location.pathname.startsWith("/users") ? "users" : location.pathname.startsWith("/network") ? "network" : location.pathname.startsWith("/reports") ? "reports" : "bookings";
   const activeLabel = navigation.find(([key]) => key === page)?.[2] ?? "Recepción";
