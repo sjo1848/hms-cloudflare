@@ -13,6 +13,8 @@ cleanup() {
 on_exit() {
   status=$?
   if [[ "$status" != "0" ]]; then
+    mkdir -p output/playwright
+    cp "$tmp_dir"/*.log output/playwright/ 2>/dev/null || true
     echo "CF-I05 browser regression failed (status $status)"
     [[ -f "$tmp_dir/migrations.log" ]] && { echo "=== migrations log ==="; cat "$tmp_dir/migrations.log"; }
     [[ -f "$tmp_dir/api.log" ]] && { echo "=== API log ==="; cat "$tmp_dir/api.log"; }
