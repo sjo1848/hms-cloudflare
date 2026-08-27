@@ -40,7 +40,13 @@ for _ in {1..30}; do curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1 && b
 for _ in {1..30}; do curl -fsS http://127.0.0.1:4174/housekeeping >/dev/null 2>&1 && break; sleep 1; done
 
 if [[ "${CI_BROWSER_STANDARD:-0}" == "1" ]]; then
-  node scripts/cf-ux-mobile-browser-ci.mjs
+  if ! node scripts/cf-ux-mobile-browser-ci.mjs; then
+    echo "=== API log ==="
+    cat "$tmp_dir/api.log" || true
+    echo "=== Web log ==="
+    cat "$tmp_dir/web.log" || true
+    exit 1
+  fi
 else
   codex_home=${CODEX_HOME:-$HOME/.codex}
   pwcli="$codex_home/skills/playwright/scripts/playwright_cli.sh"
