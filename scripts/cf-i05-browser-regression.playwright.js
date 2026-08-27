@@ -1,6 +1,6 @@
 (page) => (async () => {
   await page.setExtraHTTPHeaders({
-    "x-local-access-subject": "subject-a",
+    "x-local-access-subject": "source-user:subject-a",
     "x-local-access-email": "a@example.test",
     "x-hotel-id": "hotel-a",
   });
