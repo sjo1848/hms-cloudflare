@@ -42,6 +42,7 @@ function Rooms() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [holdSaving, setHoldSaving] = useState(false);
+  const [holdsRequestId, setHoldsRequestId] = useState(0);
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
   const [filter, setFilter] = useState("");
@@ -73,12 +74,20 @@ function Rooms() {
   }
 
   async function openRoom(room: Room) {
+    const requestId = holdsRequestId + 1;
+    setHoldsRequestId(requestId);
     setSelected(room);
+    setHolds([]);
     setDetailLoading(true);
     setError("");
-    try { setHolds(await api<Hold[]>(`/rooms/${room.id}/holds`)); }
-    catch (e) { setError((e as Error).message); }
-    finally { setDetailLoading(false); }
+    try {
+      const nextHolds = await api<Hold[]>(`/rooms/${room.id}/holds`);
+      if (requestId === holdsRequestId + 1) setHolds(nextHolds);
+    } catch (e) {
+      if (requestId === holdsRequestId + 1) setError((e as Error).message);
+    } finally {
+      if (requestId === holdsRequestId + 1) setDetailLoading(false);
+    }
   }
 
   async function editRoom(room: Room) {
@@ -101,16 +110,18 @@ function Rooms() {
   async function addHold(event: FormEvent) {
     event.preventDefault();
     if (!selected) return;
+    const room = selected;
+    const formElement = event.currentTarget as HTMLFormElement;
+    const data = new FormData(formElement);
     setHoldSaving(true);
     setError("");
-    const data = new FormData(event.currentTarget as HTMLFormElement);
     try {
-      await api(`/rooms/${selected.id}/holds`, {
+      await api(`/rooms/${room.id}/holds`, {
         method: "POST",
         body: JSON.stringify({ start_date: data.get("start"), end_date: data.get("end"), hold_type: "Other", reason: data.get("reason") })
       });
-      await openRoom(selected);
-      (event.currentTarget as HTMLFormElement).reset();
+      formElement.reset();
+      if (selected?.id === room.id) await openRoom(room);
     } catch (e) { setError((e as Error).message); }
     finally { setHoldSaving(false); }
   }
