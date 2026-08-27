@@ -83,14 +83,15 @@ describe("API foundation", () => {
         }),
       }),
     } as unknown as D1Database;
-    const response = await app.request("http://127.0.0.1/api/v1/auth/me", undefined, {
+    const response = await app.request("http://127.0.0.1/api/v1/auth/me", { headers: { "x-local-access-subject": "subject-a", "x-local-access-email": "a@example.test", "x-hotel-id": "hotel-a" } }, {
       ENVIRONMENT: "development",
       LOCAL_DEV_AUTH: "true",
       CONTROL_DB: control,
       HOTEL_DEMO_DB: control,
       HOTEL_SECOND_DB: control,
     },);
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ hotel_id: "hotel-a", hotel_name: "Hotel Norte" });
   });
 
 });
