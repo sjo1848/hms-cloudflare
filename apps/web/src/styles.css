@@ -7,7 +7,9 @@
 
 
 /* CF-UX-MOBILE-002 · Rooms + Guests */
-.resource-workspace { min-width: 0; }
+.resource-workspace { min-width: 0; max-width: 100%; overflow-x: clip; }
+.resource-layout, .resource-form, .resource-card, .guest-card, .resource-detail { min-width: 0; max-width: 100%; }
+.resource-detail-heading { flex-wrap: wrap; }
 .resource-form, .resource-toolbar, .resource-subform { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
 .resource-form { padding: 18px; margin: 20px 0; border: 1px solid #d8e0e8; border-radius: 16px; background: #fff; }
 .resource-form > div, .resource-toolbar > label { flex: 1 1 170px; }
