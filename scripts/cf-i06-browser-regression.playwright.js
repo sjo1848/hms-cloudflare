@@ -7,6 +7,25 @@
   const booking = page.getByRole("combobox", { name: "Billing booking" });
   await booking.selectOption("cf-i06");
   await page.getByRole("heading", { name: /CF-I06 Guest · Invoice/ }).waitFor();
+  let paymentRequest = 0;
+  await page.route("**/api/v1/bookings/cf-i06/payments", async route => {
+    paymentRequest += 1;
+    if (paymentRequest === 1) {
+      await route.fetch();
+      await route.abort("connectionreset");
+      return;
+    }
+    await route.continue();
+  });
+  await page.getByRole("spinbutton", { name: "Billing payment amount" }).fill("2");
+  await page.getByRole("button", { name: "Register payment" }).click();
+  await page.getByRole("alert").waitFor();
+  await page.getByText(/Payment · 2 cents/).waitFor();
+  await page.getByRole("button", { name: "Register payment" }).click();
+  await page.getByText(/Payment · 2 cents/).waitFor();
+  if (await page.getByText(/Payment · 2 cents/).count() !== 1) throw new Error("ambiguous retry created duplicate payment");
+  await page.unroute("**/api/v1/bookings/cf-i06/payments");
+
   for (const width of widths) {
     await page.setViewportSize({ width, height: 812 });
     await page.waitForTimeout(100);
