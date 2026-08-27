@@ -6,7 +6,7 @@
   "resume_authorized": false,
   "active_task": "CF-UX-MOBILE-001-REWORK",
   "last_completed_task": "CF-UX-MOBILE-001-INTERNAL-REVIEW-PASS",
-  "last_completed_head": "e7dedbf006fd767c342bbb8ff2a8a043961b14c0",
+  "last_completed_head": "1cc88cb0f9ecfa0d47c6f2828013c3191764323c",
   "work_branch": "ux-mobile-hms-elite",
   "next_action": "CF-UX-MOBILE-001_EXTERNAL_INDEPENDENT_CRITIC",
   "stop_reason": "Human authorized remote Product Acceptance over one deliberate staging deployment; intermediate deploys remain forbidden.",
@@ -17,9 +17,9 @@
   },
   "external_review": {
     "required": true,
-    "last_audited_head": "e7dedbf006fd767c342bbb8ff2a8a043961b14c0",
+    "last_audited_head": "1cc88cb0f9ecfa0d47c6f2828013c3191764323c",
     "last_verdict": "PENDING",
-    "artifact_head": "e7dedbf006fd767c342bbb8ff2a8a043961b14c0",
+    "artifact_head": "1cc88cb0f9ecfa0d47c6f2828013c3191764323c",
     "pending_verdict": "CF-UX-MOBILE-001"
   },
   "human_gate": {
