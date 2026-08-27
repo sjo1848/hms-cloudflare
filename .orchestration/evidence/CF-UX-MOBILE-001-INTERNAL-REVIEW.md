@@ -2,8 +2,9 @@
 
 Status: PASS — ready for external independent critic
 
-Reviewed artifact head: `035bb3d8c8a0a90408de35878aab918d2c4ac6e5`
-Implementation parent: `9131f5ab541a7e7176b4f6b44c2bf4e3bb1140c6`
+Implementation/test head reviewed: `9131f5ab541a7e7176b4f6b44c2bf4e3bb1140c6`
+Evidence baseline included: `035bb3d8c8a0a90408de35878aab918d2c4ac6e5`
+This receipt is part of the final artifact commit; the publication boundary records that exact artifact commit.
 
 ## Checks
 
