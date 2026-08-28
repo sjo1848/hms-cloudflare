@@ -21,3 +21,5 @@ jobs:
       - run: npm run check
       - run: npm run web:build
       - run: npm run wrangler:dry-run
+      - name: Validate staging Web Worker SPA config
+        run: npx wrangler deploy --dry-run -c apps/web/wrangler.staging.jsonc
