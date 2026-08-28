@@ -1,0 +1,38 @@
+name: web-architecture-migration
+
+on:
+  push:
+    branches:
+      - refactor/web-architecture-hardening
+    paths:
+      - "scripts/refactor-web-architecture.mjs"
+      - ".github/workflows/web-architecture-migration.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: ${{ !contains(github.event.head_commit.message, 'refactor(web): apply feature-first architecture') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refactor/web-architecture-hardening
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Generate modular web architecture
+        run: node scripts/refactor-web-architecture.mjs
+      - name: Commit generated architecture
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/web/src
+          if git diff --cached --quiet; then
+            echo "No generated changes"
+            exit 0
+          fi
+          git commit -m "refactor(web): apply feature-first architecture"
+          git push origin HEAD:refactor/web-architecture-hardening
