@@ -1,0 +1,79 @@
+name: Cloudflare Access discovery
+
+on:
+  push:
+    branches:
+      - diagnostic/cloudflare-access-discovery
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Discover non-secret staging routing and Access metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          api='https://api.cloudflare.com/client/v4'
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H 'Content-Type: application/json')
+
+          sub_file=$(mktemp)
+          sub_status=$(curl -sS -o "$sub_file" -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain")
+          echo "WORKERS_SUBDOMAIN_HTTP=$sub_status"
+          if [[ "$sub_status" == "200" ]]; then
+            node - "$sub_file" <<'NODE'
+          const fs=require('fs');
+          const p=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+          const sub=p?.result?.subdomain;
+          if(!sub) process.exit(2);
+          console.log(`WORKERS_SUBDOMAIN=${sub}`);
+          console.log(`STAGING_HOST=hms-cloudflare-web-staging.${sub}.workers.dev`);
+          NODE
+          else
+            cat "$sub_file"
+          fi
+
+          org_file=$(mktemp)
+          org_status=$(curl -sS -o "$org_file" -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/access/organizations")
+          echo "ACCESS_ORGANIZATION_HTTP=$org_status"
+          if [[ "$org_status" == "200" ]]; then
+            node - "$org_file" <<'NODE'
+          const fs=require('fs');
+          const p=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+          const r=p?.result;
+          console.log(`ACCESS_AUTH_DOMAIN=${r?.auth_domain ?? ''}`);
+          console.log(`ACCESS_ORG_NAME=${r?.name ?? ''}`);
+          NODE
+          else
+            node - "$org_file" <<'NODE'
+          const fs=require('fs');
+          const p=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+          console.log(`ACCESS_ORGANIZATION_ERROR=${p?.errors?.[0]?.message ?? 'unavailable'}`);
+          NODE
+          fi
+
+          apps_file=$(mktemp)
+          apps_status=$(curl -sS -o "$apps_file" -w '%{http_code}' "${auth[@]}" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/access/apps?per_page=100")
+          echo "ACCESS_APPS_HTTP=$apps_status"
+          if [[ "$apps_status" == "200" ]]; then
+            node - "$apps_file" <<'NODE'
+          const fs=require('fs');
+          const p=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+          for (const a of p?.result ?? []) {
+            console.log(`ACCESS_APP name=${a.name ?? ''} type=${a.type ?? ''} domain=${a.domain ?? ''} aud=${a.aud ?? ''}`);
+          }
+          NODE
+          else
+            node - "$apps_file" <<'NODE'
+          const fs=require('fs');
+          const p=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+          console.log(`ACCESS_APPS_ERROR=${p?.errors?.[0]?.message ?? 'unavailable'}`);
+          NODE
+          fi
