@@ -1,6 +1,6 @@
 # CF-UX-MOBILE-002 — Invariant Evidence
 
-Validation target (implementation/test artifact): a294edd17a387b547f95e7bf7339d17a52c9bd4e
+Validation target (implementation/test artifact): 85ea9a7e90b35bb18f349b632fe3899138cd04b5
 Evidence boundary: traceability-only commit whose parent is the validation target above; exact evidence-commit SHA is the resulting branch head.
 Task Contract: .orchestration/contracts/CF-UX-MOBILE-002.md
 Pre-Critic receipt: .orchestration/PRECRITIC-GATE.md

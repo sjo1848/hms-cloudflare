@@ -64,7 +64,7 @@ This decision is recorded in `.orchestration/decisions/HUMAN-REMOTE-ACCEPTANCE-0
 
 ## PR #13 VALIDATION BOUNDARY
 
-- Validation target (implementation/test artifact): `a294edd17a387b547f95e7bf7339d17a52c9bd4e`.
+- Validation target (implementation/test artifact): `85ea9a7e90b35bb18f349b632fe3899138cd04b5`.
 - Foundation CI: pending rerun after current-base rebase and fixture correction.
 - UX mobile browser CI: pending rerun after current-base rebase and fixture correction.
 - Tenant/RBAC: `APPLIES`; implementation unchanged.

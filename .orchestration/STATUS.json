@@ -6,7 +6,7 @@
   "resume_authorized": false,
   "active_task": "CF-UX-MOBILE-002-PR13-REWORK-EVIDENCE",
   "last_completed_task": "CF-UX-MOBILE-002-PR13-ADMIN-BROWSER-COVERAGE",
-  "last_completed_head": "a294edd17a387b547f95e7bf7339d17a52c9bd4e",
+  "last_completed_head": "85ea9a7e90b35bb18f349b632fe3899138cd04b5",
   "work_branch": "ux/hms-reports-admin",
   "next_action": "CF-UX-MOBILE-002-PR13_EXTERNAL_INDEPENDENT_CRITIC",
   "stop_reason": "Traceability rework published; independent review of the exact validation target is pending. No deploy.",
@@ -17,9 +17,9 @@
   },
   "external_review": {
     "required": true,
-    "last_audited_head": "a294edd17a387b547f95e7bf7339d17a52c9bd4e",
+    "last_audited_head": "85ea9a7e90b35bb18f349b632fe3899138cd04b5",
     "last_verdict": "PENDING",
-    "artifact_head": "a294edd17a387b547f95e7bf7339d17a52c9bd4e",
+    "artifact_head": "85ea9a7e90b35bb18f349b632fe3899138cd04b5",
     "pending_verdict": "CF-UX-MOBILE-002-PR13"
   },
   "human_gate": {
@@ -41,7 +41,7 @@
     "target": "$0/month / Cloudflare Free",
     "paid_transition_requires_human_gate": true
   },
-  "validation_target_head": "a294edd17a387b547f95e7bf7339d17a52c9bd4e",
+  "validation_target_head": "85ea9a7e90b35bb18f349b632fe3899138cd04b5",
   "evidence_boundary": "traceability-only commit whose parent is validation_target_head; exact SHA is the resulting branch head",
   "ci": {
     "foundation": {

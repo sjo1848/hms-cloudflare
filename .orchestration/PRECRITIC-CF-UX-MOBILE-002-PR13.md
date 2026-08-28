@@ -1,6 +1,6 @@
 # Pre-Critic Receipt — CF-UX-MOBILE-002 PR13
 
-Validation target (implementation/test artifact): `a294edd17a387b547f95e7bf7339d17a52c9bd4e`
+Validation target (implementation/test artifact): `85ea9a7e90b35bb18f349b632fe3899138cd04b5`
 Branch: `ux/hms-reports-admin`
 Evidence boundary: this traceability-only commit, whose parent is the validation target above. The exact evidence-commit SHA is the resulting branch head reported with this change; it is intentionally not embedded in its own contents.
 
@@ -8,7 +8,7 @@ Recorded after the admin browser harness and workflow wiring were validated.
 
 ## Required checks
 
-- [x] Exact validation target recorded: `a294edd17a387b547f95e7bf7339d17a52c9bd4e`.
+- [x] Exact validation target recorded: `85ea9a7e90b35bb18f349b632fe3899138cd04b5`.
 - [x] Evidence commit distinguished from the tested implementation artifact.
 - [x] Reports, Users and Network have interaction assertions.
 - [x] Widths 375, 390, 430 and 1366 are exercised.
@@ -17,7 +17,7 @@ Recorded after the admin browser harness and workflow wiring were validated.
 - [x] No deploy performed.
 - [ ] Foundation CI: pending rerun after current-base rebase.
 - [ ] UX mobile browser CI: pending rerun after fixture correction.
-- [ ] Independent critic verdict — pending review of the exact validation target `a294edd17a387b547f95e7bf7339d17a52c9bd4e`.
+- [ ] Independent critic verdict — pending review of the exact validation target `85ea9a7e90b35bb18f349b632fe3899138cd04b5`.
 
 ## Boundary
 
