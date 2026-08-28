@@ -3,79 +3,71 @@
 ## CURRENT AUTHORITATIVE STATE
 
 Project: HMS Cloudflare  
-Updated: 2026-08-28
+Updated: 2026-08-28  
 Global Project Mode: `DELIVERY`  
-Phase: `CF-UX-MOBILE-002 BOUNDED DELIVERY`  
-Phase Status: `CF-I01 PASS / CF-I02 PASS / CF-I03 PASS+INTEGRATED / CF-I04 PASS / CF-I05 PASS / CF-I06 PASS / CF-I07 PASS / CF-I08 PASS / CF-I09 A5 PASS / CF-UX-MOBILE-002 IN PROGRESS`
+Phase: `CF-UX-MOBILE-002 PRE-CRITIC`  
+Phase Status: `CF-I01–CF-I09 A5 PASS / staging authentication PASS / payment idempotency integrated / Rooms+Guests integrated / Housekeeping+Maintenance integrated / PR13 technical gates PASS / Independent Critic pending`
 
-Runtime: `RUNNING` — The Human authorized remote Product Acceptance over one deliberate staging deployment. Routine bounded UX rework may proceed; no intermediate deploy is authorized.
+Runtime: `RUNNING`. Remote Product Acceptance is authorized only after the complete technical/critic chain and one deliberate staging deployment. No intermediate deploy is authorized.
 
-Current objective: complete independent review of PR #13 against the exact validated implementation artifact, then integrate the approved UI candidate. No deploy before all technical gates pass.
+Current objective: obtain a fresh independent verdict on PR #13 artifact `2170b711a87b4ce7ba8b30ac472481049c0e9de0`. Do not merge or deploy before PASS.
 
 ## CANONICAL SOURCES
 
 - Source baseline: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`.
-- Target: `sjo1848/hms-cloudflare`.
-- CF-I09 contract: `.orchestration/contracts/CF-I09.md`.
-- CF-UX-MOBILE-002 contract: `.orchestration/contracts/CF-UX-MOBILE-002.md`.
-- CF-I09 A5 Independent Critic: `.orchestration/reviews/CF-I09-A5-CRITIC.md`.
-- Prior post-PASS REWORK-4 diagnosis: `.orchestration/reviews/CF-I09-POST-PASS-REWORK-4.md`.
-- Local acceptance runbook: `docs/cf-i09-local-operational-readiness.md`.
+- Target repository: `sjo1848/hms-cloudflare`.
+- Release candidate branch: `deploy/staging`.
+- Active contract: `.orchestration/contracts/CF-UX-MOBILE-002.md`.
 - Machine state: `.orchestration/STATUS.json`.
+- Pre-Critic receipt: `.orchestration/PRECRITIC-CF-UX-MOBILE-002-PR13.md`.
+- Invariant evidence: `.orchestration/evidence/CF-UX-MOBILE-002-INVARIANTS.md`.
+- Artifact evidence: `.orchestration/evidence/CF-UX-MOBILE-002-PR13-ARTIFACT.md`.
 - Method: `.orchestration/MULTIAGENT-EXECUTION.md`, `.orchestration/PRECRITIC-MULTIAGENT.md`, `.orchestration/PRECRITIC-GATE.md`.
 
 ## VALIDATED RESULTS
 
 - CF-I01 through CF-I08 remain accepted.
-- CF-I09 A1/B1 — REWORK-1.
-- CF-I09 A2/B2 — REWORK-2.
-- CF-I09 A3/B3 — REWORK-3.
-- CF-I09 A4 `fcb4dd464e8d34f80c27c034e48ec9bc62c912f3` / B4 `5d315de8ed6cccb585b16929e56e7371f819bd5e` closed lifecycle/source/RBAC parity findings, but its local readiness PASS was later reopened by real Human bootstrap evidence.
-- CF-I09 A5 `f18b35cfc6b48970f2b8842758fa025126f33407` / B5 `2b110e411a896fcd95bc839b25d7487a2f74c4bb` — **External Independent Critic PASS**. Review: `.orchestration/reviews/CF-I09-A5-CRITIC.md`.
-
-## CF-I09 A5 ACCEPTED GUARANTEES
-
-A5 preserves the previously accepted source parity, lifecycle exactness, tenant/RBAC, money, replay/failure and local-only scope, and additionally closes the actual Human acceptance runtime defect:
-
-- reset/rehearsal uses clean temporary per-binding persistence under bounded timeout;
-- checked-in D1 migration SQL is applied directly to the local SQLite stores, avoiding the known Wrangler 4.125 repeated three-D1 migration-process hang;
-- the completed CONTROL_DB, HOTEL_DEMO_DB and HOTEL_SECOND_DB are materialized into the normal shared Worker persistence root before reconciliation/startup;
-- Worker startup therefore uses the same migrated database bytes produced by reset;
-- backup/restore preserves checksummed local SQLite copies and no longer reintroduces sequential Wrangler migration/import calls;
-- reconciliation remains exact after restore;
-- Internal QA records focal rehearsal, backup/restore, real Worker+D1/browser smoke and two bounded reset/start/ready/stop repetitions with zero owned descendants;
-- no remote D1, paid resource, production, real-data migration, DNS/Access production action or cutover occurred.
-
-## HUMAN PRODUCT ACCEPTANCE GATE — REMOTE EXECUTION AUTHORIZED
-
-The Human has explicitly authorized Product Acceptance remotely because local computer access is unavailable.
-
-Before the remote gate:
-- finish the bounded CF-UX-MOBILE-001 repair;
-- pass CI, invariant evidence, Pre-Critic and Independent Critic;
-- perform exactly one deliberate Cloudflare staging deployment;
-- do not deploy intermediate commits.
-
-Remote acceptance must exercise the candidate through the deployed staging URL and return one of:
-- `ACCEPT` — authorize the next separately defined stage.
-- `REWORK` — record concrete product/UX/functional defects for autonomous repair.
-
-This decision is recorded in `.orchestration/decisions/HUMAN-REMOTE-ACCEPTANCE-001.md`. It does not accept the product, authorize production, authorize paid Cloudflare resources, alter Access or waive technical review gates.
+- CF-I09 A5 `f18b35cfc6b48970f2b8842758fa025126f33407` / B5 `2b110e411a896fcd95bc839b25d7487a2f74c4bb` — External Independent Critic PASS.
+- Staging authentication / Cloudflare Access boundary — PASS; API remains private through Service Binding.
+- Previously reviewed payment idempotency, Rooms/Guests and Housekeeping/Maintenance work is integrated in `deploy/staging`.
+- Staging deployment harness defect is closed: ordinary `deploy/staging` merges no longer trigger Cloudflare deploy; deployment is manual-only through `workflow_dispatch`.
 
 ## PR #13 VALIDATION BOUNDARY
 
-- Validation target (implementation/test artifact): `85ea9a7e90b35bb18f349b632fe3899138cd04b5`.
-- Foundation CI: pending rerun after current-base rebase and fixture correction.
-- UX mobile browser CI: pending rerun after current-base rebase and fixture correction.
-- Tenant/RBAC: `APPLIES`; implementation unchanged.
-- Evidence boundary: the traceability record follows the validation/test artifact above; its exact SHA is the resulting branch head reported with this update. This avoids embedding a self-referential hash.
-- Scope: evidence/orchestration only; no app/API/D1/RBAC/deploy changes in this rework.
-- Independent critic: pending on the exact validation target and synchronized evidence.
+Immutable implementation/test artifact: `2170b711a87b4ce7ba8b30ac472481049c0e9de0`.
+
+Technical evidence:
+- Foundation CI `33137425712` — PASS.
+- UX mobile browser CI `33137425715` — PASS.
+- Browser artifact `9672578298`, digest `sha256:a3582bb73100e7b731a280145494c3703f171dc9b88ca9eac9ad20b500320476`.
+- Reports, Users and Network run at 375/390/430/1366 with real local API success paths.
+- Reports covers loading/error/retry/zero-occupancy/success.
+- Users covers loading/search-empty/detail interaction.
+- Network covers loading/filter-empty/real successful plan update/409 rejected-plan rollback/analytics refresh.
+- Exact seeded admin/network subjects are used.
+- Tenant/RBAC implementations remain unchanged and applicable.
+- No API/D1 schema/auth/production/deploy product changes are in PR13.
+- No intermediate Cloudflare deployment occurred for this validation artifact.
+
+## HUMAN PRODUCT ACCEPTANCE GATE — REMOTE
+
+The Human has authorized Product Acceptance through the remote staging candidate after all technical and independent gates pass.
+
+This authorization does NOT authorize:
+- production or cutover;
+- real hotel data;
+- paid resources;
+- weakening authentication/RBAC/tenant boundaries;
+- treating Technical PASS as Product Acceptance.
+
+At the final gate the Human returns exactly one semantic outcome:
+- `ACCEPT` — product acceptance for the staged candidate.
+- `REWORK` — concrete product/UX/functional defects to repair autonomously.
 
 ## DELIVERY SEQUENCE
 
-`CF-UX-MOBILE-001 → CF-UX-MOBILE-002 secondary surfaces → CI/Pre-Critic → Independent Critic PASS → integration → one staging deploy → REMOTE HUMAN PRODUCT ACCEPTANCE → next gate`.
+`PR13 technical PASS → Pre-Critic evidence → fresh Independent Critic → integrate PR13 → integrated CI/review → one deliberate staging deploy → REMOTE HUMAN PRODUCT ACCEPTANCE`.
 
 ## NEXT AUTHORIZED ACTION
 
-Independent Critic reviews PR #13 validation target `b3c5eb263a9c5e52865ecac04bd24de30825608a` with the synchronized evidence above. Do not merge or deploy before PASS.
+Fresh Critic reviews immutable artifact `2170b711a87b4ce7ba8b30ac472481049c0e9de0` against CF-UX-MOBILE-002, executable CI evidence and invariant receipt. Return PASS / REWORK / HUMAN_GATE. Do not merge or deploy before PASS.
