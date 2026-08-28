@@ -20,6 +20,8 @@ jobs:
       - run: npm run types:check
       - run: npm run check
       - run: npm run web:build
+      - name: Validate web architecture fitness
+        run: node scripts/check-web-architecture.mjs
       - run: npm run wrangler:dry-run
       - name: Validate staging Web Worker SPA config
         run: npx wrangler deploy --dry-run -c apps/web/wrangler.staging.jsonc
