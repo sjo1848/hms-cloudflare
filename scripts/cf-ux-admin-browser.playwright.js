@@ -6,7 +6,7 @@
   const delayRealApi = async (pattern) => {
     await page.route(pattern, async route => {
       await new Promise(resolve => setTimeout(resolve, 250));
-      await route.continue();
+      await route.fallback();
     });
   };
   const reports = async (width) => {
