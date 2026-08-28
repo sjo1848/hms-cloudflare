@@ -65,7 +65,13 @@
   if (!(await page.getByText(/Blocked departure/).count())) throw new Error("eligible checked-in departure was not visibly blocked");
   await page.getByRole("button", { name: "Cerrar tarea" }).click();
   await waitForRoom("901");
-  await page.getByRole("button", { name: "Start cleaning" }).click();
+  const boardDate = page.getByRole("textbox", { name: "Board date" });
+  await page.route("**/api/v1/housekeeping/browser-a/start", async route => { await new Promise(resolve => setTimeout(resolve, 250)); await route.continue(); });
+  const startRequest = page.getByRole("button", { name: "Start cleaning" });
+  const startPromise = startRequest.click();
+  await page.waitForTimeout(50);
+  if (!await boardDate.isDisabled()) throw new Error("board date remained editable during housekeeping mutation");
+  await startPromise;
   await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
   await assertResponsive(390);
   await waitForRoom("901");
