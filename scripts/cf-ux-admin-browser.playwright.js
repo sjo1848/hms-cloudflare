@@ -28,15 +28,16 @@
     await page.getByLabel("Report start").fill("2026-12-01");
     await page.getByLabel("Report end").fill("2026-12-02");
     await page.getByRole("button", { name: "Retry" }).click();
-    await page.getByText("Daily occupancy", { exact: true }).waitFor();
-    await page.getByText("2026-12-01", { exact: true }).waitFor();
+    const zeroOccupancyCard = page.getByText("Daily occupancy", { exact: true }).locator("..");
+    await zeroOccupancyCard.getByText("2026-12-01", { exact: true }).waitFor();
     await page.getByText("Occupied rooms", { exact: true }).locator("..").getByText("0", { exact: true }).waitFor();
-    await page.getByText(/^0\/\d+ · 0\.00%$/).first().waitFor();
+    await zeroOccupancyCard.getByText(/^0\/\d+ · 0\.00%$/).first().waitFor();
 
     await page.getByLabel("Report start").fill("2026-09-01");
     await page.getByLabel("Report end").fill("2026-10-01");
     await page.getByRole("button", { name: "Refresh report" }).click();
-    await page.getByText("2026-09-02", { exact: true }).waitFor();
+    const refreshedOccupancyCard = page.getByText("Daily occupancy", { exact: true }).locator("..");
+    await refreshedOccupancyCard.getByText("2026-09-02", { exact: true }).waitFor();
     await assertNoOverflow("Reports retry", width);
   };
   const users = async (width) => {
