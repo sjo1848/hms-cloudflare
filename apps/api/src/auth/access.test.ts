@@ -92,14 +92,13 @@ describe("Cloudflare Access identity boundary", () => {
     await expect(resolveAccessIdentity(request, {
       ENVIRONMENT: "staging",
       STAGING_ACCEPTANCE_AUTH: "true",
-      ACCESS_TEAM_DOMAIN: "https://team.cloudflareaccess.com",
       ACCESS_AUDIENCE: "audience",
     })).rejects.toThrow(AccessAuthenticationError);
   });
 
-  it("accepts the staging bridge only after verifying the forwarded Access JWT", async () => {
+  it("accepts staging after deriving a Cloudflare issuer and verifying the pinned app audience", async () => {
     const issuer = "https://team.cloudflareaccess.com";
-    const audience = "audience";
+    const audience = "staging-app-audience";
     const { publicKey, privateKey } = await generateKeyPair("RS256");
     const jwk = await exportJWK(publicKey);
     Object.assign(jwk, { kid: "test-key", alg: "RS256", use: "sig" });
@@ -130,9 +129,34 @@ describe("Cloudflare Access identity boundary", () => {
     await expect(resolveAccessIdentity(request, {
       ENVIRONMENT: "staging",
       STAGING_ACCEPTANCE_AUTH: "true",
-      ACCESS_TEAM_DOMAIN: issuer,
       ACCESS_AUDIENCE: audience,
     })).resolves.toEqual({ subject: "source-user:test", email: "tester@migration.invalid" });
+  });
+
+  it("rejects a non-Cloudflare issuer in staging even if an audience is configured", async () => {
+    const assertion = await new SignJWT({ email: "attacker@example.test" })
+      .setProtectedHeader({ alg: "HS256" })
+      .setSubject("attacker")
+      .setIssuer("https://attacker.example.com")
+      .setAudience("staging-app-audience")
+      .setIssuedAt()
+      .setExpirationTime("5m")
+      .sign(new TextEncoder().encode("not-used-because-issuer-is-rejected-first"));
+
+    const request = new Request("https://hms-cloudflare-web-staging.example.workers.dev/api/v1/auth/me", {
+      headers: {
+        "Cf-Access-Jwt-Assertion": assertion,
+        "x-hms-staging-gateway": "access-gated-web",
+        "x-staging-access-subject": "source-user:test",
+        "x-staging-access-email": "tester@migration.invalid",
+      },
+    });
+
+    await expect(resolveAccessIdentity(request, {
+      ENVIRONMENT: "staging",
+      STAGING_ACCEPTANCE_AUTH: "true",
+      ACCESS_AUDIENCE: "staging-app-audience",
+    })).rejects.toThrow(AccessAuthenticationError);
   });
 
   it("rejects staging bridge headers when the gateway marker is missing", async () => {
