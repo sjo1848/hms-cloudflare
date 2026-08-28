@@ -7,9 +7,6 @@ const required = (name) => {
   return value;
 };
 
-const accessTeamDomain = process.env.CF_ACCESS_TEAM_DOMAIN?.trim() || "https://pending.invalid";
-const accessAudience = process.env.CF_ACCESS_AUDIENCE?.trim() || "pending-access-audience";
-
 const config = {
   $schema: "../../node_modules/wrangler/config-schema.json",
   name: "hms-cloudflare-api-staging",
@@ -23,8 +20,7 @@ const config = {
   },
   vars: {
     ENVIRONMENT: "staging",
-    ACCESS_TEAM_DOMAIN: accessTeamDomain,
-    ACCESS_AUDIENCE: accessAudience,
+    ACCESS_AUDIENCE: required("CF_ACCESS_AUDIENCE"),
     LOCAL_DEV_AUTH: "false",
     STAGING_ACCEPTANCE_AUTH: "true",
   },
@@ -57,5 +53,5 @@ await writeFile(
 );
 
 process.stderr.write(
-  "STAGING_ACCEPTANCE_BRIDGE: API remains private; authenticated product testing requires Cloudflare Access on hms-cloudflare-web-staging.\n",
+  "STAGING_ACCEPTANCE_BRIDGE: API is private and pins the exact Access application audience; staging issuer is derived only from a Cloudflare Access assertion.\n",
 );
