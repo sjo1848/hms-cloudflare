@@ -1,0 +1,25 @@
+name: Cloudflare Access provision check
+
+on:
+  push:
+    branches:
+      - diagnostic/cloudflare-access-provision
+
+permissions:
+  contents: read
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Create or reuse exact staging Access app
+        run: node scripts/cloudflare/ensure-staging-access.mjs
