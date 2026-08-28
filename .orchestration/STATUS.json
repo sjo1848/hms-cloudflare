@@ -1,38 +1,60 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "phase": "CF_UX_MOBILE_002_INTEGRATED_REWORK",
+  "phase": "CF_UX_MOBILE_002",
   "runtime_status": "RUNNING",
   "resume_authorized": false,
-  "active_task": "CF-UX-MOBILE-002-INTEGRATION",
-  "last_completed_task": "CF-UX-MOBILE-002-PR12-REBASE",
-  "work_branch": "ux/hms-housekeeping",
-  "next_action": "CF-UX-MOBILE-002_INTEGRATED_CI",
-  "stop_reason": "PR12 is updated over deploy/staging, which already contains PR10 and PR11; integrated Foundation and Browser CI are required before independent review.",
+  "active_task": "CF-UX-MOBILE-002-PR13-REWORK-EVIDENCE",
+  "last_completed_task": "CF-UX-MOBILE-002-PR13-ADMIN-BROWSER-COVERAGE",
+  "last_completed_head": "a294edd17a387b547f95e7bf7339d17a52c9bd4e",
+  "work_branch": "ux/hms-reports-admin",
+  "next_action": "CF-UX-MOBILE-002-PR13_EXTERNAL_INDEPENDENT_CRITIC",
+  "stop_reason": "Traceability rework published; independent review of the exact validation target is pending. No deploy.",
   "event": {
-    "seq": 102,
-    "id": "CF-UX-MOBILE-002-PR12-REBASE",
-    "type": "INTEGRATION"
+    "seq": 103,
+    "id": "CF-UX-MOBILE-002-PR13-TRACEABILITY-REWORK",
+    "type": "EVIDENCE_BOUNDARY"
   },
   "external_review": {
     "required": true,
-    "last_verdict": "PENDING"
+    "last_audited_head": "a294edd17a387b547f95e7bf7339d17a52c9bd4e",
+    "last_verdict": "PENDING",
+    "artifact_head": "a294edd17a387b547f95e7bf7339d17a52c9bd4e",
+    "pending_verdict": "CF-UX-MOBILE-002-PR13"
   },
   "human_gate": {
     "type": "PRODUCT_ACCEPTANCE",
     "scope": "REMOTE_STAGING",
-    "required_action": "After technical and independent review PASS, deploy once to staging and exercise the complete candidate remotely."
+    "reason": "Human cannot access the development computer; acceptance will occur on one deliberate staging deployment.",
+    "required_action": "Complete CF-UX-MOBILE-001 technical gates, deploy once to staging, exercise the candidate remotely, and record ACCEPT or REWORK."
   },
   "blocker": null,
   "method": {
     "multi_context_required": true,
+    "internal_review_receipt": ".orchestration/PRECRITIC-CF-UX-MOBILE-002-PR13.md",
     "external_critic_after_internal_closure_only": true,
     "human_routine_relay_forbidden": true,
-    "invariant_evidence": ".orchestration/evidence/CF-UX-MOBILE-002-INVARIANTS.md"
+    "model_policy": ".orchestration/MODEL-REASONING-POLICY.md",
+    "luna_first": true
   },
   "cost_guard": {
     "target": "$0/month / Cloudflare Free",
-    "paid_transition_requires_human_gate": true,
-    "intermediate_deploys_forbidden": true
+    "paid_transition_requires_human_gate": true
+  },
+  "validation_target_head": "a294edd17a387b547f95e7bf7339d17a52c9bd4e",
+  "evidence_boundary": "traceability-only commit whose parent is validation_target_head; exact SHA is the resulting branch head",
+  "ci": {
+    "foundation": {
+      "run": null,
+      "status": "PENDING"
+    },
+    "ux_mobile_browser": {
+      "run": null,
+      "status": "PENDING"
+    }
+  },
+  "applicability": {
+    "tenant": "APPLIES",
+    "rbac": "APPLIES"
   }
 }

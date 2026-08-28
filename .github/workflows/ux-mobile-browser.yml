@@ -8,6 +8,7 @@ on:
       - "scripts/cf-i05-browser-regression*"
       - "scripts/cf-ux-rooms-guests-browser.playwright.js"
       - "scripts/cf-ux-mobile-browser-ci.mjs"
+      - "scripts/cf-ux-admin-browser.playwright.js"
       - ".orchestration/contracts/CF-UX-MOBILE-002.md"
       - ".orchestration/contracts/CF-UX-MOBILE-001.md"
       - ".orchestration/evidence/CF-UX-MOBILE-001-INVARIANTS.md"

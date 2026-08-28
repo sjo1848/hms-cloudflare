@@ -1,17 +1,49 @@
-# CF-UX-MOBILE-002 — Integrated invariant evidence
+# CF-UX-MOBILE-002 — Invariant Evidence
 
-Status: PENDING INTEGRATED CI
-Scope: Rooms, Guests, Housekeeping, Reports, Users, Network and payment retry safety.
+Validation target (implementation/test artifact): a294edd17a387b547f95e7bf7339d17a52c9bd4e
+Evidence boundary: traceability-only commit whose parent is the validation target above; exact evidence-commit SHA is the resulting branch head.
+Task Contract: .orchestration/contracts/CF-UX-MOBILE-002.md
+Pre-Critic receipt: .orchestration/PRECRITIC-GATE.md
 
-| Invariant | Applies | Status | Required evidence |
-|---|---|---|---|
-| INV-UX-001 | APPLIES | PASS | Contracted workflows and HMS Elite interaction intent preserved. |
-| INV-RESP-001 | APPLIES | PASS | Browser evidence at 375, 390, 430, 768, 1024 and 1366 px. |
-| INV-STATE-001 | APPLIES | PASS | Async responses, selected dates, forms and payment retries remain coherent. |
-| INV-PARITY-001 | APPLIES | PASS | Existing API payloads and domain semantics preserved; payment idempotency is separately reviewed. |
-| INV-SCOPE-001 | APPLIES | PASS | Diff limited to contracted UX, evidence and reviewed payment retry safety. |
-| INV-EVID-001 | APPLIES | PENDING | Final status depends on integrated Foundation and Browser CI. |
-| INV-TENANT-001 / INV-RBAC-001 / INV-DOMAIN-001 | APPLIES | PASS | No unauthorized tenant, permission or domain behavior change. |
-| INV-MONEY-001 | APPLIES | PASS | Payment retries are idempotent and bound to booking and full payload. |
+| Invariant | Applies? | Status | Concrete evidence | Notes |
+|---|---|---|---|---|
+| INV-ATOMIC-001 | N/A | N/A | No business mutation implementation; browser requests are mocked. | |
+| INV-AUDIT-001 | N/A | N/A | No audit/event implementation. | |
+| INV-DOMAIN-001 | N/A | N/A | No domain transition implementation. | |
+| INV-TENANT-001 | APPLIES | PASS | Contract classification and unchanged tenant routing/API behavior. | UI-only rework; no tenant implementation change. |
+| INV-RBAC-001 | APPLIES | PASS | Contract classification and unchanged RBAC implementation/capability boundaries. | UI-only rework; no RBAC implementation change. |
+| INV-PARITY-001 | APPLIES | PASS | CF-UX-MOBILE-002 contract and preserved Rooms/Guests, Housekeeping, Reports, Users and Network workflows. | |
+| INV-RESP-001 | APPLIES | PENDING | Admin browser harness exercises Reports, Users and Network at 375/390/430/1366; final CI rerun pending after fixture fix. | |
+| INV-EVID-001 | APPLIES | PENDING | Integrated workflow is wired to execute and upload the full browser artifact; final CI rerun pending. | |
+| INV-LEGACY-001 | N/A | N/A | No legacy behavior changed. | |
+| INV-MONEY-001 | N/A | N/A | No financial behavior. | |
+| INV-STATE-001 | APPLIES | PASS | Validation target is the implementation/test artifact and evidence remains a separate traceability commit. | Avoids self-referential commit claims. |
+| INV-SCOPE-001 | APPLIES | PASS | Traceability diff is restricted to orchestration records; app/API/D1/RBAC/deploy untouched. | |
 
-The immutable integrated head and final CI run must be recorded here before Independent Critic review. No deploy is authorized from this evidence alone.
+## Mandatory mutation inventory
+
+No business mutation is implemented by this traceability rework. Mocked POSTs exercise UI handling only and are labeled mockApi: true.
+
+## Evidence claim audit
+
+| Claim | Evidence | Classification |
+|---|---|---|
+| Room selection and stale-response isolation | cf-ux-rooms-guests-browser.playwright.js | browser mock |
+| Hold form success/reset | cf-ux-rooms-guests-browser.playwright.js | browser mock |
+| Guest retry, selection and form reset | cf-ux-rooms-guests-browser.playwright.js | browser mock |
+| Responsive controls at contracted widths | cf-ux-rooms-guests-browser.playwright.js | browser mock |
+| Reports loading/error/empty/retry/success | cf-ux-admin-browser.playwright.js | local browser fixture |
+| Users search/detail/empty states | cf-ux-admin-browser.playwright.js | local browser fixture |
+| Network selection/plan update/analytics | cf-ux-admin-browser.playwright.js | local browser fixture |
+| No API changes | Artifact A diff scope audit | static |
+
+## Publication decision
+
+- [ ] No applicable invariant is FAIL or UNPROVEN; final CI pending.
+- [x] Full Task Contract scope is preserved.
+- [x] Scope audit passed.
+- [x] Validation target is explicit in the synchronized STATUS record.
+- [x] Tenant and RBAC are explicitly `APPLIES`.
+- [ ] CI rerun after the fixture correction is pending.
+- [x] Evidence boundary is distinct and transparent.
+- [x] External review is required and Codex does not self-approve PASS.

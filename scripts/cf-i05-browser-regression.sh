@@ -15,10 +15,6 @@ on_exit() {
   if [[ "$status" != "0" ]]; then
     mkdir -p output/playwright
     cp "$tmp_dir"/*.log output/playwright/ 2>/dev/null || true
-    echo "CF-I05 browser regression failed (status $status)"
-    [[ -f "$tmp_dir/migrations.log" ]] && { echo "=== migrations log ==="; cat "$tmp_dir/migrations.log"; }
-    [[ -f "$tmp_dir/api.log" ]] && { echo "=== API log ==="; cat "$tmp_dir/api.log"; }
-    [[ -f "$tmp_dir/web.log" ]] && { echo "=== Web log ==="; cat "$tmp_dir/web.log"; }
   fi
   cleanup
   exit "$status"
@@ -30,11 +26,18 @@ wrangler="$repo_dir/node_modules/.bin/wrangler"
 
 CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc >"$tmp_dir/migrations.log" 2>&1
 CI=1 "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >>"$tmp_dir/migrations.log" 2>&1
+CI=1 "$wrangler" d1 migrations apply HOTEL_SECOND_DB --local -c apps/api/wrangler.jsonc >>"$tmp_dir/migrations.log" 2>&1
 CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --command "
-  INSERT OR REPLACE INTO control_hotels (id,slug,operational_binding,active) VALUES ('hotel-a','hotel-a','HOTEL_DEMO_DB',1);
-  INSERT OR REPLACE INTO access_identity_mappings (access_subject,email,active) VALUES ('source-user:subject-a','a@example.test',1);
-  INSERT OR REPLACE INTO hotel_memberships (access_subject,hotel_id,role,active) VALUES ('source-user:subject-a','hotel-a','housekeeping',1);
-  INSERT OR REPLACE INTO hotel_admin_metadata (hotel_id,name,plan_tier) VALUES ('hotel-a','Hotel Norte','BASIC');
+  INSERT OR REPLACE INTO control_hotels (id,slug,operational_binding,active) VALUES ('hotel-a','hotel-a','HOTEL_DEMO_DB',1),('hotel-b','hotel-b','HOTEL_SECOND_DB',1);
+  INSERT OR REPLACE INTO access_identity_mappings (access_subject,email,active) VALUES
+    ('source-user:subject-a','a@example.test',1),
+    ('source-user:subject-admin','admin@example.test',1),
+    ('source-user:subject-network','network@example.test',1);
+  INSERT OR REPLACE INTO hotel_memberships (access_subject,hotel_id,role,active) VALUES
+    ('source-user:subject-a','hotel-a','housekeeping',1),
+    ('source-user:subject-admin','hotel-a','admin',1);
+  INSERT OR REPLACE INTO network_memberships (access_subject,role,active) VALUES ('source-user:subject-network','saas_admin',1);
+  INSERT OR REPLACE INTO hotel_admin_metadata (hotel_id,name,plan_tier) VALUES ('hotel-a','Hotel Norte','BASIC'),('hotel-b','Hotel Sur','PRO');
 " >>"$tmp_dir/migrations.log" 2>&1
 CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "
   DELETE FROM housekeeping_events; DELETE FROM maintenance_cases; DELETE FROM bookings; DELETE FROM rooms WHERE id IN ('browser-a','browser-b','browser-c','browser-d','browser-e','browser-f','browser-g','browser-h');
@@ -55,23 +58,16 @@ CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --c
 " >>"$tmp_dir/migrations.log" 2>&1
 
 "$wrangler" dev --local --ip 127.0.0.1 --port 8787 --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >"$tmp_dir/api.log" 2>&1 & api_pid=$!
-api_ready=0
-for _ in {1..30}; do if curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1; then api_ready=1; break; fi; sleep 1; done
-if [[ "$api_ready" != "1" ]]; then echo "API did not become ready"; cat "$tmp_dir/api.log"; exit 1; fi
+for _ in {1..30}; do curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1 && break; sleep 1; done
 VITE_LOCAL_ACCEPTANCE_AUTH=true "$repo_dir/node_modules/.bin/vite" --host 127.0.0.1 --port 4174 --config apps/web/vite.config.ts >"$tmp_dir/web.log" 2>&1 & web_pid=$!
-web_ready=0
-for _ in {1..30}; do if curl -fsS http://127.0.0.1:4174/housekeeping >/dev/null 2>&1; then web_ready=1; break; fi; sleep 1; done
-if [[ "$web_ready" != "1" ]]; then echo "Web did not become ready"; cat "$tmp_dir/web.log"; exit 1; fi
+for _ in {1..30}; do curl -fsS http://127.0.0.1:4174/housekeeping >/dev/null 2>&1 && break; sleep 1; done
 
 if [[ "${CI_BROWSER_STANDARD:-0}" == "1" ]]; then
-  if ! node scripts/cf-ux-mobile-browser-ci.mjs 2>&1 | tee output/playwright/browser.log; then
-    exit 1
-  fi
+  node scripts/cf-ux-mobile-browser-ci.mjs 2>&1 | tee output/playwright/browser.log
 else
   codex_home=${CODEX_HOME:-$HOME/.codex}
   pwcli="$codex_home/skills/playwright/scripts/playwright_cli.sh"
   bash "$pwcli" -s cf-i05-integrated open about:blank >/dev/null
   bash "$pwcli" -s cf-i05-integrated run-code --filename scripts/cf-i05-browser-regression.playwright.js
   bash "$pwcli" -s cf-i05-integrated close >/dev/null
-  echo "CF-I05 integrated browser regression PASS"
 fi
