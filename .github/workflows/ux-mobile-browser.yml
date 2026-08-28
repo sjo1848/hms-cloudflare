@@ -9,6 +9,8 @@ on:
       - "scripts/cf-ux-rooms-guests-browser.playwright.js"
       - "scripts/cf-ux-mobile-browser-ci.mjs"
       - ".orchestration/contracts/CF-UX-MOBILE-002.md"
+      - ".orchestration/contracts/CF-UX-MOBILE-001.md"
+      - ".orchestration/evidence/CF-UX-MOBILE-001-INVARIANTS.md"
       - ".orchestration/evidence/CF-UX-MOBILE-002-INVARIANTS.md"
       - ".orchestration/STATE.md"
       - ".orchestration/STATUS.json"

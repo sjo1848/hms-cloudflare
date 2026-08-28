@@ -1,44 +1,38 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "phase": "CF_UX_MOBILE_002",
+  "phase": "CF_UX_MOBILE_002_INTEGRATED_REWORK",
   "runtime_status": "RUNNING",
   "resume_authorized": false,
-  "active_task": "CF-UX-MOBILE-002-PR11-EVIDENCE",
-  "last_completed_task": "CF-UX-MOBILE-002-PR11-ARTIFACT-A",
-  "last_completed_head": "821f9e03b2939684d5e38119999feb37c84d3dae",
-  "work_branch": "ux/hms-rooms-guests",
-  "next_action": "CF-UX-MOBILE-002_EXTERNAL_INDEPENDENT_CRITIC",
-  "stop_reason": "Artifact A and boundary B are ready for independent review; no merge or deploy.",
+  "active_task": "CF-UX-MOBILE-002-INTEGRATION",
+  "last_completed_task": "CF-UX-MOBILE-002-PR12-REBASE",
+  "work_branch": "ux/hms-housekeeping",
+  "next_action": "CF-UX-MOBILE-002_INTEGRATED_CI",
+  "stop_reason": "PR12 is updated over deploy/staging, which already contains PR10 and PR11; integrated Foundation and Browser CI are required before independent review.",
   "event": {
-    "seq": 101,
-    "id": "CF-UX-MOBILE-002-PR11-EVIDENCE",
-    "type": "ARTIFACT_BOUNDARY"
+    "seq": 102,
+    "id": "CF-UX-MOBILE-002-PR12-REBASE",
+    "type": "INTEGRATION"
   },
   "external_review": {
     "required": true,
-    "last_audited_head": "821f9e03b2939684d5e38119999feb37c84d3dae",
-    "last_verdict": "PENDING",
-    "artifact_head": "821f9e03b2939684d5e38119999feb37c84d3dae",
-    "pending_verdict": "CF-UX-MOBILE-002"
+    "last_verdict": "PENDING"
   },
   "human_gate": {
     "type": "PRODUCT_ACCEPTANCE",
     "scope": "REMOTE_STAGING",
-    "reason": "Human acceptance is remote and remains deferred until the complete candidate is integrated and deployed once.",
-    "required_action": "Await technical and independent review gates, integrate the candidate, deploy once to staging, then exercise the complete candidate remotely."
+    "required_action": "After technical and independent review PASS, deploy once to staging and exercise the complete candidate remotely."
   },
   "blocker": null,
   "method": {
     "multi_context_required": true,
-    "internal_review_receipt": ".orchestration/evidence/CF-UX-MOBILE-002-INVARIANTS.md",
     "external_critic_after_internal_closure_only": true,
     "human_routine_relay_forbidden": true,
-    "model_policy": ".orchestration/MODEL-REASONING-POLICY.md",
-    "luna_first": true
+    "invariant_evidence": ".orchestration/evidence/CF-UX-MOBILE-002-INVARIANTS.md"
   },
   "cost_guard": {
     "target": "$0/month / Cloudflare Free",
-    "paid_transition_requires_human_gate": true
+    "paid_transition_requires_human_gate": true,
+    "intermediate_deploys_forbidden": true
   }
 }
