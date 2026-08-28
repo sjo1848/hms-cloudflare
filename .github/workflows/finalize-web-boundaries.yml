@@ -1,0 +1,31 @@
+name: finalize-web-boundaries
+
+on:
+  push:
+    branches:
+      - "refactor/web-architecture-hardening"
+    paths:
+      - ".github/workflows/finalize-web-boundaries.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refactor/web-architecture-hardening
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node scripts/finalize-web-boundaries.mjs
+      - name: Commit final boundaries
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/web/src
+          git commit -m "refactor(web): finalize api and shared component boundaries"
+          git push origin HEAD:refactor/web-architecture-hardening
