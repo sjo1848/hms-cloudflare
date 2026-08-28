@@ -20,8 +20,6 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      CF_ACCESS_TEAM_DOMAIN: ${{ vars.CF_ACCESS_TEAM_DOMAIN }}
-      CF_ACCESS_AUDIENCE: ${{ vars.CF_ACCESS_AUDIENCE }}
 
     steps:
       - uses: actions/checkout@v4
@@ -34,25 +32,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify staging trust inputs
+      - name: Verify Cloudflare credentials and D1 access
         shell: bash
         run: |
           set -euo pipefail
           test -n "$CLOUDFLARE_API_TOKEN"
           test -n "$CLOUDFLARE_ACCOUNT_ID"
-          if [[ -z "${CF_ACCESS_TEAM_DOMAIN:-}" || "$CF_ACCESS_TEAM_DOMAIN" == "https://pending.invalid" ]]; then
-            echo "Refusing staging deploy: CF_ACCESS_TEAM_DOMAIN must identify the configured Cloudflare Access team." >&2
-            exit 1
-          fi
-          if [[ -z "${CF_ACCESS_AUDIENCE:-}" || "$CF_ACCESS_AUDIENCE" == "pending-access-audience" ]]; then
-            echo "Refusing staging deploy: CF_ACCESS_AUDIENCE must match the protected staging Access application." >&2
-            exit 1
-          fi
           npx wrangler whoami
           if ! npx wrangler d1 list --json >/dev/null; then
             echo "Cloudflare token is valid but lacks D1 access. Add Account > D1 > Write/Edit to the token and retry." >&2
             exit 1
           fi
+
+      - name: Create or reuse staging Access application
+        run: node scripts/cloudflare/ensure-staging-access.mjs
 
       - name: Create or reuse staging D1 databases
         shell: bash
@@ -142,13 +135,7 @@ jobs:
         run: |
           set -euo pipefail
           npx wrangler deploy --dry-run --config apps/web/wrangler.staging.jsonc
-          output="$(npx wrangler deploy --config apps/web/wrangler.staging.jsonc 2>&1 | tee /dev/stderr)"
-          url="$(printf '%s\n' "$output" | grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev' | tail -n 1 || true)"
-          if [[ -z "$url" ]]; then
-            echo "Could not determine the deployed staging Web Worker URL." >&2
-            exit 1
-          fi
-          echo "STAGING_WEB_URL=$url" >> "$GITHUB_ENV"
+          npx wrangler deploy --config apps/web/wrangler.staging.jsonc
 
       - name: Verify anonymous staging is fail-closed
         shell: bash
@@ -170,3 +157,4 @@ jobs:
         run: |
           echo "Staging deploy and fail-closed Access probe complete."
           echo "STAGING_WEB_URL=$STAGING_WEB_URL"
+          echo "CF_ACCESS_APP_ID=$CF_ACCESS_APP_ID"
