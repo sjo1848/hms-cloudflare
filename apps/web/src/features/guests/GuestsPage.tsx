@@ -1,0 +1,59 @@
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
+import { api } from "../../shared/api";
+import type { Guest } from "../../domain/types";
+
+export function GuestsPage() {
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [selected, setSelected] = useState<Guest | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [formError, setFormError] = useState("");
+  const [filter, setFilter] = useState("");
+  const [form, setForm] = useState({ full_name: "", email: "", phone: "" });
+
+  async function load() {
+    setLoading(true);
+    setError("");
+    try { setGuests(await api<Guest[]>("/guests")); }
+    catch (e) { setError((e as Error).message); }
+    finally { setLoading(false); }
+  }
+
+  useEffect(() => { void load(); }, []);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setFormError("");
+    setSaving(true);
+    try {
+      await api("/guests", { method: "POST", body: JSON.stringify({ ...form, phone: form.phone || null }) });
+      setForm({ full_name: "", email: "", phone: "" });
+      await load();
+    } catch (e) { setFormError((e as Error).message); }
+    finally { setSaving(false); }
+  }
+
+  const visible = guests.filter(guest => `${guest.full_name} ${guest.email} ${guest.phone ?? ""}`.toLowerCase().includes(filter.toLowerCase()));
+
+  return <section className="resource-workspace">
+    <div className="workspace-heading">
+      <div><p className="eyebrow">Directory</p><h2>Guests</h2><p className="muted">Guest records and contact details</p></div>
+      <span className="case-count">{guests.length} guests</span>
+    </div>
+    <form className="resource-form guest-form" onSubmit={submit}>
+      <div><label>Full name<input required value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} placeholder="Guest name" /></label></div>
+      <div><label>Email<input required type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="guest@example.com" /></label></div>
+      <div><label>Phone <span className="optional">(optional)</span><input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+54 9…" /></label></div>
+      <button type="submit" disabled={saving}>{saving ? "Adding…" : "Add guest"}</button>
+    </form>
+    {formError && <p className="error" role="alert">{formError}</p>}
+    <div className="resource-toolbar"><label>Search guests<input aria-label="Search guests" value={filter} onChange={e => setFilter(e.target.value)} placeholder="Name, email or phone" /></label><button type="button" onClick={() => void load()} disabled={loading}>Refresh</button></div>
+    {error && <div className="state-panel state-error" role="alert"><strong>Guests could not be loaded</strong><span>{error}</span><button type="button" onClick={() => void load()}>Try again</button></div>}
+    {loading && <div className="state-panel" role="status"><span className="state-spinner" />Loading guests…</div>}
+    {!loading && !error && visible.length === 0 && <div className="state-panel state-empty"><strong>{guests.length ? "No matching guests" : "No guests yet"}</strong><span>{guests.length ? "Try another search." : "Add the first guest using the form above."}</span></div>}
+    {!loading && !error && visible.length > 0 && <div className="guest-grid" aria-label="Guests list">{visible.map(guest => <button type="button" className={selected?.id === guest.id ? "guest-card selected" : "guest-card"} key={guest.id} onClick={() => setSelected(guest)} aria-pressed={selected?.id === guest.id}><span className="avatar">{guest.full_name.trim().charAt(0).toUpperCase() || "?"}</span><span><strong>{guest.full_name}</strong><small>{guest.email}</small><small>{guest.phone ?? "No phone recorded"}</small></span><span className="selection-indicator">{selected?.id === guest.id ? "Selected" : "View"}</span></button>)}</div>}
+    {selected && <div className="guest-detail" aria-live="polite"><div><p className="eyebrow">Selected guest</p><h3>{selected.full_name}</h3><p>{selected.email}</p><p>{selected.phone ?? "No phone recorded"}</p></div><button type="button" className="secondary-button" onClick={() => setSelected(null)}>Clear selection</button></div>}
+  </section>;
+}
