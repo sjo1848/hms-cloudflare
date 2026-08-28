@@ -34,12 +34,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify Cloudflare credentials and D1 access
+      - name: Verify staging trust inputs
         shell: bash
         run: |
           set -euo pipefail
           test -n "$CLOUDFLARE_API_TOKEN"
           test -n "$CLOUDFLARE_ACCOUNT_ID"
+          if [[ -z "${CF_ACCESS_TEAM_DOMAIN:-}" || "$CF_ACCESS_TEAM_DOMAIN" == "https://pending.invalid" ]]; then
+            echo "Refusing staging deploy: CF_ACCESS_TEAM_DOMAIN must identify the configured Cloudflare Access team." >&2
+            exit 1
+          fi
+          if [[ -z "${CF_ACCESS_AUDIENCE:-}" || "$CF_ACCESS_AUDIENCE" == "pending-access-audience" ]]; then
+            echo "Refusing staging deploy: CF_ACCESS_AUDIENCE must match the protected staging Access application." >&2
+            exit 1
+          fi
           npx wrangler whoami
           if ! npx wrangler d1 list --json >/dev/null; then
             echo "Cloudflare token is valid but lacks D1 access. Add Account > D1 > Write/Edit to the token and retry." >&2
@@ -134,11 +142,31 @@ jobs:
         run: |
           set -euo pipefail
           npx wrangler deploy --dry-run --config apps/web/wrangler.staging.jsonc
-          npx wrangler deploy --config apps/web/wrangler.staging.jsonc
+          output="$(npx wrangler deploy --config apps/web/wrangler.staging.jsonc 2>&1 | tee /dev/stderr)"
+          url="$(printf '%s\n' "$output" | grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev' | tail -n 1 || true)"
+          if [[ -z "$url" ]]; then
+            echo "Could not determine the deployed staging Web Worker URL." >&2
+            exit 1
+          fi
+          echo "STAGING_WEB_URL=$url" >> "$GITHUB_ENV"
+
+      - name: Verify anonymous staging is fail-closed
+        shell: bash
+        run: |
+          set -euo pipefail
+          root_status="$(curl --max-time 15 -sS -o /dev/null -w '%{http_code}' "$STAGING_WEB_URL/")"
+          api_status="$(curl --max-time 15 -sS -o /dev/null -w '%{http_code}' "$STAGING_WEB_URL/api/v1/auth/me")"
+          echo "anonymous root=$root_status api=$api_status"
+          if [[ "$root_status" == 2* ]]; then
+            echo "Refusing acceptance handoff: staging root is anonymously accessible; Cloudflare Access is not enforcing the hostname." >&2
+            exit 1
+          fi
+          if [[ "$api_status" == 2* ]]; then
+            echo "Refusing acceptance handoff: staging API is anonymously usable." >&2
+            exit 1
+          fi
 
       - name: Staging handoff
         run: |
-          echo "Staging deploy complete."
-          if [[ -z "${CF_ACCESS_TEAM_DOMAIN:-}" || -z "${CF_ACCESS_AUDIENCE:-}" ]]; then
-            echo "Cloudflare Access is still pending. Protect hms-cloudflare-web-staging and then set CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUDIENCE repository variables before the authenticated acceptance run."
-          fi
+          echo "Staging deploy and fail-closed Access probe complete."
+          echo "STAGING_WEB_URL=$STAGING_WEB_URL"

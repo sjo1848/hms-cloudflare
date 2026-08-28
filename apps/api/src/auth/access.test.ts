@@ -1,5 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { exportJWK, generateKeyPair, SignJWT } from "jose";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AccessAuthenticationError, resolveAccessIdentity } from "./access";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("Cloudflare Access identity boundary", () => {
   it("fails closed when the Access assertion is absent", async () => {
@@ -76,8 +81,8 @@ describe("Cloudflare Access identity boundary", () => {
       .resolves.toEqual({ subject: "local-user", email: "local@example.test" });
   });
 
-  it("accepts the explicit staging bridge only in staging", async () => {
-    const request = new Request("https://hms-cloudflare-web-staging.sjo1848.workers.dev/api/v1/auth/me", {
+  it("rejects the staging bridge when the Access assertion is absent", async () => {
+    const request = new Request("https://hms-cloudflare-web-staging.example.workers.dev/api/v1/auth/me", {
       headers: {
         "x-hms-staging-gateway": "access-gated-web",
         "x-staging-access-subject": "source-user:test",
@@ -87,6 +92,46 @@ describe("Cloudflare Access identity boundary", () => {
     await expect(resolveAccessIdentity(request, {
       ENVIRONMENT: "staging",
       STAGING_ACCEPTANCE_AUTH: "true",
+      ACCESS_TEAM_DOMAIN: "https://team.cloudflareaccess.com",
+      ACCESS_AUDIENCE: "audience",
+    })).rejects.toThrow(AccessAuthenticationError);
+  });
+
+  it("accepts the staging bridge only after verifying the forwarded Access JWT", async () => {
+    const issuer = "https://team.cloudflareaccess.com";
+    const audience = "audience";
+    const { publicKey, privateKey } = await generateKeyPair("RS256");
+    const jwk = await exportJWK(publicKey);
+    Object.assign(jwk, { kid: "test-key", alg: "RS256", use: "sig" });
+
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ keys: [jwk] }), {
+      status: 200,
+      headers: { "content-type": "application/json", "cache-control": "public, max-age=60" },
+    })));
+
+    const assertion = await new SignJWT({ email: "access-user@example.test" })
+      .setProtectedHeader({ alg: "RS256", kid: "test-key" })
+      .setSubject("access-user")
+      .setIssuer(issuer)
+      .setAudience(audience)
+      .setIssuedAt()
+      .setExpirationTime("5m")
+      .sign(privateKey);
+
+    const request = new Request("https://hms-cloudflare-web-staging.example.workers.dev/api/v1/auth/me", {
+      headers: {
+        "Cf-Access-Jwt-Assertion": assertion,
+        "x-hms-staging-gateway": "access-gated-web",
+        "x-staging-access-subject": "source-user:test",
+        "x-staging-access-email": "tester@migration.invalid",
+      },
+    });
+
+    await expect(resolveAccessIdentity(request, {
+      ENVIRONMENT: "staging",
+      STAGING_ACCEPTANCE_AUTH: "true",
+      ACCESS_TEAM_DOMAIN: issuer,
+      ACCESS_AUDIENCE: audience,
     })).resolves.toEqual({ subject: "source-user:test", email: "tester@migration.invalid" });
   });
 
