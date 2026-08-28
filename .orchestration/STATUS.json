@@ -1,37 +1,36 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "phase": "CF_UX_MOBILE_002_PRECRITIC",
+  "phase": "CF_UX_MOBILE_002_PRECRITIC_REWORK1_CLOSED",
   "runtime_status": "RUNNING",
   "resume_authorized": false,
-  "active_task": "CF-UX-MOBILE-002-PR13-INDEPENDENT-CRITIC",
-  "last_completed_task": "CF-UX-MOBILE-002-PR13-TECHNICAL-GATES",
-  "last_completed_head": "2170b711a87b4ce7ba8b30ac472481049c0e9de0",
+  "active_task": "CF-UX-MOBILE-002-PR13-INDEPENDENT-CRITIC-R2",
+  "last_completed_task": "CF-UX-MOBILE-002-PR13-REWORK-1-TECHNICAL-GATES",
+  "last_completed_head": "e88a3a855581498154aaa0d782750e5cc8b97b46",
   "work_branch": "ux/hms-reports-admin",
-  "next_action": "CF-UX-MOBILE-002-PR13_EXTERNAL_INDEPENDENT_CRITIC",
-  "stop_reason": "Technical and Pre-Critic gates are complete on immutable artifact 2170b711; fresh independent review is required before integration. No deploy.",
+  "next_action": "CF-UX-MOBILE-002-PR13_EXTERNAL_INDEPENDENT_CRITIC_R2",
+  "stop_reason": "Critic REWORK-1 is repaired and technical gates are PASS on immutable artifact e88a3a855; fresh post-REWORK review is required before integration. No deploy.",
   "event": {
-    "seq": 104,
-    "id": "CF-UX-MOBILE-002-PR13-PRECRITIC-PASS",
+    "seq": 105,
+    "id": "CF-UX-MOBILE-002-PR13-REWORK1-PRECRITIC-PASS",
     "type": "PRECRITIC"
   },
   "external_review": {
     "required": true,
-    "last_audited_head": "2170b711a87b4ce7ba8b30ac472481049c0e9de0",
+    "last_audited_head": "e88a3a855581498154aaa0d782750e5cc8b97b46",
     "last_verdict": "PENDING",
-    "artifact_head": "2170b711a87b4ce7ba8b30ac472481049c0e9de0",
-    "pending_verdict": "CF-UX-MOBILE-002-PR13"
+    "artifact_head": "e88a3a855581498154aaa0d782750e5cc8b97b46",
+    "pending_verdict": "CF-UX-MOBILE-002-PR13-R2",
+    "prior_rework_review": ".orchestration/reviews/CF-UX-MOBILE-002-PR13-CRITIC-REWORK-1.md"
   },
   "human_gate": {
     "type": "PRODUCT_ACCEPTANCE",
     "scope": "REMOTE_STAGING",
-    "reason": "Human authorized final Product Acceptance remotely after technical and independent review PASS and one deliberate staging deployment.",
-    "required_action": "After final integrated PASS and deliberate staging deploy, exercise the complete candidate and return ACCEPT or REWORK."
+    "required_action": "After final integrated technical/critic PASS and deliberate staging deploy, exercise complete candidate and return ACCEPT or REWORK."
   },
   "blocker": null,
   "method": {
     "multi_context_required": true,
-    "internal_review_receipt": ".orchestration/PRECRITIC-CF-UX-MOBILE-002-PR13.md",
     "external_critic_after_internal_closure_only": true,
     "human_routine_relay_forbidden": true,
     "runtime_fallback_if_subagent_unavailable": "fresh logically separated review phase; must be disclosed"
@@ -42,18 +41,14 @@
     "intermediate_deploys_forbidden": true,
     "deployment_trigger": "workflow_dispatch"
   },
-  "validation_target_head": "2170b711a87b4ce7ba8b30ac472481049c0e9de0",
-  "evidence_boundary": "post-validation evidence commit; validation target remains immutable 2170b711",
+  "validation_target_head": "e88a3a855581498154aaa0d782750e5cc8b97b46",
   "ci": {
-    "foundation": {
-      "run": 33137425712,
-      "status": "PASS"
-    },
+    "foundation": { "run": 33137698493, "status": "PASS" },
     "ux_mobile_browser": {
-      "run": 33137425715,
+      "run": 33137698486,
       "status": "PASS",
-      "artifact_id": 9672578298,
-      "artifact_digest": "sha256:a3582bb73100e7b731a280145494c3703f171dc9b88ca9eac9ad20b500320476"
+      "artifact_id": 9672681117,
+      "artifact_digest": "sha256:8d486b474da4cf165435a6a93cfb80379c507511d861b86f5e0b42192bc7f422"
     }
   },
   "applicability": {

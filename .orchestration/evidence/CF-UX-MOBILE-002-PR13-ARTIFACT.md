@@ -1,31 +1,32 @@
 # CF-UX-MOBILE-002 — PR13 artifact evidence
 
-Artifact under review: `2170b711a87b4ce7ba8b30ac472481049c0e9de0`
+Artifact under review after Critic REWORK-1: `e88a3a855581498154aaa0d782750e5cc8b97b46`
 Branch: `ux/hms-reports-admin`
-Base candidate: `deploy/staging` (includes the separately accepted payment, Rooms/Guests, Housekeeping/Maintenance batch and manual-only staging deploy gate).
-Scope: Reports, Users administration and Hotel network presentation/interaction plus bounded Network rejected-plan UI recovery.
+Scope: responsive Reports, Users administration and Hotel network plus Network rejected-plan state recovery and complete browser action coverage.
 
 ## Executable evidence
 
-- Foundation CI `33137425712`: PASS.
-- UX mobile browser CI `33137425715`: PASS.
-- Browser artifact `9672578298`: `sha256:a3582bb73100e7b731a280145494c3703f171dc9b88ca9eac9ad20b500320476`.
-- Contracted widths: 375, 390, 430, 1366.
+- Foundation CI `33137698493`: PASS.
+- UX mobile browser CI `33137698486`: PASS.
+- Browser artifact `9672681117`: `sha256:8d486b474da4cf165435a6a93cfb80379c507511d861b86f5e0b42192bc7f422`.
+- Widths: 375, 390, 430, 1366.
 
-## Real-API coverage
+## Material workflows now proven
 
-The admin browser harness does not replace successful Reports/Users/Network API responses with mocks. It uses the local Worker/D1 path and exact seeded Access subjects.
+Reports: loading -> successful data; invalid date range -> visible error + Retry; valid no-booking range -> authoritative zero occupancy; restore normal range -> success.
 
-- Reports: loading, invalid range -> error + Retry, valid zero-occupancy calendar representation, restored success.
-- Users: loading, search empty state, user detail open/close.
-- Network: loading, filter empty state, successful plan update, rejected plan rollback, analytics refresh.
+Users: loading; search empty; create membership through real API; duplicate create -> visible error; Retry reload; role update; deactivation. Each contracted width executes the material actions.
 
-Request delay uses Playwright `route.fallback()` so the actual API continues to serve the request. The only synthetic response is a bounded 409 on the Network plan negative path; it exists to prove that the UI does not retain an optimistic plan rejected by the server.
+Network: loading; filter empty; successful real plan PATCH; bounded 409 negative-path injection; rejected optimistic selection restores authoritative plan; Retry reload; analytics refresh. Each contracted width executes the material actions.
 
-## Functional repair
+## Transport policy
 
-`Network.updatePlan` snapshots the authoritative property from the loaded hotel collection. If PATCH fails, it restores that object before surfacing the error. A failed/concurrent plan update therefore cannot leave the selected property showing an unaccepted plan.
+Successful Reports/Users/Network data is never response-mocked. Request delays use `route.fallback()` and end at the actual local API. The sole injected response is the Network plan 409 used to prove negative-path UI recovery.
+
+## Product change
+
+`Network.updatePlan` snapshots the authoritative hotel from the loaded collection and restores it on PATCH failure. No API contract or server mutation semantics are modified.
 
 ## Scope proof
 
-PR13 changes no API implementation, D1 schema/migration, RBAC/authentication implementation, production/cutover configuration or paid-resource settings. Staging deployment remains separate and manual-only. Product Acceptance remains pending.
+No API implementation, D1 schema/migration, RBAC/authentication implementation, production/cutover configuration or paid resource is changed by PR13. Staging deployment is manual-only and remains pending.
