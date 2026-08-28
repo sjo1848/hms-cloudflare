@@ -1,9 +1,6 @@
 name: Deploy HMS staging
 
 on:
-  push:
-    branches:
-      - deploy/staging
   workflow_dispatch:
 
 permissions:
