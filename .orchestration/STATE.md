@@ -5,33 +5,30 @@
 Project: HMS Cloudflare  
 Updated: 2026-08-28  
 Global Project Mode: `DELIVERY`  
-Phase: `CF-UX-MOBILE-002 PRE-CRITIC AFTER REWORK-1`  
-Phase Status: `CF-I01–CF-I09 A5 PASS / staging auth PASS / payment + Rooms/Guests + Housekeeping/Maintenance integrated / PR13 REWORK-1 CLOSED / technical gates PASS / fresh Critic pending`
+Phase: `CF-UX-MOBILE-002 PR13 CRITIC PASS`  
+Phase Status: `CF-I01–CF-I09 A5 PASS / staging auth PASS / payment + Rooms/Guests + Housekeeping/Maintenance integrated / PR13 REWORK-1 CLOSED / Foundation+Browser PASS / fresh Critic PASS`
 
-Runtime: `RUNNING`. No intermediate deploy is authorized. Remote Product Acceptance remains the next Human Gate only after final integrated PASS and one deliberate staging deployment.
+Runtime: `RUNNING`. PR #13 integration is authorized. No intermediate Cloudflare deployment is authorized.
 
-Current objective: fresh post-REWORK review of immutable PR13 artifact `e88a3a855581498154aaa0d782750e5cc8b97b46`.
+## PR13 ACCEPTED ARTIFACT
 
-## CURRENT PR13 EVIDENCE
-
-- Critic REWORK-1: `.orchestration/reviews/CF-UX-MOBILE-002-PR13-CRITIC-REWORK-1.md`.
-- Validation target: `e88a3a855581498154aaa0d782750e5cc8b97b46`.
+- Immutable implementation/test artifact: `e88a3a855581498154aaa0d782750e5cc8b97b46`.
 - Foundation CI `33137698493` — PASS.
-- Browser CI `33137698486` — PASS.
+- UX mobile browser CI `33137698486` — PASS.
 - Browser artifact `9672681117`, digest `sha256:8d486b474da4cf165435a6a93cfb80379c507511d861b86f5e0b42192bc7f422`.
-- Reports/Users/Network run material actions at 375/390/430/1366.
-- Users create, duplicate-error, Retry, role update and deactivate are in the active browser gate.
-- Network successful plan mutation, rejected-plan rollback, Retry and analytics are in the active browser gate.
-- Successful data paths use real local Worker/D1 API; only Network 409 is a bounded negative-path injected response.
-- Tenant/RBAC/API/D1/auth boundaries are unchanged.
-- Staging deployment remains manual-only through `workflow_dispatch`.
+- Critic REWORK-1 is persisted and closed.
+- Fresh post-REWORK Critic R2: PASS at `.orchestration/reviews/CF-UX-MOBILE-002-PR13-CRITIC-R2.md`.
+
+Accepted evidence covers Reports, Users and Network material states/actions at 375/390/430/1366, exact admin/network identities, real local API success paths, bounded Network 409 rollback/retry evidence, and preservation of tenant/RBAC/API/D1/auth boundaries.
+
+## DEPLOYMENT BOUNDARY
+
+`deploy/staging` uses a manual-only staging workflow. Ordinary merges do not deploy Cloudflare. The single deliberate deployment remains forbidden until PR13 is integrated, integrated CI passes and a fresh integration review returns PASS.
 
 ## HUMAN PRODUCT ACCEPTANCE GATE — REMOTE
 
-Authorized only after: fresh PR13 Critic PASS -> integration -> integrated CI/review PASS -> one deliberate staging deploy.
-
-The Human then returns `ACCEPT` or `REWORK`. Technical PASS does not imply Product Acceptance. Production, real data, paid resources and security weakening remain unauthorized.
+The Human has authorized remote Product Acceptance after final integrated PASS and one deliberate staging deployment. This does not authorize production, cutover, real data, paid resources or security weakening.
 
 ## NEXT AUTHORIZED ACTION
 
-Fresh Critic reviews `e88a3a855...` plus the synchronized evidence. Do not merge or deploy before PASS.
+Integrate PR #13 into `deploy/staging`, run Foundation + integrated browser CI on the exact merged candidate, verify no automatic Cloudflare deploy occurred, then perform the fresh integration review. Do not dispatch staging before that review PASS.

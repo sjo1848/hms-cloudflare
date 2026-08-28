@@ -1,32 +1,31 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "phase": "CF_UX_MOBILE_002_PRECRITIC_REWORK1_CLOSED",
+  "phase": "CF_UX_MOBILE_002_PR13_CRITIC_PASS",
   "runtime_status": "RUNNING",
   "resume_authorized": false,
-  "active_task": "CF-UX-MOBILE-002-PR13-INDEPENDENT-CRITIC-R2",
-  "last_completed_task": "CF-UX-MOBILE-002-PR13-REWORK-1-TECHNICAL-GATES",
+  "active_task": "CF-UX-MOBILE-002-INTEGRATION",
+  "last_completed_task": "CF-UX-MOBILE-002-PR13-INDEPENDENT-CRITIC-PASS",
   "last_completed_head": "e88a3a855581498154aaa0d782750e5cc8b97b46",
   "work_branch": "ux/hms-reports-admin",
-  "next_action": "CF-UX-MOBILE-002-PR13_EXTERNAL_INDEPENDENT_CRITIC_R2",
-  "stop_reason": "Critic REWORK-1 is repaired and technical gates are PASS on immutable artifact e88a3a855; fresh post-REWORK review is required before integration. No deploy.",
+  "next_action": "CF-UX-MOBILE-002_INTEGRATE_PR13",
+  "stop_reason": "Fresh post-REWORK Critic PASS on immutable artifact e88a3a855; integration into deploy/staging is authorized. No deploy yet.",
   "event": {
-    "seq": 105,
-    "id": "CF-UX-MOBILE-002-PR13-REWORK1-PRECRITIC-PASS",
-    "type": "PRECRITIC"
+    "seq": 106,
+    "id": "CF-UX-MOBILE-002-PR13-CRITIC-PASS",
+    "type": "INDEPENDENT_CRITIC"
   },
   "external_review": {
-    "required": true,
+    "required": false,
     "last_audited_head": "e88a3a855581498154aaa0d782750e5cc8b97b46",
-    "last_verdict": "PENDING",
+    "last_verdict": "PASS",
     "artifact_head": "e88a3a855581498154aaa0d782750e5cc8b97b46",
-    "pending_verdict": "CF-UX-MOBILE-002-PR13-R2",
-    "prior_rework_review": ".orchestration/reviews/CF-UX-MOBILE-002-PR13-CRITIC-REWORK-1.md"
+    "review_path": ".orchestration/reviews/CF-UX-MOBILE-002-PR13-CRITIC-R2.md"
   },
   "human_gate": {
     "type": "PRODUCT_ACCEPTANCE",
     "scope": "REMOTE_STAGING",
-    "required_action": "After final integrated technical/critic PASS and deliberate staging deploy, exercise complete candidate and return ACCEPT or REWORK."
+    "required_action": "After integrated technical/critic PASS and one deliberate staging deployment, exercise the complete candidate and return ACCEPT or REWORK."
   },
   "blocker": null,
   "method": {
