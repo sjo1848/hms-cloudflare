@@ -47,12 +47,36 @@
     await page.getByRole("status").filter({ hasText: "Loading users" }).waitFor();
     await page.getByRole("heading", { name: "Users administration" }).waitFor();
     await page.unroute("**/api/v1/users**");
+
     await page.getByLabel("Search users").fill("not-present");
     await page.getByText("No users match this search").waitFor();
-    await page.getByLabel("Search users").fill("@");
+    await page.getByLabel("Search users").fill("");
+
+    const subject = `pr13-browser-${width}`;
+    const email = `pr13-${width}@example.test`;
+    await page.getByLabel("Access subject", { exact: true }).fill(subject);
+    await page.getByLabel("Email", { exact: true }).fill(email);
+    await page.getByRole("button", { name: "Create user" }).click();
+    await page.getByRole("status").filter({ hasText: "User membership created" }).waitFor();
+
+    await page.getByLabel("Access subject", { exact: true }).fill(subject);
+    await page.getByLabel("Email", { exact: true }).fill(email);
+    await page.getByRole("button", { name: "Create user" }).click();
+    await page.getByRole("alert").waitFor();
+    await page.getByRole("button", { name: "Retry" }).click();
+    await page.getByRole("alert").waitFor({ state: "detached" });
+
+    await page.getByLabel("Search users").fill(subject);
     await page.getByRole("button", { name: "View details" }).first().click();
     await page.getByRole("dialog").waitFor();
-    await page.getByRole("button", { name: "Close details" }).click();
+    const role = page.getByRole("combobox", { name: `Role for ${email}` });
+    await role.selectOption("ops");
+    await page.getByRole("status").filter({ hasText: "Role updated" }).waitFor();
+    if (await role.inputValue() !== "ops") throw new Error(`Users role did not update at ${width}`);
+
+    page.once("dialog", dialog => dialog.accept());
+    await page.getByRole("button", { name: "Deactivate user" }).click();
+    await page.getByRole("status").filter({ hasText: "Membership deactivated" }).waitFor();
     await assertNoOverflow("Users", width);
   };
   const network = async (width) => {
@@ -87,6 +111,9 @@
     const restoredPlan = await plan.inputValue();
     if (restoredPlan !== authoritativePlan) throw new Error(`Network rejected plan drifted: ${restoredPlan} != ${authoritativePlan}`);
     await page.unroute("**/api/v1/hotels/*/plan");
+    await page.getByRole("button", { name: "Retry" }).click();
+    await page.getByRole("alert").waitFor({ state: "detached" });
+    await page.getByText("Total hotels", { exact: true }).waitFor();
 
     await page.getByRole("button", { name: "Refresh analytics" }).click();
     await page.getByText("Revenue ranking", { exact: true }).waitFor();
@@ -98,5 +125,5 @@
   await page.setExtraHTTPHeaders({ "x-local-access-subject": "source-user:subject-network", "x-local-access-email": "network@test.com" });
   for (const width of widths) await network(width);
   await page.screenshot({ path: "output/playwright/cf-ux-admin.png", fullPage: true });
-  return { widths, surfaces: ["Reports", "Users", "Network"], states: ["loading", "error", "empty-or-zero-data", "retry", "success"], mockApi: false, negativeTransportInjection: "Network plan 409 only" };
+  return { widths, surfaces: ["Reports", "Users", "Network"], states: ["loading", "error", "empty-or-zero-data", "retry", "success"], userActions: ["create", "duplicate-error", "retry", "role-update", "deactivate"], mockApi: false, negativeTransportInjection: "Network plan 409 only" };
 })()
