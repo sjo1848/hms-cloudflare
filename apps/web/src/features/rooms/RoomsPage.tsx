@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { api } from "../../shared/api";
+import { api } from "../../api/client";
 import type { Hold, Room } from "../../domain/types";
+import { AsyncState } from "../../components/AsyncState";
+import { StatusBadge } from "../../components/StatusBadge";
 
 export function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -118,20 +120,20 @@ export function RoomsPage() {
     </form>
     {formError && <p className="error" role="alert">{formError}</p>}
     <div className="resource-toolbar"><label>Search rooms<input aria-label="Search rooms" value={filter} onChange={e => setFilter(e.target.value)} placeholder="Number, type or status" /></label><button type="button" onClick={() => void load()} disabled={loading}>Refresh</button></div>
-    {error && <div className="state-panel state-error" role="alert"><strong>Rooms could not be loaded</strong><span>{error}</span><button type="button" onClick={() => void load()}>Try again</button></div>}
-    {loading && <div className="state-panel" role="status"><span className="state-spinner" />Loading rooms…</div>}
-    {!loading && !error && visible.length === 0 && <div className="state-panel state-empty"><strong>{rooms.length ? "No matching rooms" : "No rooms yet"}</strong><span>{rooms.length ? "Try another search." : "Add the first room using the form above."}</span></div>}
+    {error && <AsyncState kind="error" title="Rooms could not be loaded" message={error} onRetry={() => void load()} />}
+    {loading && <AsyncState kind="loading" message="Loading rooms…" />}
+    {!loading && !error && visible.length === 0 && <AsyncState kind="empty" title={rooms.length ? "No matching rooms" : "No rooms yet"} message={rooms.length ? "Try another search." : "Add the first room using the form above."} />}
     {!loading && !error && visible.length > 0 && <div className="resource-layout">
       <div className="resource-list" aria-label="Rooms list">{visible.map(room => <article className={selected?.id === room.id ? "resource-card selected" : "resource-card"} key={room.id}>
         <button type="button" className="resource-card-select" onClick={() => void openRoom(room)} aria-pressed={selected?.id === room.id}>
-          <span className="resource-card-title">Room {room.room_number}</span><span className="status-badge">{room.status}</span>
+          <span className="resource-card-title">Room {room.room_number}</span><StatusBadge>{room.status}</StatusBadge>
           <span className="resource-card-meta">{room.room_type} · ${(room.price_cents / 100).toFixed(2)}</span>
         </button>
         <button type="button" className="secondary-button" onClick={() => void editRoom(room)}>Edit</button>
       </article>)}</div>
       <aside className="resource-detail" aria-label="Selected room">
         {!selected && <div className="state-panel state-empty"><strong>Select a room</strong><span>Choose a room to review its holds.</span></div>}
-        {selected && <><div className="resource-detail-heading"><div><p className="eyebrow">Selected room</p><h3>Room {selected.room_number}</h3><p className="muted">{selected.room_type} · ${(selected.price_cents / 100).toFixed(2)}</p></div><span className="status-badge">{selected.status}</span></div>
+        {selected && <><div className="resource-detail-heading"><div><p className="eyebrow">Selected room</p><h3>Room {selected.room_number}</h3><p className="muted">{selected.room_type} · ${(selected.price_cents / 100).toFixed(2)}</p></div><StatusBadge>{selected.status}</StatusBadge></div>
           <form className="resource-subform" onSubmit={addHold}><h4>Operational hold</h4><div className="form-grid"><label>Start<input required name="start" type="date" /></label><label>End<input required name="end" type="date" /></label><label className="form-span"><span>Reason</span><input required name="reason" minLength={4} placeholder="Maintenance or reservation hold" /></label></div><button type="submit" disabled={holdSaving}>{holdSaving ? "Saving…" : "Add hold"}</button></form>
           {detailLoading && <p className="muted" role="status">Loading holds…</p>}
           {!detailLoading && holds.length === 0 && <p className="muted">No operational holds for this room.</p>}

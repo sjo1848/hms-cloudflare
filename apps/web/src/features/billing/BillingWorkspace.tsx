@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { ApiError, api } from "../../shared/api";
+import { ApiError, api } from "../../api/client";
 import type { Booking, ExtraCharge, Invoice, Payment } from "../../domain/types";
 
 function BillingPanel() {

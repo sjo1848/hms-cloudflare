@@ -1,4 +1,4 @@
-import { getActiveLocalProfileIndex, localAcceptanceEnabled, localDevProfiles, setActiveLocalProfileIndex } from "../shared/api";
+import { getActiveLocalProfileIndex, localAcceptanceEnabled, localDevProfiles, setActiveLocalProfileIndex } from "../api/client";
 
 export function LocalDevIdentitySelector({ onChange }: { onChange: () => void }) {
   if (!localAcceptanceEnabled) return null;

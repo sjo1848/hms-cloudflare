@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { api } from "../../shared/api";
+import { api } from "../../api/client";
 import type { Guest } from "../../domain/types";
+import { AsyncState } from "../../components/AsyncState";
 
 export function GuestsPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
@@ -50,9 +51,9 @@ export function GuestsPage() {
     </form>
     {formError && <p className="error" role="alert">{formError}</p>}
     <div className="resource-toolbar"><label>Search guests<input aria-label="Search guests" value={filter} onChange={e => setFilter(e.target.value)} placeholder="Name, email or phone" /></label><button type="button" onClick={() => void load()} disabled={loading}>Refresh</button></div>
-    {error && <div className="state-panel state-error" role="alert"><strong>Guests could not be loaded</strong><span>{error}</span><button type="button" onClick={() => void load()}>Try again</button></div>}
-    {loading && <div className="state-panel" role="status"><span className="state-spinner" />Loading guests…</div>}
-    {!loading && !error && visible.length === 0 && <div className="state-panel state-empty"><strong>{guests.length ? "No matching guests" : "No guests yet"}</strong><span>{guests.length ? "Try another search." : "Add the first guest using the form above."}</span></div>}
+    {error && <AsyncState kind="error" title="Guests could not be loaded" message={error} onRetry={() => void load()} />}
+    {loading && <AsyncState kind="loading" message="Loading guests…" />}
+    {!loading && !error && visible.length === 0 && <AsyncState kind="empty" title={guests.length ? "No matching guests" : "No guests yet"} message={guests.length ? "Try another search." : "Add the first guest using the form above."} />}
     {!loading && !error && visible.length > 0 && <div className="guest-grid" aria-label="Guests list">{visible.map(guest => <button type="button" className={selected?.id === guest.id ? "guest-card selected" : "guest-card"} key={guest.id} onClick={() => setSelected(guest)} aria-pressed={selected?.id === guest.id}><span className="avatar">{guest.full_name.trim().charAt(0).toUpperCase() || "?"}</span><span><strong>{guest.full_name}</strong><small>{guest.email}</small><small>{guest.phone ?? "No phone recorded"}</small></span><span className="selection-indicator">{selected?.id === guest.id ? "Selected" : "View"}</span></button>)}</div>}
     {selected && <div className="guest-detail" aria-live="polite"><div><p className="eyebrow">Selected guest</p><h3>{selected.full_name}</h3><p>{selected.email}</p><p>{selected.phone ?? "No phone recorded"}</p></div><button type="button" className="secondary-button" onClick={() => setSelected(null)}>Clear selection</button></div>}
   </section>;

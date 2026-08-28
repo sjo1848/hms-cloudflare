@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { api } from "../../shared/api";
+import { api } from "../../api/client";
 
 type AdminHotel = { id: string; slug: string; name: string; address: string | null; plan_tier: string; operational_binding: string; active: number };
 type NetworkKpis = { total_hotels: number; total_active_bookings: number; total_revenue_cents: number; average_occupancy_rate: number; hotels: Array<{ hotel_id: string; hotel_name: string; plan_tier: string; revenue_cents: number; active_bookings_count: number; occupancy_rate: number; adr_cents: number; rev_par_cents: number }> };

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { api } from "../../shared/api";
+import { api } from "../../api/client";
 
 type AdminUser = { access_subject: string; email: string; role: string; active: number; hotel_id: string };
 

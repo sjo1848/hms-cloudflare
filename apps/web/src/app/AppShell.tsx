@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
-import { api } from "../shared/api";
+import { api } from "../api/client";
 import { GuestsPage } from "../features/guests/GuestsPage";
 import { HousekeepingPage } from "../features/housekeeping/HousekeepingPage";
 import { NetworkPage } from "../features/network/NetworkPage";
