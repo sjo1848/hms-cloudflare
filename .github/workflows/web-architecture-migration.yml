@@ -3,7 +3,7 @@ name: web-architecture-migration
 on:
   push:
     branches:
-      - refactor/web-architecture-hardening
+      - "refactor/web-architecture-hardening"
     paths:
       - "scripts/refactor-web-architecture.mjs"
       - ".github/workflows/web-architecture-migration.yml"
@@ -13,7 +13,6 @@ permissions:
 
 jobs:
   migrate:
-    if: ${{ !contains(github.event.head_commit.message, 'refactor(web): apply feature-first architecture') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
