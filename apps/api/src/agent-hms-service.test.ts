@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { authorizeAgentHmsCall } from "./agent-hms-authorization";
 import { AgentHmsReadService } from "./agent-hms-read-service";
 
 const HOTEL_ID = "10000000-0000-0000-0000-000000000001";
+const SECOND_HOTEL_ID = "20000000-0000-0000-0000-000000000002";
 const ROOM_ID = "11000000-0000-0000-0000-000000000001";
 
 function createTestEnv(options: { unknownHotel?: boolean; badBinding?: boolean; unavailable?: boolean } = {}) {
@@ -74,6 +76,33 @@ const context = {
   sessionId: "session-1",
   traceId: "trace-1",
 };
+
+const callerProps = {
+  clientId: "ai-commerce-platform",
+  permissions: ["availability.read", "quote.read"] as Array<"availability.read" | "quote.read">,
+  allowedHotelIds: [HOTEL_ID],
+};
+
+describe("AgentHms Service Binding authorization", () => {
+  it("accepts the expected platform capability", () => {
+    expect(() => authorizeAgentHmsCall(callerProps, context, "availability.read")).not.toThrow();
+  });
+
+  it("rejects an unknown caller", () => {
+    expect(() => authorizeAgentHmsCall({ ...callerProps, clientId: "other-service" }, context, "availability.read"))
+      .toThrow(/caller is not authorized/);
+  });
+
+  it("rejects an ungranted method capability", () => {
+    expect(() => authorizeAgentHmsCall({ ...callerProps, permissions: ["availability.read"] }, context, "quote.read"))
+      .toThrow(/capability is not authorized/);
+  });
+
+  it("rejects a hotel outside the binding resource grant", () => {
+    expect(() => authorizeAgentHmsCall({ ...callerProps, allowedHotelIds: [SECOND_HOTEL_ID] }, context, "availability.read"))
+      .toThrow(/hotel is not authorized/);
+  });
+});
 
 describe("AgentHmsReadService", () => {
   it("returns transactional availability using only read queries", async () => {
