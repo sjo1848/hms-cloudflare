@@ -18,7 +18,7 @@
   });
   const widths=[375,430,768,1366];
   await page.goto("http://127.0.0.1:4174/rooms",{waitUntil:"domcontentloaded"});
-  await page.getByRole("heading",{name:"Rooms"}).waitFor();
+  await page.getByRole("heading",{name:"Rooms",level:1}).waitFor();
   await page.getByRole("button",{name:"Room 101"}).click();
   await page.getByRole("heading",{name:"Room 101"}).waitFor();
   await page.getByLabel("Start").fill("2026-09-01");await page.getByLabel("End").fill("2026-09-03");await page.getByLabel("Reason").fill("Maintenance window");await page.getByRole("button",{name:"Add hold"}).click();await page.getByText("Maintenance window").waitFor();
@@ -27,7 +27,7 @@
   if(await page.getByText("A hold").count())throw new Error("stale Room A hold leaked into Room B");
   await page.getByLabel("Room number").fill("103");await page.getByLabel("Room type").fill("STANDARD");await page.getByLabel("Price in cents").fill("19000");await page.getByRole("button",{name:"Add room"}).click();await page.getByRole("button",{name:"Room 103"}).waitFor();if(await page.getByLabel("Room number").inputValue()!=="")throw new Error("room form was not reset");
   for(const width of widths){await page.setViewportSize({width,height:812});await page.waitForTimeout(100);if(await page.evaluate(()=>document.documentElement.scrollWidth)>width)throw new Error("Rooms overflow at "+width);}
-  await page.goto("http://127.0.0.1:4174/guests",{waitUntil:"domcontentloaded"});await page.getByRole("heading",{name:"Guests"}).waitFor();await page.getByRole("alert").filter({hasText:"Guests temporarily unavailable"}).waitFor();await page.getByRole("button",{name:"Try again"}).click();await page.getByRole("button",{name:/Ana Guest/}).waitFor();await page.getByRole("button",{name:/Ana Guest/}).click();await page.getByRole("heading",{name:"Ana Guest"}).waitFor();await page.getByLabel("Full name").fill("Carla Guest");await page.getByLabel("Email").fill("carla@example.test");await page.getByRole("button",{name:"Add guest"}).click();await page.getByRole("button",{name:/Carla Guest/}).waitFor();if(await page.getByLabel("Full name").inputValue()!=="")throw new Error("guest form was not reset");
+  await page.goto("http://127.0.0.1:4174/guests",{waitUntil:"domcontentloaded"});await page.getByRole("heading",{name:"Guests",level:1}).waitFor();await page.getByRole("alert").filter({hasText:"Guests temporarily unavailable"}).waitFor();await page.getByRole("button",{name:"Try again"}).click();await page.getByRole("button",{name:/Ana Guest/}).waitFor();await page.getByRole("button",{name:/Ana Guest/}).click();await page.getByRole("heading",{name:"Ana Guest"}).waitFor();await page.getByLabel("Full name").fill("Carla Guest");await page.getByLabel("Email").fill("carla@example.test");await page.getByRole("button",{name:"Add guest"}).click();await page.getByRole("button",{name:/Carla Guest/}).waitFor();if(await page.getByLabel("Full name").inputValue()!=="")throw new Error("guest form was not reset");
   for(const width of widths){await page.setViewportSize({width,height:812});await page.waitForTimeout(100);if(await page.evaluate(()=>document.documentElement.scrollWidth)>width)throw new Error("Guests overflow at "+width);}
   await page.screenshot({path:"output/playwright/cf-ux-mobile-002-rooms-guests.png",fullPage:true});
   return {widths,mockApi:true,rooms:"selection-hold-form-concurrency-responsive",guests:"retry-selection-form-responsive"};
