@@ -39,17 +39,17 @@ export async function runProductFlowApiAudit() {
   const futureStart = "2027-01-10";
   const futureEnd = "2027-01-12";
   const future = roomNumbers(await availability(futureStart, futureEnd));
-  for (const number of ["901", "902", "903", "905", "906", "907", "908", "909"]) {
+  for (const number of ["951", "952", "953", "955", "956", "957", "958", "959"]) {
     assert(future.has(number), `pre-existing room ${number} must be advance-reservable when its dates are free`);
   }
-  assert(!future.has("904"), "maintenance room 904 must not be advance-reservable");
-  evidence.preExistingFutureAvailability = [...future].sort();
+  assert(!future.has("954"), "maintenance room 954 must not be advance-reservable");
+  evidence.preExistingFutureAvailability = [...future].filter(number => number.startsWith("95")).sort();
 
   // 2) Half-open boundaries and active inventory.
   const overlap = roomNumbers(await availability("2026-09-02", "2026-09-04"));
-  assert(!overlap.has("909"), "room 909 must be blocked by overlapping active inventory");
+  assert(!overlap.has("959"), "room 959 must be blocked by overlapping active inventory");
   const boundary = roomNumbers(await availability("2026-09-04", "2026-09-05"));
-  assert(boundary.has("909"), "checkout == next check-in boundary must be reservable");
+  assert(boundary.has("959"), "checkout == next check-in boundary must be reservable");
   await request("/rooms/available?start=2027-01-10&end=2027-01-10", { expected: 400 });
   await request("/rooms/available?start=2027-01-12&end=2027-01-10", { expected: 400 });
   await request("/rooms/available?start=2027-01-10", { expected: 400 });
@@ -72,7 +72,7 @@ export async function runProductFlowApiAudit() {
   await request("/rooms", {
     method: "POST",
     expected: 409,
-    body: { room_number: "901", room_type: "STANDARD", price_cents: 10000 },
+    body: { room_number: "951", room_type: "STANDARD", price_cents: 10000 },
   });
   evidence.uniqueness = "PASS";
 
@@ -80,54 +80,54 @@ export async function runProductFlowApiAudit() {
   const futureBooking = await request("/bookings", {
     method: "POST",
     expected: 201,
-    body: { guest_id: guestId, room_id: "browser-a", check_in: futureStart, check_out: futureEnd, notes: "future on dirty room" },
+    body: { guest_id: guestId, room_id: "integral-dirty", check_in: futureStart, check_out: futureEnd, notes: "future on dirty room" },
   });
   const futureBookingId = futureBooking.payload.id;
-  assert(!roomNumbers(await availability(futureStart, futureEnd)).has("901"), "claimed dirty room must disappear for overlapping dates");
+  assert(!roomNumbers(await availability(futureStart, futureEnd)).has("951"), "claimed dirty room must disappear for overlapping dates");
   await request("/bookings", {
     method: "POST",
     expected: 409,
-    body: { guest_id: guestId, room_id: "browser-a", check_in: futureStart, check_out: futureEnd },
+    body: { guest_id: guestId, room_id: "integral-dirty", check_in: futureStart, check_out: futureEnd },
   });
   const bookingsAfterConflict = (await request("/bookings?limit=100")).payload.filter(
-    (booking) => booking.room_id === "browser-a" && booking.check_in === futureStart && booking.check_out === futureEnd && booking.status === "Confirmed",
+    (booking) => booking.room_id === "integral-dirty" && booking.check_in === futureStart && booking.check_out === futureEnd && booking.status === "Confirmed",
   );
   assert(bookingsAfterConflict.length === 1, "overlap conflict must not leave a second partial booking");
   await request(`/bookings/${futureBookingId}`, { method: "PATCH", body: { status: "CANCELLED" } });
-  assert(roomNumbers(await availability(futureStart, futureEnd)).has("901"), "cancellation must release future inventory on dirty room");
+  assert(roomNumbers(await availability(futureStart, futureEnd)).has("951"), "cancellation must release future inventory on dirty room");
   evidence.bookingConflictAndCancel = "PASS";
 
   // 5) Maintenance remains an operational block even for a date-free future stay.
   await request("/bookings", {
     method: "POST",
     expected: 409,
-    body: { guest_id: guestId, room_id: "browser-d", check_in: "2027-01-20", check_out: "2027-01-22" },
+    body: { guest_id: guestId, room_id: "integral-maintenance", check_in: "2027-01-20", check_out: "2027-01-22" },
   });
   evidence.maintenanceReservability = "PASS";
 
   // 6) Holds block overlap but not the checkout/check-in boundary.
-  const hold = await request("/rooms/browser-g/holds", {
+  const hold = await request("/rooms/integral-hold/holds", {
     method: "POST",
     expected: 201,
     body: { start_date: "2027-02-01", end_date: "2027-02-03", hold_type: "Other", reason: "Integral flow hold" },
   });
-  assert(!roomNumbers(await availability("2027-02-01", "2027-02-03")).has("907"), "hold must block overlapping availability");
-  assert(roomNumbers(await availability("2027-02-03", "2027-02-04")).has("907"), "hold boundary must remain reservable");
-  await request(`/rooms/browser-g/holds/${hold.payload.id}`, { method: "DELETE" });
+  assert(!roomNumbers(await availability("2027-02-01", "2027-02-03")).has("957"), "hold must block overlapping availability");
+  assert(roomNumbers(await availability("2027-02-03", "2027-02-04")).has("957"), "hold boundary must remain reservable");
+  await request(`/rooms/integral-hold/holds/${hold.payload.id}`, { method: "DELETE" });
   evidence.holds = "PASS";
 
   // 7) Editing a confirmed future reservation uses date inventory, not current physical state.
   const editable = await request("/bookings", {
     method: "POST",
     expected: 201,
-    body: { guest_id: guestId, room_id: "browser-b", check_in: "2027-03-01", check_out: "2027-03-03", notes: "editable" },
+    body: { guest_id: guestId, room_id: "integral-cleaning", check_in: "2027-03-01", check_out: "2027-03-03", notes: "editable" },
   });
   await request(`/bookings/${editable.payload.id}`, {
     method: "PATCH",
-    body: { room_id: "browser-f", check_in: "2027-03-10", check_out: "2027-03-12", notes: "moved to currently occupied room" },
+    body: { room_id: "integral-occupied", check_in: "2027-03-10", check_out: "2027-03-12", notes: "moved to currently occupied room" },
   });
-  assert(roomNumbers(await availability("2027-03-01", "2027-03-03")).has("902"), "old inventory must be released after edit");
-  assert(!roomNumbers(await availability("2027-03-10", "2027-03-12")).has("906"), "new inventory must be claimed after edit");
+  assert(roomNumbers(await availability("2027-03-01", "2027-03-03")).has("952"), "old inventory must be released after edit");
+  assert(!roomNumbers(await availability("2027-03-10", "2027-03-12")).has("956"), "new inventory must be claimed after edit");
   await request(`/bookings/${editable.payload.id}`, { method: "PATCH", body: { notes: "self-claim update" } });
   await request(`/bookings/${editable.payload.id}`, { method: "PATCH", body: { status: "CANCELLED" } });
   evidence.bookingEdit = "PASS";
@@ -136,7 +136,7 @@ export async function runProductFlowApiAudit() {
   const dirtyForCheckIn = await request("/bookings", {
     method: "POST",
     expected: 201,
-    body: { guest_id: guestId, room_id: "browser-a", check_in: "2027-04-01", check_out: "2027-04-03" },
+    body: { guest_id: guestId, room_id: "integral-dirty", check_in: "2027-04-01", check_out: "2027-04-03" },
   });
   await request(`/bookings/${dirtyForCheckIn.payload.id}/check-in`, {
     method: "POST",
@@ -151,7 +151,7 @@ export async function runProductFlowApiAudit() {
   const lifecycleBooking = await request("/bookings", {
     method: "POST",
     expected: 201,
-    body: { guest_id: guestId, room_id: "browser-c", check_in: "2027-04-10", check_out: "2027-04-12", notes: "lifecycle" },
+    body: { guest_id: guestId, room_id: "integral-ready-a", check_in: "2027-04-10", check_out: "2027-04-12", notes: "lifecycle" },
   });
   await request(`/bookings/${lifecycleBooking.payload.id}/check-in`, {
     method: "POST",
@@ -159,41 +159,41 @@ export async function runProductFlowApiAudit() {
   });
   await request(`/bookings/${lifecycleBooking.payload.id}/reassign`, {
     method: "POST",
-    body: { room_id: "browser-e" },
+    body: { room_id: "integral-ready-b" },
   });
   let rooms = (await request("/rooms")).payload;
-  assert(rooms.find((room) => room.id === "browser-c")?.status === "Available", "reassign must release old occupied room");
-  assert(rooms.find((room) => room.id === "browser-e")?.status === "Occupied", "reassign must occupy destination room");
+  assert(rooms.find((room) => room.id === "integral-ready-a")?.status === "Available", "reassign must release old occupied room");
+  assert(rooms.find((room) => room.id === "integral-ready-b")?.status === "Occupied", "reassign must occupy destination room");
   await request(`/bookings/${lifecycleBooking.payload.id}/check-out`, {
     method: "POST",
     body: { check_out_payment_policy: "settled", charge_reviewed: true, release_confirmed: true, handoff_confirmed: true },
   });
   rooms = (await request("/rooms")).payload;
-  assert(rooms.find((room) => room.id === "browser-e")?.status === "Dirty", "checkout must hand room to housekeeping as dirty");
-  assert(roomNumbers(await availability("2027-04-10", "2027-04-12")).has("905"), "checkout must release date inventory even while room is dirty");
-  await request("/housekeeping/browser-e/finish", { method: "POST", expected: 409 });
-  await request("/housekeeping/browser-e/start", { method: "POST" });
-  await request("/housekeeping/browser-e/finish", { method: "POST" });
+  assert(rooms.find((room) => room.id === "integral-ready-b")?.status === "Dirty", "checkout must hand room to housekeeping as dirty");
+  assert(roomNumbers(await availability("2027-04-10", "2027-04-12")).has("955"), "checkout must release date inventory even while room is dirty");
+  await request("/housekeeping/integral-ready-b/finish", { method: "POST", expected: 409 });
+  await request("/housekeeping/integral-ready-b/start", { method: "POST" });
+  await request("/housekeeping/integral-ready-b/finish", { method: "POST" });
   evidence.lifecycleAndHousekeeping = "PASS";
 
   // 10) Maintenance open/duplicate/resolve protects the room and returns through housekeeping.
-  const maintenance = await request("/housekeeping/browser-e/maintenance", {
+  const maintenance = await request("/housekeeping/integral-ready-b/maintenance", {
     method: "POST",
     expected: 201,
     body: { priority: "HIGH", reason: "Integral audit maintenance", assigned_to: "ops" },
   });
-  assert(!roomNumbers(await availability("2027-05-01", "2027-05-03")).has("905"), "open maintenance must block advance availability");
-  await request("/housekeeping/browser-e/maintenance", {
+  assert(!roomNumbers(await availability("2027-05-01", "2027-05-03")).has("955"), "open maintenance must block advance availability");
+  await request("/housekeeping/integral-ready-b/maintenance", {
     method: "POST",
     expected: 409,
     body: { priority: "HIGH", reason: "Duplicate maintenance", assigned_to: "ops" },
   });
-  await request("/housekeeping/browser-e/dirty", {
+  await request("/housekeeping/integral-ready-b/dirty", {
     method: "POST",
     body: { case_id: maintenance.payload.id, resolution_note: "Resolved by integral audit" },
   });
-  await request("/housekeeping/browser-e/start", { method: "POST" });
-  await request("/housekeeping/browser-e/finish", { method: "POST" });
+  await request("/housekeeping/integral-ready-b/start", { method: "POST" });
+  await request("/housekeeping/integral-ready-b/finish", { method: "POST" });
   evidence.maintenanceLifecycle = "PASS";
 
   // 11) Billing: extra charge, partial payment, replay idempotency, conflicting token, overpayment.
