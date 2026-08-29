@@ -206,6 +206,21 @@ function Bookings() {
     }
   }
 
+  async function cancelBooking() {
+    if (!selected || selected.status !== "Confirmed") return;
+    if (!window.confirm("Cancel this booking? Its room inventory will be released.")) return;
+    try {
+      await api(`/bookings/${selected.id}`, { method: "PATCH", body: JSON.stringify({ status: "CANCELLED" }) });
+      setSelected(null);
+      setEditAvailableRooms([]);
+      setCheckInStep(0);
+      setCheckInData({ count: "1", document: false, contact: false, stay: false });
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
   async function addCharge(event: FormEvent) {
     event.preventDefault();
     if (!selected) return;
@@ -292,6 +307,7 @@ function Bookings() {
           <label>Check-out <input aria-label="Edit check-out" type="date" value={editForm.check_out} onChange={e => setEditForm({ ...editForm, check_out: e.target.value })} required /></label>
           <label>Notes <input aria-label="Edit notes" value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} placeholder="Notes (optional)" /></label>
           <button>Save changes</button>
+          <button type="button" onClick={() => void cancelBooking()}>Cancel booking</button>
           <button type="button" onClick={() => { setSelected(null); setEditAvailableRooms([]); setCheckInStep(0); }}>Close case</button>
         </form> : <div className="locked-stay-details"><h4>Stay details</h4><p className="muted">Stay assignment is locked after the booking leaves Confirmed state.</p></div>}
 
