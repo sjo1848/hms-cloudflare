@@ -4,6 +4,7 @@ import type { ApiVariables } from "../context";
 import { ApiError } from "../errors";
 import { dateRange, email, integerCents, isoDate, jsonBody, requiredText } from "../validation";
 import { hasCapability } from "../auth/capabilities";
+import { ADVANCE_RESERVABLE_ROOM_SQL } from "../room-availability";
 
 type InventoryApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 
@@ -109,7 +110,7 @@ export function createInventoryRoutes(): InventoryApp {
     const rows = await context.get("operationalDatabase").prepare(
       `SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents
        FROM rooms AS r
-       WHERE r.status = 'AVAILABLE'
+       WHERE ${ADVANCE_RESERVABLE_ROOM_SQL}
        AND NOT EXISTS (
          SELECT 1 FROM room_holds AS h
          WHERE h.room_id = r.id AND h.start_date < ?2 AND h.end_date > ?1
