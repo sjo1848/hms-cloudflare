@@ -102,7 +102,10 @@ export function createLifecycleRoutes(): LifecycleApp {
     const policy = requiredText(body.check_out_payment_policy, "check_out_payment_policy", 1, 30);
     if (!["settled", "pending-approved"].includes(policy)) throw ApiError.badRequest("check_out_payment_policy is invalid");
     if (policy === "pending-approved" && !hasCapability(context.get("membership").role, "bookings.checkout.override")) throw ApiError.forbidden();
-    const reference = body.check_out_reference == null ? null : requiredText(body.check_out_reference, "check_out_reference", 3, 120);
+    const referenceInput = body.check_out_reference;
+    const reference = referenceInput == null || (typeof referenceInput === "string" && referenceInput.trim() === "")
+      ? null
+      : requiredText(referenceInput, "check_out_reference", 3, 120);
     if (policy === "pending-approved" && (!reference || reference.trim().length < 6)) throw ApiError.badRequest("check_out_reference must be at least 6 characters for pending-approved");
     const id = context.req.param("id"); const db = context.get("operationalDatabase"); const current = await booking(db, id);
     if (!current) throw ApiError.notFound("Booking not found");
