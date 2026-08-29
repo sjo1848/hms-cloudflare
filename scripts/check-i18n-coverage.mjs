@@ -1,8 +1,21 @@
 import ts from "typescript";
-import { readFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 
-const files = execFileSync("rg", ["--files", "apps/web/src", "-g", "*.tsx", "-g", "!i18n/index.tsx"], { encoding: "utf8" }).trim().split("\n").filter(Boolean);
+function collectTsxFiles(root) {
+  const files = [];
+  const visit = directory => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) visit(path);
+      else if (entry.isFile() && path.endsWith(".tsx") && !path.endsWith(join("i18n", "index.tsx"))) files.push(path);
+    }
+  };
+  visit(root);
+  return files.sort();
+}
+
+const files = collectTsxFiles("apps/web/src");
 const allowedJsxText = new Set(["HMS", "Elite", "HMS Elite", "Email", "ADR", "RevPAR", "· ADR", "· RevPAR", "HOTEL_DEMO_DB", "HOTEL_SECOND_DB", "×", "☰", "→", "·"]);
 const allowedAttributes = new Set(["STANDARD", "18000", "101", "name@hotel.com", "guest@example.com", "+54 9…"]);
 const failures = [];
