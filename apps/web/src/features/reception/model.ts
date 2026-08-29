@@ -10,14 +10,6 @@ export type BookingForm = {
 
 export type BookingEditForm = BookingForm;
 
-export type BillingForm = {
-  charge: string;
-  description: string;
-  payment: string;
-  method: string;
-  reference: string;
-};
-
 export type CheckInData = {
   count: string;
   document: boolean;
@@ -26,5 +18,4 @@ export type CheckInData = {
 };
 
 export const emptyBookingForm = (): BookingForm => ({ guest_id: "", room_id: "", check_in: "", check_out: "", notes: "" });
-export const emptyBillingForm = (): BillingForm => ({ charge: "", description: "", payment: "", method: "CASH", reference: "" });
 export const emptyCheckInData = (): CheckInData => ({ count: "1", document: false, contact: false, stay: false });
