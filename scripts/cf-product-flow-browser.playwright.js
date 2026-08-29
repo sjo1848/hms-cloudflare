@@ -10,7 +10,7 @@
     await route.continue({ headers: { ...request.headers(), ...adminHeaders } });
   });
 
-  const roomSelect = page.getByLabel("Room");
+  const roomSelect = page.getByLabel("Habitación");
   const optionTexts = async () => roomSelect.locator("option").allTextContents();
   const assertIncludes = (items, text, message) => {
     if (!items.some(item => item.includes(text))) throw new Error(`${message}; options=${JSON.stringify(items)}`);
@@ -20,12 +20,12 @@
   };
 
   async function searchAvailability(checkIn, checkOut, { expectSuccess = true } = {}) {
-    await page.getByLabel("Check-in").fill(checkIn);
-    await page.getByLabel("Check-out").fill(checkOut);
+    await page.getByLabel("Ingreso").fill(checkIn);
+    await page.getByLabel("Salida").fill(checkOut);
     const responsePromise = page.waitForResponse(response =>
       response.url().includes("/api/v1/rooms/available") && response.request().method() === "GET",
     );
-    await page.getByRole("button", { name: "Find available rooms" }).click();
+    await page.getByRole("button", { name: "Buscar habitaciones disponibles" }).click();
     const response = await responsePromise;
     const body = await response.json().catch(() => null);
     if (expectSuccess) {
@@ -33,7 +33,7 @@
         throw new Error(`availability API expected 200 array, got ${response.status()}: ${JSON.stringify(body)}`);
       }
       await page.waitForFunction(
-        expectedCount => document.querySelector('select[aria-label="Room"]')?.querySelectorAll("option").length === expectedCount + 1,
+        expectedCount => document.querySelector('select[aria-label="Habitación"]')?.querySelectorAll("option").length === expectedCount + 1,
         body.length,
       );
       return { response: body, options: await optionTexts() };
@@ -48,7 +48,7 @@
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("http://127.0.0.1:4174/bookings", { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "Recepción", exact: true }).waitFor();
-  await page.getByRole("heading", { name: "Booking case workspace", exact: true }).waitFor();
+  await page.getByRole("heading", { name: "Gestión de reservas", exact: true }).waitFor();
 
   let result = await searchAvailability("2027-06-10", "2027-06-12");
   let options = result.options;

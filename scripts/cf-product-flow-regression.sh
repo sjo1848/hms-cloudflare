@@ -30,7 +30,7 @@ wrangler="$repo_dir/node_modules/.bin/wrangler"
 
 # This runner owns its D1 state. The isolated CI job starts from a clean checkout;
 # local invocations explicitly clear local D1 persistence so the result is order-independent.
-rm -rf .wrangler/state/v3/d1
+rm -rf apps/api/.wrangler/state/v3/d1
 
 CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc >"$tmp_dir/migrations.log" 2>&1
 CI=1 "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >>"$tmp_dir/migrations.log" 2>&1
@@ -58,13 +58,17 @@ CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --comm
 
 bash scripts/cf-product-flow-seed.sh "$wrangler" "$tmp_dir/migrations.log"
 
-"$wrangler" dev --local --ip 127.0.0.1 --port 8787 --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >"$tmp_dir/api.log" 2>&1 & api_pid=$!
-api_ready=0
-for _ in {1..40}; do
-  if curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1; then api_ready=1; break; fi
-  sleep 1
-done
-if [[ "$api_ready" != "1" ]]; then echo "API did not become ready" >&2; exit 1; fi
+start_api() {
+  "$wrangler" dev --local --ip 127.0.0.1 --port 8787 --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >>"$tmp_dir/api.log" 2>&1 & api_pid=$!
+  api_ready=0
+  for _ in {1..40}; do
+    if curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1; then api_ready=1; break; fi
+    sleep 1
+  done
+  if [[ "$api_ready" != "1" ]]; then echo "API did not become ready" >&2; exit 1; fi
+}
+
+start_api
 
 VITE_LOCAL_ACCEPTANCE_AUTH=true "$repo_dir/node_modules/.bin/vite" --host 127.0.0.1 --port 4174 --config apps/web/vite.config.ts >"$tmp_dir/web.log" 2>&1 & web_pid=$!
 web_ready=0
@@ -74,4 +78,31 @@ for _ in {1..40}; do
 done
 if [[ "$web_ready" != "1" ]]; then echo "Web did not become ready" >&2; exit 1; fi
 
-node scripts/cf-product-flow-browser-ci.mjs 2>&1 | tee output/playwright/product-flow.log
+PRODUCT_FLOW_PHASE=api node scripts/cf-product-flow-browser-ci.mjs 2>&1 | tee output/playwright/product-flow.log
+
+# Wrangler's local proxy can lose its internal connection after the intentional
+# concurrency stress. Restart only the Worker process while preserving the owned
+# D1 state, then exercise the complete browser lifecycle against that same state.
+pkill -TERM -P "$api_pid" 2>/dev/null || true
+kill "$api_pid" 2>/dev/null || true
+wait "$api_pid" 2>/dev/null || true
+api_pid=""
+start_api
+
+PRODUCT_FLOW_PHASE=availability node scripts/cf-product-flow-browser-ci.mjs 2>&1 | tee -a output/playwright/product-flow.log
+
+pkill -TERM -P "$api_pid" 2>/dev/null || true
+kill "$api_pid" 2>/dev/null || true
+wait "$api_pid" 2>/dev/null || true
+api_pid=""
+start_api
+
+PRODUCT_FLOW_PHASE=lifecycle node scripts/cf-product-flow-browser-ci.mjs 2>&1 | tee -a output/playwright/product-flow.log
+
+pkill -TERM -P "$api_pid" 2>/dev/null || true
+kill "$api_pid" 2>/dev/null || true
+wait "$api_pid" 2>/dev/null || true
+api_pid=""
+start_api
+
+PRODUCT_FLOW_PHASE=i18n node scripts/cf-product-flow-browser-ci.mjs 2>&1 | tee -a output/playwright/product-flow.log

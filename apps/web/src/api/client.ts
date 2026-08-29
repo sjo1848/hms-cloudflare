@@ -36,7 +36,8 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`/api/v1${path}`, { ...init, headers });
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null;
-    throw new ApiError(payload?.error?.message ?? `Request failed (${response.status})`, response.status);
+    throw new ApiError(localizedHttpError(response.status, payload?.error?.message), response.status);
   }
   return response.json();
 }
+import { localizedHttpError } from "../i18n";

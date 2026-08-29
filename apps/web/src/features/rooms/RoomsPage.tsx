@@ -4,8 +4,10 @@ import { api } from "../../api/client";
 import type { Hold, Room } from "../../domain/types";
 import { AsyncState } from "../../components/AsyncState";
 import { StatusBadge } from "../../components/StatusBadge";
+import { useI18n } from "../../i18n";
 
 export function RoomsPage() {
+  const { t, statusLabel, formatCurrency, formatDate } = useI18n();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selected, setSelected] = useState<Room | null>(null);
   const [holds, setHolds] = useState<Hold[]>([]);
@@ -61,11 +63,11 @@ export function RoomsPage() {
   }
 
   async function editRoom(room: Room) {
-    const roomNumber = window.prompt("Room number", room.room_number);
+    const roomNumber = window.prompt(t("rooms.promptNumber"), room.room_number);
     if (!roomNumber) return;
-    const roomType = window.prompt("Room type", room.room_type);
+    const roomType = window.prompt(t("rooms.promptType"), room.room_type);
     if (!roomType) return;
-    const price = window.prompt("Price in cents", String(room.price_cents));
+    const price = window.prompt(t("rooms.promptPrice"), String(room.price_cents));
     if (!price) return;
     try {
       await api(`/rooms/${room.id}`, {
@@ -109,35 +111,35 @@ export function RoomsPage() {
 
   return <section className="resource-workspace">
     <div className="workspace-heading">
-      <div><p className="eyebrow">Inventory</p><h2>Rooms</h2><p className="muted">Availability, pricing and operational holds</p></div>
-      <span className="case-count">{rooms.length} rooms</span>
+      <div><p className="eyebrow">{t("rooms.eyebrow")}</p><h2>{t("rooms.title")}</h2><p className="muted">{t("rooms.subtitle")}</p></div>
+      <span className="case-count">{t("rooms.count", { count: rooms.length })}</span>
     </div>
     <form className="resource-form" onSubmit={submit}>
-      <div><label>Room number<input required value={form.room_number} onChange={e => setForm({ ...form, room_number: e.target.value })} placeholder="e.g. 101" /></label></div>
-      <div><label>Room type<input required value={form.room_type} onChange={e => setForm({ ...form, room_type: e.target.value })} placeholder="STANDARD" /></label></div>
-      <div><label>Price in cents<input required min="0" type="number" value={form.price_cents} onChange={e => setForm({ ...form, price_cents: e.target.value })} placeholder="18000" /></label></div>
-      <button type="submit" disabled={saving}>{saving ? "Adding…" : "Add room"}</button>
+      <div><label>{t("rooms.number")}<input required value={form.room_number} onChange={e => setForm({ ...form, room_number: e.target.value })} placeholder="101" /></label></div>
+      <div><label>{t("rooms.type")}<input required value={form.room_type} onChange={e => setForm({ ...form, room_type: e.target.value })} placeholder="STANDARD" /></label></div>
+      <div><label>{t("rooms.price")}<input required min="0" type="number" value={form.price_cents} onChange={e => setForm({ ...form, price_cents: e.target.value })} placeholder="18000" /></label></div>
+      <button type="submit" disabled={saving}>{saving ? t("rooms.adding") : t("rooms.add")}</button>
     </form>
     {formError && <p className="error" role="alert">{formError}</p>}
-    <div className="resource-toolbar"><label>Search rooms<input aria-label="Search rooms" value={filter} onChange={e => setFilter(e.target.value)} placeholder="Number, type or status" /></label><button type="button" onClick={() => void load()} disabled={loading}>Refresh</button></div>
-    {error && <AsyncState kind="error" title="Rooms could not be loaded" message={error} onRetry={() => void load()} />}
-    {loading && <AsyncState kind="loading" message="Loading rooms…" />}
-    {!loading && !error && visible.length === 0 && <AsyncState kind="empty" title={rooms.length ? "No matching rooms" : "No rooms yet"} message={rooms.length ? "Try another search." : "Add the first room using the form above."} />}
+    <div className="resource-toolbar"><label>{t("rooms.search")}<input aria-label={t("rooms.search")} value={filter} onChange={e => setFilter(e.target.value)} placeholder={t("rooms.searchPlaceholder")} /></label><button type="button" onClick={() => void load()} disabled={loading}>{t("common.refresh")}</button></div>
+    {error && <AsyncState kind="error" title={t("rooms.loadError")} message={error} onRetry={() => void load()} />}
+    {loading && <AsyncState kind="loading" message={t("rooms.loading")} />}
+    {!loading && !error && visible.length === 0 && <AsyncState kind="empty" title={t(rooms.length ? "rooms.noMatch" : "rooms.none")} message={t(rooms.length ? "rooms.trySearch" : "rooms.addFirst")} />}
     {!loading && !error && visible.length > 0 && <div className="resource-layout">
-      <div className="resource-list" aria-label="Rooms list">{visible.map(room => <article className={selected?.id === room.id ? "resource-card selected" : "resource-card"} key={room.id}>
+      <div className="resource-list" aria-label={t("rooms.listAria")}>{visible.map(room => <article className={selected?.id === room.id ? "resource-card selected" : "resource-card"} key={room.id}>
         <button type="button" className="resource-card-select" onClick={() => void openRoom(room)} aria-pressed={selected?.id === room.id}>
-          <span className="resource-card-title">Room {room.room_number}</span><StatusBadge>{room.status}</StatusBadge>
-          <span className="resource-card-meta">{room.room_type} · ${(room.price_cents / 100).toFixed(2)}</span>
+          <span className="resource-card-title">{t("common.room")} {room.room_number}</span><StatusBadge>{statusLabel(room.status)}</StatusBadge>
+          <span className="resource-card-meta">{room.room_type} · {formatCurrency(room.price_cents)}</span>
         </button>
-        <button type="button" className="secondary-button" onClick={() => void editRoom(room)}>Edit</button>
+        <button type="button" className="secondary-button" onClick={() => void editRoom(room)}>{t("rooms.edit")}</button>
       </article>)}</div>
-      <aside className="resource-detail" aria-label="Selected room">
-        {!selected && <div className="state-panel state-empty"><strong>Select a room</strong><span>Choose a room to review its holds.</span></div>}
-        {selected && <><div className="resource-detail-heading"><div><p className="eyebrow">Selected room</p><h3>Room {selected.room_number}</h3><p className="muted">{selected.room_type} · ${(selected.price_cents / 100).toFixed(2)}</p></div><StatusBadge>{selected.status}</StatusBadge></div>
-          <form className="resource-subform" onSubmit={addHold}><h4>Operational hold</h4><div className="form-grid"><label>Start<input required name="start" type="date" /></label><label>End<input required name="end" type="date" /></label><label className="form-span"><span>Reason</span><input required name="reason" minLength={4} placeholder="Maintenance or reservation hold" /></label></div><button type="submit" disabled={holdSaving}>{holdSaving ? "Saving…" : "Add hold"}</button></form>
-          {detailLoading && <p className="muted" role="status">Loading holds…</p>}
-          {!detailLoading && holds.length === 0 && <p className="muted">No operational holds for this room.</p>}
-          {!detailLoading && holds.map(hold => <div className="hold-row" key={hold.id}><div><strong>{hold.start_date} → {hold.end_date}</strong><span>{hold.reason}</span></div><button type="button" className="danger-button" onClick={() => void deleteHold(hold.id)}>Delete</button></div>)}
+      <aside className="resource-detail" aria-label={t("rooms.selectedAria")}>
+        {!selected && <div className="state-panel state-empty"><strong>{t("rooms.select")}</strong><span>{t("rooms.selectHint")}</span></div>}
+        {selected && <><div className="resource-detail-heading"><div><p className="eyebrow">{t("rooms.selected")}</p><h3>{t("common.room")} {selected.room_number}</h3><p className="muted">{selected.room_type} · {formatCurrency(selected.price_cents)}</p></div><StatusBadge>{statusLabel(selected.status)}</StatusBadge></div>
+          <form className="resource-subform" onSubmit={addHold}><h4>{t("rooms.operationalHold")}</h4><div className="form-grid"><label>{t("common.start")}<input required name="start" type="date" /></label><label>{t("common.end")}<input required name="end" type="date" /></label><label className="form-span"><span>{t("common.reason")}</span><input required name="reason" minLength={4} placeholder={t("rooms.holdReasonPlaceholder")} /></label></div><button type="submit" disabled={holdSaving}>{holdSaving ? t("common.saving") : t("rooms.addHold")}</button></form>
+          {detailLoading && <p className="muted" role="status">{t("rooms.loadingHolds")}</p>}
+          {!detailLoading && holds.length === 0 && <p className="muted">{t("rooms.noHolds")}</p>}
+          {!detailLoading && holds.map(hold => <div className="hold-row" key={hold.id}><div><strong>{formatDate(hold.start_date)} → {formatDate(hold.end_date)}</strong><span>{hold.reason}</span></div><button type="button" className="danger-button" onClick={() => void deleteHold(hold.id)}>{t("common.delete")}</button></div>)}
         </>}
       </aside>
     </div>}

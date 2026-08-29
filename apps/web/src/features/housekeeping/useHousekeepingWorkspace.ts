@@ -35,7 +35,7 @@ export function useHousekeepingWorkspace() {
       if (requestId !== boardRequestRef.current) return;
       setBoard(nextBoard);
       setBoardDate(nextDate);
-      setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+      setLastUpdated(new Date().toISOString());
     } catch (e) {
       if (requestId === boardRequestRef.current) setError((e as Error).message);
     } finally {

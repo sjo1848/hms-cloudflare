@@ -1,0 +1,22 @@
+export const reportsEsAR = {
+  "reports.analytics": "Analítica",
+  "reports.title": "Reportes",
+  "reports.subtitle": "Series diarias de ingresos y ocupación",
+  "reports.days": "{count} días",
+  "reports.startAria": "Inicio del reporte",
+  "reports.endAria": "Fin del reporte",
+  "reports.loading": "Cargando…",
+  "reports.refresh": "Actualizar reporte",
+  "reports.retry": "Reintentar",
+  "reports.loadingReports": "Cargando reportes…",
+  "reports.noData": "No hay datos para este rango",
+  "reports.noDataHint": "Elegí otro rango de fechas y actualizá el reporte.",
+  "reports.revenue": "Ingresos",
+  "reports.occupancyDays": "Días de ocupación",
+  "reports.occupiedRooms": "Habitaciones ocupadas",
+  "reports.roomsPerDay": "Habitaciones/día",
+  "reports.revenueByArrival": "Ingresos por fecha de llegada",
+  "reports.noRevenue": "No hay ingresos en este rango.",
+  "reports.dailyOccupancy": "Ocupación diaria",
+  "reports.noOccupancy": "No hay ocupación en este rango."
+} as const;

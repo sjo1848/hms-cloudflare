@@ -1,0 +1,22 @@
+export const guestsEn = {
+  "guests.eyebrow": "Directory",
+  "guests.title": "Guests",
+  "guests.subtitle": "Guest records and contact details",
+  "guests.count": "{count} guests",
+  "guests.fullName": "Full name",
+  "guests.namePlaceholder": "Guest name",
+  "guests.phone": "Phone",
+  "guests.adding": "Adding…",
+  "guests.add": "Add guest",
+  "guests.search": "Search guests",
+  "guests.searchPlaceholder": "Name, email or phone",
+  "guests.loadError": "Guests could not be loaded",
+  "guests.loading": "Loading guests…",
+  "guests.noMatch": "No matching guests",
+  "guests.none": "No guests yet",
+  "guests.trySearch": "Try another search.",
+  "guests.addFirst": "Add the first guest using the form above.",
+  "guests.listAria": "Guests list",
+  "guests.selected": "Selected guest",
+  "guests.clear": "Clear selection"
+} as const;

@@ -12,15 +12,17 @@ import {
   updateBooking,
 } from "./reception-api";
 import {
-  checkInSteps,
+  CHECK_IN_STEP_COUNT,
   emptyBookingForm,
   emptyCheckInData,
   type BookingEditForm,
   type BookingForm,
   type CheckInData,
 } from "./model";
+import { useI18n } from "../../i18n";
 
 export function useReceptionWorkspace() {
+  const { t } = useI18n();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [guests, setGuests] = useState<Guest[]>([]);
@@ -136,7 +138,7 @@ export function useReceptionWorkspace() {
     event.preventDefault();
     if (!selected) return;
     const mobile = window.innerWidth < 768;
-    if (mobile && checkInStep < checkInSteps.length - 1) {
+    if (mobile && checkInStep < CHECK_IN_STEP_COUNT - 1) {
       setCheckInStep(current => current + 1);
       return;
     }
@@ -171,7 +173,7 @@ export function useReceptionWorkspace() {
 
   async function cancelBooking() {
     if (!selected || selected.status !== "Confirmed") return;
-    if (!window.confirm("Cancel this booking? Its room inventory will be released.")) return;
+    if (!window.confirm(t("reception.cancelConfirm"))) return;
     try {
       await cancelBookingRequest(selected.id);
       closeCase();

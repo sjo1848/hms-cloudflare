@@ -1,12 +1,14 @@
+import type { MessageKey } from "../i18n";
+
 export const navigation = [
-  ["bookings", "/bookings", "Recepción", "Llegadas, salidas y cobros"],
-  ["rooms", "/rooms", "Habitaciones", "Inventario y disponibilidad"],
-  ["guests", "/guests", "Huéspedes", "Fichas y contactos"],
-  ["housekeeping", "/housekeeping", "Housekeeping", "Limpieza y handoff"],
-  ["reports", "/reports", "Reportes", "Ocupación e ingresos"],
-  ["users", "/users", "Usuarios", "Accesos y roles"],
-  ["network", "/network", "Red", "Operación multi-hotel"],
-] as const;
+  ["bookings", "/bookings", "nav.reception", "nav.receptionDescription"],
+  ["rooms", "/rooms", "nav.rooms", "nav.roomsDescription"],
+  ["guests", "/guests", "nav.guests", "nav.guestsDescription"],
+  ["housekeeping", "/housekeeping", "nav.housekeeping", "nav.housekeepingDescription"],
+  ["reports", "/reports", "nav.reports", "nav.reportsDescription"],
+  ["users", "/users", "nav.users", "nav.usersDescription"],
+  ["network", "/network", "nav.network", "nav.networkDescription"],
+] as const satisfies ReadonlyArray<readonly [string, string, MessageKey, MessageKey]>;
 
 export type PageKey = typeof navigation[number][0];
 export function pageFromPath(pathname: string): PageKey {

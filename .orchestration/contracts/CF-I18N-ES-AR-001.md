@@ -19,11 +19,13 @@ Internationalize the HMS web application without changing product/domain behavio
 8. Backend/API contracts, D1 schema/topology, Access/RBAC, lifecycle/concurrency semantics and Product Flow MUST remain unchanged.
 
 ## Architecture
-Use a small application-owned typed i18n layer. Do not add a runtime i18n dependency for the current two-locale, bounded product unless evidence shows the internal layer is insufficient.
+Use the application-owned typed i18n boundary under ADR `.orchestration/decisions/CF-I18N-001.md`. The choice is deliberate rather than an accidental departure from the initial `i18next`/`react-i18next` preference.
 
 The i18n boundary must provide:
 - active locale + persisted setter;
 - typed message lookup and interpolation;
+- typed plural selection backed by `Intl.PluralRules`;
+- physically separated feature namespaces with exact locale parity;
 - locale-aware currency/date/time formatting;
 - presentation-only labels for canonical status/role/payment/priority values;
 - localized HTTP error fallback without mutating API status semantics.
