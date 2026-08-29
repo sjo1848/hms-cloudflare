@@ -144,10 +144,11 @@ export function createBookingRoutes(): BookingApp {
     if (requestedStatus && requestedStatus !== "CANCELLED") throw ApiError.badRequest("Only cancellation is supported as a booking status update");
     if (requestedStatus === "CANCELLED") {
       if (current.status !== "CONFIRMED") throw ApiError.conflict("Cancelled bookings cannot be changed");
-      await database.batch([
+      const results = await database.batch([
         database.prepare("UPDATE bookings SET status = 'CANCELLED', updated_at = ?2 WHERE id = ?1 AND status = 'CONFIRMED'").bind(id, new Date().toISOString()),
-        database.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1").bind(id),
+        database.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND status = 'CANCELLED')").bind(id),
       ]);
+      assertBookingUpdateApplied(results[0]);
     } else {
       if (current.status !== "CONFIRMED") throw ApiError.conflict("Cancelled bookings cannot be revived");
       const guestId = body.guest_id == null ? current.guest_id : requiredText(body.guest_id, "guest_id", 1, 100);
