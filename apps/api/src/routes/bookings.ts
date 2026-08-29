@@ -6,6 +6,7 @@ import { dateRange, jsonBody, requiredText } from "../validation";
 import { hasCapability } from "../auth/capabilities";
 import { D1BookingRepository } from "../modules/bookings/d1-booking-repository";
 import {
+  bookingStatusView,
   bookingView,
   isBookingListStatus,
   nights,
@@ -130,4 +131,4 @@ export function createBookingRoutes(): BookingApp {
   return app;
 }
 
-export { nights };
+export { bookingStatusView, isBookingListStatus, nights };
