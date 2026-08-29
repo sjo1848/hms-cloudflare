@@ -6,7 +6,10 @@ Internationalize the HMS web application without changing product/domain behavio
 ## Immutable baseline
 - Product-accepted artifact: `e6fc4dd0eb42d0eca172932f13daf768160ccbc9`
 - Recovery branch: `backup/architecture-hardening-ii-2026-08-29`
-- Working branch: `feature/i18n-es-ar`
+- Controller working branch: `controller/i18n-es-ar-completion`
+- Integration PR: `#25`
+
+The earlier `feature/i18n-es-ar` branch and PR #24 are superseded as active orchestration surfaces. Their implementation was preserved at controller takeover; the accepted baseline did not change.
 
 ## Required behavior
 1. First visit defaults to `es-AR` regardless of browser language unless a previously persisted supported locale exists.
@@ -38,6 +41,8 @@ Historical browser/product-flow regressions that assert legacy English text MUST
 - reload preserves English;
 - switch back to Spanish persists;
 - navigation remains SPA and no horizontal overflow at 375/390/430 px.
+
+The real integral Product Flow MUST execute the primary create/edit/cancel/check-in/reassign/checkout/housekeeping path in `es-AR`, with an explicit bilingual smoke proving English switching and persistence.
 
 ## Gates
 1. i18n foundation + catalog parity.
