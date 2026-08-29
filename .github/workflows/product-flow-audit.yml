@@ -35,8 +35,10 @@ jobs:
         run: |
           npm run web:build
           npm run wrangler:dry-run
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Install pinned Playwright and Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
       - name: Real Worker+D1 integral product flow
         env:
           CI_BROWSER_STANDARD: "1"
