@@ -15,9 +15,9 @@ The deployed staging checkpoint remains frozen while this work proceeds on an is
 ### Frontend
 - Feature-first modular architecture with vertical slices.
 - Persistent App Shell.
-- Standard client routing via React Router unless exact evidence shows a material regression versus the current minimal router.
-- TanStack Query for server-state caching, request deduplication, invalidation and background refresh where it replaces duplicated manual fetch/loading/error state.
-- Feature-specific components/hooks/API/model boundaries; page modules should orchestrate, not own every workflow detail.
+- Client routing must use a bounded, tested abstraction. A standard router is preferred when nested/dynamic routing, route data APIs, guards or URL complexity justify it; retaining the current minimal router requires an explicit ADR, regression coverage and concrete adoption triggers.
+- Server-state must live behind replaceable feature boundaries. TanStack Query is preferred when demonstrated cache reuse, request deduplication, invalidation fan-out, background refresh or retry/offline requirements justify the dependency; manual fetch/loading/error orchestration must not remain embedded in page views.
+- Feature-specific components/hooks/API/model boundaries; page modules should render and compose rather than own transport and every workflow detail.
 - Mobile-first behavior and direct-route/reload parity remain mandatory.
 
 ### Backend
@@ -54,6 +54,7 @@ The deployed staging checkpoint remains frozen while this work proceeds on an is
 - No rewrite for architectural aesthetics.
 - No generic Clean Architecture/DDD framework applied everywhere.
 - No migration from Cloudflare merely to avoid future paid-plan growth.
+- No dependency adoption solely to satisfy architectural fashion when the existing bounded abstraction is smaller, tested and has explicit replacement triggers.
 
 ## Baseline invariants
 
@@ -71,6 +72,7 @@ The deployed staging checkpoint remains frozen while this work proceeds on an is
 - Exact query-plan evidence for every D1 index change.
 - Bundle/asset measurements before and after dependency changes.
 - Dependency-direction checks for new backend/application boundaries.
+- ADR evidence when a standard routing/server-state dependency is intentionally deferred, including bounded current surface and explicit adoption triggers.
 - Existing Foundation, UX/mobile and integral Product Flow gates remain green.
 - Exact-artifact Pre-Critic evidence and Independent Critic PASS before integration.
 
