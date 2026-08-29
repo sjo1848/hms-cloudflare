@@ -1,6 +1,6 @@
 import { api } from "../../api/client";
-import type { Booking, ExtraCharge, Guest, Invoice, Payment, Room } from "../../domain/types";
-import type { BillingForm, BookingEditForm, BookingForm, CheckInData } from "./model";
+import type { Booking, Guest, Room } from "../../domain/types";
+import type { BookingEditForm, BookingForm, CheckInData } from "./model";
 
 export async function loadReceptionQueue() {
   const [bookings, rooms, guests] = await Promise.all([
@@ -9,15 +9,6 @@ export async function loadReceptionQueue() {
     api<Guest[]>("/guests"),
   ]);
   return { bookings, rooms, guests };
-}
-
-export async function loadBookingBilling(bookingId: string) {
-  const [invoice, payments, charges] = await Promise.all([
-    api<Invoice>(`/bookings/${bookingId}/invoice`),
-    api<Payment[]>(`/bookings/${bookingId}/payments`),
-    api<ExtraCharge[]>(`/bookings/${bookingId}/extra-charges`),
-  ]);
-  return { invoice, payments, charges };
 }
 
 export function loadAvailableRooms(start: string, end: string, excludeBookingId?: string) {
@@ -63,25 +54,6 @@ export function checkoutBooking(bookingId: string, data: FormData) {
       charge_reviewed: data.get("charges") === "on",
       release_confirmed: data.get("release") === "on",
       handoff_confirmed: data.get("handoff") === "on",
-    }),
-  });
-}
-
-export function addBookingCharge(bookingId: string, billingForm: BillingForm) {
-  return api(`/bookings/${bookingId}/extra-charges`, {
-    method: "POST",
-    body: JSON.stringify({ amount_cents: Number(billingForm.charge), description: billingForm.description, category: "OTHER" }),
-  });
-}
-
-export function addBookingPayment(bookingId: string, billingForm: BillingForm, operationToken: string) {
-  return api(`/bookings/${bookingId}/payments`, {
-    method: "POST",
-    body: JSON.stringify({
-      amount_cents: Number(billingForm.payment),
-      payment_method: billingForm.method,
-      payment_reference: billingForm.reference || undefined,
-      operation_token: operationToken,
     }),
   });
 }
