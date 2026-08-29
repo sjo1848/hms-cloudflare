@@ -4,6 +4,7 @@ import type { ApiVariables } from "../context";
 import { ApiError } from "../errors";
 import { dateRange, jsonBody, requiredText } from "../validation";
 import { hasCapability } from "../auth/capabilities";
+import { ADVANCE_RESERVABLE_ROOM_SQL } from "../room-availability";
 
 type BookingApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 type Db = ApiVariables["operationalDatabase"];
@@ -73,7 +74,7 @@ async function findBooking(database: Db, id: string): Promise<BookingRow | null>
 async function validateBookingReferences(database: Db, guestId: string, roomId: string, bookingId: string | null, start: string, end: string): Promise<number> {
   const row = await database.prepare(
     `SELECT r.price_cents FROM rooms AS r JOIN guests AS g ON g.id = ?1
-     WHERE r.id = ?2 AND r.status = 'AVAILABLE'
+     WHERE r.id = ?2 AND ${ADVANCE_RESERVABLE_ROOM_SQL}
        AND NOT EXISTS (SELECT 1 FROM room_holds AS h WHERE h.room_id = r.id AND h.start_date < ?4 AND h.end_date > ?3)
        AND NOT EXISTS (SELECT 1 FROM room_inventory_nights AS n
                        WHERE n.room_id = r.id AND n.stay_date >= ?3 AND n.stay_date < ?4
@@ -121,7 +122,8 @@ export function createBookingRoutes(): BookingApp {
       await database.batch([
         database.prepare(`INSERT INTO bookings (id, guest_id, room_id, check_in, check_out, status, total_cents, notes, created_at, updated_at)
           SELECT ?1, g.id, r.id, ?4, ?5, 'CONFIRMED', ?6, ?7, ?8, ?8 FROM guests AS g JOIN rooms AS r ON r.id = ?3
-          WHERE g.id = ?2 AND r.status = 'AVAILABLE' AND NOT EXISTS (SELECT 1 FROM room_holds AS h WHERE h.room_id = r.id AND h.start_date < ?5 AND h.end_date > ?4)`).bind(id, guestId, roomId, range.start, range.end, total, notes, now),
+          WHERE g.id = ?2 AND ${ADVANCE_RESERVABLE_ROOM_SQL}
+          AND NOT EXISTS (SELECT 1 FROM room_holds AS h WHERE h.room_id = r.id AND h.start_date < ?5 AND h.end_date > ?4)`).bind(id, guestId, roomId, range.start, range.end, total, notes, now),
         ...claimStatements(database, id, roomId, claimNights, range.start, range.end),
       ]);
     } catch { throw ApiError.conflict("Room is unavailable for one or more nights"); }
@@ -142,10 +144,11 @@ export function createBookingRoutes(): BookingApp {
     if (requestedStatus && requestedStatus !== "CANCELLED") throw ApiError.badRequest("Only cancellation is supported as a booking status update");
     if (requestedStatus === "CANCELLED") {
       if (current.status !== "CONFIRMED") throw ApiError.conflict("Cancelled bookings cannot be changed");
-      await database.batch([
+      const results = await database.batch([
         database.prepare("UPDATE bookings SET status = 'CANCELLED', updated_at = ?2 WHERE id = ?1 AND status = 'CONFIRMED'").bind(id, new Date().toISOString()),
-        database.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1").bind(id),
+        database.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND status = 'CANCELLED')").bind(id),
       ]);
+      assertBookingUpdateApplied(results[0]);
     } else {
       if (current.status !== "CONFIRMED") throw ApiError.conflict("Cancelled bookings cannot be revived");
       const guestId = body.guest_id == null ? current.guest_id : requiredText(body.guest_id, "guest_id", 1, 100);
@@ -157,7 +160,8 @@ export function createBookingRoutes(): BookingApp {
       try {
         const results = await database.batch([
           database.prepare(`UPDATE bookings SET guest_id = ?2, room_id = ?3, check_in = ?4, check_out = ?5, total_cents = ?6, notes = ?7, updated_at = ?8
-            WHERE id = ?1 AND status = 'CONFIRMED' AND EXISTS (SELECT 1 FROM guests WHERE id = ?2) AND EXISTS (SELECT 1 FROM rooms WHERE id = ?3 AND status = 'AVAILABLE')
+            WHERE id = ?1 AND status = 'CONFIRMED' AND EXISTS (SELECT 1 FROM guests WHERE id = ?2)
+            AND EXISTS (SELECT 1 FROM rooms AS r WHERE r.id = ?3 AND ${ADVANCE_RESERVABLE_ROOM_SQL})
             AND NOT EXISTS (SELECT 1 FROM room_holds WHERE room_id = ?3 AND start_date < ?5 AND end_date > ?4)`).bind(id, guestId, roomId, range.start, range.end, total, notes, now),
           database.prepare(`DELETE FROM room_inventory_nights
             WHERE booking_id = ?1 AND EXISTS (
