@@ -30,8 +30,9 @@ CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c "$repo_dir/apps/api/wrangle
   VALUES
     ('integral-maintenance-case','integral-maintenance','OPEN','HIGH','Integral fixture maintenance','ops','subject-admin','2026-08-28T00:00:00Z');
 
-  INSERT INTO guests (id,full_name,email,created_at)
-  VALUES ('integral-report-guest','Integral Report Guest','integral-report@example.test','2026-08-28T00:00:00Z');
+  INSERT INTO guests (id,full_name,email,created_at) VALUES
+    ('integral-report-guest','Integral Report Guest','integral-report@example.test','2026-08-28T00:00:00Z'),
+    ('integral-browser-guest','Integral Browser Guest','integral-browser@example.test','2026-08-28T00:00:00Z');
 
   INSERT INTO bookings
     (id,guest_id,room_id,check_in,check_out,status,total_cents,created_at,updated_at)
