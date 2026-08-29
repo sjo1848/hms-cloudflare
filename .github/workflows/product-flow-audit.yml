@@ -1,0 +1,87 @@
+name: product-flow-audit
+
+on:
+  pull_request:
+    branches: [deploy/staging]
+    paths:
+      - "apps/**"
+      - "scripts/**"
+      - ".orchestration/contracts/CF-PRODUCT-FLOW-AUDIT-001.md"
+      - ".github/workflows/product-flow-audit.yml"
+      - "package*.json"
+      - "tsconfig*.json"
+  push:
+    branches:
+      - "rework/integral-product-flow-audit"
+
+concurrency:
+  group: product-flow-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  product-flow-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Typecheck and unit tests
+        run: npm run check
+      - name: Build and Wrangler dry-run
+        run: |
+          npm run web:build
+          npm run wrangler:dry-run
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Real Worker+D1 integral product flow
+        env:
+          CI_BROWSER_STANDARD: "1"
+        run: timeout 900 bash scripts/cf-product-flow-regression.sh
+      - name: Upload integral evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: product-flow-audit-evidence
+          path: output/playwright
+          if-no-files-found: warn
+
+  historical-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Migration rehearsal and reconciliation
+        run: timeout 900 bash scripts/migration/test-rehearsal.sh
+      - name: CF-I03 bookings and inventory
+        run: |
+          rm -rf .wrangler/state/v3/d1
+          timeout 600 bash scripts/cf-i03-regression.sh
+      - name: CF-I04 reception lifecycle
+        run: |
+          rm -rf .wrangler/state/v3/d1
+          timeout 600 bash scripts/cf-i04-regression.sh
+      - name: CF-I05 housekeeping and maintenance
+        run: |
+          rm -rf .wrangler/state/v3/d1
+          timeout 600 bash scripts/cf-i05-regression.sh
+      - name: CF-I06 billing
+        run: |
+          rm -rf .wrangler/state/v3/d1
+          timeout 600 bash scripts/cf-i06-regression.sh
+      - name: CF-I07 admin and security
+        run: |
+          rm -rf .wrangler/state/v3/d1
+          timeout 600 bash scripts/cf-i07-regression.sh
+      - name: CF-I08 analytics and reporting
+        run: |
+          rm -rf .wrangler/state/v3/d1
+          timeout 600 bash scripts/cf-i08-regression.sh
