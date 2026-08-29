@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { chromium } from "playwright";
 import { runProductFlowApiAudit } from "./cf-product-flow-api.mjs";
+import { runCancellationCheckInRace } from "./cf-product-flow-cancel-race.mjs";
 
 const availabilityBrowser = eval(readFileSync("scripts/cf-product-flow-browser.playwright.js", "utf8"));
 const lifecycleBrowser = eval(readFileSync("scripts/cf-product-flow-lifecycle.playwright.js", "utf8"));
@@ -8,6 +9,7 @@ const lifecycleBrowser = eval(readFileSync("scripts/cf-product-flow-lifecycle.pl
 // Establish backend/D1 truth first. If this fails, the browser is not allowed to mask it
 // as a rendering problem.
 const apiEvidence = await runProductFlowApiAudit();
+const raceEvidence = await runCancellationCheckInRace();
 
 const browser = await chromium.launch({ headless: true });
 try {
@@ -23,6 +25,7 @@ try {
     integralProductFlow: "PASS",
     evidence: {
       api: apiEvidence,
+      concurrency: raceEvidence,
       browser: {
         availability: availabilityEvidence,
         lifecycle: lifecycleEvidence,
