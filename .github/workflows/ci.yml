@@ -20,8 +20,10 @@ jobs:
       - run: npm run types:check
       - run: npm run check
       - run: npm run web:build
-      - name: Validate web architecture fitness
-        run: node scripts/check-web-architecture.mjs
+      - name: Validate architecture fitness and Cloudflare budgets
+        run: npm run architecture:fitness
+      - name: Validate D1 critical query plans
+        run: npm run test:d1-query-plan
       - run: npm run wrangler:dry-run
       - name: Validate staging Web Worker SPA config
         run: npx wrangler deploy --dry-run -c apps/web/wrangler.staging.jsonc

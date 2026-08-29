@@ -23,7 +23,10 @@ CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c "$repo_dir/apps/api/wrangle
     ('integral-occupied','956','STANDARD','OCCUPIED',10600),
     ('integral-hold','957','STANDARD','AVAILABLE',10700),
     ('integral-life-a','958','STANDARD','AVAILABLE',10800),
-    ('integral-report','959','STANDARD','AVAILABLE',10900);
+    ('integral-report','959','STANDARD','AVAILABLE',10900),
+    ('integral-race-source-a','960','STANDARD','AVAILABLE',11000),
+    ('integral-race-source-b','961','STANDARD','AVAILABLE',11100),
+    ('integral-race-target','962','STANDARD','AVAILABLE',11200);
 
   INSERT INTO maintenance_cases
     (id,room_id,status,priority,reason,assigned_to,reported_by_user_id,reported_at)
