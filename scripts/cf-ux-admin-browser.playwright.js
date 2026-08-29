@@ -1,5 +1,9 @@
 (page) => (async () => {
   const widths = [375, 390, 430, 1366];
+  const formatEnglishDate = (isoDate) => {
+    const [year, month, day] = isoDate.split("-").map(Number);
+    return new Intl.DateTimeFormat("en", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(year, month - 1, day)));
+  };
   const assertNoOverflow = async (name, width) => {
     if (await page.evaluate(() => document.documentElement.scrollWidth) > width) throw new Error(name + " overflow at " + width);
   };
@@ -14,7 +18,7 @@
     await delayRealApi("**/api/v1/reports/**");
     await page.goto("http://127.0.0.1:4174/reports");
     await page.getByRole("status").filter({ hasText: "Loading reports" }).waitFor();
-    await page.getByRole("heading", { name: "Reports" }).waitFor();
+    await page.getByRole("heading", { name: "Reports", level: 1 }).waitFor();
     await page.getByText("Daily occupancy", { exact: true }).waitFor();
     await page.unroute("**/api/v1/reports/**");
     await assertNoOverflow("Reports", width);
@@ -29,7 +33,7 @@
     await page.getByLabel("Report end").fill("2026-12-02");
     await page.getByRole("button", { name: "Retry" }).click();
     const zeroOccupancyCard = page.getByText("Daily occupancy", { exact: true }).locator("..");
-    await zeroOccupancyCard.getByText("2026-12-01", { exact: true }).waitFor();
+    await zeroOccupancyCard.getByText(formatEnglishDate("2026-12-01"), { exact: true }).waitFor();
     await page.getByText("Occupied rooms", { exact: true }).locator("..").getByText("0", { exact: true }).waitFor();
     await zeroOccupancyCard.getByText(/^0\/\d+ · 0\.00%$/).first().waitFor();
 
@@ -37,7 +41,7 @@
     await page.getByLabel("Report end").fill("2026-10-01");
     await page.getByRole("button", { name: "Refresh report" }).click();
     const refreshedOccupancyCard = page.getByText("Daily occupancy", { exact: true }).locator("..");
-    await refreshedOccupancyCard.getByText("2026-09-02", { exact: true }).waitFor();
+    await refreshedOccupancyCard.getByText(formatEnglishDate("2026-09-02"), { exact: true }).waitFor();
     await assertNoOverflow("Reports retry", width);
   };
   const users = async (width) => {

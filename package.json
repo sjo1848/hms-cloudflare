@@ -5,6 +5,8 @@
   "scripts": {
     "check": "npm run typecheck && npm run test",
     "test": "vitest run",
+    "test:i18n": "vitest run apps/web/src/i18n/index.test.ts",
+    "i18n:coverage": "node scripts/check-i18n-coverage.mjs",
     "test:cf-i03": "bash scripts/cf-i03-regression.sh",
     "test:cf-i04": "bash scripts/cf-i04-regression.sh",
     "test:cf-i05": "bash scripts/cf-i05-regression.sh",
@@ -16,7 +18,7 @@
     "test:d1-query-plan": "bash scripts/cf-d1-query-plan-regression.sh",
     "typecheck": "tsc -b",
     "web:build": "vite build --config apps/web/vite.config.ts",
-    "architecture:fitness": "node scripts/check-web-architecture.mjs && node scripts/check-architecture-fitness-ii.mjs && node scripts/check-cloudflare-budgets.mjs",
+    "architecture:fitness": "node scripts/check-web-architecture.mjs && node scripts/check-architecture-fitness-ii.mjs && node scripts/check-i18n-coverage.mjs && node scripts/check-cloudflare-budgets.mjs",
     "types:api": "wrangler types apps/api/worker-configuration.d.ts -c apps/api/wrangler.jsonc",
     "types:web": "wrangler types apps/web/worker-configuration.d.ts -c apps/web/wrangler.jsonc",
     "types:check": "npm run types:api -- --check && npm run types:web -- --check",

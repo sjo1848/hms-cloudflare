@@ -1,4 +1,4 @@
-export const checkInSteps = ["Verificación", "Datos / estadía", "Habitación", "Confirmar ingreso"] as const;
+export const CHECK_IN_STEP_COUNT = 4;
 
 export type BookingForm = {
   guest_id: string;

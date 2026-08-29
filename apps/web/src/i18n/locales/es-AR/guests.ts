@@ -1,0 +1,22 @@
+export const guestsEsAR = {
+  "guests.eyebrow": "Directorio",
+  "guests.title": "Huéspedes",
+  "guests.subtitle": "Fichas y datos de contacto",
+  "guests.count": "{count} huéspedes",
+  "guests.fullName": "Nombre completo",
+  "guests.namePlaceholder": "Nombre del huésped",
+  "guests.phone": "Teléfono",
+  "guests.adding": "Agregando…",
+  "guests.add": "Agregar huésped",
+  "guests.search": "Buscar huéspedes",
+  "guests.searchPlaceholder": "Nombre, email o teléfono",
+  "guests.loadError": "No se pudieron cargar los huéspedes",
+  "guests.loading": "Cargando huéspedes…",
+  "guests.noMatch": "No hay huéspedes que coincidan",
+  "guests.none": "Todavía no hay huéspedes",
+  "guests.trySearch": "Probá otra búsqueda.",
+  "guests.addFirst": "Agregá el primer huésped con el formulario de arriba.",
+  "guests.listAria": "Lista de huéspedes",
+  "guests.selected": "Huésped seleccionado",
+  "guests.clear": "Quitar selección"
+} as const;
