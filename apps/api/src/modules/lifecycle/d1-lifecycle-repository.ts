@@ -29,12 +29,18 @@ export class D1LifecycleRepository implements LifecycleRepository {
     const dates = claimDates(current.check_in, current.check_out);
     const now = new Date().toISOString();
     const results = await this.db.batch([
-      this.db.prepare("UPDATE bookings SET room_id = ?2, updated_at = ?3 WHERE id = ?1 AND status = 'CHECKED_IN' AND room_id = ?4").bind(current.id, destinationRoomId, now, current.room_id),
+      this.db.prepare(`UPDATE bookings SET room_id = ?2, updated_at = ?3
+        WHERE id = ?1 AND status = 'CHECKED_IN' AND room_id = ?4
+        AND EXISTS (SELECT 1 FROM rooms old_room WHERE old_room.id = ?4 AND old_room.status = 'OCCUPIED')
+        AND EXISTS (SELECT 1 FROM rooms destination WHERE destination.id = ?2 AND destination.status = 'AVAILABLE')
+        AND NOT EXISTS (SELECT 1 FROM room_holds h WHERE h.room_id = ?2 AND h.start_date < ?6 AND h.end_date > ?5)
+        AND NOT EXISTS (SELECT 1 FROM room_inventory_nights n WHERE n.room_id = ?2 AND n.stay_date >= ?5 AND n.stay_date < ?6)`)
+        .bind(current.id, destinationRoomId, now, current.room_id, current.check_in, current.check_out),
       this.db.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND status = 'CHECKED_IN' AND room_id = ?2)").bind(current.id, destinationRoomId),
       ...dates.map(date => this.db.prepare("INSERT INTO room_inventory_nights (room_id, stay_date, booking_id) SELECT ?1, ?2, ?3 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?3 AND status = 'CHECKED_IN' AND room_id = ?1)").bind(destinationRoomId, date, current.id)),
       this.db.prepare("UPDATE rooms SET status = 'AVAILABLE' WHERE id = ?1 AND status = 'OCCUPIED' AND EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?3)").bind(current.room_id, current.id, destinationRoomId),
       this.db.prepare("UPDATE rooms SET status = 'OCCUPIED' WHERE id = ?1 AND status = 'AVAILABLE' AND EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?1)").bind(destinationRoomId, current.id),
-      this.db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) VALUES (?1, ?2, 'REASSIGN', ?3, ?4, ?5, ?6, ?7, ?8)").bind(crypto.randomUUID(), current.id, current.room_id, actor.subject, actor.requestId, actor.hotelId, JSON.stringify({ from_room_id: current.room_id, to_room_id: destinationRoomId }), now),
+      this.db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) SELECT ?1, ?2, 'REASSIGN', ?3, ?4, ?5, ?6, ?7, ?8 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?9) AND EXISTS (SELECT 1 FROM rooms WHERE id = ?9 AND status = 'OCCUPIED')").bind(crypto.randomUUID(), current.id, current.room_id, actor.subject, actor.requestId, actor.hotelId, JSON.stringify({ from_room_id: current.room_id, to_room_id: destinationRoomId }), now, destinationRoomId),
     ]);
     const first = results[0]?.meta.changes === 1;
     const oldReleased = results[2 + dates.length]?.meta.changes === 1;
@@ -46,11 +52,11 @@ export class D1LifecycleRepository implements LifecycleRepository {
   async checkout(current: LifecycleBooking, policy: CheckoutPolicy, reference: string | null, actor: LifecycleActor): Promise<LifecycleMutationResult> {
     const now = new Date().toISOString();
     const results = await this.db.batch([
-      this.db.prepare("UPDATE bookings SET status = 'CHECKED_OUT', check_out_payment_policy = ?4, check_out_reference = ?5, checked_out_at = ?2, checked_out_by = ?3, updated_at = ?2 WHERE id = ?1 AND status = 'CHECKED_IN'").bind(current.id, now, actor.subject, policy, reference),
+      this.db.prepare("UPDATE bookings SET status = 'CHECKED_OUT', check_out_payment_policy = ?4, check_out_reference = ?5, checked_out_at = ?2, checked_out_by = ?3, updated_at = ?2 WHERE id = ?1 AND status = 'CHECKED_IN' AND room_id = ?6 AND EXISTS (SELECT 1 FROM rooms WHERE id = ?6 AND status = 'OCCUPIED')").bind(current.id, now, actor.subject, policy, reference, current.room_id),
       this.db.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND status = 'CHECKED_OUT' AND room_id = ?2)").bind(current.id, current.room_id),
       this.db.prepare("UPDATE rooms SET status = 'DIRTY' WHERE id = ?1 AND status = 'OCCUPIED' AND EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_OUT' AND room_id = ?1)").bind(current.room_id, current.id),
       this.db.prepare("INSERT OR IGNORE INTO invoices (id, booking_id, amount_cents, created_at) SELECT ?1, id, total_cents, ?2 FROM bookings WHERE id = ?3 AND status = 'CHECKED_OUT'").bind(crypto.randomUUID(), now, current.id),
-      this.db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) VALUES (?1, ?2, 'CHECK_OUT', ?3, ?4, ?5, ?6, ?7, ?8)").bind(crypto.randomUUID(), current.id, current.room_id, actor.subject, actor.requestId, actor.hotelId, JSON.stringify({ handoff: "housekeeping", check_out_payment_policy: policy, check_out_reference: reference, charge_reviewed: true, release_confirmed: true }), now),
+      this.db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) SELECT ?1, ?2, 'CHECK_OUT', ?3, ?4, ?5, ?6, ?7, ?8 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_OUT' AND room_id = ?3) AND EXISTS (SELECT 1 FROM rooms WHERE id = ?3 AND status = 'DIRTY')").bind(crypto.randomUUID(), current.id, current.room_id, actor.subject, actor.requestId, actor.hotelId, JSON.stringify({ handoff: "housekeeping", check_out_payment_policy: policy, check_out_reference: reference, charge_reviewed: true, release_confirmed: true }), now),
     ]);
     return { ok: results[0]?.meta.changes === 1 && results[2]?.meta.changes === 1 && results[4]?.meta.changes === 1 };
   }
