@@ -14,7 +14,7 @@
     await delayRealApi("**/api/v1/reports/**");
     await page.goto("http://127.0.0.1:4174/reports");
     await page.getByRole("status").filter({ hasText: "Loading reports" }).waitFor();
-    await page.getByRole("heading", { name: "Reports" }).waitFor();
+    await page.getByRole("heading", { name: "Reports", level: 1 }).waitFor();
     await page.getByText("Daily occupancy", { exact: true }).waitFor();
     await page.unroute("**/api/v1/reports/**");
     await assertNoOverflow("Reports", width);
