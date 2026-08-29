@@ -66,7 +66,7 @@ export function createAnalyticsRoutes(): AnalyticsApp {
     const hotels = await context.env.CONTROL_DB.prepare("SELECT h.id,h.slug,h.operational_binding,COALESCE(m.name,'') AS name,m.plan_tier FROM control_hotels h LEFT JOIN hotel_admin_metadata m ON m.hotel_id=h.id WHERE h.active=1 ORDER BY h.slug").all<any>();
     const rows = [];
     for (const hotel of hotels.results) {
-      const metrics = await loadNetworkHotelMetrics(configuredDb(context.env, hotel.operational_binding), range, current);
+      const metrics = await loadNetworkHotelMetrics(configuredDb(context.env, hotel.operational_binding), range, current, monthStart(current));
       rows.push({ hotel_id: hotel.id, hotel_name: hotel.name, plan_tier: hotel.plan_tier ?? "BASIC", ...metrics });
     }
     rows.sort((a, b) => b.revenue_cents - a.revenue_cents || a.hotel_id.localeCompare(b.hotel_id));
