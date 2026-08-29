@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import type { ApiVariables } from "../context";
 import { ApiError } from "../errors";
-import { dateRange, email, integerCents, isoDate, jsonBody, requiredText } from "../validation";
+import { dateRange, email, integerCents, jsonBody, requiredText } from "../validation";
 import { hasCapability } from "../auth/capabilities";
 import { ADVANCE_RESERVABLE_ROOM_SQL } from "../room-availability";
 
@@ -107,6 +107,10 @@ export function createInventoryRoutes(): InventoryApp {
   app.get("/rooms/available", async (context) => {
     requireCapability(context, "rooms.search");
     const range = dateRange(context.req.query("start"), context.req.query("end"));
+    const excludeBookingIdInput = context.req.query("exclude_booking_id");
+    const excludeBookingId = excludeBookingIdInput == null
+      ? null
+      : requiredText(excludeBookingIdInput, "exclude_booking_id", 1, 100);
     const rows = await context.get("operationalDatabase").prepare(
       `SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents
        FROM rooms AS r
@@ -118,9 +122,10 @@ export function createInventoryRoutes(): InventoryApp {
        AND NOT EXISTS (
          SELECT 1 FROM room_inventory_nights AS n
          WHERE n.room_id = r.id AND n.stay_date >= ?1 AND n.stay_date < ?2
+           AND (?3 IS NULL OR n.booking_id <> ?3)
        )
        ORDER BY r.room_number`,
-    ).bind(range.start, range.end).all<RoomRow>();
+    ).bind(range.start, range.end, excludeBookingId).all<RoomRow>();
     return context.json(rows.results.map((row) => roomView(row, context.get("membership").hotelId)));
   });
 
@@ -225,7 +230,7 @@ export function createInventoryRoutes(): InventoryApp {
     if (!row) {
       const room = await context.get("operationalDatabase").prepare("SELECT id FROM rooms WHERE id = ?1").bind(roomId).first<{ id: string }>();
       if (!room) throw ApiError.notFound("Room not found");
-      throw ApiError.conflict("Room hold overlaps an existing hold");
+      throw ApiError.conflict("Room hold overlaps an existing hold or booking");
     }
     return context.json(holdView(row, context.get("membership").hotelId), 201);
   });
@@ -255,7 +260,7 @@ export function createInventoryRoutes(): InventoryApp {
        )
        RETURNING id, room_id, start_date, end_date, hold_type, reason, created_by_user_id, created_at`,
     ).bind(holdId, roomId, range.start, range.end, holdType, reason).first<HoldRow>();
-    if (!row) throw ApiError.conflict("Hold overlaps an existing hold");
+    if (!row) throw ApiError.conflict("Hold overlaps an existing hold or booking");
     return context.json(holdView(row, context.get("membership").hotelId));
   });
 
