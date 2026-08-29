@@ -1,25 +1,20 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import type { Booking, ExtraCharge, Guest, Invoice, Payment, Room } from "../../domain/types";
+import type { Booking, Guest, Room } from "../../domain/types";
 import {
-  addBookingCharge,
-  addBookingPayment,
   cancelBooking as cancelBookingRequest,
   checkInBooking,
   checkoutBooking,
   createBooking,
   loadAvailableRooms,
-  loadBookingBilling,
   loadReceptionQueue,
   reassignBooking,
   updateBooking,
 } from "./reception-api";
 import {
   checkInSteps,
-  emptyBillingForm,
   emptyBookingForm,
   emptyCheckInData,
-  type BillingForm,
   type BookingEditForm,
   type BookingForm,
   type CheckInData,
@@ -34,11 +29,6 @@ export function useReceptionWorkspace() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<Booking | null>(null);
-  const [invoice, setInvoice] = useState<Invoice>(null);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [charges, setCharges] = useState<ExtraCharge[]>([]);
-  const [billingForm, setBillingForm] = useState<BillingForm>(emptyBillingForm);
-  const [paymentOperationToken, setPaymentOperationToken] = useState<string | null>(null);
   const [checkInStep, setCheckInStep] = useState(0);
   const [checkInData, setCheckInData] = useState<CheckInData>(emptyCheckInData);
   const [form, setForm] = useState<BookingForm>(emptyBookingForm);
@@ -80,17 +70,6 @@ export function useReceptionWorkspace() {
     return () => window.clearTimeout(timeout);
   }, [selected?.id, selected?.status, editForm.check_in, editForm.check_out]);
 
-  async function loadBilling(bookingId: string) {
-    try {
-      const next = await loadBookingBilling(bookingId);
-      setInvoice(next.invoice);
-      setPayments(next.payments);
-      setCharges(next.charges);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }
-
   function resetLifecycleUi() {
     setCheckInStep(0);
     setCheckInData(emptyCheckInData());
@@ -112,10 +91,7 @@ export function useReceptionWorkspace() {
       notes: booking.notes ?? "",
     });
     resetLifecycleUi();
-    setBillingForm(emptyBillingForm());
-    setPaymentOperationToken(null);
     setError("");
-    void loadBilling(booking.id);
   }
 
   async function refreshAvailability() {
@@ -205,40 +181,11 @@ export function useReceptionWorkspace() {
     }
   }
 
-  async function addCharge(event: FormEvent) {
-    event.preventDefault();
-    if (!selected) return;
-    try {
-      await addBookingCharge(selected.id, billingForm);
-      setBillingForm(current => ({ ...current, charge: "", description: "" }));
-      await loadBilling(selected.id);
-      await load();
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }
-
-  async function addPayment(event: FormEvent) {
-    event.preventDefault();
-    if (!selected) return;
-    const operationToken = paymentOperationToken ?? crypto.randomUUID();
-    setPaymentOperationToken(operationToken);
-    try {
-      await addBookingPayment(selected.id, billingForm, operationToken);
-      setBillingForm(current => ({ ...current, payment: "", reference: "" }));
-      setPaymentOperationToken(null);
-      await loadBilling(selected.id);
-    } catch (e) {
-      setError((e as Error).message);
-      await loadBilling(selected.id);
-    }
-  }
-
   return {
     bookings, rooms, guests, availableRooms, editAvailableRooms, loading, error, selected,
-    invoice, payments, charges, billingForm, checkInStep, checkInData, form, editForm,
-    setBillingForm, setCheckInStep, setCheckInData, setForm, setEditForm,
+    checkInStep, checkInData, form, editForm,
+    setCheckInStep, setCheckInData, setForm, setEditForm,
     selectCase, closeCase, refreshAvailability, submit, checkIn, reassign, checkout,
-    saveEdit, cancelBooking, addCharge, addPayment,
+    saveEdit, cancelBooking,
   };
 }
