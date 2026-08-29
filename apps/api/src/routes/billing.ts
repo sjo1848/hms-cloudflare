@@ -4,6 +4,8 @@ import type { ApiVariables } from "../context";
 import { ApiError } from "../errors";
 import { jsonBody, requiredText } from "../validation";
 import { hasCapability } from "../auth/capabilities";
+import { D1PaymentRepository } from "../modules/billing/d1-payment-repository";
+import { integerCents, normalizePaymentMethod, paymentTarget, priorPaymentMatches } from "../modules/billing/domain";
 
 type BillingApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 type Db = ApiVariables["operationalDatabase"];
@@ -16,13 +18,15 @@ function requireCap(c: Ctx, capability: string) {
 }
 
 function cents(value: unknown, field: string, positive = false): number {
-  if (!Number.isSafeInteger(value) || (positive ? (value as number) <= 0 : (value as number) < 0)) throw ApiError.badRequest(`${field} must be an integer number of cents`);
-  return value as number;
+  const result = integerCents(value, positive);
+  if (result == null) throw ApiError.badRequest(`${field} must be an integer number of cents`);
+  return result;
 }
 
-function paymentMethod(value: unknown): string {
-  const result = requiredText(value, "payment_method", 4, 8).toUpperCase();
-  if (!["CASH", "CARD", "TRANSFER"].includes(result)) throw ApiError.badRequest("payment_method is invalid");
+function paymentMethod(value: unknown) {
+  const input = requiredText(value, "payment_method", 4, 8);
+  const result = normalizePaymentMethod(input);
+  if (!result) throw ApiError.badRequest("payment_method is invalid");
   return result;
 }
 
@@ -47,36 +51,38 @@ async function shiftSnapshot(db: Db, opening: string) {
 
 async function recordPayment(c: Ctx, id: string, body: Body, settle: boolean) {
   requireCap(c, "bookings.update");
-  const db = c.get("operationalDatabase");
-  const booking = await bookingExists(db, id);
+  const repository = new D1PaymentRepository(c.get("operationalDatabase"));
+  const booking = await repository.findBooking(id);
   if (!booking) throw ApiError.notFound("Booking not found");
   const amount = settle ? undefined : cents(body.amount_cents, "amount_cents", true);
   const pm = paymentMethod(body.payment_method);
   const reference = body.payment_reference == null ? null : requiredText(body.payment_reference, "payment_reference", 1, 120);
   const note = body.note == null ? null : requiredText(body.note, "note", 1, 250);
   const operationToken = body.operation_token == null ? crypto.randomUUID() : requiredText(body.operation_token, "operation_token", 8, 120);
-  const now = new Date().toISOString();
-  const invoiceId = crypto.randomUUID();
-  const invoice = await db.prepare("SELECT id, amount_cents, paid_amount_cents FROM invoices WHERE booking_id = ?1").bind(id).first<{ id: string; amount_cents: number; paid_amount_cents: number }>();
-  const target = amount ?? (invoice ? invoice.amount_cents - invoice.paid_amount_cents : booking.total_cents);
-  const prior = await db.prepare("SELECT booking_id, amount_cents, payment_method, payment_reference, note FROM payment_entries WHERE operation_token = ?1").bind(operationToken).first<{ booking_id: string; amount_cents: number; payment_method: string; payment_reference: string | null; note: string | null }>();
+  const invoice = await repository.findInvoice(id);
+  const target = paymentTarget(amount, booking, invoice);
+  if (target == null) throw ApiError.conflict("Booking is already settled");
+  const prior = await repository.findPriorPayment(operationToken);
   if (prior) {
-    if (prior.booking_id !== id || prior.amount_cents !== target || prior.payment_method !== pm || prior.payment_reference !== reference || prior.note !== note) throw ApiError.conflict("Payment operation token was reused with different details");
-    return { ok: true, amount_cents: prior.amount_cents, invoice: await invoiceView(db, id) };
+    if (!priorPaymentMatches(prior, id, target, pm, reference, note)) throw ApiError.conflict("Payment operation token was reused with different details");
+    return { ok: true, amount_cents: prior.amount_cents, invoice: await repository.invoiceView(id) };
   }
-  if (!Number.isSafeInteger(target) || target <= 0) throw ApiError.conflict("Booking is already settled");
   try {
-    const results = await db.batch([
-      db.prepare("INSERT INTO invoices (id,booking_id,amount_cents,created_at) SELECT ?1,?2,total_cents,?4 FROM bookings WHERE id=?2 AND NOT EXISTS (SELECT 1 FROM invoices WHERE booking_id=?2) AND total_cents>=?3").bind(invoice?.id ?? invoiceId, id, target, now),
-      db.prepare("INSERT INTO payment_entries (id,invoice_id,booking_id,amount_cents,payment_method,payment_reference,note,received_by_user_id,received_at,operation_token) SELECT ?1,id,?2,?3,?4,?5,?6,?7,?8,?9 FROM invoices WHERE booking_id=?2 AND status='PENDING' AND paid_amount_cents + ?3 <= amount_cents").bind(crypto.randomUUID(), id, target, pm, reference, note, c.get("identity").subject, now, operationToken),
-      db.prepare("UPDATE invoices SET paid_amount_cents=paid_amount_cents+?2, status=CASE WHEN paid_amount_cents+?2=amount_cents THEN 'PAID' ELSE 'PENDING' END, payment_method=?3, payment_reference=?4, paid_at=CASE WHEN paid_amount_cents+?2=amount_cents THEN ?5 ELSE paid_at END WHERE booking_id=?1 AND status='PENDING' AND paid_amount_cents+?2<=amount_cents AND changes()=1").bind(id, target, pm, reference, now),
-      db.prepare("INSERT INTO financial_events (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at) SELECT ?1,?2,?3,?4,?5,?6,?7,?8 WHERE changes()=1").bind(crypto.randomUUID(), settle ? "SETTLE_PAYMENT" : "PAYMENT", id, c.get("identity").subject, c.get("requestId"), c.get("membership").hotelId, JSON.stringify({ amount_cents: target, payment_method: pm, payment_reference: reference }), now),
-    ]);
-    if (results[1]?.meta.changes !== 1 || results[2]?.meta.changes !== 1) throw new Error("payment did not win");
+    const won = await repository.recordPayment({
+      bookingId: id,
+      amountCents: target,
+      paymentMethod: pm,
+      reference,
+      note,
+      operationToken,
+      settle,
+      actor: { subject: c.get("identity").subject, requestId: c.get("requestId"), hotelId: c.get("membership").hotelId },
+    }, invoice);
+    if (!won) throw new Error("payment did not win");
   } catch {
     throw ApiError.conflict("Payment exceeds the remaining balance or booking changed");
   }
-  return { ok: true, amount_cents: target, invoice: await invoiceView(db, id) };
+  return { ok: true, amount_cents: target, invoice: await repository.invoiceView(id) };
 }
 
 export function createBillingRoutes(): BillingApp {
