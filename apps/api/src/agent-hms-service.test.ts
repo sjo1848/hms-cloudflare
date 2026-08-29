@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AgentHmsReadService } from "./agent-hms-service";
+import { AgentHmsReadService } from "./agent-hms-read-service";
 
 const HOTEL_ID = "10000000-0000-0000-0000-000000000001";
 const ROOM_ID = "11000000-0000-0000-0000-000000000001";
