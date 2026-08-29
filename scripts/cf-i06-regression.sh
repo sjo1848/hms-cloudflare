@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euxo pipefail
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd); cd "$repo_dir"; wrangler="$repo_dir/node_modules/.bin/wrangler"; tmp_dir=$(mktemp -d); worker_pid=""; cleanup() { [[ -n "$worker_pid" ]] && kill "$worker_pid" 2>/dev/null || true; }; trap cleanup EXIT
 CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc >/dev/null
 CI=1 "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >/dev/null
