@@ -1,6 +1,6 @@
 import type { OperationalDatabase } from "../../routing";
 import { ADVANCE_RESERVABLE_ROOM_SQL } from "../../room-availability";
-import type { BookingListQuery, BookingRow, BookingUpdateResult, CreateBookingRecord, UpdateBookingRecord } from "./domain";
+import type { BookingListQuery, BookingMutationProvenance, BookingRow, BookingUpdateResult, CreateBookingRecord, UpdateBookingRecord } from "./domain";
 import type { BookingRepository } from "./ports";
 
 const bookingSelect = `SELECT b.id, b.guest_id, g.full_name AS guest_name, g.email AS guest_email,
@@ -12,6 +12,32 @@ function claimStatements(database: OperationalDatabase, bookingId: string, roomI
   return claimNights.map(stayDate => database.prepare(
     "INSERT INTO room_inventory_nights (room_id, stay_date, booking_id) SELECT ?1, ?2, ?3 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?3 AND room_id = ?1 AND check_in = ?4 AND check_out = ?5 AND status = 'CONFIRMED')",
   ).bind(roomId, stayDate, bookingId, start, end));
+}
+
+function mutationEventStatement(
+  database: OperationalDatabase,
+  bookingId: string,
+  action: "CREATE" | "CANCEL",
+  provenance: BookingMutationProvenance,
+  now: string,
+) {
+  const requiredStatus = action === "CREATE" ? "CONFIRMED" : "CANCELLED";
+  return database.prepare(`INSERT OR IGNORE INTO agent_mutation_events
+    (id, booking_id, action, tenant_id, hotel_id, actor_id, session_id, trace_id, created_at)
+    SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9
+    WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = ?10)`)
+    .bind(
+      `${bookingId}:${action}`,
+      bookingId,
+      action,
+      provenance.tenantId,
+      provenance.hotelId,
+      provenance.actorId,
+      provenance.sessionId,
+      provenance.traceId,
+      now,
+      requiredStatus,
+    );
 }
 
 export class D1BookingRepository implements BookingRepository {
@@ -55,13 +81,15 @@ export class D1BookingRepository implements BookingRepository {
         AND NOT EXISTS (SELECT 1 FROM room_holds AS h WHERE h.room_id = r.id AND h.start_date < ?5 AND h.end_date > ?4)`)
         .bind(record.id, record.guestId, record.roomId, record.start, record.end, record.totalCents, record.notes, record.now),
       ...claimStatements(this.database, record.id, record.roomId, record.claimNights, record.start, record.end),
+      ...(record.provenance ? [mutationEventStatement(this.database, record.id, "CREATE", record.provenance, record.now)] : []),
     ]);
   }
 
-  async cancel(bookingId: string, now: string): Promise<BookingUpdateResult> {
+  async cancel(bookingId: string, now: string, provenance?: BookingMutationProvenance): Promise<BookingUpdateResult> {
     const results = await this.database.batch([
       this.database.prepare("UPDATE bookings SET status = 'CANCELLED', updated_at = ?2 WHERE id = ?1 AND status = 'CONFIRMED'").bind(bookingId, now),
       this.database.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND status = 'CANCELLED')").bind(bookingId),
+      ...(provenance ? [mutationEventStatement(this.database, bookingId, "CANCEL", provenance, now)] : []),
     ]);
     return results[0] as BookingUpdateResult;
   }
