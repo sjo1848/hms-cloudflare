@@ -19,11 +19,6 @@ const activeMiniflares: Miniflare[] = [];
 afterEach(async () => { await Promise.all(activeMiniflares.splice(0).map((mf) => mf.dispose())); });
 
 async function executingDatabase() {
-  // Wrangler 4.125 currently installs Miniflare 5 alpha internally. Its public
-  // constructor consumes the converted config shape, while the stable V4
-  // options remain the documented/test-friendly representation. Use the same
-  // compatibility bridge Wrangler itself uses instead of coupling the test to
-  // Miniflare 5's internal config schema.
   const mf = new Miniflare(convertV4MiniflareOptions({
     script: "export default { fetch() { return new Response('ok') } }",
     modules: true,
@@ -31,15 +26,13 @@ async function executingDatabase() {
   }));
   activeMiniflares.push(mf);
   const db = await mf.getD1Database("DB");
-  await db.exec(`
-    CREATE TABLE bookings (id TEXT PRIMARY KEY, room_id TEXT NOT NULL, status TEXT NOT NULL, updated_at TEXT NOT NULL);
-    CREATE TABLE room_inventory_nights (room_id TEXT NOT NULL, stay_date TEXT NOT NULL, booking_id TEXT NOT NULL, PRIMARY KEY (room_id, stay_date));
-    CREATE TABLE agent_mutation_events (
-      id TEXT PRIMARY KEY, booking_id TEXT NOT NULL, action TEXT NOT NULL,
-      tenant_id TEXT NOT NULL, hotel_id TEXT NOT NULL, actor_id TEXT NOT NULL,
-      session_id TEXT NOT NULL, trace_id TEXT NOT NULL, created_at TEXT NOT NULL
-    );
-  `);
+  // Execute DDL as complete prepared statements. D1's exec() line-oriented
+  // parser is intentionally not part of the behavior under test here.
+  await db.batch([
+    db.prepare("CREATE TABLE bookings (id TEXT PRIMARY KEY, room_id TEXT NOT NULL, status TEXT NOT NULL, updated_at TEXT NOT NULL)"),
+    db.prepare("CREATE TABLE room_inventory_nights (room_id TEXT NOT NULL, stay_date TEXT NOT NULL, booking_id TEXT NOT NULL, PRIMARY KEY (room_id, stay_date))"),
+    db.prepare("CREATE TABLE agent_mutation_events (id TEXT PRIMARY KEY, booking_id TEXT NOT NULL, action TEXT NOT NULL, tenant_id TEXT NOT NULL, hotel_id TEXT NOT NULL, actor_id TEXT NOT NULL, session_id TEXT NOT NULL, trace_id TEXT NOT NULL, created_at TEXT NOT NULL)"),
+  ]);
   return db;
 }
 
