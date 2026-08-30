@@ -21,11 +21,10 @@ function mutationEventStatement(
   provenance: BookingMutationProvenance,
   now: string,
 ) {
-  const requiredStatus = action === "CREATE" ? "CONFIRMED" : "CANCELLED";
   return database.prepare(`INSERT OR IGNORE INTO agent_mutation_events
     (id, booking_id, action, tenant_id, hotel_id, actor_id, session_id, trace_id, created_at)
     SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9
-    WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = ?10)`)
+    WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CONFIRMED')`)
     .bind(
       `${bookingId}:${action}`,
       bookingId,
@@ -36,7 +35,6 @@ function mutationEventStatement(
       provenance.sessionId,
       provenance.traceId,
       now,
-      requiredStatus,
     );
 }
 
@@ -86,12 +84,17 @@ export class D1BookingRepository implements BookingRepository {
   }
 
   async cancel(bookingId: string, now: string, provenance?: BookingMutationProvenance): Promise<BookingUpdateResult> {
-    const results = await this.database.batch([
-      this.database.prepare("UPDATE bookings SET status = 'CANCELLED', updated_at = ?2 WHERE id = ?1 AND status = 'CONFIRMED'").bind(bookingId, now),
-      this.database.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND status = 'CANCELLED')").bind(bookingId),
-      ...(provenance ? [mutationEventStatement(this.database, bookingId, "CANCEL", provenance, now)] : []),
-    ]);
-    return results[0] as BookingUpdateResult;
+    const update = this.database.prepare("UPDATE bookings SET status = 'CANCELLED', updated_at = ?2 WHERE id = ?1 AND status = 'CONFIRMED'").bind(bookingId, now);
+    const cleanup = this.database.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND status = 'CANCELLED')").bind(bookingId);
+    // The provenance claim runs first while the booking must still be CONFIRMED.
+    // D1 batch is one transaction: once this write starts, a competing cancellation
+    // cannot interleave between the claim and our conditional transition. If another
+    // caller already won, the claim inserts zero rows and this operation is a replay.
+    const statements = provenance
+      ? [mutationEventStatement(this.database, bookingId, "CANCEL", provenance, now), update, cleanup]
+      : [update, cleanup];
+    const results = await this.database.batch(statements);
+    return results[provenance ? 1 : 0] as BookingUpdateResult;
   }
 
   async update(record: UpdateBookingRecord): Promise<BookingUpdateResult> {
