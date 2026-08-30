@@ -177,17 +177,20 @@ export class AgentHmsReservationService {
           now,
           claimNights,
         });
-      } catch {
+      } catch (createError) {
         const raced = await repository.find(bookingId);
         if (raced && sameReservation(raced, expected)) {
           return { ok: true, data: reservationData(raced, hotelId, traceId, true) };
         }
         if (raced) throw ApiError.conflict("Idempotency token was already used for a different reservation");
-        throw ApiError.conflict("Room is unavailable for one or more nights");
+
+        const stillValid = await repository.validateReferences(guestId, roomId, null, range.start, range.end);
+        if (stillValid == null) throw ApiError.conflict("Room is unavailable for one or more nights");
+        throw createError;
       }
 
       const row = await repository.find(bookingId);
-      if (!row) throw ApiError.conflict("Guest, room or availability is invalid");
+      if (!row) throw new Error("Reservation was created but could not be read back");
       if (!sameReservation(row, expected)) {
         throw ApiError.conflict("Idempotency token was already used for a different reservation");
       }
@@ -233,8 +236,8 @@ export class AgentHmsReservationService {
       }
 
       const row = await repository.find(expectedBookingId);
-      if (!row) throw ApiError.notFound("Booking not found");
-      if (row.status !== "CANCELLED") throw ApiError.conflict("Reservation cancellation was not applied");
+      if (!row) throw new Error("Reservation was cancelled but could not be read back");
+      if (row.status !== "CANCELLED") throw new Error("Reservation cancellation was not applied");
       return { ok: true, data: reservationData(row, hotelId, traceId, false) };
     } catch (error) {
       return normalizeAgentHmsError(error, traceId);
