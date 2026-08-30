@@ -8,18 +8,18 @@
   "last_completed_task": "ACP-2.4-E1-REAL",
   "last_completed_head": "8821cd2971f66e1d7711027554649374750036b3",
   "work_branch": "feature/acp-2-5-controlled-reservation",
-  "next_action": "INDEPENDENT_CRITIC_ON_FINAL_FROZEN_HMS_ARTIFACT",
+  "next_action": "INDEPENDENT_CRITIC_ON_FINAL_EXECUTING_D1_ARTIFACT",
   "stop_reason": "PRECRITIC_PASS_AWAITING_EXTERNAL_REVIEW",
   "event": {
-    "seq": 114,
-    "id": "ACP-2.5-HMS-FINAL-PRECRITIC-PASS",
+    "seq": 115,
+    "id": "ACP-2.5-HMS-EXECUTING-D1-PRECRITIC-PASS",
     "type": "EXTERNAL_REVIEW"
   },
   "external_review": {
     "required": true,
     "last_audited_head": null,
     "last_verdict": null,
-    "artifact_head": "a9cf1fe45a510f82d4725236fa7693ba9a2b376e",
+    "artifact_head": "70fae5c902af557eadc2802ba773f44b9f95fd46",
     "review_path": ".orchestration/evidence/ACP-2.5-HMS-PRECRITIC.md"
   },
   "human_gate": null,
