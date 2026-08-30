@@ -21,6 +21,11 @@ export type AgentReservationInput = {
   notes?: string | null;
 };
 
+export type AgentCancelReservationInput = {
+  operationToken: string;
+  bookingId: string;
+};
+
 export type AgentReservationData = {
   source: "hms";
   truth: "transactional";
@@ -186,6 +191,50 @@ export class AgentHmsReservationService {
       if (!sameReservation(row, expected)) {
         throw ApiError.conflict("Idempotency token was already used for a different reservation");
       }
+      return { ok: true, data: reservationData(row, hotelId, traceId, false) };
+    } catch (error) {
+      return normalizeAgentHmsError(error, traceId);
+    }
+  }
+
+  public async cancelReservation(
+    rawContext: AgentHmsCallContext,
+    input: AgentCancelReservationInput,
+  ): Promise<AgentHmsResult<AgentReservationData>> {
+    let traceId = "unknown";
+    try {
+      const context = normalizeAgentHmsContext(rawContext);
+      traceId = context.traceId;
+      const operationToken = requiredText(input?.operationToken, "operationToken", 8, 200);
+      const bookingId = requiredText(input?.bookingId, "bookingId", 1, 100);
+      const expectedBookingId = await reservationBookingId(context, operationToken);
+      if (bookingId !== expectedBookingId) {
+        throw ApiError.forbidden("Reservation does not belong to this operation token");
+      }
+
+      const { hotelId, database } = await this.resolveHotel(this.env, context);
+      const repository = this.repositoryFactory(database);
+      const current = await repository.find(expectedBookingId);
+      if (!current) throw ApiError.notFound("Booking not found");
+      if (current.status === "CANCELLED") {
+        return { ok: true, data: reservationData(current, hotelId, traceId, true) };
+      }
+      if (current.status !== "CONFIRMED") {
+        throw ApiError.conflict("Only confirmed reservations can be cancelled");
+      }
+
+      const update = await repository.cancel(expectedBookingId, this.now().toISOString());
+      if (update.meta.changes !== 1) {
+        const raced = await repository.find(expectedBookingId);
+        if (raced?.status === "CANCELLED") {
+          return { ok: true, data: reservationData(raced, hotelId, traceId, true) };
+        }
+        throw ApiError.conflict("Reservation changed before cancellation");
+      }
+
+      const row = await repository.find(expectedBookingId);
+      if (!row) throw ApiError.notFound("Booking not found");
+      if (row.status !== "CANCELLED") throw ApiError.conflict("Reservation cancellation was not applied");
       return { ok: true, data: reservationData(row, hotelId, traceId, false) };
     } catch (error) {
       return normalizeAgentHmsError(error, traceId);
