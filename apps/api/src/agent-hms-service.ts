@@ -14,6 +14,7 @@ import {
 } from "./agent-hms-read-service";
 import {
   AgentHmsReservationService,
+  type AgentCancelReservationInput,
   type AgentReservationData,
   type AgentReservationInput,
 } from "./agent-hms-reservation-service";
@@ -28,7 +29,7 @@ export type {
   AgentQuoteInput,
   AgentRoom,
 } from "./agent-hms-read-service";
-export type { AgentReservationData, AgentReservationInput } from "./agent-hms-reservation-service";
+export type { AgentCancelReservationInput, AgentReservationData, AgentReservationInput } from "./agent-hms-reservation-service";
 export type { AgentHmsCallerProps, AgentHmsPermission } from "./agent-hms-authorization";
 
 /**
@@ -59,5 +60,13 @@ export class AgentHmsService extends WorkerEntrypoint<Env, AgentHmsCallerProps> 
   ): Promise<AgentHmsResult<AgentReservationData>> {
     authorizeAgentHmsCall(this.ctx.props, context, "reservation.write");
     return new AgentHmsReservationService(this.env).createReservation(context, input);
+  }
+
+  public cancelReservation(
+    context: AgentHmsCallContext,
+    input: AgentCancelReservationInput,
+  ): Promise<AgentHmsResult<AgentReservationData>> {
+    authorizeAgentHmsCall(this.ctx.props, context, "reservation.cancel");
+    return new AgentHmsReservationService(this.env).cancelReservation(context, input);
   }
 }
