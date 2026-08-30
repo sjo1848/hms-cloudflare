@@ -1,6 +1,6 @@
 import { ApiError } from "./errors";
 import { D1BookingRepository } from "./modules/bookings/d1-booking-repository";
-import { nights, totalCents, type BookingRow } from "./modules/bookings/domain";
+import { nights, totalCents, type BookingMutationProvenance, type BookingRow } from "./modules/bookings/domain";
 import type { BookingRepository } from "./modules/bookings/ports";
 import type { OperationalDatabase } from "./routing";
 import { dateRange, requiredText } from "./validation";
@@ -71,6 +71,16 @@ function sameReservation(
     && row.check_in === input.start
     && row.check_out === input.end
     && row.notes === input.notes;
+}
+
+function mutationProvenance(context: AgentHmsCallContext, hotelId: string): BookingMutationProvenance {
+  return {
+    tenantId: context.tenantId,
+    hotelId,
+    actorId: context.actorId,
+    sessionId: context.sessionId,
+    traceId: context.traceId,
+  };
 }
 
 function reservationData(
@@ -176,6 +186,7 @@ export class AgentHmsReservationService {
           notes,
           now,
           claimNights,
+          provenance: mutationProvenance(context, hotelId),
         });
       } catch (createError) {
         const raced = await repository.find(bookingId);
@@ -226,7 +237,11 @@ export class AgentHmsReservationService {
         throw ApiError.conflict("Only confirmed reservations can be cancelled");
       }
 
-      const update = await repository.cancel(expectedBookingId, this.now().toISOString());
+      const update = await repository.cancel(
+        expectedBookingId,
+        this.now().toISOString(),
+        mutationProvenance(context, hotelId),
+      );
       if (update.meta.changes !== 1) {
         const raced = await repository.find(expectedBookingId);
         if (raced?.status === "CANCELLED") {
