@@ -1,6 +1,6 @@
 # ACP 2.5 HMS — Pre-Critic Gate
 
-Substantive artifact A: `61b614fb21d5d3d51595e22030a0b551e6614c1a`  
+Substantive artifact A: `a9cf1fe45a510f82d4725236fa7693ba9a2b376e`  
 Review scope: HMS portion of `ACP-2.5-HMS-CONTROLLED-RESERVATION`.
 
 | Gate | Result | Exact evidence |
@@ -18,34 +18,39 @@ Review scope: HMS portion of `ACP-2.5-HMS-CONTROLLED-RESERVATION`.
 | Cancel audit atomicity | PASS | CANCEL provenance claim + conditional CONFIRMED→CANCELLED update + inventory cleanup share one D1 batch. |
 | Cancellation winner attribution | PASS | CANCEL event is allowed only while booking is CONFIRMED and executes before the conditional transition in the same transaction. Already-cancelled race cannot create a false ACP event. |
 | Exactly-once provenance | PASS | Deterministic event id + DB uniqueness + replay behavior. |
-| Failure classification | PASS | Unexpected persistence failure remains INTERNAL_ERROR if inventory is still valid. |
-| Migration safety | PASS | Accidental 0012 collision caught; replacement 0018; fresh rehearsal passes. |
-| Foundation | PASS | `33288020198` SUCCESS on artifact A. |
-| Product Flow / D1 | PASS | `33288020169`: Worker+D1 PASS, migration rehearsal PASS, CF-I03→CF-I08 PASS after one bounded rerun for transient local `SQLITE_BUSY`. |
-| UX/mobile | PASS | `33288020210` SUCCESS. |
-| Invariants | PASS | `.orchestration/evidence/ACP-2.5-HMS-INVARIANTS.md`; no HMS-side FAIL/UNPROVEN. |
-| Prior P1: stale state | ADDRESSED | State and Task Contract now reflect approved Phase 2.5. |
+| Zero-row create race | PASS | Repository returns authoritative INSERT result; service maps `meta.changes !== 1` directly to `CONFLICT`, avoiding the prior revalidation race. Focused test keeps references valid while insert returns zero and still requires `CONFLICT`. |
+| Unexpected persistence failure | PASS | A thrown persistence error with valid inventory remains `INTERNAL_ERROR`, distinct from the conditional zero-row business race. |
+| Migration safety | PASS | Initial 0012 collision was caught; replacement migration 0018 rehearses successfully. |
+| Foundation | PASS | `33289871047` SUCCESS on artifact A; auxiliary branch Foundation `33289869352` also SUCCESS. |
+| Product Flow / D1 | PASS | `33289871006`: Worker+D1, migration rehearsal and historical CF-I03→CF-I08 regressions SUCCESS. |
+| UX/mobile | PASS | `33289870953` SUCCESS. |
+| Invariants | PASS | `.orchestration/evidence/ACP-2.5-HMS-INVARIANTS.md`; no applicable HMS-side FAIL/UNPROVEN. |
+| Prior P1: stale state | ADDRESSED | State and Task Contract reflect approved Phase 2.5. |
 | Prior P1: missing provenance | ADDRESSED | Durable same-batch provenance added. |
-| Fresh P1: cancellation winner attribution | ADDRESSED | Artifact A changes order/predicate and adds focused race-boundary test. |
+| Prior P1: cancellation winner attribution | ADDRESSED | Winner-bound pre-transition provenance claim + race coverage. |
+| Prior P1: stale/frozen evidence | ADDRESSED | Evidence is now anchored to final artifact A and exact successful CI runs. |
+| Prior P2: zero-row create classification | ADDRESSED | Final artifact uses authoritative INSERT `meta.changes`, superseding the post-create revalidation approach. |
 | Independent Critic | REQUIRED | Fresh external review must inspect artifact A + publication evidence before merge. |
 
 ## Defects found and closed before Critic
 
 1. Obsolete Access Human Gate persisted in repo state → reconciled to explicit Phase 2.5 staging-only authorization.
 2. Agent create/cancel lacked durable HMS attribution → migration 0018 + trusted provenance + same-batch D1 event.
-3. Initial migration number collided with existing 0012 → rehearsal caught it; new migration moved after 0012–0017.
-4. Cancellation event originally relied on final CANCELLED status and could misattribute a race loser → event now claims only pre-transition CONFIRMED state before update in the same transaction; focused test covers zero-update race.
-5. One historical-regression attempt hit local workerd `SQLITE_BUSY`; one bounded rerun passed the entire CF-I03→CF-I08 suite. No product assertion was relaxed or skipped.
+3. Initial migration number collided with existing 0012 → rehearsal caught it; migration moved to 0018 after existing sequence.
+4. Cancellation event could misattribute a race loser → event now claims only pre-transition CONFIRMED state before update in the same transaction.
+5. Initial zero-row create handling relied on a later availability revalidation. That state could become valid again and incorrectly preserve an INTERNAL_ERROR path. Final artifact A returns the canonical INSERT batch result and classifies `meta.changes === 0` immediately as `CONFLICT`.
+6. Evidence previously described the superseded zero-row approach → evidence refreshed to artifact A and exact final CI.
 
 ## Exact executable gates
 
-- Foundation: `33288020198` — SUCCESS.
-- Product Flow / Worker+D1 / migration / historical regressions: `33288020169` — SUCCESS.
-- UX/mobile browser: `33288020210` — SUCCESS.
-- Substantive artifact: `61b614fb21d5d3d51595e22030a0b551e6614c1a`.
+- Foundation: `33289871047` — SUCCESS.
+- Product Flow / Worker+D1 / migration / historical regressions: `33289871006` — SUCCESS.
+- UX/mobile browser: `33289870953` — SUCCESS.
+- Additional Foundation: `33289869352` — SUCCESS.
+- Substantive artifact: `a9cf1fe45a510f82d4725236fa7693ba9a2b376e`.
 
 ## Next boundary
 
-Product code is frozen at artifact A. Evidence-only publication may move the branch head but does not alter artifact A. A fresh Independent Critic must review PR #28 against artifact A, the Task Contract, invariants and this Pre-Critic publication. No merge to `deploy/staging` until that external gate passes.
+Product code is frozen at artifact A. Evidence-only publication may move the branch head but does not alter artifact A. A fresh Independent Critic must review PR #28 against artifact A, the Task Contract, invariant evidence and this Pre-Critic publication. No merge to `deploy/staging` until that external gate passes.
 
-Cross-repository ACP deploy/E2E remains downstream and is not claimed here.
+Cross-repository Agent Core deployment/E2E remains downstream and is not claimed here.
