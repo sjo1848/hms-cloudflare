@@ -22,13 +22,17 @@ afterEach(async () => {
 });
 
 async function executingDatabase() {
+  const workerName = "d1-cancellation-race-proof";
   const mf = new Miniflare({
-    modules: true,
-    script: "export default { fetch() { return new Response('ok') } }",
-    d1Databases: ["DB"],
+    workers: [{
+      name: workerName,
+      modules: true,
+      script: "export default { fetch() { return new Response('ok') } }",
+      d1Databases: { DB: "agent-race-proof-db" },
+    }],
   });
   activeMiniflares.push(mf);
-  const db = await mf.getD1Database("DB");
+  const db = await mf.getD1Database("DB", workerName);
 
   await db.exec(`
     CREATE TABLE bookings (
