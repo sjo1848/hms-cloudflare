@@ -176,7 +176,7 @@ export class AgentHmsReservationService {
 
       try {
         const now = this.now().toISOString();
-        await repository.create({
+        const createResult = await repository.create({
           id: bookingId,
           guestId,
           roomId,
@@ -188,6 +188,9 @@ export class AgentHmsReservationService {
           claimNights,
           provenance: mutationProvenance(context, hotelId),
         });
+        if (createResult.meta.changes !== 1) {
+          throw ApiError.conflict("Guest, room or availability changed before reservation creation");
+        }
       } catch (createError) {
         const raced = await repository.find(bookingId);
         if (raced && sameReservation(raced, expected)) {
@@ -201,14 +204,7 @@ export class AgentHmsReservationService {
       }
 
       const row = await repository.find(bookingId);
-      if (!row) {
-        // D1 INSERT ... SELECT may validly affect zero rows without throwing when
-        // guest/room/hold/reservability changes between validation and create.
-        // Classify that ordinary stale-state race like the canonical booking path.
-        const stillValid = await repository.validateReferences(guestId, roomId, null, range.start, range.end);
-        if (stillValid == null) throw ApiError.conflict("Guest, room or availability changed before reservation creation");
-        throw new Error("Reservation create returned without a booking row");
-      }
+      if (!row) throw new Error("Reservation was created but could not be read back");
       if (!sameReservation(row, expected)) {
         throw ApiError.conflict("Idempotency token was already used for a different reservation");
       }
