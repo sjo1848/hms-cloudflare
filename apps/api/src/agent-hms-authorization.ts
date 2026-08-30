@@ -1,7 +1,7 @@
 import { ApiError } from "./errors";
 import type { AgentHmsCallContext } from "./agent-hms-read-service";
 
-export type AgentHmsPermission = "availability.read" | "quote.read";
+export type AgentHmsPermission = "availability.read" | "quote.read" | "reservation.write";
 
 export type AgentHmsCallerProps = {
   clientId: string;
