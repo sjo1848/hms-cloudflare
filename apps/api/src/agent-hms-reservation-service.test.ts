@@ -28,6 +28,7 @@ const expectedProvenance = {
 
 type FakeOptions = {
   unavailable?: boolean;
+  zeroRowCreate?: boolean;
   throwBeforeCreate?: boolean;
   throwAfterCreate?: boolean;
 };
@@ -58,8 +59,9 @@ class FakeBookingRepository implements BookingRepository {
     return this.options.unavailable ? null : 10000;
   }
 
-  async create(record: CreateBookingRecord): Promise<void> {
+  async create(record: CreateBookingRecord): Promise<BookingUpdateResult> {
     this.createCalls += 1;
+    if (this.options.zeroRowCreate) return { meta: { changes: 0 } };
     if (record.provenance) this.createProvenance.push(structuredClone(record.provenance));
     if (this.options.throwBeforeCreate) throw new Error("simulated persistence failure");
     if (this.rows.has(record.id)) throw new Error("duplicate booking id");
@@ -81,6 +83,7 @@ class FakeBookingRepository implements BookingRepository {
       updated_at: record.now,
     });
     if (this.options.throwAfterCreate) throw new Error("simulated concurrent completion");
+    return { meta: { changes: 1 } };
   }
 
   async cancel(bookingId: string, now: string, provenance?: BookingMutationProvenance): Promise<BookingUpdateResult> {
@@ -197,6 +200,22 @@ describe("AgentHmsReservationService", () => {
     expect(result.data.replayed).toBe(true);
     expect(repository.rows.size).toBe(1);
     expect(repository.createProvenance).toEqual([expectedProvenance]);
+  });
+
+  it("classifies a zero-row canonical insert as CONFLICT without relying on later revalidation", async () => {
+    const repository = new FakeBookingRepository({ zeroRowCreate: true });
+    const result = await createService(repository).createReservation(context, input);
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        code: "CONFLICT",
+        message: "Guest, room or availability changed before reservation creation",
+        traceId: "trace-reserve-1",
+      },
+    });
+    expect(repository.rows.size).toBe(0);
+    expect(repository.createProvenance).toHaveLength(0);
   });
 
   it("preserves an unexpected persistence failure as INTERNAL_ERROR when inventory is still valid", async () => {
