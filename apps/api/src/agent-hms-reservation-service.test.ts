@@ -70,8 +70,11 @@ class FakeBookingRepository implements BookingRepository {
     if (this.options.throwAfterCreate) throw new Error("simulated concurrent completion");
   }
 
-  async cancel(_bookingId: string, _now: string): Promise<BookingUpdateResult> {
-    return { meta: { changes: 0 } };
+  async cancel(bookingId: string, now: string): Promise<BookingUpdateResult> {
+    const row = this.rows.get(bookingId);
+    if (!row || row.status !== "CONFIRMED") return { meta: { changes: 0 } };
+    this.rows.set(bookingId, { ...row, status: "CANCELLED", updated_at: now });
+    return { meta: { changes: 1 } };
   }
 
   async update(_record: UpdateBookingRecord): Promise<BookingUpdateResult> {
@@ -176,6 +179,47 @@ describe("AgentHmsReservationService", () => {
     if (!result.ok) return;
     expect(result.data.replayed).toBe(true);
     expect(repository.rows.size).toBe(1);
+  });
+
+  it("cancels only the reservation derived from the original operation token and replays cleanup safely", async () => {
+    const repository = new FakeBookingRepository();
+    const service = createService(repository);
+    const created = await service.createReservation(context, input);
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+
+    const first = await service.cancelReservation(context, {
+      operationToken: input.operationToken,
+      bookingId: created.data.bookingId,
+    });
+    const second = await service.cancelReservation(context, {
+      operationToken: input.operationToken,
+      bookingId: created.data.bookingId,
+    });
+    expect(first.ok).toBe(true);
+    expect(second.ok).toBe(true);
+    if (!first.ok || !second.ok) return;
+    expect(first.data.status).toBe("CANCELLED");
+    expect(first.data.replayed).toBe(false);
+    expect(second.data.status).toBe("CANCELLED");
+    expect(second.data.replayed).toBe(true);
+  });
+
+  it("rejects cleanup when booking id does not match the original operation token", async () => {
+    const repository = new FakeBookingRepository();
+    const service = createService(repository);
+    const result = await service.cancelReservation(context, {
+      operationToken: input.operationToken,
+      bookingId: "00000000-0000-0000-0000-000000000000",
+    });
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        code: "FORBIDDEN",
+        message: "Reservation does not belong to this operation token",
+        traceId: "trace-reserve-1",
+      },
+    });
   });
 
   it("returns a conflict when the canonical booking references are unavailable", async () => {
