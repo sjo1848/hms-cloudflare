@@ -201,7 +201,14 @@ export class AgentHmsReservationService {
       }
 
       const row = await repository.find(bookingId);
-      if (!row) throw new Error("Reservation was created but could not be read back");
+      if (!row) {
+        // D1 INSERT ... SELECT may validly affect zero rows without throwing when
+        // guest/room/hold/reservability changes between validation and create.
+        // Classify that ordinary stale-state race like the canonical booking path.
+        const stillValid = await repository.validateReferences(guestId, roomId, null, range.start, range.end);
+        if (stillValid == null) throw ApiError.conflict("Guest, room or availability changed before reservation creation");
+        throw new Error("Reservation create returned without a booking row");
+      }
       if (!sameReservation(row, expected)) {
         throw ApiError.conflict("Idempotency token was already used for a different reservation");
       }
