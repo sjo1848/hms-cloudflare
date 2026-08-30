@@ -71,8 +71,8 @@ export class D1BookingRepository implements BookingRepository {
     return row?.price_cents ?? null;
   }
 
-  async create(record: CreateBookingRecord): Promise<void> {
-    await this.database.batch([
+  async create(record: CreateBookingRecord): Promise<BookingUpdateResult> {
+    const results = await this.database.batch([
       this.database.prepare(`INSERT INTO bookings (id, guest_id, room_id, check_in, check_out, status, total_cents, notes, created_at, updated_at)
         SELECT ?1, g.id, r.id, ?4, ?5, 'CONFIRMED', ?6, ?7, ?8, ?8 FROM guests AS g JOIN rooms AS r ON r.id = ?3
         WHERE g.id = ?2 AND ${ADVANCE_RESERVABLE_ROOM_SQL}
@@ -81,6 +81,7 @@ export class D1BookingRepository implements BookingRepository {
       ...claimStatements(this.database, record.id, record.roomId, record.claimNights, record.start, record.end),
       ...(record.provenance ? [mutationEventStatement(this.database, record.id, "CREATE", record.provenance, record.now)] : []),
     ]);
+    return results[0] as BookingUpdateResult;
   }
 
   async cancel(bookingId: string, now: string, provenance?: BookingMutationProvenance): Promise<BookingUpdateResult> {
