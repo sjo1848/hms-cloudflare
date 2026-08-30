@@ -1,49 +1,51 @@
 # ACP 2.5 HMS — Pre-Critic Gate
 
-Substantive artifact A: `30ec09e6dcab7fde3cf791290a69aab30fd6eb58`  
+Substantive artifact A: `61b614fb21d5d3d51595e22030a0b551e6614c1a`  
 Review scope: HMS portion of `ACP-2.5-HMS-CONTROLLED-RESERVATION`.
 
 | Gate | Result | Exact evidence |
 |---|---|---|
-| Human authorization persisted | PASS | `.orchestration/STATE.md` + `STATUS.json`; staging-only reservation/create + token-bound cleanup explicitly authorized. |
-| Task Contract exists | PASS | `.orchestration/contracts/ACP-2.5-HMS-CONTROLLED-RESERVATION.md`. |
-| Scope bounded | PASS | No production, paid resources, real-data migration, payment side effects or unrelated UX work. |
-| Capability boundary | PASS | `reservation.write` / `reservation.cancel` authorization plus hotel grant fail closed before mutation. |
-| Tenant routing | PASS | Control-plane binding resolution remains trusted; no model/user D1 binding choice. |
-| Reservation business semantics | PASS | Canonical `D1BookingRepository` reused for guest/room/hold/inventory rules and integer-cent total. |
-| Idempotency | PASS | Deterministic trusted-context booking identity; same-payload replay, different-payload conflict, concurrent replay tests. |
-| Cleanup safety | PASS | Cancellation booking id must derive from original operation token; cancellation replay tested. |
-| Durable provenance | PASS | `0018_agent_mutation_provenance.sql` + service/repository propagation stores actor/tenant/hotel/session/trace/action/booking/timestamp. |
-| Provenance privacy | PASS | Raw operation token is not part of provenance schema or payload and is asserted absent in tests. |
-| Mutation/audit atomicity | PASS | Focused repository test proves create+claims+CREATE event and cancel+claim cleanup+CANCEL event are each one D1 batch. |
-| Exactly-once audit | PASS | Deterministic event key, DB uniqueness and replay behavior prevent duplicate create/cancel events. |
-| Failure classification | PASS | Internal persistence faults remain INTERNAL_ERROR when inventory revalidation is still valid. |
-| Migration safety | PASS | Collision defect discovered by rehearsal was repaired by moving new schema to migration 0018; fresh rehearsal PASS. |
-| Foundation | PASS | GitHub Actions run `33287796048` SUCCESS on artifact A. |
-| Product Flow / D1 | PASS | Run `33287796046`: real Worker+D1 integral product flow + migration rehearsal + CF-I03→CF-I08 historical regressions SUCCESS. |
-| UX/mobile regression | PASS | Run `33287796053` SUCCESS. |
-| Invariants | PASS | `.orchestration/evidence/ACP-2.5-HMS-INVARIANTS.md`; no HMS-side applicable FAIL/UNPROVEN remains. |
-| P1 state review | ADDRESSED | Canonical state + Task Contract now reflect the Human-approved increment. |
-| P1 provenance review | ADDRESSED | Durable same-batch provenance and focused atomicity tests added. |
-| Independent Critic | REQUIRED | Specialist does not self-approve. External review must use this evidence, Task Contract, PR #28 patch and exact artifact A. |
+| Human authorization persisted | PASS | `.orchestration/STATE.md` + `STATUS.json`; staging-only create + token-bound cleanup authorized. |
+| Task Contract | PASS | `.orchestration/contracts/ACP-2.5-HMS-CONTROLLED-RESERVATION.md`. |
+| Scope bounded | PASS | No production, paid resources, real-data migration, payment side effects or unrelated UX. |
+| Capability + hotel grant | PASS | `reservation.write` / `reservation.cancel` + allowedHotelIds fail closed before mutation. |
+| Tenant routing | PASS | Control-plane binding remains trusted; no model/user D1 binding choice. |
+| Canonical business semantics | PASS | `D1BookingRepository` reused for guest/room/hold/inventory and integer-cent total. |
+| Persistent idempotency | PASS | Deterministic trusted-context booking identity; replay/conflict/concurrency covered. |
+| Token-bound cleanup | PASS | Cancellation booking id derives from original trusted operation token. |
+| Durable provenance | PASS | Migration 0018 stores actor/tenant/hotel/session/trace/action/booking/timestamp; raw operation token absent. |
+| Create audit atomicity | PASS | Create + room-night claims + CREATE provenance share one D1 batch. |
+| Cancel audit atomicity | PASS | CANCEL provenance claim + conditional CONFIRMED→CANCELLED update + inventory cleanup share one D1 batch. |
+| Cancellation winner attribution | PASS | CANCEL event is allowed only while booking is CONFIRMED and executes before the conditional transition in the same transaction. Already-cancelled race cannot create a false ACP event. |
+| Exactly-once provenance | PASS | Deterministic event id + DB uniqueness + replay behavior. |
+| Failure classification | PASS | Unexpected persistence failure remains INTERNAL_ERROR if inventory is still valid. |
+| Migration safety | PASS | Accidental 0012 collision caught; replacement 0018; fresh rehearsal passes. |
+| Foundation | PASS | `33288020198` SUCCESS on artifact A. |
+| Product Flow / D1 | PASS | `33288020169`: Worker+D1 PASS, migration rehearsal PASS, CF-I03→CF-I08 PASS after one bounded rerun for transient local `SQLITE_BUSY`. |
+| UX/mobile | PASS | `33288020210` SUCCESS. |
+| Invariants | PASS | `.orchestration/evidence/ACP-2.5-HMS-INVARIANTS.md`; no HMS-side FAIL/UNPROVEN. |
+| Prior P1: stale state | ADDRESSED | State and Task Contract now reflect approved Phase 2.5. |
+| Prior P1: missing provenance | ADDRESSED | Durable same-batch provenance added. |
+| Fresh P1: cancellation winner attribution | ADDRESSED | Artifact A changes order/predicate and adds focused race-boundary test. |
+| Independent Critic | REQUIRED | Fresh external review must inspect artifact A + publication evidence before merge. |
 
-## Requirement → Expected Surface → Acceptance → Evidence
+## Defects found and closed before Critic
 
-1. **Controlled reservation write** → `AgentHmsService` + reservation service → capability + hotel grant + canonical D1 write → unit/service tests + Foundation/Product Flow PASS.
-2. **Persistent idempotency** → deterministic booking identity + D1 booking → replay without duplicate and conflict on changed payload → reservation service tests.
-3. **Durable risk provenance** → hotel migration + booking repository batch → attribution survives RPC/isolate and is exactly once → migration 0018 + repository atomicity test.
-4. **Safe cleanup** → token-bound `cancelReservation` → only matching operation can cancel; replay does not duplicate mutation → service tests.
-5. **No regression** → migration rehearsal + inherited suites + browser → all fresh gates pass on artifact A → runs `33287796046`, `33287796053`, `33287796048`.
+1. Obsolete Access Human Gate persisted in repo state → reconciled to explicit Phase 2.5 staging-only authorization.
+2. Agent create/cancel lacked durable HMS attribution → migration 0018 + trusted provenance + same-batch D1 event.
+3. Initial migration number collided with existing 0012 → rehearsal caught it; new migration moved after 0012–0017.
+4. Cancellation event originally relied on final CANCELLED status and could misattribute a race loser → event now claims only pre-transition CONFIRMED state before update in the same transaction; focused test covers zero-update race.
+5. One historical-regression attempt hit local workerd `SQLITE_BUSY`; one bounded rerun passed the entire CF-I03→CF-I08 suite. No product assertion was relaxed or skipped.
 
-## Defects found and closed during Pre-Critic
+## Exact executable gates
 
-- Stale orchestration state incorrectly retained an old Access credential gate: reconciled before merge.
-- Missing durable mutation provenance: implemented before merge.
-- New provenance migration initially reused migration number `0012`: migration rehearsal failed as designed; migration was removed and recreated as `0018`, after existing `0012–0017`; fresh rehearsal passed.
-- Added explicit repository-level evidence that provenance is in the same D1 batch as each business mutation.
+- Foundation: `33288020198` — SUCCESS.
+- Product Flow / Worker+D1 / migration / historical regressions: `33288020169` — SUCCESS.
+- UX/mobile browser: `33288020210` — SUCCESS.
+- Substantive artifact: `61b614fb21d5d3d51595e22030a0b551e6614c1a`.
 
 ## Next boundary
 
-No merge is authorized by this document alone. The branch must be treated as frozen for product code while an Independent Critic reviews PR #28 against artifact A and this publication/evidence boundary. A fresh PASS is required before merge to `deploy/staging`.
+Product code is frozen at artifact A. Evidence-only publication may move the branch head but does not alter artifact A. A fresh Independent Critic must review PR #28 against artifact A, the Task Contract, invariants and this Pre-Critic publication. No merge to `deploy/staging` until that external gate passes.
 
-Cross-repository ACP deployment/E2E remains a later integration gate; this Pre-Critic does not claim it.
+Cross-repository ACP deploy/E2E remains downstream and is not claimed here.
