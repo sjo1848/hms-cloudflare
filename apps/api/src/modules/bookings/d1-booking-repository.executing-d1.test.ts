@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { Miniflare } from "miniflare";
+import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import { D1BookingRepository } from "./d1-booking-repository";
 import type { BookingMutationProvenance } from "./domain";
 import type { OperationalDatabase } from "../../routing";
@@ -19,11 +19,16 @@ const activeMiniflares: Miniflare[] = [];
 afterEach(async () => { await Promise.all(activeMiniflares.splice(0).map((mf) => mf.dispose())); });
 
 async function executingDatabase() {
-  const mf = new Miniflare({
-    modules: true,
+  // Wrangler 4.125 currently installs Miniflare 5 alpha internally. Its public
+  // constructor consumes the converted config shape, while the stable V4
+  // options remain the documented/test-friendly representation. Use the same
+  // compatibility bridge Wrangler itself uses instead of coupling the test to
+  // Miniflare 5's internal config schema.
+  const mf = new Miniflare(convertV4MiniflareOptions({
     script: "export default { fetch() { return new Response('ok') } }",
+    modules: true,
     d1Databases: { DB: "agent-race-proof-db" },
-  });
+  }));
   activeMiniflares.push(mf);
   const db = await mf.getD1Database("DB");
   await db.exec(`
