@@ -2,25 +2,25 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "ACP_INTEGRATION_PHASE_2_5",
-  "runtime_status": "RUNNING",
+  "runtime_status": "EXTERNAL_REVIEW",
   "resume_authorized": false,
   "active_task": "ACP-2.5-HMS-CONTROLLED-RESERVATION",
   "last_completed_task": "ACP-2.4-E1-REAL",
   "last_completed_head": "8821cd2971f66e1d7711027554649374750036b3",
   "work_branch": "feature/acp-2-5-controlled-reservation",
-  "next_action": "IMPLEMENT_DURABLE_AGENT_MUTATION_PROVENANCE_AND_REVALIDATE",
-  "stop_reason": null,
+  "next_action": "INDEPENDENT_CRITIC_ON_FROZEN_HMS_ARTIFACT",
+  "stop_reason": "PRECRITIC_PASS_AWAITING_EXTERNAL_REVIEW",
   "event": {
-    "seq": 112,
-    "id": "ACP-2.5-HMS-AUTHORIZED-REWORK",
-    "type": "RUNNING"
+    "seq": 113,
+    "id": "ACP-2.5-HMS-PRECRITIC-PASS",
+    "type": "EXTERNAL_REVIEW"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": null,
     "last_verdict": null,
-    "artifact_head": null,
-    "review_path": null
+    "artifact_head": "61b614fb21d5d3d51595e22030a0b551e6614c1a",
+    "review_path": ".orchestration/evidence/ACP-2.5-HMS-PRECRITIC.md"
   },
   "human_gate": null,
   "blocker": null,
