@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { authorizeAgentHmsCall } from "./agent-hms-authorization";
 import { AgentHmsReservationService, reservationBookingId } from "./agent-hms-reservation-service";
-import type { BookingListQuery, BookingRow, BookingUpdateResult, CreateBookingRecord, UpdateBookingRecord } from "./modules/bookings/domain";
+import type { BookingListQuery, BookingMutationProvenance, BookingRow, BookingUpdateResult, CreateBookingRecord, UpdateBookingRecord } from "./modules/bookings/domain";
 import type { BookingRepository } from "./modules/bookings/ports";
 import type { OperationalDatabase } from "./routing";
 
@@ -18,13 +18,24 @@ const context = {
   traceId: "trace-reserve-1",
 };
 
+const expectedProvenance = {
+  tenantId: "hotel-demo",
+  hotelId: HOTEL_ID,
+  actorId: "visitor-1",
+  sessionId: "session-1",
+  traceId: "trace-reserve-1",
+};
+
 type FakeOptions = {
   unavailable?: boolean;
+  throwBeforeCreate?: boolean;
   throwAfterCreate?: boolean;
 };
 
 class FakeBookingRepository implements BookingRepository {
   readonly rows = new Map<string, BookingRow>();
+  readonly createProvenance: BookingMutationProvenance[] = [];
+  readonly cancelProvenance: BookingMutationProvenance[] = [];
   createCalls = 0;
 
   constructor(private readonly options: FakeOptions = {}) {}
@@ -49,6 +60,8 @@ class FakeBookingRepository implements BookingRepository {
 
   async create(record: CreateBookingRecord): Promise<void> {
     this.createCalls += 1;
+    if (record.provenance) this.createProvenance.push(structuredClone(record.provenance));
+    if (this.options.throwBeforeCreate) throw new Error("simulated persistence failure");
     if (this.rows.has(record.id)) throw new Error("duplicate booking id");
     this.rows.set(record.id, {
       id: record.id,
@@ -70,7 +83,8 @@ class FakeBookingRepository implements BookingRepository {
     if (this.options.throwAfterCreate) throw new Error("simulated concurrent completion");
   }
 
-  async cancel(bookingId: string, now: string): Promise<BookingUpdateResult> {
+  async cancel(bookingId: string, now: string, provenance?: BookingMutationProvenance): Promise<BookingUpdateResult> {
+    if (provenance) this.cancelProvenance.push(structuredClone(provenance));
     const row = this.rows.get(bookingId);
     if (!row || row.status !== "CONFIRMED") return { meta: { changes: 0 } };
     this.rows.set(bookingId, { ...row, status: "CANCELLED", updated_at: now });
@@ -116,7 +130,7 @@ describe("AgentHms reservation authorization", () => {
 });
 
 describe("AgentHmsReservationService", () => {
-  it("creates a confirmed reservation through the canonical repository", async () => {
+  it("creates a confirmed reservation through the canonical repository with trusted provenance", async () => {
     const repository = new FakeBookingRepository();
     const result = await createService(repository).createReservation(context, input);
 
@@ -137,9 +151,11 @@ describe("AgentHmsReservationService", () => {
       traceId: "trace-reserve-1",
     });
     expect(repository.createCalls).toBe(1);
+    expect(repository.createProvenance).toEqual([expectedProvenance]);
+    expect(JSON.stringify(repository.createProvenance)).not.toContain(input.operationToken);
   });
 
-  it("replays the same operation token without creating a duplicate", async () => {
+  it("replays the same operation token without creating a duplicate or second mutation event", async () => {
     const repository = new FakeBookingRepository();
     const service = createService(repository);
     const first = await service.createReservation(context, input);
@@ -152,6 +168,7 @@ describe("AgentHmsReservationService", () => {
     expect(second.data.replayed).toBe(true);
     expect(repository.createCalls).toBe(1);
     expect(repository.rows.size).toBe(1);
+    expect(repository.createProvenance).toHaveLength(1);
   });
 
   it("rejects reuse of the same token for a different reservation", async () => {
@@ -179,6 +196,22 @@ describe("AgentHmsReservationService", () => {
     if (!result.ok) return;
     expect(result.data.replayed).toBe(true);
     expect(repository.rows.size).toBe(1);
+    expect(repository.createProvenance).toEqual([expectedProvenance]);
+  });
+
+  it("preserves an unexpected persistence failure as INTERNAL_ERROR when inventory is still valid", async () => {
+    const repository = new FakeBookingRepository({ throwBeforeCreate: true });
+    const result = await createService(repository).createReservation(context, input);
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Internal HMS error",
+        traceId: "trace-reserve-1",
+      },
+    });
+    expect(repository.rows.size).toBe(0);
   });
 
   it("cancels only the reservation derived from the original operation token and replays cleanup safely", async () => {
@@ -203,6 +236,7 @@ describe("AgentHmsReservationService", () => {
     expect(first.data.replayed).toBe(false);
     expect(second.data.status).toBe("CANCELLED");
     expect(second.data.replayed).toBe(true);
+    expect(repository.cancelProvenance).toEqual([expectedProvenance]);
   });
 
   it("rejects cleanup when booking id does not match the original operation token", async () => {
@@ -220,6 +254,7 @@ describe("AgentHmsReservationService", () => {
         traceId: "trace-reserve-1",
       },
     });
+    expect(repository.cancelProvenance).toHaveLength(0);
   });
 
   it("returns a conflict when the canonical booking references are unavailable", async () => {
@@ -235,6 +270,7 @@ describe("AgentHmsReservationService", () => {
       },
     });
     expect(repository.createCalls).toBe(0);
+    expect(repository.createProvenance).toHaveLength(0);
   });
 
   it("rejects an invalid range before resolving hotel data", async () => {
