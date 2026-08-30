@@ -91,7 +91,7 @@ function agentRoom(row: AvailableRoomRow): AgentRoom {
   };
 }
 
-function normalizeContext(value: AgentHmsCallContext): AgentHmsCallContext {
+export function normalizeAgentHmsContext(value: AgentHmsCallContext): AgentHmsCallContext {
   if (!value || typeof value !== "object") throw ApiError.badRequest("agent context is required");
   return {
     tenantId: requiredText(value.tenantId, "tenantId", 1, 100),
@@ -102,7 +102,7 @@ function normalizeContext(value: AgentHmsCallContext): AgentHmsCallContext {
   };
 }
 
-function normalizeError(error: unknown, traceId: string): AgentHmsResult<never> {
+export function normalizeAgentHmsError(error: unknown, traceId: string): AgentHmsResult<never> {
   if (error instanceof ApiError) {
     const code: AgentHmsErrorCode =
       error.code === "INVALID_INPUT"
@@ -123,19 +123,22 @@ function normalizeError(error: unknown, traceId: string): AgentHmsResult<never> 
   return { ok: false, error: { code: "INTERNAL_ERROR", message: "Internal HMS error", traceId } };
 }
 
+export async function resolveAgentHotel(
+  env: Env,
+  context: AgentHmsCallContext,
+): Promise<{ hotelId: string; database: OperationalDatabase }> {
+  const hotel = await env.CONTROL_DB.prepare(
+    "SELECT id, operational_binding FROM control_hotels WHERE id = ?1 AND active = 1 LIMIT 1",
+  ).bind(context.hotelId).first<HotelRouteRow>();
+  if (!hotel) throw ApiError.notFound("Hotel not found");
+  return {
+    hotelId: hotel.id,
+    database: resolveOperationalDatabaseBinding(env, hotel.operational_binding),
+  };
+}
+
 export class AgentHmsReadService {
   public constructor(private readonly env: Env) {}
-
-  private async resolveHotel(context: AgentHmsCallContext): Promise<{ hotelId: string; database: OperationalDatabase }> {
-    const hotel = await this.env.CONTROL_DB.prepare(
-      "SELECT id, operational_binding FROM control_hotels WHERE id = ?1 AND active = 1 LIMIT 1",
-    ).bind(context.hotelId).first<HotelRouteRow>();
-    if (!hotel) throw ApiError.notFound("Hotel not found");
-    return {
-      hotelId: hotel.id,
-      database: resolveOperationalDatabaseBinding(this.env, hotel.operational_binding),
-    };
-  }
 
   public async checkAvailability(
     rawContext: AgentHmsCallContext,
@@ -143,10 +146,10 @@ export class AgentHmsReadService {
   ): Promise<AgentHmsResult<AgentAvailabilityData>> {
     let traceId = "unknown";
     try {
-      const context = normalizeContext(rawContext);
+      const context = normalizeAgentHmsContext(rawContext);
       traceId = context.traceId;
       const range = dateRange(input?.start, input?.end);
-      const { hotelId, database } = await this.resolveHotel(context);
+      const { hotelId, database } = await resolveAgentHotel(this.env, context);
       const rooms = await listAvailableRooms(database, range.start, range.end);
       return {
         ok: true,
@@ -162,7 +165,7 @@ export class AgentHmsReadService {
         },
       };
     } catch (error) {
-      return normalizeError(error, traceId);
+      return normalizeAgentHmsError(error, traceId);
     }
   }
 
@@ -172,11 +175,11 @@ export class AgentHmsReadService {
   ): Promise<AgentHmsResult<AgentQuoteData>> {
     let traceId = "unknown";
     try {
-      const context = normalizeContext(rawContext);
+      const context = normalizeAgentHmsContext(rawContext);
       traceId = context.traceId;
       const roomId = requiredText(input?.roomId, "roomId", 1, 100);
       const range = dateRange(input?.start, input?.end);
-      const { hotelId, database } = await this.resolveHotel(context);
+      const { hotelId, database } = await resolveAgentHotel(this.env, context);
       const room = await findRoomById(database, roomId);
       if (!room) throw ApiError.notFound("Room not found");
       const availableRoom = await findAvailableRoom(database, roomId, range.start, range.end);
@@ -201,7 +204,7 @@ export class AgentHmsReadService {
         },
       };
     } catch (error) {
-      return normalizeError(error, traceId);
+      return normalizeAgentHmsError(error, traceId);
     }
   }
 }

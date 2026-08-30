@@ -12,6 +12,14 @@ export type BookingListQuery = {
   limit: number;
 };
 
+export type BookingMutationProvenance = {
+  tenantId: string;
+  hotelId: string;
+  actorId: string;
+  sessionId: string;
+  traceId: string;
+};
+
 export type CreateBookingRecord = {
   id: string;
   guestId: string;
@@ -22,6 +30,7 @@ export type CreateBookingRecord = {
   notes: string | null;
   now: string;
   claimNights: string[];
+  provenance?: BookingMutationProvenance;
 };
 
 export type UpdateBookingRecord = CreateBookingRecord & { bookingId: string };
