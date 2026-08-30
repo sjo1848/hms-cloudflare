@@ -3,63 +3,74 @@
 ## CURRENT AUTHORITATIVE STATE
 
 Project: HMS Cloudflare  
-Updated: 2026-08-28  
+Updated: 2026-08-30  
 Global Project Mode: `DELIVERY`  
-Phase: `STAGING RELEASE PREFLIGHT`  
-Runtime: `HUMAN_GATE`  
-Gate type: `CREDENTIAL_PERMISSION`
+Phase: `ACP INTEGRATION — PHASE 2.5`  
+Runtime: `EXTERNAL_REVIEW`  
+Active task: `ACP-2.5-HMS-CONTROLLED-RESERVATION`
 
-The integrated product candidate is technically accepted by CI and independent review. No further UX/mobile implementation is authorized before secure remote Product Acceptance.
+The previous Cloudflare Access credential gate is closed and obsolete. HMS staging is already operational behind the private API / Worker boundary. The Human-authorized increment remains strictly **staging only**.
 
-## INTEGRATED CANDIDATE
+## HUMAN AUTHORIZATION
 
-- Product/integration candidate: `3ccc28a0207bc142521ab92baa73960b1c86f3c0`.
-- Current `deploy/staging` orchestration head: `44938deabe07494c31930530a6d6fda249058e7d`; later commits are evidence/state only.
-- Foundation CI `33147471962` — PASS.
-- UX/mobile browser CI `33147471959` — PASS.
-- Browser artifact `9676346444`, digest `sha256:de63be030e353d2cefe738a2a3631c2b4161647bf4206f2576e798f380d3c1d6`.
-- State-freeze head `44938dea...` also passed Foundation `33147701124` and Browser `33147701108`.
-- Reports/Users/Network REWORK is closed.
-- Access JWT verification REWORK is closed.
-- Hostname-scoped Access auto-provision design passed independent Critic before integration.
+Authorized:
+- `createReservation` against HMS staging;
+- persistent idempotency and replay safety;
+- policy / approval enforcement in Agent Core;
+- tenant + hotel capability enforcement;
+- durable mutation provenance in HMS;
+- token-bound `cancelReservation` for synthetic E2E cleanup;
+- staging verification.
 
-## STAGING RELEASE BOUNDARY
+Not authorized:
+- production deployment/cutover;
+- real-data migration;
+- paid-resource expansion;
+- unrelated UX/product scope;
+- payment or other financial side effects.
 
-- Target hostname: `hms-cloudflare-web-staging.sjo1848.workers.dev`.
-- Ordinary merges to `deploy/staging` do not deploy Cloudflare.
-- Deliberate release is gated through `acceptance/staging`.
-- The first acceptance release attempt `33146922474` stopped at preflight before D1 or Worker mutation.
-- No production, DNS/custom-domain cutover, real-data migration or paid-resource activation is authorized.
-- Cost target remains Cloudflare Free / `$0/month`.
+## ACTIVE CONTRACT
 
-## CURRENT HUMAN GATE
+Canonical Task Contract: `.orchestration/contracts/ACP-2.5-HMS-CONTROLLED-RESERVATION.md`.
 
-The existing `CLOUDFLARE_API_TOKEN` can authenticate, use the existing Workers/D1 permissions and list Access Apps, but creation of the exact staging Access application returns HTTP 403.
+## FROZEN SUBSTANTIVE ARTIFACT
 
-Required human action when Cloudflare access is available:
+`a9cf1fe45a510f82d4725236fa7693ba9a2b376e`
 
-1. Grant `Account > Access: Apps and Policies > Write/Edit` to the HMS Cloudflare API token.
-2. If Cloudflare rotates the token value, replace only the GitHub Actions secret `CLOUDFLARE_API_TOKEN`.
-3. Report `listo`; do not paste the token into chat.
+Executable evidence on that exact artifact:
+- Foundation `33289871047` — PASS.
+- Product Flow / Worker+D1 / migration rehearsal / historical CF-I03→CF-I08 `33289871006` — PASS.
+- UX/mobile browser `33289870953` — PASS.
+- Additional branch Foundation `33289869352` — PASS.
 
-Evidence:
+Publication evidence:
+- `.orchestration/evidence/ACP-2.5-HMS-INVARIANTS.md`
+- `.orchestration/evidence/ACP-2.5-HMS-PRECRITIC.md`
 
-- Access discovery run `33147160941`: workers.dev subdomain resolved to `sjo1848`; Access Apps GET is readable.
-- Provision check run `33147549494`: Access App POST returns HTTP 403.
+## REVIEW FINDINGS CLOSED BEFORE FINAL FREEZE
 
-## RELEASE DESIGN ALREADY CLOSED
+1. **Persisted authorization boundary** — obsolete Access gate was reconciled and a Phase 2.5 Task Contract was added.
+2. **Durable mutation provenance** — create/cancel persist tenant/hotel/actor/session/trace/action/booking/timestamp in hotel D1, without raw operation token.
+3. **Migration id collision** — initial 0012 collision was caught by rehearsal and moved to migration 0018 after existing migrations.
+4. **Cancellation winner attribution** — CANCEL provenance is claimed only while booking is CONFIRMED, before the conditional transition, in the same D1 transaction. A race loser cannot falsely attribute another caller's cancellation to ACP.
+5. **Zero-row create race classification** — the prior post-create revalidation approach was insufficient because state could become valid again. Final artifact returns the authoritative booking INSERT result from `D1BookingRepository.create` and maps `meta.changes !== 1` immediately to `CONFLICT`; focused adversarial coverage proves this branch independently of later revalidation.
+6. **Stale evidence after substantive rework** — invariant and Pre-Critic evidence were refreshed to the final artifact and exact successful CI runs.
 
-- Release creates or reuses one Access application scoped to `hms-cloudflare-web-staging.sjo1848.workers.dev`.
-- The Access application AUD is obtained automatically and pinned into the private API configuration.
-- Staging verifies the Cloudflare Access JWT before substituting the synthetic acceptance identity.
-- API Worker remains private behind the Web Worker Service Binding.
-- Anonymous root/API probes must fail closed before the workflow can hand off staging for Product Acceptance.
-- D1 seed logic preserves already initialized synthetic state and refuses partial seed state.
+## CURRENT GATE
 
-## NEXT AUTHORIZED ACTION
+Fresh Independent Critic review of PR #28 against:
+- substantive artifact `a9cf1fe45a510f82d4725236fa7693ba9a2b376e`;
+- Task Contract;
+- invariant evidence;
+- Pre-Critic evidence;
+- full PR patch.
 
-While the credential gate is open, do not perform additional product/UX work and do not weaken Access.
+No merge to `deploy/staging` before fresh external PASS/no blocking finding.
 
-When the permission is available: verify Access write capability → advance `acceptance/staging` once → create/reuse Access → apply D1 migrations/seed-preservation → deploy private API + Web Worker → verify anonymous fail-closed behavior → persist version/evidence → enter `REMOTE HUMAN PRODUCT ACCEPTANCE`.
+## NEXT AUTHORIZED ACTION AFTER CRITIC PASS
 
-The Human then exercises the complete candidate and returns `ACCEPT` or `REWORK`. Technical PASS is not `PRODUCT_ACCEPTED`.
+Merge HMS PR #28 to `deploy/staging` → post-merge CI → promote to `acceptance/staging` → deploy HMS staging with migration 0018 + write RPCs → integrate/promote Agent Core → execute the full synthetic E2E:
+
+`no approval -> blocked -> approved reservation -> replay -> changed-payload conflict -> inventory occupied -> token-bound cancellation -> cancellation replay -> availability restored`.
+
+No Human action is required unless a legitimate strategy/security/cost/irreversibility/product-acceptance gate appears.

@@ -1,66 +1,47 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "phase": "STAGING_RELEASE_PREFLIGHT",
-  "runtime_status": "HUMAN_GATE",
+  "phase": "ACP_INTEGRATION_PHASE_2_5",
+  "runtime_status": "EXTERNAL_REVIEW",
   "resume_authorized": false,
-  "active_task": "CF-STAGING-ACCESS-TOKEN-PERMISSION",
-  "last_completed_task": "CF-STAGING-ACCESS-AUTOPROVISION-INTEGRATED-CI-PASS",
-  "last_completed_head": "3ccc28a0207bc142521ab92baa73960b1c86f3c0",
-  "work_branch": "deploy/staging",
-  "next_action": "HUMAN_GRANT_ACCESS_APPS_POLICIES_WRITE",
-  "stop_reason": "Integrated candidate is technically PASS. The Cloudflare token can list Access Apps but creation of the exact staging Access application returns HTTP 403. Failed release preflight stopped before D1 or Worker mutation.",
+  "active_task": "ACP-2.5-HMS-CONTROLLED-RESERVATION",
+  "last_completed_task": "ACP-2.4-E1-REAL",
+  "last_completed_head": "8821cd2971f66e1d7711027554649374750036b3",
+  "work_branch": "feature/acp-2-5-controlled-reservation",
+  "next_action": "INDEPENDENT_CRITIC_ON_FINAL_EXECUTING_D1_ARTIFACT",
+  "stop_reason": "PRECRITIC_PASS_AWAITING_EXTERNAL_REVIEW",
   "event": {
-    "seq": 111,
-    "id": "CF-STAGING-ACCESS-TOKEN-WRITE-HUMAN-GATE",
-    "type": "HUMAN_GATE"
+    "seq": 115,
+    "id": "ACP-2.5-HMS-EXECUTING-D1-PRECRITIC-PASS",
+    "type": "EXTERNAL_REVIEW"
   },
   "external_review": {
-    "required": false,
-    "last_audited_head": "28b673f5abe9fdb809058d33169351d9427af3e9",
-    "last_verdict": "PASS",
-    "artifact_head": "3ccc28a0207bc142521ab92baa73960b1c86f3c0",
-    "review_path": ".orchestration/reviews/CF-STAGING-ACCESS-AUTOPROVISION-CRITIC.md"
+    "required": true,
+    "last_audited_head": null,
+    "last_verdict": null,
+    "artifact_head": "70fae5c902af557eadc2802ba773f44b9f95fd46",
+    "review_path": ".orchestration/evidence/ACP-2.5-HMS-PRECRITIC.md"
   },
-  "human_gate": {
-    "type": "CREDENTIAL_PERMISSION",
-    "scope": "CLOUDFLARE_STAGING",
-    "reason": "The HMS Cloudflare API token lacks Access: Apps and Policies Write/Edit; secure staging cannot create its hostname-scoped Access application.",
-    "required_action": "Grant Account > Access: Apps and Policies > Write/Edit to the HMS Cloudflare token. If Cloudflare changes the token secret, replace GitHub Actions secret CLOUDFLARE_API_TOKEN. Then report listo."
-  },
-  "blocker": {
-    "type": "EXTERNAL_PERMISSION",
-    "evidence_run": 33147549494,
-    "detail": "Access Apps GET succeeds; Access application POST returns HTTP 403."
-  },
-  "release_preflight": {
-    "first_release_run": 33146922474,
-    "first_release_remote_mutation": false,
-    "access_discovery_run": 33147160941,
-    "access_provision_run": 33147549494,
-    "staging_host": "hms-cloudflare-web-staging.sjo1848.workers.dev"
-  },
-  "ci": {
-    "foundation": {
-      "run": 33147471962,
-      "status": "PASS"
-    },
-    "ux_mobile_browser": {
-      "run": 33147471959,
-      "status": "PASS",
-      "artifact_id": 9676346444,
-      "artifact_digest": "sha256:de63be030e353d2cefe738a2a3631c2b4161647bf4206f2576e798f380d3c1d6"
-    }
+  "human_gate": null,
+  "blocker": null,
+  "authorization": {
+    "scope": "STAGING_ONLY",
+    "create_reservation": true,
+    "cancel_cleanup": true,
+    "production": false,
+    "paid_expansion": false,
+    "real_data_migration": false,
+    "payment_mutation": false
   },
   "method": {
     "human_routine_relay_forbidden": true,
     "technical_rework_autonomous": true,
+    "independent_critic_before_merge": true,
     "product_acceptance_after_secure_staging_only": true
   },
   "cost_guard": {
     "target": "$0/month / Cloudflare Free",
     "paid_transition_requires_human_gate": true,
-    "intermediate_deploys_forbidden": true,
     "production_forbidden_without_separate_authorization": true
   }
 }
