@@ -1,0 +1,164 @@
+name: ACP R2.8.4 HMS read diagnostic
+
+on:
+  push:
+    branches:
+      - diagnostic/acp-r2.8.4-hms-read
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      AGENT_CORE_URL: https://ai-commerce-agent-core.sjo1848.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked toolchain
+        run: npm ci
+
+      - name: Resolve existing staging D1 ids
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          rows="$(npx wrangler d1 list --json)"
+          resolve_id() {
+            printf '%s' "$rows" | node -e '
+              const fs=require("fs");
+              const rows=JSON.parse(fs.readFileSync(0,"utf8"));
+              const row=rows.find((item)=>item.name===process.argv[1]);
+              if(!row) process.exit(2);
+              process.stdout.write(row.uuid||row.id||"");
+            ' "$1"
+          }
+          echo "CONTROL_DB_ID=$(resolve_id hms-control-staging)" >> "$GITHUB_ENV"
+          echo "HOTEL_DEMO_DB_ID=$(resolve_id hms-hotel-demo-staging)" >> "$GITHUB_ENV"
+
+      - name: Render read-only diagnostic D1 config
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > apps/api/wrangler.r28-diagnostic.jsonc <<EOF
+          {
+            "name": "hms-r28-read-diagnostic",
+            "main": "src/entrypoint.ts",
+            "compatibility_date": "2026-08-23",
+            "d1_databases": [
+              {
+                "binding": "CONTROL_DB",
+                "database_name": "hms-control-staging",
+                "database_id": "$CONTROL_DB_ID"
+              },
+              {
+                "binding": "HOTEL_DEMO_DB",
+                "database_name": "hms-hotel-demo-staging",
+                "database_id": "$HOTEL_DEMO_DB_ID"
+              }
+            ]
+          }
+          EOF
+
+      - name: Prove control-plane hotel route
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute CONTROL_DB --remote \
+            --config apps/api/wrangler.r28-diagnostic.jsonc \
+            --command "SELECT id, operational_binding, active FROM control_hotels WHERE id='10000000-0000-0000-0000-000000000001' LIMIT 1" \
+            --json | tee /tmp/r28-control-route.json
+
+      - name: Inspect required hotel schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute HOTEL_DEMO_DB --remote \
+            --config apps/api/wrangler.r28-diagnostic.jsonc \
+            --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('rooms','room_holds','room_inventory_nights') ORDER BY name" \
+            --json | tee /tmp/r28-schema.json
+          npx wrangler d1 execute HOTEL_DEMO_DB --remote \
+            --config apps/api/wrangler.r28-diagnostic.jsonc \
+            --command "PRAGMA table_info(rooms)" --json | tee /tmp/r28-rooms-columns.json
+          npx wrangler d1 execute HOTEL_DEMO_DB --remote \
+            --config apps/api/wrangler.r28-diagnostic.jsonc \
+            --command "PRAGMA table_info(room_holds)" --json | tee /tmp/r28-holds-columns.json
+          npx wrangler d1 execute HOTEL_DEMO_DB --remote \
+            --config apps/api/wrangler.r28-diagnostic.jsonc \
+            --command "PRAGMA table_info(room_inventory_nights)" --json | tee /tmp/r28-inventory-columns.json
+
+      - name: Execute exact read-service availability SQL
+        id: exact_sql
+        shell: bash
+        run: |
+          set +e
+          npx wrangler d1 execute HOTEL_DEMO_DB --remote \
+            --config apps/api/wrangler.r28-diagnostic.jsonc \
+            --command "SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents FROM rooms AS r WHERE r.status IN ('AVAILABLE','OCCUPIED','DIRTY','CLEANING') AND NOT EXISTS (SELECT 1 FROM room_holds AS h WHERE h.room_id = r.id AND h.start_date < '2030-01-03' AND h.end_date > '2030-01-01') AND NOT EXISTS (SELECT 1 FROM room_inventory_nights AS n WHERE n.room_id = r.id AND n.stay_date >= '2030-01-01' AND n.stay_date < '2030-01-03' AND (NULL IS NULL OR n.booking_id <> NULL)) ORDER BY r.room_number" \
+            --json > /tmp/r28-exact-availability.json 2>&1
+          code=$?
+          set -e
+          cat /tmp/r28-exact-availability.json
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
+      - name: Tail HMS while replaying read-only C06
+        id: runtime_probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f /tmp/r28-hms-tail.log /tmp/r28-c06-body.json /tmp/r28-c06-status.txt
+          request_id="r28-hms-diag-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          (
+            sleep 4
+            status="$(curl -sS --max-time 30 -o /tmp/r28-c06-body.json -w '%{http_code}' \
+              -X POST "$AGENT_CORE_URL/api/chat" \
+              -H 'content-type: application/json' \
+              -H "x-request-id: $request_id" \
+              --data '{"message":"Hola. Somos cuatro y queremos quedarnos del 1 al 3 de enero de 2030. ¿Qué tenés disponible?"}' || true)"
+            printf '%s' "$status" > /tmp/r28-c06-status.txt
+          ) &
+          PROBE_PID=$!
+          set +e
+          timeout 30s script -qefc \
+            "npx wrangler tail 'hms-cloudflare-api-staging' --format=json" \
+            /tmp/r28-hms-tail.log
+          tail_code=$?
+          set -e
+          wait "$PROBE_PID"
+          echo "C06_STATUS=$(cat /tmp/r28-c06-status.txt)"
+          cat /tmp/r28-c06-body.json || true
+          echo '--- HMS tail ---'
+          cat /tmp/r28-hms-tail.log || true
+          echo "status=$(cat /tmp/r28-c06-status.txt)" >> "$GITHUB_OUTPUT"
+          echo "tail_code=$tail_code" >> "$GITHUB_OUTPUT"
+
+      - name: Classify diagnostic
+        shell: bash
+        env:
+          SQL_CODE: ${{ steps.exact_sql.outputs.code }}
+          C06_STATUS: ${{ steps.runtime_probe.outputs.status }}
+        run: |
+          set -euo pipefail
+          if [[ "$SQL_CODE" != "0" ]]; then
+            echo "R2.8.4 HMS_DIAG=REMOTE_D1_EXACT_QUERY_FAILURE"
+            exit 1
+          fi
+          if [[ "$C06_STATUS" != 2* ]]; then
+            if grep -Fq 'agent_hms_error' /tmp/r28-hms-tail.log; then
+              echo "R2.8.4 HMS_DIAG=HMS_RUNTIME_INTERNAL_ERROR_CAPTURED"
+            else
+              echo "R2.8.4 HMS_DIAG=HMS_RUNTIME_FAILURE_WITHOUT_INTERNAL_LOG"
+            fi
+            exit 1
+          fi
+          echo "R2.8.4 HMS_DIAG=READ_PATH_HEALTHY_NOW"
