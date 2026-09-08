@@ -1,0 +1,11 @@
+# HMS Cloudflare — project-scoped Codex defaults
+# Cost-aware baseline: use the balanced model by default and cheaper subagents
+# for routine parallel work. Escalation rules live in
+# .orchestration/decisions/PM-MODEL-ROUTING-001.md.
+
+model = "gpt-5.6-terra"
+model_reasoning_effort = "medium"
+
+[agents]
+default_subagent_model = "gpt-5.6-luna"
+default_subagent_reasoning_effort = "medium"
