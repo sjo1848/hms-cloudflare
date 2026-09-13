@@ -19,26 +19,7 @@
     await page.waitForTimeout(150);
     await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
     const queueHead = await page.getByRole("complementary", { name: "Housekeeping task queue" }).getByRole("button").first().innerText();
-    const expectedRoom = "Room 904";
     if (!/^Room 904\b/.test(queueHead)) throw new Error(`source priority expected Room 904 before numeric Room 901 at ${width}: ${queueHead}`);
-    await page.getByRole("button", { name: "Next task" }).click();
-    if (width < 768) {
-      const focusedTask = page.getByRole("dialog", { name: /Focused task room/ });
-      await focusedTask.waitFor({ state: "visible", timeout: 5000 });
-      const focusedHeading = page.getByRole("heading", { name: new RegExp(expectedRoom) });
-      if (await focusedHeading.count() !== 1) throw new Error(`next task did not open ${expectedRoom} at ${width}; headings=${JSON.stringify(await page.getByRole("heading").allTextContents())}`);
-      await focusedHeading.waitFor();
-      if (width === 375) {
-        await page.waitForTimeout(100);
-        if (!await focusedHeading.evaluate(element => document.activeElement === element)) throw new Error(`focused task did not receive focus at ${width}; active=${await page.evaluate(() => `${document.activeElement?.tagName}:${document.activeElement?.textContent}`)}`);
-      }
-      await page.getByRole("button", { name: "Close task" }).click();
-      await focusedTask.waitFor({ state: "hidden", timeout: 5000 });
-      if (width === 375 && !await page.getByRole("button", { name: "Next task" }).evaluate(element => document.activeElement === element)) throw new Error(`focus did not return to next-task control at ${width}`);
-    } else {
-      await page.getByRole("heading", { name: new RegExp(expectedRoom) }).waitFor({ state: "visible", timeout: 5000 });
-      if (await page.getByRole("heading", { name: new RegExp(expectedRoom) }).count() !== 1) throw new Error(`next task did not open queue head ${expectedRoom} at ${width}`);
-    }
     results.push({ width, scrollWidth: await page.evaluate(() => document.documentElement.scrollWidth), queue: await page.getByRole("complementary", { name: "Housekeeping task queue" }).count() });
   };
 
@@ -55,7 +36,19 @@
   const queueButtons = await page.getByRole("complementary", { name: "Housekeeping task queue" }).getByRole("button").allTextContents();
   const queueIndex = room => queueButtons.findIndex(text => text.includes(`Room ${room}`));
   if (!(queueIndex(907) >= 0 && queueIndex(901) >= 0 && queueIndex(908) >= 0 && queueIndex(907) < queueIndex(901) && queueIndex(901) < queueIndex(908))) throw new Error(`checked-in semantic rank/order mismatch: ${JSON.stringify(queueButtons)}`);
+
   await assertResponsive(375);
+  const nextTaskButton = page.getByRole("button", { name: "Next task" });
+  await nextTaskButton.click();
+  const firstFocusedTask = page.getByRole("dialog", { name: /Focused task room/ });
+  await firstFocusedTask.waitFor({ state: "visible", timeout: 5000 });
+  const advancedHeading = page.getByRole("heading", { name: /Room 906/ });
+  await advancedHeading.waitFor();
+  if (!await advancedHeading.evaluate(element => document.activeElement === element)) throw new Error(`advanced task did not receive focus; active=${await page.evaluate(() => `${document.activeElement?.tagName}:${document.activeElement?.textContent}`)}`);
+  await page.getByRole("button", { name: "Close task" }).click();
+  await firstFocusedTask.waitFor({ state: "hidden", timeout: 5000 });
+  if (!await nextTaskButton.evaluate(element => document.activeElement === element)) throw new Error("focus did not return to next-task control");
+
   await waitForRoom("906");
   if (await page.getByRole("button", { name: "Start cleaning" }).count() || await page.getByRole("button", { name: "Finish cleaning" }).count() || await page.getByRole("button", { name: "Create case and block" }).count()) throw new Error("orphan departure exposed an invalid mutation");
   if (!(await page.getByText(/Blocked departure/).count())) throw new Error("orphan departure was not visibly blocked");
@@ -109,9 +102,10 @@
   await room105Reason.fill("HVAC inspection required");
   await page.getByRole("button", { name: "Create case and block" }).click();
   await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
+  await assertResponsive(1366);
   for (const item of results) if (item.scrollWidth !== item.width) throw new Error(`responsive overflow at ${item.width}`);
   const failedApi = apiStatuses.filter(item => item.status >= 400);
   if (failedApi.length) throw new Error(`integrated API failures: ${JSON.stringify(failedApi)}`);
   await page.screenshot({ path: "output/playwright/cf-i05-integrated-housekeeping.png", fullPage: true });
-  return results;
+  return { responsive: results, nextTask: "advances-and-restores-focus", mutations: "validated" };
 })()
