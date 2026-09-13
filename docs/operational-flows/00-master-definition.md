@@ -4,12 +4,14 @@ Status: `ANALYSIS / IMPLEMENTATION LOCKED`
 Baseline: `acceptance/staging` @ `26239b76b919266de07d7bece5977296647f109c`
 Source reference: `sjo1848/hotel-management-system` @ `4df56a6217caab611f2f5fcbd98bde8386bb5629`
 Canonical E2E scope: `docs/operational-flows/18-end-to-end-scope-matrix.md`
+Canonical API map: `docs/operational-flows/19-api-command-contract-map.md`
+Canonical maintenance RBAC: `docs/operational-flows/05-maintenance-data-rbac.md`
 
 ## Governing rule
 
 HMS follows the real hotel workflow; the operator must not reconstruct state, eligibility or handoffs the system already knows. Physical room state, future sellability and immediate readiness are distinct concepts. Accepted source behavior is preserved unless an explicit product decision authorizes a departure.
 
-The next implementation wave is not considered defined by isolated feature documents alone. Its complete perimeter is the master + transition matrix + operational invariants + E2E scope matrix. BUILD may not omit a cross-module consequence, failure path, concurrency rule, financial consequence or acceptance proof that is listed there.
+The next implementation wave is not considered defined by isolated feature documents alone. Its complete perimeter is the master + transition matrix + operational invariants + E2E scope matrix + API command map + RBAC contract. BUILD may not omit a cross-module consequence, failure path, concurrency rule, financial consequence, authorization rule or acceptance proof that is listed there.
 
 ## Canonical domain
 
@@ -23,7 +25,7 @@ Date-sensitive rules use server-derived `hotel_local_date` from a persisted hote
 
 **Reassignment:** for `CHECKED_IN`, destination must be immediately usable and free for the remaining stay. `effective_date=max(check_in, hotel_local_date)`. Only `[effective_date, check_out)` inventory moves; historical nights remain on the prior room. Destination becomes occupied; old room becomes dirty or maintenance according to open blocking maintenance. Source-parity pricing recalculates accommodation using total stay nights × destination room current price, plus extra charges; invoice state is reconciled atomically.
 
-**Maintenance:** case impact is `NON_BLOCKING | BLOCKING`, independent from priority and physical room state. Non-blocking is advisory. Blocking prevents new occupancy; if already occupied, guest remains until explicit relocation/checkout. V1 keeps one open case per room.
+**Maintenance:** case impact is `NON_BLOCKING | BLOCKING`, independent from priority and physical room state. Non-blocking is advisory. Blocking prevents new occupancy; if already occupied, guest remains until explicit relocation/checkout. V1 keeps one open case per room. Maintenance permissions are binding, not advisory: admin/ops/housekeeping may resolve; receptionist may read/report/escalate but not resolve; saas_admin has no tenant maintenance authority.
 
 **Arrival exceptions:** source parity is binding. A `CONFIRMED` booking may check in when formal checklist/evidence is complete and its room is immediately ready; no additional calendar-day block is introduced. Cancellation remains an explicit `CONFIRMED -> CANCELLED` terminal action with required reason and no new arrival-date cutoff. `NO_SHOW` is distinct and allowed from hotel-local arrival date: `hotel_local_date >= check_in`. It releases inventory without dirtying the room.
 
@@ -33,7 +35,13 @@ Date-sensitive rules use server-derived `hotel_local_date` from a persisted hote
 
 Payments are immutable evidence. Booking total and invoice amount/status must remain consistent. A paid invoice cannot remain `PAID` if authoritative total later exceeds paid amount. Checkout must display authoritative total, paid and remaining balance for the Reception-selected booking.
 
-Source parity fixes checkout policy semantics: `settled` requires a fully paid account; `pending-approved` is the governed positive-balance exception and requires accepted reference/override rules. This is binding behavior, not a Human Gate.
+Source parity fixes checkout policy semantics: `settled` requires a fully paid account; `pending-approved` is the governed positive-balance exception and requires accepted reference/override rules. `bookings.checkout.override` remains admin-only. This is binding behavior, not a Human Gate.
+
+## API/lifecycle contract
+
+`19-api-command-contract-map.md` is binding. Existing explicit `check-in`, `reassign` and `check-out` routes are preserved/hardened; cancellation remains on the existing confirmed-booking update path; `no-show` and `extend-stay` are explicit lifecycle commands; `/api/v1/front-desk/board` is preserved/extended; maintenance open is expanded and dedicated escalate/resolve commands are added. The legacy `/housekeeping/:id/dirty` path is compatibility-only for the historical blocking maintenance-room resolution case and is not the new general resolve contract.
+
+Generic booking PATCH must not become a shortcut around checked-in lifecycle commands. New routes/fields require aligned OpenAPI/client contracts and backend capability enforcement.
 
 ## Cross-module flow
 
@@ -51,9 +59,9 @@ Before date-sensitive P0 work ships, persist hotel IANA timezone and expose a tr
 
 ## Complete E2E perimeter
 
-`18-end-to-end-scope-matrix.md` is binding and includes technical foundations, reservation with existing/new guest, formal check-in, cancellation, no-show, late arrival, in-stay reassignment, non-blocking/blocking maintenance, vacant maintenance, housekeeping turnover, checkout, stay extension, extra-charge/Billing reconciliation, front-desk read model, contextual navigation/freshness, post-action continuation, audit/event evidence and synthetic-shift acceptance.
+`18-end-to-end-scope-matrix.md` is binding and includes technical foundations, reservation with existing/new guest, formal check-in, cancellation, no-show, late arrival, in-stay reassignment, non-blocking/blocking maintenance, vacant maintenance, housekeeping turnover, checkout, stay extension, extra-charge/Billing reconciliation, front-desk read model, contextual navigation/freshness, post-action continuation, audit/event evidence, API/OpenAPI/RBAC conformance and synthetic-shift acceptance.
 
-No implementation increment is complete merely because its endpoint/UI is green. It must prove its row's domain mutation, failure/concurrency behavior, financial consequence where applicable, cross-module handoff, audit truth and responsive user journey.
+No implementation increment is complete merely because its endpoint/UI is green. It must prove its row's domain mutation, failure/concurrency behavior, financial consequence where applicable, authorization, API contract, cross-module handoff, audit truth and responsive user journey.
 
 ## Sequence
 
@@ -77,10 +85,11 @@ Analysis closes only when:
 
 1. canonical documents are contradiction-free;
 2. every E2E scope row has unambiguous owner, trigger/preconditions, authoritative effects, failure/concurrency behavior, cross-module consequence and acceptance proof requirements;
-3. no source-parity behavior was silently narrowed or changed;
-4. no unresolved Human Gate blocks an in-scope row;
-5. Pre-Critic passes;
-6. a fresh adversarial review of the immutable artifact finds no blocking definition defect;
-7. orchestration state points to that exact immutable artifact.
+3. API and RBAC contracts are unambiguous and consistent with the E2E/domain model;
+4. no source-parity behavior was silently narrowed or changed;
+5. no unresolved Human Gate blocks an in-scope row;
+6. Pre-Critic passes;
+7. a fresh adversarial review of the immutable artifact finds no blocking definition defect;
+8. orchestration state points to that exact immutable artifact.
 
-Until all seven conditions are true, implementation remains locked.
+Until all eight conditions are true, implementation remains locked.
