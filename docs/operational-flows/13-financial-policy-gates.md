@@ -1,50 +1,45 @@
-# 13 — Financial policy Human Gates
+# 13 — Financial policy gate and deferred policy
 
-Status: `HUMAN GATE REGISTER`
+Status: `HUMAN GATE REGISTER / SOURCE-PARITY CLARIFICATION`
 
-Operational/domain work must not silently invent the following commercial rules.
+Operational/domain work must not invent unsupported commercial rules. Accepted source financial semantics remain binding and are not reopened as Human Gates.
 
 ## HG-FIN-001 — Rate basis for extending a stay
 
-Current HMS stores `total_cents` / source `total_price_cents`, but no immutable booked nightly-rate snapshot. Extra charges can also increase the booking total, so `total / nights` is not a reliable live rate after charges.
+The new dedicated active-stay extension flow requires an explicit price basis. Current target stores `total_cents`; accepted source stores `total_price_cents` and recalculates accommodation from room price during generic booking updates, but there is no explicit contracted-rate snapshot dedicated to extension semantics. Extra charges also make `total / nights` unsafe as a rate derivation.
 
 Options:
 
-A. **Preserve the originally booked nightly rate** for added nights. Recommended for predictability. Requires storing/backfilling a rate snapshot or accommodation subtotal.
+A. **Persist/preserve the originally contracted accommodation nightly rate** for added nights. Recommended for predictable commercial behavior; requires an explicit rate/accommodation snapshot.
 
-B. Use the room's current price at extension time. Simpler technically, but the same stay can change rate without explicit negotiation.
+B. Apply the room's current price according to a specifically approved extension pricing rule.
 
-C. Require an explicit extension rate entered/approved by staff. Flexible but adds operator friction and authorization policy.
+C. Require an explicit extension rate/amount entered or approved by staff with an authorization policy.
 
-Recommendation: **A**. Do not implement P0.4 pricing until human approval.
+Recommendation: **A**. Do not implement P0.4 price mutation until human approval.
 
-## HG-FIN-002 — Meaning of checkout policy `settled`
+## Checkout `settled` — NOT A HUMAN GATE
 
-Current backend accepts `settled` without proving that authoritative remaining balance is zero.
+Accepted source semantics are already explicit and binding:
 
-Options:
+- `settled` requires the account to be fully paid;
+- `pending-approved` is the positive-balance exception;
+- the accepted reference/override capability rules apply to `pending-approved`.
 
-A. **Enforce `remaining_balance == 0` for `settled`; use `pending-approved` for positive balance with override capability/reference.** Recommended.
+The target must restore/preserve this behavior. BUILD may not treat `settled` as a manual declaration independent of Billing truth.
 
-B. Keep `settled` as a manual declaration independent of Billing state.
+## Cancellation/no-show money disposition — DEFERRED
 
-Recommendation: **A**, because it makes the persisted policy truthful and uses the existing override path for exceptions.
+Cancellation/no-show may occur after advance payments. This operational wave does not automatically refund, retain, void or create a penalty.
 
-## HG-FIN-003 — Cancellation/no-show money disposition
-
-Cancellation/no-show may occur after advance payments.
-
-Recommended v1 boundary:
-
-- lifecycle transition does not auto-refund, void or create a penalty;
 - payment entries remain immutable evidence of received money;
-- existing invoice/payment context remains visible for manual financial follow-up;
-- refund/retention/penalty policy is deferred to a dedicated Billing contract.
+- invoice/payment context remains visible for financial follow-up;
+- refund/retention/penalty policy belongs to a dedicated future Billing decision if automation is requested.
 
-This recommendation does not block operational no-show if no automatic financial mutation is introduced.
+This deferred policy does not block operational cancellation/no-show because those transitions introduce no automatic money mutation.
 
-## Existing Billing consistency defect to repair regardless of commercial choice
+## Billing consistency regardless of policy
 
-If an invoice exists, any authoritative increase of booking total (extra charge or approved extension delta) must keep invoice amount/status consistent. A previously `PAID` invoice cannot remain `PAID` when the amount increases beyond paid amount.
+If an invoice exists, any authoritative increase of booking total (extra charge or approved extension delta) must keep invoice amount/status consistent. A previously `PAID` invoice cannot remain `PAID` when the authoritative amount exceeds paid amount.
 
-This is an accounting consistency invariant, not a pricing-policy choice.
+This is an accounting invariant, not a commercial-policy choice.
