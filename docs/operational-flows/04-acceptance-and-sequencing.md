@@ -1,64 +1,56 @@
 # 04 — Acceptance and sequencing
 
-Status: `BINDING DEFINITION`; implementation ordering is refined by `04a-sequencing-refinement.md`.
+Status: `BINDING DEFINITION`; ordering refined by `04a-sequencing-refinement.md`.
 
-## Acceptance strategy
+## Evidence strategy
 
-Each future implementation increment must prove the domain transition first, then browser workflow, then cross-module continuity. Green UI tests alone are insufficient.
+Each increment proves domain/API transition, invalid-state and stale/concurrency rejection, exact state, truthful audit, authorization, OpenAPI/client alignment, responsive browser journey and cross-module consequence. Green UI alone is insufficient.
 
-Minimum evidence per P0 flow:
-
-- positive API/domain path;
-- invalid-state rejection;
-- deterministic stale/concurrency rejection;
-- exact DB/state assertions;
-- truthful audit/event assertion;
-- responsive browser journey at contracted widths;
-- source-parity assertion for any migrated behavior;
-- cross-surface consequence where applicable.
-
-## End-to-end operational scenarios
+## Representative operational scenarios
 
 ### A — Normal departure
+Checked-in guest -> authoritative Billing review -> checkout -> booking checked out -> room DIRTY (or MAINTENANCE with blocking case) -> downstream work -> cleaning -> AVAILABLE. Checkout settlement uses stored authoritative booking total and does not reprice accommodation under D9.
 
-Checked-in guest -> review authoritative balance/charges -> confirm room vacated -> checkout -> booking checked out -> room dirty -> housekeeping sees room -> clean -> available -> Reception revalidation sees room ready.
-
-### B — Reassignment without blocking maintenance
-
-Checked-in guest in 101 -> select valid 104 for remaining stay -> show source-parity destination-price consequence -> confirm -> booking/current room becomes 104 -> 104 occupied -> 101 dirty -> booking total/invoice reconciled -> housekeeping cleans 101 -> 101 available. Past inventory nights remain traceable to 101.
+### B — Reassignment
+Checked-in guest -> valid destination for remaining stay -> show destination-price consequence -> confirm -> remaining inventory moves; destination OCCUPIED; old room DIRTY/MAINTENANCE; history preserved; booking total/invoice reconciled; downstream turnover completes.
 
 ### C — Blocking occupied incident
+Guest OCCUPIED -> BLOCKING case -> relocation attention -> explicit reassignment -> old room MAINTENANCE -> resolve -> DIRTY -> clean -> AVAILABLE. No automatic guest move.
 
-Guest in 102 -> open urgent `BLOCKING` maintenance case -> Reception attention/relocation -> reassign to 105 -> 102 maintenance -> resolve -> 102 dirty -> clean -> available.
+### D — Non-blocking incident
+Open NON_BLOCKING on OCCUPIED, AVAILABLE, DIRTY or CLEANING -> physical state unchanged -> advisory case -> resolve with physical state unchanged. On AVAILABLE the case does not independently remove sellability/readiness.
 
-### D — Non-blocking occupied incident
-
-Guest remains in 103 -> open `NON_BLOCKING` case -> booking/room remain occupied -> resolve -> room remains occupied -> later normal checkout sends room dirty.
-
-### E — Arrival exception / no-show
-
-Confirmed arrival reaches its hotel-local arrival date and never occupies the room -> no-show is eligible according to accepted source parity -> booking no-show -> inventory released -> physical room unchanged -> arrival disappears -> availability refreshes. Cancellation remains a separate terminal operator choice while booking is still confirmed. No automatic money mutation is inferred.
+### E — Arrival exceptions
+No-show from hotel-local arrival date: CONFIRMED never occupied -> NO_SHOW -> inventory release -> room unchanged -> **booking total unchanged** -> financial evidence preserved. Cancellation is separate CONFIRMED terminal intent and likewise preserves total; neither adds automatic refund/penalty.
 
 ### F — Stay extension
+Checked-in guest -> later checkout -> added nights free -> display source pricing result (`total nights × current room price + extras`) -> confirm -> dates/inventory/total/invoice atomic. Conflict rolls all parts back.
 
-Checked-in guest requests later checkout -> added interval available -> show source-parity recalculated total (`new total nights × current room price + extra charges`) and resulting balance -> confirm -> extension commits atomically -> booking remains checked in -> room remains occupied -> added inventory claimed -> invoice/balance reconciled.
+### G — Checkout settlement
+`settled` succeeds only when authoritative account is fully paid. Positive balance uses pending-approved + reference + admin-only override. Catalog price changes after booking do not cause checkout repricing; validation uses the stored authoritative total.
 
-Conflict variant: any added-night, price, booking or concurrent Billing conflict rejects with zero partial mutation.
+### H — Metadata/state no-repricing regression
+After reservation creation, change the room catalog price, then independently:
+- edit only guest/name/ordinary notes;
+- record/rerecord late arrival;
+- check in;
+- cancel;
+- mark no-show;
+- checkout.
 
-### G — Checkout settlement parity
+Each state/evidence-only action preserves the stored booking total (and invoice amount where one exists), except checkout may alter settlement/invoice lifecycle against that same total. By contrast a room/date edit, reassignment, extension or extra charge demonstrates the defined pricing mutation and invoice reconciliation.
 
-Reception selects `settled` -> backend verifies authoritative account is fully paid -> checkout succeeds only when source financial invariant is true. Positive balance requires the governed `pending-approved` path with reference/override capability. UI declaration alone cannot bypass this rule.
+### I — Late arrival
+Confirmed booking -> valid future ETA whose hotel-local date is inside stay + note min 6 -> persist front-desk metadata/actor/time/audit -> remains CONFIRMED -> board shows context. Past/out-of-stay ETA, short note or non-confirmed booking rejects without state/financial drift.
 
-## Required implementation sequence
+## Sequence
 
-Use `04a-sequencing-refinement.md` as the authoritative wave order. Wave 0 prerequisites precede material feature UI growth. Every Wave 1 domain item gets a bounded Task Contract and independent review.
+`04a-sequencing-refinement.md` is authoritative. Wave 0 prerequisites precede material UI growth. Every Wave 1 state-changing domain item gets a bounded Task Contract and independent review.
 
 ## Stop conditions
 
-Return to analysis/Human Gate if implementation proposes a new financial policy, multiple simultaneous maintenance cases, split-stay/multi-room extension, cross-D1 atomicity, paid/production dependency, UX that weakens backend lifecycle guards, or a calendar/pricing restriction that intentionally departs from accepted source behavior.
+Return to definition/Human Gate if BUILD proposes new commercial policy, multiple simultaneous maintenance cases, split-stay/automatic relocation, cross-D1 atomicity, paid/production dependency, weakened lifecycle guards, unregistered source departure, or hidden pricing side effect.
 
 ## Product simulation gate
 
-Before the workflow pass is accepted, execute a synthetic hotel shift covering scenarios A–G and record module switches, confirmations, stale/conflict outcomes, hidden-memory burden and whether the next actionable case is obvious.
-
-The target is not minimum clicks at any cost. It is minimum unnecessary context switching while preserving explicit high-risk confirmations and accepted business semantics.
+Before acceptance execute the full `18-end-to-end-scope-matrix.md` synthetic shift, including scenarios A-I, and record context switches, confirmations, conflict recovery, operator-memory burden, next-action clarity and contracted mobile/desktop evidence.
