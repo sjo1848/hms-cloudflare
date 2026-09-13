@@ -2,50 +2,42 @@
 
 Status: `BINDING PRODUCT TARGETS`
 
-The second pass is successful only if primary hotel work can be completed without unnecessary module switching.
+The workflow pass succeeds only if primary hotel work completes without unnecessary module switching while preserving backend safety.
 
 ## Zero-required-switch primary paths
 
-The following flows should complete from their owning surface without requiring navigation to another module:
+From Reception:
+- normal check-in;
+- normal checkout with authoritative embedded Billing context;
+- in-stay room reassignment;
+- report/escalate occupied-room maintenance;
+- new reservation with existing or inline-created guest;
+- checked-in stay extension with availability/pricing/balance preview;
+- cancellation/no-show when eligible;
+- record/rerecord late-arrival ETA/note.
 
-- normal check-in from Reception;
-- normal checkout from Reception, including Billing context needed for the checkout decision;
-- in-stay room reassignment from Reception;
-- reporting an occupied-room maintenance issue from Reception;
-- new reservation with a new guest from Reception;
-- extending a checked-in stay from Reception after the applicable financial policy gate is resolved;
-- marking an eligible no-show from Reception;
-- dirty -> cleaning -> available from Housekeeping.
+From Housekeeping:
+- dirty -> cleaning -> available;
+- maintenance inspect/resolve where role permits.
 
-Cross-module links remain available for inspection and specialist work, but are not mandatory detours for the primary flow.
+Cross-module links remain available for inspection/specialist work but are not mandatory detours for the primary flow.
 
 ## Operator-memory rule
 
-If HMS already knows guest, booking, room, balance, readiness, maintenance blocker or prior selected context, the user must not be required to remember/reselect that information solely because another component owns it internally.
+If HMS already knows guest, booking, room, balance, readiness, maintenance blocker, selected case, operational date or late-arrival context, the operator must not re-enter/reselect it solely because another component owns it internally.
+
+## Pricing transparency
+
+State/evidence-only actions under D9 (check-in, cancellation, no-show, late arrival, checkout, metadata-only booking edits) must not display a fabricated price delta. Pricing-affecting actions (room/date edit, reassignment, extension, extra charge) show resulting total/balance before confirmation where material.
 
 ## High-risk confirmations
 
-Clicks are not minimized at the expense of safety. Explicit confirmation remains appropriate for:
-
-- no-show;
-- cancellation;
-- checkout/release;
-- room reassignment;
-- consequences of a `BLOCKING` maintenance incident and relocation;
-- cash/financial irreversible actions.
+Explicit confirmation remains appropriate for no-show, cancellation, checkout/release, room reassignment, BLOCKING maintenance consequences/relocation and irreversible cash/financial actions. Low-risk metadata such as late-arrival recording should not be burdened with unrelated lifecycle confirmations.
 
 ## Post-action continuity
 
-After an action:
-
-- authoritative data is refreshed;
-- filters/search remain stable;
-- successful item changes/disappears according to state;
-- next case is obvious and follows operational priority;
-- a conflict explains what changed and refreshes the affected case.
+After action: authoritative refresh; filters/search stable; item changes according to state; next case follows operational priority; conflict explains what changed and refreshes affected context.
 
 ## Simulation measurements
 
-For each synthetic shift scenario record module switches, confirmations, duplicate data entry, re-selection of already-known entities, stale-state conflicts, and whether the next action is evident without scanning unrelated controls.
-
-No hard click-count KPI is imposed. The optimization target is unnecessary context switching and redundant input, not removal of safety confirmations.
+Record module switches, confirmations, duplicate entry, re-selection of known entities, stale conflicts and whether next action is evident. No arbitrary click-count KPI; optimize unnecessary context switching/redundant input without removing safety confirmations.
