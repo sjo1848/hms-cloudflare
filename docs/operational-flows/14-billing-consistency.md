@@ -1,6 +1,6 @@
 # 14 — Billing consistency
 
-Status: `BINDING TECHNICAL/ACCOUNTING INVARIANT`; commercial choices in `13-financial-policy-gates.md` remain Human Gates.
+Status: `BINDING TECHNICAL/ACCOUNTING INVARIANT`; unsupported extension pricing remains governed by `HG-FIN-001`.
 
 ## Booking total and invoice
 
@@ -16,18 +16,24 @@ A `PAID` invoice cannot remain `PAID` with `paid_amount_cents < amount_cents`.
 
 ## Extra charges
 
-Current behavior updates invoices only when invoice status is already `PENDING`. This leaves a paid invoice stale if a later charge is added. Future Billing hardening must reopen/reconcile the invoice or reject the charge; preferred invariant is reconcile and reopen unless a later Human Gate chooses stricter workflow.
+Current target behavior updates invoices only when invoice status is already `PENDING`. This can leave a paid invoice stale if a later charge is added. Future Billing hardening must reconcile/reopen the invoice or reject the total-increasing operation atomically; the invariant is that stale paid state is forbidden.
 
-## Checkout consistency
+## Checkout source parity
 
-Checkout must read authoritative Billing state in the same decision window as checkout policy validation. UI checkbox/text alone is not evidence of settled balance.
+Checkout must read authoritative Billing state in the same decision window as checkout policy validation. UI checkbox/text alone is not evidence of settlement.
 
-The exact commercial enforcement of `settled` is HG-FIN-002, but regardless of that choice the UI must display authoritative total, paid and remaining amount for the active Reception booking.
+Accepted source semantics are binding:
+
+- `settled` requires the account to be fully paid;
+- `pending-approved` is the governed positive-balance exception;
+- the existing operational reference and override capability requirements apply.
+
+This is not a new commercial-policy choice.
 
 ## No-show / cancellation
 
-Operational state changes do not delete payment entries. They do not manufacture refunds or penalties. Financial follow-up remains visible and auditable.
+Operational state changes do not delete payment entries and do not manufacture refunds or penalties. Financial follow-up remains visible and auditable unless a later policy explicitly authorizes automatic disposition.
 
 ## Audit
 
-Money-affecting mutations must meet `INV-MONEY-001`: no success without business mutation + audit/event, no audit-only false success, idempotency/retry safety where relevant.
+Money-affecting mutations must meet `INV-MONEY-001`: no success without business mutation + audit/event, no audit-only false success, and idempotency/retry safety where relevant.
