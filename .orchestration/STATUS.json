@@ -2,19 +2,20 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "OPERATIONAL_FLOW_DEFINITION",
-  "runtime_status": "EXTERNAL_REVIEW",
+  "runtime_status": "EXTERNAL_REVIEW_V2",
   "resume_authorized": false,
   "active_task": "CF-OPS-FLOW-DEFINITION-001",
   "work_branch": "analysis/operational-flow-definition",
-  "next_action": "INDEPENDENT_DEFINITION_CRITIC",
+  "next_action": "INDEPENDENT_DEFINITION_CRITIC_V2",
   "definition_review": {
     "required": true,
-    "artifact_head": "3ad6d84124a7b3da803d8ae2eb4c439a3e411fa4",
-    "master": "docs/operational-flows/00-master-definition.md"
+    "artifact_head": "0fd52aa5fa344ca7a6d123bdce61c5496453e799",
+    "master": "docs/operational-flows/00-master-definition.md",
+    "e2e_scope": "docs/operational-flows/18-end-to-end-scope-matrix.md"
   },
   "human_gate": {
-    "status": "OPEN",
-    "ids": ["HG-FIN-001", "HG-FIN-002"]
+    "status": "NONE_OPEN",
+    "ids": []
   },
   "authorization": {
     "scope": "ANALYSIS_ONLY",
