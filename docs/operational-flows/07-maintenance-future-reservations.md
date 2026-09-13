@@ -4,40 +4,41 @@ Status: `BINDING DEFINITION`
 
 ## New sales
 
-An open `RELOCATION_REQUIRED` maintenance case blocks new advance reservations for that room, even while the current guest still occupies it.
+An open `BLOCKING` maintenance case blocks new advance reservations for that room, including while a current guest still occupies it.
 
-An open `NON_BLOCKING` case does not by itself block advance sale; normal holds/inventory/status rules still apply.
+An open `NON_BLOCKING` case does not by itself block advance sale; normal holds, booking inventory and physical-state policy still apply.
 
 ## Existing future reservations
 
-Opening a relocation-required case does **not** silently cancel or reassign an already confirmed future reservation.
+Opening a blocking case does **not** silently cancel or auto-reassign an already confirmed future reservation.
 
-Instead, any overlapping future confirmed reservation becomes an operational attention case until one of these occurs:
+Instead, each overlapping future confirmed reservation becomes an operational attention case until one of these occurs:
 
 1. maintenance is resolved early enough and the room returns to a valid readiness path;
-2. Reception explicitly reassigns the future confirmed booking using the existing confirmed-booking edit/reassignment capability;
-3. the future booking is cancelled/no-show according to normal lifecycle rules.
+2. Reception explicitly moves the future confirmed booking using the normal pre-occupancy booking-edit/reassignment path;
+3. the booking later ends through its normal cancellation/no-show lifecycle.
 
 ## Front-desk read model consequence
 
-The future booking must expose a maintenance blocker so staff sees it before arrival day. A room being occupied today must not hide a known blocker for tomorrow's arrival.
+A future booking must expose a known blocking maintenance condition before arrival day. Current occupancy must not hide a blocker for a later arrival.
 
 Minimum derived context:
 
 - open maintenance case id;
 - impact;
-- current room state;
-- whether the case overlaps the booking's operational readiness;
-- recommended action: monitor/resolve or reassign confirmed booking.
+- current room physical state;
+- affected booking/stay interval;
+- recommended action: monitor resolution or explicitly reassign the future booking.
 
 ## No automatic guest move
 
-The system never auto-reassigns a future booking because of maintenance. It may suggest valid rooms, but human confirmation remains required.
+The system never auto-reassigns a current or future booking because of maintenance. It may suggest valid alternatives, but human confirmation remains required.
 
 ## Acceptance
 
-- new booking search excludes relocation-required room;
-- existing confirmed future booking remains intact but flagged;
-- resolving maintenance clears blocker after revalidation;
-- explicit future-booking reassignment clears blocker without modifying the current occupied stay;
-- cross-tenant IDs cannot influence the blocker.
+- new booking search excludes rooms with an open blocking case;
+- an existing confirmed future booking remains intact but is flagged;
+- resolving maintenance clears the blocker after authoritative revalidation;
+- explicit future-booking reassignment clears the affected booking without altering another current occupied stay;
+- non-blocking advisory does not falsely remove sellable inventory;
+- cross-tenant identifiers cannot influence blocker evaluation.
