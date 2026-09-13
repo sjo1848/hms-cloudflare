@@ -4,17 +4,18 @@ Status: `BINDING DEFINITION`
 
 ## Meaning
 
-`NO_SHOW` is not cancellation. In v1 it means the arrival date has **passed**, the reservation remained confirmed, and the guest never occupied the room.
+`NO_SHOW` is not cancellation. It means the arrival date has been reached or passed, the reservation remained confirmed, and the guest did not occupy the room.
 
 ## Preconditions
 
 - booking status is `CONFIRMED`;
-- authoritative `hotel_local_date > check_in`;
+- authoritative `hotel_local_date >= check_in`;
 - guest has not checked in;
 - actor has booking/lifecycle write capability;
+- terminal reason satisfies the accepted source requirement;
 - booking state has not changed concurrently.
 
-The full calendar arrival date remains available for normal check-in/cancellation semantics. A configurable same-day cutoff is deferred product policy.
+This preserves accepted source semantics while replacing UTC/browser date authority with the hotel's operational date.
 
 ## Authoritative mutation
 
@@ -26,15 +27,17 @@ A no-show operation must atomically:
 4. record exactly one truthful lifecycle/audit event with actor, hotel, booking, operational date and prior assigned room;
 5. remove the booking from active arrival work after authoritative reload.
 
+## Cancellation relationship
+
+Cancellation and no-show remain distinct terminal choices from `CONFIRMED`. This definition does not add a new calendar cutoff to cancellation because the accepted source does not impose one. Operator intent/evidence distinguishes cancellation from no-show.
+
 ## Financial boundary
 
 Penalty, retained deposit, first-night charge, refund or other money disposition is deferred. No-show does not invent an automatic financial mutation. Existing payments/invoice context remains auditable for later Billing follow-up.
 
 ## UI flow
 
-When a confirmed arrival is overdue (`hotel_local_date > check_in`), Reception may offer `Mark no-show`. The confirmation states that reservation inventory is released and that no-show is distinct from cancellation.
-
-On the arrival date itself, normal check-in remains possible while `hotel_local_date < check_out`; no-show is not yet enabled under v1.
+From the arrival date onward, Reception may offer `Mark no-show` for an eligible confirmed booking. Confirmation states that reservation inventory is released and that no-show is distinct from cancellation.
 
 ## Postconditions
 
@@ -49,8 +52,8 @@ If check-in or another booking transition wins first, no-show returns conflict a
 
 ## Acceptance
 
-1. arrival date today -> no-show rejected;
-2. day after arrival, still confirmed/never occupied -> no-show succeeds;
+1. arrival date today -> no-show can succeed when still confirmed and never occupied;
+2. overdue confirmed arrival -> no-show can succeed;
 3. future arrival -> rejected;
 4. checked-in booking -> rejected;
 5. concurrent check-in wins -> no-show fails with zero state drift;
