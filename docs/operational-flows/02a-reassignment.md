@@ -11,54 +11,61 @@ A guest is already `CHECKED_IN` and must move to another room.
 - booking status is `CHECKED_IN`;
 - destination room differs from current room;
 - destination is immediately usable and physically `AVAILABLE`;
-- destination has no overlapping hold or inventory conflict for the remaining stay;
+- destination has no overlapping hold or inventory conflict for the **remaining stay**;
 - actor has lifecycle write capability;
 - the current booking-room relation has not changed concurrently.
+
+## Effective date
+
+Reassignment uses the hotel's authoritative local operational date.
+
+`effective_date = max(check_in, hotel_local_date)`.
+
+Only inventory nights in `[effective_date, check_out)` move to the destination. Past stay dates are never revalidated against the destination and must not prevent relocation merely because that room was occupied earlier in the guest's stay.
 
 ## Authoritative mutation
 
 One logical operation must:
 
-1. move the booking to the destination room;
-2. move the booking inventory claims for the relevant stay nights to the destination;
+1. move the booking's current room reference to the destination;
+2. move only remaining inventory claims to the destination;
 3. set destination room `AVAILABLE -> OCCUPIED`;
-4. transition the old room according to incident context:
-   - no relocation-required maintenance case: `OCCUPIED -> DIRTY`;
-   - open `RELOCATION_REQUIRED` maintenance case: `OCCUPIED -> MAINTENANCE`;
-5. record one reassignment lifecycle event including old room, new room and resulting old-room state.
+4. inspect open maintenance cases on the old room;
+5. set old room:
+   - no open maintenance case: `OCCUPIED -> DIRTY`;
+   - any unresolved maintenance case: `OCCUPIED -> MAINTENANCE`;
+6. record one reassignment lifecycle event with old room, new room, effective date and resulting old-room state.
 
 A partially applied move is failure.
 
-## Why old room must not become AVAILABLE
+## Pricing
 
-The guest actually occupied it. Even if the move occurred shortly after check-in, HMS must require a housekeeping/inspection step before that room can return to service.
+Reassignment does not automatically reprice the booking because destination room type/price may differ. Any commercial adjustment is explicit and belongs to Billing; it is not inferred by the lifecycle command.
 
 ## UI flow
 
-Reception selected case:
+`Reassign room -> show valid destinations for remaining stay -> choose -> show old-room consequence -> confirm -> authoritative mutation -> reload current context`.
 
-`Reassign room -> show only valid destinations -> choose destination -> show old-room consequence -> confirm -> backend mutation -> reload current operational context`.
-
-The confirmation must say whether the old room will enter `DIRTY` or `MAINTENANCE`.
+The operator must see whether the old room will enter `DIRTY` or `MAINTENANCE`.
 
 ## Postconditions
 
 - guest remains checked in;
 - booking references destination room;
 - destination is occupied;
-- old room is not sellable for immediate check-in;
-- Housekeeping can see old room when it is dirty;
-- Maintenance can see the case when old room enters maintenance;
-- Reception/Rooms show the new assignment after revalidation.
+- old room is not immediately sellable;
+- old room appears in Housekeeping if dirty, or maintenance workflow if an open case exists;
+- Reception/Rooms reflect new assignment after revalidation.
 
 ## Concurrency
 
-If destination availability changes between selection and confirmation, operation returns conflict and leaves booking, old room, destination room and inventory unchanged.
+If destination availability or booking-room identity changes before the mutation wins, return conflict and leave booking, both rooms and inventory unchanged.
 
 ## Acceptance scenarios
 
-1. normal reassign: old room becomes dirty, new room occupied;
-2. destination claimed concurrently: zero state drift;
-3. relocation-required maintenance exists: old room becomes maintenance;
-4. repeated reassignment request: cannot duplicate inventory/event side effects;
-5. mobile and desktop Reception expose the same consequence before confirmation.
+1. normal reassign: old room dirty, new room occupied;
+2. destination had past occupancy but is free for remaining nights: reassignment succeeds;
+3. destination conflicts on a remaining night: atomic rejection;
+4. any unresolved old-room maintenance case: old room becomes maintenance;
+5. repeated request cannot duplicate inventory/event effects;
+6. mobile and desktop expose the same consequence before confirmation.
