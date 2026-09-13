@@ -1,6 +1,6 @@
 # 02A — In-stay room reassignment
 
-Status: `BINDING DEFINITION`
+Status: `BINDING DEFINITION / SOURCE-PARITY PRICING`.
 
 ## Trigger
 
@@ -35,17 +35,21 @@ One logical operation must:
 5. set old room:
    - no open `BLOCKING` case: `OCCUPIED -> DIRTY`;
    - open `BLOCKING` case: `OCCUPIED -> MAINTENANCE`;
-6. record one reassignment event with old/new room, effective date, moved interval and resulting old-room state.
+6. recalculate the authoritative booking accommodation total using accepted source pricing semantics and the destination room's current price, then add/preserve extra charges;
+7. reconcile any existing invoice with the new authoritative booking total;
+8. record one reassignment event with old/new room, effective date, moved interval, resulting old-room state and resulting financial total.
 
 A partial move is failure.
 
-## Pricing
+## Pricing parity
 
-Reassignment does not automatically reprice the stay. Any commercial adjustment is explicit Billing behavior.
+Accepted source behavior recalculates the booking total on room change using the destination room's current `price_cents` across the stay nights, then adds extra charges. This can reprice an active stay when moving between room prices. V1 preserves that observable source behavior rather than inventing a frozen-rate policy.
+
+Changing reassignment pricing to preserve a contracted/snapshot rate is a future product decision and must not be introduced silently during BUILD.
 
 ## UI flow
 
-`Reassign -> show valid remaining-stay destinations -> disclose advisory incidents -> choose -> show old-room consequence -> confirm -> authoritative mutation -> refresh context`.
+`Reassign -> show valid remaining-stay destinations -> disclose advisory incidents + destination price consequence -> choose -> show old-room consequence + resulting total/balance -> confirm -> authoritative mutation -> refresh context`.
 
 ## Postconditions
 
@@ -54,11 +58,12 @@ Reassignment does not automatically reprice the stay. Any commercial adjustment 
 - old room not immediately sellable for check-in;
 - old room enters Housekeeping if dirty or maintenance flow if blocking case remains;
 - past room history is not rewritten;
-- Reception/Rooms revalidate.
+- booking total/invoice are financially consistent with accepted source pricing;
+- Reception/Rooms/Billing revalidate.
 
 ## Concurrency
 
-If destination availability, maintenance impact or booking-room identity changes before mutation wins, return conflict with zero booking/room/inventory/audit drift.
+If destination availability, maintenance impact, booking-room identity, invoice/payment state or price input changes before mutation wins, return conflict with zero booking/room/inventory/financial/audit drift.
 
 ## Acceptance
 
@@ -68,5 +73,5 @@ If destination availability, maintenance impact or booking-room identity changes
 4. destination BLOCKING case -> excluded/rejected;
 5. destination NON_BLOCKING case -> advisory but allowed;
 6. old BLOCKING case -> old room maintenance;
-7. overrun stay -> reassign rejected until extension/checkout;
-8. replay cannot duplicate claims/events.
+7. source-parity total uses destination current room price across stay nights plus extra charges and reconciles invoice;
+8. replay cannot duplicate claims/events or financial effects.
