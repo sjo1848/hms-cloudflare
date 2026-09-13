@@ -46,18 +46,22 @@ function Bookings() {
   } = useReceptionWorkspace();
   const [queueFilter, setQueueFilter] = useState<QueueFilter>("attention");
   const [queueSearch, setQueueSearch] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
   const mobileStep = checkInStep;
   const queue = buildQueue(bookings);
   const counts = queueCounts(queue);
   const visibleQueue = filterQueue(queue, queueFilter, queueSearch);
 
   return <section className="reception-workspace">
-    <div className="workspace-heading">
+    <div className="workspace-heading reception-workspace-heading">
       <div><p className="eyebrow">{t("reception.eyebrow")}</p><h2>{t("reception.title")}</h2><p className="muted">{t("reception.subtitle")}</p></div>
-      <span className="case-count">{t("reception.queueSummary", { attention: counts.attention, all: counts.all })}</span>
+      <div className="reception-heading-actions">
+        <span className="case-count">{t("reception.queueSummary", { attention: counts.attention, all: counts.all })}</span>
+        <button type="button" className="secondary-button reception-create-trigger" onClick={() => setShowCreate(current => !current)}>{showCreate ? t("common.close") : t("reception.createBooking")}</button>
+      </div>
     </div>
 
-    <form onSubmit={submit} aria-label={t("reception.createAria")} className="case-create">
+    {showCreate && <form onSubmit={submit} aria-label={t("reception.createAria")} className="case-create reception-create-panel">
       <h3>{t("reception.openCase")}</h3>
       <select required aria-label={t("common.guest")} value={form.guest_id} onChange={e => setForm({ ...form, guest_id: e.target.value })}>
         <option value="">{t("reception.selectGuest")}</option>{guests.map(guest => <option key={guest.id} value={guest.id}>{guest.full_name}</option>)}
@@ -70,7 +74,7 @@ function Bookings() {
       <button type="button" onClick={() => void refreshAvailability()}>{t("reception.findRooms")}</button>
       <input placeholder={t("reception.notesOptional")} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
       <button>{t("reception.createBooking")}</button>
-    </form>
+    </form>}
 
     {error && <p className="error" role="alert">{error}</p>}
     {loading && <p className="muted" role="status">{t("reception.loadingQueue")}</p>}
