@@ -18,19 +18,19 @@ Date-sensitive rules use server-derived `hotel_local_date` from a persisted hote
 
 ## P0 flows
 
-**Reassignment:** for `CHECKED_IN`, destination must be immediately usable and free for the remaining stay. `effective_date=max(check_in, hotel_local_date)`. Only `[effective_date, check_out)` inventory moves; historical nights remain on the prior room. Destination becomes occupied; old room becomes dirty or maintenance according to open blocking maintenance.
+**Reassignment:** for `CHECKED_IN`, destination must be immediately usable and free for the remaining stay. `effective_date=max(check_in, hotel_local_date)`. Only `[effective_date, check_out)` inventory moves; historical nights remain on the prior room. Destination becomes occupied; old room becomes dirty or maintenance according to open blocking maintenance. Source-parity pricing recalculates accommodation using total stay nights × destination room current price, plus extra charges; invoice state is reconciled atomically.
 
 **Maintenance:** case impact is `NON_BLOCKING | BLOCKING`, independent from priority and physical room state. Non-blocking is advisory. Blocking prevents new occupancy; if already occupied, guest remains until explicit relocation/checkout. V1 keeps one open case per room.
 
-**Arrival exceptions:** source parity is binding. A `CONFIRMED` booking may check in when the formal checklist is complete and its room is immediately ready; no additional calendar-day block is introduced by this definition. Cancellation remains an explicit `CONFIRMED -> CANCELLED` terminal action with required reason and no new arrival-date cutoff. `NO_SHOW` is distinct and is allowed from the hotel's arrival date: `hotel_local_date >= check_in`. It releases inventory without dirtying the room.
+**Arrival exceptions:** source parity is binding. A `CONFIRMED` booking may check in when formal checklist/evidence is complete and its room is immediately ready; no additional calendar-day block is introduced. Cancellation remains an explicit `CONFIRMED -> CANCELLED` terminal action with required reason and no new arrival-date cutoff. `NO_SHOW` is distinct and allowed from hotel-local arrival date: `hotel_local_date >= check_in`. It releases inventory without dirtying the room.
 
-**Extension:** explicit command for a checked-in stay; checkout only moves later; all added nights are claimed atomically. Pricing remains `HG-FIN-001` because the new dedicated extension flow lacks a sufficiently explicit approved rate-basis contract.
+**Extension:** explicit command for a checked-in stay; checkout only moves later and all added nights are claimed atomically. Accepted source pricing is preserved: authoritative accommodation is recalculated as total stay nights × current room price, then extra charges are added; any existing invoice is reconciled.
 
 ## Billing truth
 
 Payments are immutable evidence. Booking total and invoice amount/status must remain consistent. A paid invoice cannot remain `PAID` if authoritative total later exceeds paid amount. Checkout must display authoritative total, paid and remaining balance for the Reception-selected booking.
 
-Source parity fixes checkout policy semantics: `settled` requires a fully paid account; `pending-approved` is the governed positive-balance exception and requires the existing reference/override rules. This is binding behavior, not a Human Gate.
+Source parity fixes checkout policy semantics: `settled` requires a fully paid account; `pending-approved` is the governed positive-balance exception and requires the accepted reference/override rules. This is binding behavior, not a Human Gate.
 
 ## Cross-module flow
 
@@ -54,12 +54,10 @@ Wave 2: front-desk read model; Reception lifecycle UX; Billing coupling; atomic 
 
 Wave 3: performance/focus refinements and full synthetic hotel-shift acceptance.
 
-## Human Gate
+## Product decisions explicitly deferred
 
-`HG-FIN-001`: extension rate basis. Recommendation: persist a contracted accommodation-rate snapshot and preserve it for ordinary extensions. This recommendation remains unapproved.
-
-No-show/cancellation refund, retention and penalty policy is deferred; lifecycle transitions do not invent automatic money mutation.
+The current definition has no unresolved Human Gate. Future departures from source behavior require an explicit product decision, including a frozen/contracted nightly-rate model, new early/late check-in cutoff, cancellation cutoff, configurable no-show hour, automated cancellation/no-show refund/penalty, split-stay extension or multi-case maintenance.
 
 ## Exit condition
 
-Analysis closes only after canonical documents are contradiction-free, Human Gates are isolated, Pre-Critic passes, independent review finds no blocking definition defect, and orchestration state points to the immutable definition artifact. Until then implementation remains locked.
+Analysis closes only after canonical documents are contradiction-free, Pre-Critic passes, independent review finds no blocking definition defect, and orchestration state points to the immutable definition artifact. Until then implementation remains locked.
