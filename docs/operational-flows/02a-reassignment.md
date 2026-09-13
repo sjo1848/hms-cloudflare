@@ -9,63 +9,64 @@ A guest is already `CHECKED_IN` and must move to another room.
 ## Preconditions
 
 - booking status is `CHECKED_IN`;
-- destination room differs from current room;
-- destination is immediately usable and physically `AVAILABLE`;
-- destination has no overlapping hold or inventory conflict for the **remaining stay**;
+- `hotel_local_date < check_out`; an overrun stay must be extended or checked out first;
+- destination differs from current room;
+- destination is physically `AVAILABLE`;
+- destination has no `BLOCKING` maintenance case;
+- destination has no overlapping hold or inventory conflict for the remaining stay;
+- a destination with `NON_BLOCKING` maintenance is allowed only with visible advisory context;
 - actor has lifecycle write capability;
-- the current booking-room relation has not changed concurrently.
+- current booking-room relation has not changed concurrently.
 
-## Effective date
-
-Reassignment uses the hotel's authoritative local operational date.
+## Effective date and history
 
 `effective_date = max(check_in, hotel_local_date)`.
 
-Only inventory nights in `[effective_date, check_out)` move to the destination. Past stay dates are never revalidated against the destination and must not prevent relocation merely because that room was occupied earlier in the guest's stay.
+Only inventory nights in `[effective_date, check_out)` move to the destination. Past stay dates remain associated with the old room; they are not revalidated against the destination. `bookings.room_id` becomes the current room and the reassignment event preserves movement history.
 
 ## Authoritative mutation
 
 One logical operation must:
 
-1. move the booking's current room reference to the destination;
-2. move only remaining inventory claims to the destination;
-3. set destination room `AVAILABLE -> OCCUPIED`;
-4. inspect open maintenance cases on the old room;
+1. move current booking room reference to destination;
+2. move only remaining inventory claims;
+3. set destination `AVAILABLE -> OCCUPIED`;
+4. inspect old-room maintenance impact;
 5. set old room:
-   - no open maintenance case: `OCCUPIED -> DIRTY`;
-   - any unresolved maintenance case: `OCCUPIED -> MAINTENANCE`;
-6. record one reassignment lifecycle event with old room, new room, effective date and resulting old-room state.
+   - no open `BLOCKING` case: `OCCUPIED -> DIRTY`;
+   - open `BLOCKING` case: `OCCUPIED -> MAINTENANCE`;
+6. record one reassignment event with old/new room, effective date, moved interval and resulting old-room state.
 
-A partially applied move is failure.
+A partial move is failure.
 
 ## Pricing
 
-Reassignment does not automatically reprice the booking because destination room type/price may differ. Any commercial adjustment is explicit and belongs to Billing; it is not inferred by the lifecycle command.
+Reassignment does not automatically reprice the stay. Any commercial adjustment is explicit Billing behavior.
 
 ## UI flow
 
-`Reassign room -> show valid destinations for remaining stay -> choose -> show old-room consequence -> confirm -> authoritative mutation -> reload current context`.
-
-The operator must see whether the old room will enter `DIRTY` or `MAINTENANCE`.
+`Reassign -> show valid remaining-stay destinations -> disclose advisory incidents -> choose -> show old-room consequence -> confirm -> authoritative mutation -> refresh context`.
 
 ## Postconditions
 
-- guest remains checked in;
-- booking references destination room;
-- destination is occupied;
-- old room is not immediately sellable;
-- old room appears in Housekeeping if dirty, or maintenance workflow if an open case exists;
-- Reception/Rooms reflect new assignment after revalidation.
+- booking remains checked in on destination;
+- destination occupied;
+- old room not immediately sellable for check-in;
+- old room enters Housekeeping if dirty or maintenance flow if blocking case remains;
+- past room history is not rewritten;
+- Reception/Rooms revalidate.
 
 ## Concurrency
 
-If destination availability or booking-room identity changes before the mutation wins, return conflict and leave booking, both rooms and inventory unchanged.
+If destination availability, maintenance impact or booking-room identity changes before mutation wins, return conflict with zero booking/room/inventory/audit drift.
 
-## Acceptance scenarios
+## Acceptance
 
-1. normal reassign: old room dirty, new room occupied;
-2. destination had past occupancy but is free for remaining nights: reassignment succeeds;
-3. destination conflicts on a remaining night: atomic rejection;
-4. any unresolved old-room maintenance case: old room becomes maintenance;
-5. repeated request cannot duplicate inventory/event effects;
-6. mobile and desktop expose the same consequence before confirmation.
+1. normal move -> old dirty, new occupied;
+2. destination occupied in a past night but free for remaining interval -> succeeds;
+3. remaining-night booking/hold conflict -> atomic rejection;
+4. destination BLOCKING case -> excluded/rejected;
+5. destination NON_BLOCKING case -> advisory but allowed;
+6. old BLOCKING case -> old room maintenance;
+7. overrun stay -> reassign rejected until extension/checkout;
+8. replay cannot duplicate claims/events.
