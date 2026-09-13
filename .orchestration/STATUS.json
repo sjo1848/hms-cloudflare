@@ -1,47 +1,44 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "phase": "ACP_INTEGRATION_PHASE_2_5",
-  "runtime_status": "EXTERNAL_REVIEW",
+  "phase": "CF_UX_MOBILE_001_REWORK",
+  "runtime_status": "RUNNING",
   "resume_authorized": false,
-  "active_task": "ACP-2.5-HMS-CONTROLLED-RESERVATION",
-  "last_completed_task": "ACP-2.4-E1-REAL",
-  "last_completed_head": "8821cd2971f66e1d7711027554649374750036b3",
-  "work_branch": "feature/acp-2-5-controlled-reservation",
-  "next_action": "INDEPENDENT_CRITIC_ON_FINAL_EXECUTING_D1_ARTIFACT",
-  "stop_reason": "PRECRITIC_PASS_AWAITING_EXTERNAL_REVIEW",
+  "active_task": "CF-UX-MOBILE-001-REWORK",
+  "last_completed_task": "CF-I09-REWORK-4-INDEPENDENT-CRITIC-PASS",
+  "last_completed_head": "f18b35cfc6b48970f2b8842758fa025126f33407",
+  "work_branch": "main",
+  "next_action": "CF-UX-MOBILE-001_REWORK_PR9_FINDINGS_AND_PRECRITIC",
+  "stop_reason": "Human authorized remote Product Acceptance over one deliberate staging deployment; intermediate deploys remain forbidden.",
   "event": {
-    "seq": 115,
-    "id": "ACP-2.5-HMS-EXECUTING-D1-PRECRITIC-PASS",
-    "type": "EXTERNAL_REVIEW"
+    "seq": 100,
+    "id": "HUMAN-REMOTE-ACCEPTANCE-001",
+    "type": "HUMAN_DECISION"
   },
   "external_review": {
     "required": true,
-    "last_audited_head": null,
-    "last_verdict": null,
-    "artifact_head": "70fae5c902af557eadc2802ba773f44b9f95fd46",
-    "review_path": ".orchestration/evidence/ACP-2.5-HMS-PRECRITIC.md"
+    "last_audited_head": "f18b35cfc6b48970f2b8842758fa025126f33407",
+    "last_verdict": "PASS",
+    "artifact_head": "f18b35cfc6b48970f2b8842758fa025126f33407",
+    "pending_verdict": "CF-UX-MOBILE-001-REWORK"
   },
-  "human_gate": null,
+  "human_gate": {
+    "type": "PRODUCT_ACCEPTANCE",
+    "scope": "REMOTE_STAGING",
+    "reason": "Human cannot access the development computer; acceptance will occur on one deliberate staging deployment.",
+    "required_action": "Complete CF-UX-MOBILE-001 technical gates, deploy once to staging, exercise the candidate remotely, and record ACCEPT or REWORK."
+  },
   "blocker": null,
-  "authorization": {
-    "scope": "STAGING_ONLY",
-    "create_reservation": true,
-    "cancel_cleanup": true,
-    "production": false,
-    "paid_expansion": false,
-    "real_data_migration": false,
-    "payment_mutation": false
-  },
   "method": {
+    "multi_context_required": true,
+    "internal_review_receipt": ".orchestration/evidence/CF-I09-INTERNAL-REVIEW.md",
+    "external_critic_after_internal_closure_only": true,
     "human_routine_relay_forbidden": true,
-    "technical_rework_autonomous": true,
-    "independent_critic_before_merge": true,
-    "product_acceptance_after_secure_staging_only": true
+    "model_policy": ".orchestration/MODEL-REASONING-POLICY.md",
+    "luna_first": true
   },
   "cost_guard": {
     "target": "$0/month / Cloudflare Free",
-    "paid_transition_requires_human_gate": true,
-    "production_forbidden_without_separate_authorization": true
+    "paid_transition_requires_human_gate": true
   }
 }
