@@ -2,43 +2,40 @@
 
 Project: HMS Cloudflare
 Phase: `OPERATIONAL FLOW DEFINITION`
-Runtime: `FINAL_EXTERNAL_REVIEW_V3`
+Runtime: `FINAL_EXTERNAL_REVIEW_V4`
 Active task: `CF-OPS-FLOW-DEFINITION-001`
 Accepted staging: `26239b76b919266de07d7bece5977296647f109c`
-Source reference: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`
+Accepted source: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`
 
 ## Implementation lock
 
-Product/runtime implementation remains unauthorized until Artifact A3 passes fresh final review and a phase-exit commit is persisted.
+Product/runtime implementation remains unauthorized until final Critic V4 passes Artifact A4 and a separate phase-exit state is persisted.
 
-## Artifact A3
+## Artifact A4
 
-`b9d3db3cec6c6c0d3cec012d8f3a7b2abaaa1fa0`
+`1482f7d67396f2ba7095effb3274705c2c9e79b1`
 
-Canonical scope:
+Canonical authority set:
 - `docs/operational-flows/00-master-definition.md`
+- `docs/operational-flows/05-maintenance-data-rbac.md`
+- `docs/operational-flows/16-target-transition-matrix.md`
 - `docs/operational-flows/18-end-to-end-scope-matrix.md`
 - `docs/operational-flows/19-api-command-contract-map.md`
-- `docs/operational-flows/16-target-transition-matrix.md`
-- `docs/operational-flows/05-maintenance-data-rbac.md`
+- `docs/operational-flows/20-intentional-target-departures.md`
 - `.orchestration/OPERATIONAL-INVARIANTS.md`
 - `.orchestration/decisions/CF-OPS-FLOWS-001.md`
-- `.orchestration/evidence/CF-OPS-FLOW-DEFINITION-001-PRECRITIC-V3.md`
+- `.orchestration/evidence/CF-OPS-FLOW-DEFINITION-001-PRECRITIC-V4.md`
 
-Earlier A/A2 artifacts failed review and are historical only.
-
-## Pre-Critic V3
-
-Verdict: `PASS FOR IMMUTABLE FINAL REVIEW`.
+Earlier artifacts A/A2/A3 failed review and are historical evidence only.
 
 ## Human Gates
 
-None remain open for the current source-parity wave. Future product departures require a new explicit decision.
+None open for the defined wave.
 
 ## Current gate
 
-Run final Independent Definition Critic V3 against Artifact A3 plus Boundary B3. Review must challenge domain, E2E scope, API ownership, RBAC, source parity, Billing, concurrency/audit, compatibility, OpenAPI/client obligations and acceptance completeness.
+Run final adversarial Independent Definition Critic V4 against immutable A4 plus this one-commit publication boundary. Only PASS may close the definition phase.
 
 ## Next action
 
-Final critic V3 -> persist verdict -> if PASS, exit definition phase and authorize bounded implementation planning only.
+Critic V4 -> persist verdict -> on PASS, persist phase exit and authorize bounded implementation planning only.
