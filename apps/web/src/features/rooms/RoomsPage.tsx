@@ -47,7 +47,7 @@ export function RoomsPage() {
   const holdsRequestIdRef = useRef(0);
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
-  const [filter, setFilter] = useState<RoomBoardFilter>("attention");
+  const [filter, setFilter] = useState<RoomBoardFilter>("all");
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({ room_number: "", room_type: "STANDARD", price_cents: "" });
