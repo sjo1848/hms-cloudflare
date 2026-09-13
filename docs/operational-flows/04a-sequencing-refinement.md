@@ -8,17 +8,17 @@ Status: `BINDING`; supersedes the numeric order in `04-acceptance-and-sequencing
 
 0.2 **Hotel operational timezone** — persist valid IANA timezone, expose trusted context, add server helper for hotel-local date.
 
-These may be implemented in separate small contracts. No feature UI expansion should consume the current ~142-byte margin.
+These may be implemented in separate small contracts. No feature UI expansion should consume the current near-zero bundle margin.
 
 ## Wave 1 — domain correctness
 
-1.1 Reassignment remaining-night semantics + old-room turnover.
+1.1 Reassignment remaining-night semantics + old-room turnover + source-parity repricing/invoice reconciliation.
 
 1.2 Occupied maintenance schema/events/capabilities + checkout/reassignment vacancy behavior.
 
-1.3 No-show lifecycle + cancellation temporal boundary.
+1.3 Arrival-exception parity: no-show from hotel-local arrival date, cancellation/check-in without invented calendar cutoffs, plus target command/evidence hardening.
 
-1.4 Checked-in stay extension + invoice/payment consistency.
+1.4 Checked-in stay extension + source-parity repricing + invoice/payment consistency.
 
 ## Wave 2 — operational read/context
 
@@ -42,4 +42,4 @@ These may be implemented in separate small contracts. No feature UI expansion sh
 
 ## Review rule
 
-Each Wave 1 item gets its own bounded Task Contract and independent critique because each changes authoritative business state. Do not combine all P0 migrations and endpoints in one large implementation PR.
+Each Wave 1 item gets its own bounded Task Contract and independent critique because each changes authoritative business state. Do not combine all P0 migrations/endpoints in one large implementation PR. Source-parity evidence is mandatory for any lifecycle or financial predicate changed by the increment.
