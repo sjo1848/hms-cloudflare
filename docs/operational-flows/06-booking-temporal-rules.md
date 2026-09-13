@@ -1,50 +1,34 @@
 # 06 — Booking temporal rules
 
-Status: `BINDING DEFINITION / SOURCE-PARITY PRESERVING EXCEPT EXPLICIT DEPARTURES`
+Status: `BINDING DEFINITION / SOURCE-PARITY EXCEPT REGISTERED DEPARTURES`
 
-All genuinely date-sensitive rules use authoritative `hotel_local_date`. This document does not invent calendar restrictions unless they are explicitly registered in `20-intentional-target-departures.md`.
+Genuine date-sensitive rules use authoritative hotel-local date. No calendar restriction is invented unless registered in `20-intentional-target-departures.md`.
 
-## Formal check-in
+## Check-in
 
-Source parity governs the transition:
+CONFIRMED + formal checklist + immediately ready AVAILABLE room + normal concurrency guards. No hard hotel-local-date check-in window is added; early/late context may be surfaced without narrowing source transition eligibility.
 
-- booking is `CONFIRMED`;
-- formal check-in checklist/evidence is complete;
-- assigned room is immediately ready / physically `AVAILABLE`;
-- normal lifecycle/concurrency guards pass.
+## Cancellation / no-show
 
-The accepted source does not add a hard `hotel_local_date` window to `Confirmed -> CheckedIn`, so this definition does not introduce one. Early/late-date conditions may be surfaced as operational context, but a future rule that forbids them requires an explicit product decision.
+Both are distinct terminal CONFIRMED transitions requiring terminal evidence.
+- CANCELLED: no new arrival-date cutoff.
+- NO_SHOW: `hotel_local_date >= check_in`, still confirmed, never occupied.
+- future booking: no-show rejected.
 
-## Cancellation and no-show
+## Late arrival — D10 time semantics
 
-Both remain distinct terminal transitions from `CONFIRMED` and require accepted terminal evidence/reason.
+Late-arrival ETA/note keeps booking CONFIRMED and is operational context, not a state.
 
-- `CANCELLED`: no new arrival-date cutoff; eligibility ends when booking leaves `CONFIRMED`.
-- `NO_SHOW`: allowed when `hotel_local_date >= check_in` and booking remains confirmed/never occupied.
-- future booking (`hotel_local_date < check_in`): no-show rejected.
+Wire ETA must be RFC3339/ISO-8601 with explicit Z/offset. Server parses the absolute instant, requires it to be future, converts it to the hotel's persisted IANA timezone, and validates `check_in <= eta_hotel_local_date < check_out`. Timezone-less input is invalid; browser timezone cannot change eligibility. The board may use valid late-arrival context for explanation/priority without narrowing lifecycle transitions.
 
-This preserves source timing while using hotel-local rather than UTC/browser date authority.
+## Stay overrun — D2
 
-## Late arrival
-
-A late-arrival ETA/note keeps booking `CONFIRMED` and preserves accepted source semantics. The front-desk board may use it for explanation/priority but it is not a new booking state.
-
-## Stay overrun
-
-If booking is `CHECKED_IN` and `hotel_local_date >= check_out`, the read model treats it as an overdue departure/overrun attention case.
-
-Normal operator choices are:
-- checkout now; or
-- extend to a later checkout if added nights are available.
-
-Target-specific rule: an overrun stay cannot be reassigned to another room until a valid future checkout exists through extension. This restriction is deliberately stricter than accepted source behavior because reassignment otherwise has no authoritative remaining-night interval. It is explicitly governed by departure `D2` in `20-intentional-target-departures.md`.
-
-The overrun classification itself does not mutate state.
+If CHECKED_IN and `hotel_local_date >= check_out`, classify overdue/overrun. Operator may checkout or extend to a later valid checkout. Reassignment is rejected until extension establishes a future interval or checkout ends occupancy. Classification itself does not mutate state.
 
 ## Queue consequence
 
-Reception distinguishes future arrival, arrival due, overdue confirmed arrival, checked-in departure due, checked-in overdue departure and recorded late arrival. These are derived classifications; they must not silently narrow lifecycle transitions beyond explicit target departures.
+Reception distinguishes future arrival, arrival due, overdue confirmed arrival, recorded late arrival, checked-in departure due and checked-in overrun. These are derived classifications, not hidden lifecycle gates.
 
 ## Future policy boundary
 
-A new early-check-in date restriction, late check-in cutoff, cancellation cutoff or configurable no-show hour requires a product decision. BUILD cannot derive such cutoffs from browser time, hotel timezone or queue ranking.
+A new early-check-in restriction, late check-in cutoff, cancellation cutoff or configurable no-show hour requires a new product decision.
