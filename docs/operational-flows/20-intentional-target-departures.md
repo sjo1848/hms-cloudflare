@@ -5,66 +5,51 @@ Status: `BINDING GOVERNANCE REGISTER / IMPLEMENTATION LOCKED`
 Default is accepted-source parity. Only departures listed here are authorized for this workflow wave.
 
 ## D1 — Authoritative hotel-local operational date
-Target persists a hotel IANA timezone and derives `hotel_local_date` server-side for genuine date predicates instead of relying on UTC/browser date. This preserves business meaning such as no-show-from-arrival-date without inventing check-in/cancellation cutoffs.
+Persist hotel IANA timezone and derive `hotel_local_date` server-side for genuine date predicates rather than UTC/browser date. No new check-in/cancellation cutoff.
 
-## D2 — Overrun stay normalization before reassignment
-If `hotel_local_date >= check_out`, a CHECKED_IN stay must be extended to a future checkout or checked out before reassignment. Remaining-night relocation requires a truthful future interval.
+## D2 — Normalize overrun stay before reassignment
+If `hotel_local_date >= check_out`, extend to a future checkout or checkout before reassignment so remaining-night movement has a truthful future interval.
 
 ## D3 — Explicit no-show and extension commands
-Target adds `POST /api/v1/bookings/:id/no-show` and `POST /api/v1/bookings/:id/extend-stay` instead of using generic booking updates for these material lifecycle/inventory operations.
+Add explicit no-show and extend-stay commands instead of generic booking update for material lifecycle/inventory operations.
 
 ## D4 — Server-enforced reassignment reason
-Active-stay reassignment requires trimmed `reason` min 6 server-side, closing the source gap where UI required evidence but backend could accept the mutation without it.
+Active-stay reassignment requires trimmed reason min 6 server-side.
 
 ## D5 — Atomic inline guest + reservation
-Target adds one same-hotel atomic command for inline new guest + reservation so room-loss/validation failure cannot leave unintended guest-only state.
+Use one same-hotel atomic command so failed booking intent cannot leave unintended guest-only state.
 
-## D6 — Occupied maintenance and dedicated capabilities
-Target models maintenance as an independent case with `NON_BLOCKING | BLOCKING`, supports occupied-room coexistence/escalation/resolution and introduces dedicated `maintenance.read/report/resolve` capabilities. V1 remains one open case per room.
+## D6 — Occupied maintenance + dedicated capabilities
+Maintenance becomes independent case impact `NON_BLOCKING | BLOCKING` with occupied coexistence, escalation/resolution and maintenance.read/report/resolve. V1 one open case/room.
 
-## D7 — Restore/extend server-owned front-desk board
-Target restores/extends accepted `GET /api/v1/front-desk/board` so queue/readiness/blocker meaning is server-owned rather than reconstructed independently by clients.
+## D7 — Server-owned front-desk board
+Restore/extend accepted `GET /api/v1/front-desk/board` so queue/readiness/blocker meaning is server-owned.
 
 ## D8 — Invoice consistency after authoritative total changes
-Every authoritative booking-total change reconciles an existing invoice in the same logical operation. A PAID invoice cannot remain truthful when paid amount no longer covers authoritative amount. Payment entries remain immutable.
+Every actual booking-total change reconciles an existing invoice atomically; false PAID state is forbidden; payments remain immutable.
 
 ## D9 — Only explicit pricing mutations may change booking total
 
-Accepted source generic booking update recalculates accommodation from the room's current catalog price even when the operator only changes lifecycle state, guest/notes metadata or front-desk evidence. Target removes that incidental coupling.
+Accepted source generic update can recalculate accommodation on unrelated status/metadata writes. Target removes that coupling.
 
-A mutation changes authoritative booking total **only if the contract explicitly classifies it as pricing-affecting**. In this wave those are:
-- pre-occupancy room change;
-- pre-occupancy stay-date change;
-- in-stay reassignment;
-- stay extension;
-- explicit extra charge;
-- another future command explicitly defined as priced.
+Pricing-affecting in this wave: reservation room change, stay-date change, reassignment, extension, extra charge, or future explicitly priced command.
 
-All other booking metadata/state/evidence writes preserve the existing authoritative booking total unless a future decision says otherwise. This includes:
-- guest reassociation/name or ordinary notes without room/date change;
-- check-in and its evidence;
-- cancellation;
-- no-show;
-- late-arrival metadata;
-- checkout and its evidence.
+All other booking metadata/state/evidence writes preserve the stored total, including guest/name/ordinary notes-only update, check-in, cancellation, no-show, late arrival and checkout. Checkout may alter invoice/settlement lifecycle against the preserved total but does not reprice accommodation. Cancellation/no-show preserve financial evidence and add no automatic disposition.
 
-Checkout may create/reconcile invoice and settlement state against the preserved total but does not reprice accommodation. Cancellation/no-show preserve total plus existing payment/invoice evidence and add no automatic refund/penalty. Late-arrival/notes/guest-only changes preserve total/invoice exactly.
+## D10 — Timezone-aware late-arrival ETA wire
 
-Reason: a non-pricing administrative or lifecycle action must not alter the commercial value of a stay just because the room's catalog price changed after booking. This also prevents copying an incidental generic-PATCH implementation detail into explicit target commands.
+Accepted source OpenAPI declares `late_arrival_eta` as `date-time`, while source UI serializes a UTC instant and strips the timezone suffix before sending a naive datetime. Target removes that ambiguity.
+
+Target wire contract requires an RFC3339/ISO-8601 date-time with an explicit `Z` or numeric UTC offset. Server parses it as an absolute instant, verifies it is in the future, converts it to the hotel's persisted IANA timezone, and validates the resulting hotel-local date against `check_in <= eta_date < check_out`.
+
+Audit stores an absolute timestamp/instant representation; UI renders in hotel/user context as appropriate. A timezone-less ETA is rejected as malformed instead of being guessed.
+
+Reason: future-time and hotel-day semantics cannot be authoritative when the payload omits its offset. This hardening aligns the target with the OpenAPI `date-time` intent while correcting the accepted source serialization ambiguity.
 
 ## Non-authorized departures
 
-Still outside this wave without a new decision:
-- contracted/frozen nightly-rate pricing replacing current-room repricing on actual room/date pricing mutations;
-- new early/late check-in cutoff;
-- cancellation cutoff;
-- configurable same-day no-show hour;
-- automatic refund/retention/penalty;
-- automatic relocation or split-stay extension;
-- multiple simultaneous maintenance cases per room;
-- new OUT_OF_ORDER transition design;
-- paid realtime/WebSocket dependency;
-- production/cutover or real-data migration.
+Without a new decision, remain outside scope: frozen contracted-rate pricing on actual priced room/date mutations; new arrival cutoffs; automatic refund/retention/penalty; automatic relocation/split stay; multiple simultaneous maintenance cases; new OUT_OF_ORDER design; paid realtime; production/cutover/real-data migration.
 
 ## Governance rule
-If BUILD needs behavior different from both accepted source and this register, stop and return to definition. Do not treat unregistered product divergence as implementation latitude.
+
+If BUILD needs behavior different from source and this register, stop and return to definition.
