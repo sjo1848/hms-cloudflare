@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { BillingWorkspace } from "../billing/BillingWorkspace";
 import { StatusBadge } from "../../components/StatusBadge";
 import { useReceptionWorkspace } from "./useReceptionWorkspace";
@@ -46,18 +47,52 @@ function Bookings() {
   } = useReceptionWorkspace();
   const [queueFilter, setQueueFilter] = useState<QueueFilter>("attention");
   const [queueSearch, setQueueSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const queueSearchRef = useRef<HTMLInputElement>(null);
   const mobileStep = checkInStep;
   const queue = buildQueue(bookings);
   const counts = queueCounts(queue);
   const visibleQueue = filterQueue(queue, queueFilter, queueSearch);
 
+  useEffect(() => {
+    function handleGlobalShortcut(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const editing = target?.tagName === "INPUT" || target?.tagName === "SELECT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
+      if (event.key === "/" && !editing) {
+        event.preventDefault();
+        queueSearchRef.current?.focus();
+      }
+      if (event.key === "Escape" && !editing && selected) closeCase();
+    }
+    window.addEventListener("keydown", handleGlobalShortcut);
+    return () => window.removeEventListener("keydown", handleGlobalShortcut);
+  }, [selected, closeCase]);
+
+  function handleQueueKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
+    if (!visibleQueue.length) return;
+    const currentIndex = selected ? visibleQueue.findIndex(item => item.booking.id === selected.id) : -1;
+    let nextIndex = currentIndex;
+    if (event.key === "ArrowDown") nextIndex = currentIndex < 0 ? 0 : Math.min(currentIndex + 1, visibleQueue.length - 1);
+    else if (event.key === "ArrowUp") nextIndex = currentIndex < 0 ? visibleQueue.length - 1 : Math.max(currentIndex - 1, 0);
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = visibleQueue.length - 1;
+    else return;
+    event.preventDefault();
+    selectCase(visibleQueue[nextIndex].booking);
+  }
+
   return <section className="reception-workspace">
     <div className="workspace-heading">
       <div><p className="eyebrow">{t("reception.eyebrow")}</p><h2>{t("reception.title")}</h2><p className="muted">{t("reception.subtitle")}</p></div>
-      <span className="case-count">{t("reception.queueSummary", { attention: counts.attention, all: counts.all })}</span>
+      <div className="workspace-heading-actions reception-heading-actions">
+        <span className="case-count">{t("reception.queueSummary", { attention: counts.attention, all: counts.all })}</span>
+        <button type="button" className="reception-create-toggle" aria-expanded={createOpen} aria-controls="reception-create-booking" onClick={() => setCreateOpen(value => !value)}>
+          {createOpen ? t("reception.hideBookingForm") : t("reception.newBooking")}
+        </button>
+      </div>
     </div>
 
-    <form onSubmit={submit} aria-label={t("reception.createAria")} className="case-create">
+    {createOpen && <form id="reception-create-booking" onSubmit={submit} aria-label={t("reception.createAria")} className="case-create reception-create-form">
       <h3>{t("reception.openCase")}</h3>
       <select required aria-label={t("common.guest")} value={form.guest_id} onChange={e => setForm({ ...form, guest_id: e.target.value })}>
         <option value="">{t("reception.selectGuest")}</option>{guests.map(guest => <option key={guest.id} value={guest.id}>{guest.full_name}</option>)}
@@ -70,20 +105,20 @@ function Bookings() {
       <button type="button" onClick={() => void refreshAvailability()}>{t("reception.findRooms")}</button>
       <input placeholder={t("reception.notesOptional")} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
       <button>{t("reception.createBooking")}</button>
-    </form>
+    </form>}
 
     {error && <p className="error" role="alert">{error}</p>}
     {loading && <p className="muted" role="status">{t("reception.loadingQueue")}</p>}
 
     <div className="case-layout reception-case-layout">
-      <aside className="reception-queue-panel" aria-label={t("reception.queueAria")}>
+      <aside className="reception-queue-panel" aria-label={t("reception.queueAria")} onKeyDown={handleQueueKeyDown}>
         <div className="reception-queue-heading">
           <div><h3>{t("reception.caseQueue")}</h3><p className="muted">{t("reception.queueNow")}</p></div>
           <span className="reception-attention-count">{counts.attention}</span>
         </div>
         <label className="reception-queue-search">
           <span>{t("reception.queueSearch")}</span>
-          <input value={queueSearch} onChange={event => setQueueSearch(event.target.value)} placeholder={t("reception.queueSearchPlaceholder")} />
+          <input ref={queueSearchRef} value={queueSearch} onChange={event => setQueueSearch(event.target.value)} placeholder={t("reception.queueSearchPlaceholder")} />
         </label>
         <div className="reception-queue-filters" aria-label={t("reception.queueAria")}>
           {queueFilters.map(filter => <button type="button" key={filter} className={queueFilter === filter ? "selected" : ""} onClick={() => setQueueFilter(filter)}>{t(filterLabelKeys[filter])} <span>{counts[filter]}</span></button>)}
@@ -92,7 +127,7 @@ function Bookings() {
           {visibleQueue.map(item => {
             const booking = item.booking;
             const actionKey: MessageKey = item.lane === "arrival" ? "reception.queueActionCheckIn" : item.lane === "departure" ? "reception.queueActionCheckout" : "reception.queueActionOpen";
-            return <button type="button" className={`reception-queue-row lane-${item.lane} ${selected?.id === booking.id ? "selected" : ""}`} key={booking.id} onClick={() => selectCase(booking)}>
+            return <button type="button" aria-current={selected?.id === booking.id ? "true" : undefined} className={`reception-queue-row lane-${item.lane} ${selected?.id === booking.id ? "selected" : ""}`} key={booking.id} onClick={() => selectCase(booking)}>
               <span className="reception-row-top"><span className="reception-lane-badge">{t(laneLabelKeys[item.lane])}</span><strong>{t("common.room")} {booking.room_number}</strong></span>
               <strong className="reception-guest-name">{booking.guest_name}</strong>
               <span className="reception-row-reason">{t(reasonLabelKeys[item.reason])}</span>
@@ -102,51 +137,66 @@ function Bookings() {
           })}
           {!loading && visibleQueue.length === 0 && <div className="reception-queue-empty"><strong>{queueFilter === "attention" ? t("reception.queueEmptyAttention") : t("reception.queueEmpty")}</strong></div>}
         </div>
+        <p className="reception-queue-shortcuts">{t("reception.keyboardHint")}</p>
       </aside>
 
-      {selected ? <article className="case-panel">
+      {selected ? <article className="case-panel reception-case-panel">
         <div className="case-panel-heading">
           <div><p className="eyebrow">{t("reception.selectedCase")}</p><h3>{selected.guest_name}</h3><p className="muted">{formatDate(selected.check_in)} → {formatDate(selected.check_out)} · {t("common.room")} {selected.room_number}</p></div>
-          <StatusBadge>{statusLabel(selected.status)}</StatusBadge>
+          <div className="reception-case-heading-actions"><StatusBadge>{statusLabel(selected.status)}</StatusBadge><button type="button" className="reception-case-close" onClick={closeCase}>{t("reception.closeCase")}</button></div>
         </div>
 
-        {selected.status === "Confirmed" ? <form onSubmit={saveEdit} aria-label={t("reception.editAria")}>
-          <h4>{t("reception.stayDetails")}</h4>
-          <label>{t("common.guest")} <select aria-label={t("reception.editGuest")} value={editForm.guest_id} onChange={e => setEditForm({ ...editForm, guest_id: e.target.value })} required>{guests.map(guest => <option key={guest.id} value={guest.id}>{guest.full_name}</option>)}</select></label>
-          <label>{t("common.room")} <select aria-label={t("reception.editRoom")} value={editForm.room_id} onChange={e => setEditForm({ ...editForm, room_id: e.target.value })} required><option value="">{t("reception.selectRoomDates")}</option>{editAvailableRooms.map(room => <option key={room.id} value={room.id}>{room.room_number} · {room.room_type}</option>)}</select></label>
-          <label>{t("reception.checkIn")} <input aria-label={t("reception.editCheckIn")} type="date" value={editForm.check_in} onChange={e => setEditForm({ ...editForm, check_in: e.target.value })} required /></label>
-          <label>{t("reception.checkOut")} <input aria-label={t("reception.editCheckOut")} type="date" value={editForm.check_out} onChange={e => setEditForm({ ...editForm, check_out: e.target.value })} required /></label>
-          <label>{t("common.notes")} <input aria-label={t("reception.editNotes")} value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} placeholder={t("reception.notesOptional")} /></label>
-          <button>{t("reception.saveChanges")}</button>
-          <button type="button" onClick={() => void cancelBooking()}>{t("reception.cancelBooking")}</button>
-          <button type="button" onClick={closeCase}>{t("reception.closeCase")}</button>
-        </form> : <div className="locked-stay-details"><h4>{t("reception.stayDetails")}</h4><p className="muted">{t("reception.assignmentLocked")}</p></div>}
+        {selected.status === "Confirmed" && <div className="reception-primary-action">
+          <p className="eyebrow">{t("reception.nextAction")}</p>
+          <form onSubmit={checkIn} aria-label={t("reception.checkInAria")}>
+            <h4>{t("reception.nextCheckIn")}</h4>
+            <div className="step-progress" aria-label={t("reception.checkInProgress")}>{checkInStepKeys.map((step, index) => <span className={index === mobileStep ? "current" : index < mobileStep ? "complete" : ""} key={step}>{index + 1}. {t(step)}</span>)}</div>
+            {(window.innerWidth >= 768 || mobileStep === 0) && <><p className="step-title">{t(checkInStepKeys[0])}</p><label>{t("reception.finalGuestCount")} <input name="check_in_guests_count" type="number" min="1" max="100" value={checkInData.count} onChange={e => setCheckInData({ ...checkInData, count: e.target.value })} required /></label><label><input type="checkbox" name="document" checked={checkInData.document} onChange={e => setCheckInData({ ...checkInData, document: e.target.checked })} required />{t("reception.documentVerified")}</label></>}
+            {(window.innerWidth >= 768 || mobileStep === 1) && <><p className="step-title">{t(checkInStepKeys[1])}</p><label><input type="checkbox" name="contact" checked={checkInData.contact} onChange={e => setCheckInData({ ...checkInData, contact: e.target.checked })} required />{t("reception.contactConfirmed")}</label><label><input type="checkbox" name="stay" checked={checkInData.stay} onChange={e => setCheckInData({ ...checkInData, stay: e.target.checked })} required />{t("reception.stayConfirmed")}</label></>}
+            {(window.innerWidth >= 768 || mobileStep === 2) && <><p className="step-title">{t(checkInStepKeys[2])}</p><p className="muted">{t("reception.roomAssigned", { room: selected.room_number })}</p></>}
+            {(window.innerWidth >= 768 || mobileStep === 3) && <><p className="step-title">{t(checkInStepKeys[3])}</p><p className="muted">{t("reception.reviewCheckIn")}</p></>}
+            {window.innerWidth < 768 && <div className="step-actions">{mobileStep > 0 && <button type="button" onClick={() => setCheckInStep(mobileStep - 1)}>{t("reception.back")}</button>}<button>{mobileStep < checkInStepKeys.length - 1 ? t("reception.nextStep") : t("reception.completeCheckIn")}</button></div>}
+            {window.innerWidth >= 768 && <button>{t("reception.completeCheckIn")}</button>}
+          </form>
+        </div>}
 
-        {selected.status === "Confirmed" && <form onSubmit={checkIn} aria-label={t("reception.checkInAria")}>
-          <h4>{t("reception.nextCheckIn")}</h4>
-          <div className="step-progress" aria-label={t("reception.checkInProgress")}>{checkInStepKeys.map((step, index) => <span className={index === mobileStep ? "current" : index < mobileStep ? "complete" : ""} key={step}>{index + 1}. {t(step)}</span>)}</div>
-          {(window.innerWidth >= 768 || mobileStep === 0) && <><p className="step-title">{t(checkInStepKeys[0])}</p><label>{t("reception.finalGuestCount")} <input name="check_in_guests_count" type="number" min="1" max="100" value={checkInData.count} onChange={e => setCheckInData({ ...checkInData, count: e.target.value })} required /></label><label><input type="checkbox" name="document" checked={checkInData.document} onChange={e => setCheckInData({ ...checkInData, document: e.target.checked })} required />{t("reception.documentVerified")}</label></>}
-          {(window.innerWidth >= 768 || mobileStep === 1) && <><p className="step-title">{t(checkInStepKeys[1])}</p><label><input type="checkbox" name="contact" checked={checkInData.contact} onChange={e => setCheckInData({ ...checkInData, contact: e.target.checked })} required />{t("reception.contactConfirmed")}</label><label><input type="checkbox" name="stay" checked={checkInData.stay} onChange={e => setCheckInData({ ...checkInData, stay: e.target.checked })} required />{t("reception.stayConfirmed")}</label></>}
-          {(window.innerWidth >= 768 || mobileStep === 2) && <><p className="step-title">{t(checkInStepKeys[2])}</p><p className="muted">{t("reception.roomAssigned", { room: selected.room_number })}</p></>}
-          {(window.innerWidth >= 768 || mobileStep === 3) && <><p className="step-title">{t(checkInStepKeys[3])}</p><p className="muted">{t("reception.reviewCheckIn")}</p></>}
-          {window.innerWidth < 768 && <div className="step-actions">{mobileStep > 0 && <button type="button" onClick={() => setCheckInStep(mobileStep - 1)}>{t("reception.back")}</button>}<button>{mobileStep < checkInStepKeys.length - 1 ? t("reception.nextStep") : t("reception.completeCheckIn")}</button></div>}
-          {window.innerWidth >= 768 && <button>{t("reception.completeCheckIn")}</button>}
-        </form>}
+        {selected.status === "Confirmed" && <details className="reception-secondary-flow">
+          <summary>{t("reception.editReservation")}</summary>
+          <form onSubmit={saveEdit} aria-label={t("reception.editAria")}>
+            <h4>{t("reception.stayDetails")}</h4>
+            <label>{t("common.guest")} <select aria-label={t("reception.editGuest")} value={editForm.guest_id} onChange={e => setEditForm({ ...editForm, guest_id: e.target.value })} required>{guests.map(guest => <option key={guest.id} value={guest.id}>{guest.full_name}</option>)}</select></label>
+            <label>{t("common.room")} <select aria-label={t("reception.editRoom")} value={editForm.room_id} onChange={e => setEditForm({ ...editForm, room_id: e.target.value })} required><option value="">{t("reception.selectRoomDates")}</option>{editAvailableRooms.map(room => <option key={room.id} value={room.id}>{room.room_number} · {room.room_type}</option>)}</select></label>
+            <label>{t("reception.checkIn")} <input aria-label={t("reception.editCheckIn")} type="date" value={editForm.check_in} onChange={e => setEditForm({ ...editForm, check_in: e.target.value })} required /></label>
+            <label>{t("reception.checkOut")} <input aria-label={t("reception.editCheckOut")} type="date" value={editForm.check_out} onChange={e => setEditForm({ ...editForm, check_out: e.target.value })} required /></label>
+            <label>{t("common.notes")} <input aria-label={t("reception.editNotes")} value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} placeholder={t("reception.notesOptional")} /></label>
+            <button>{t("reception.saveChanges")}</button>
+            <button type="button" onClick={() => void cancelBooking()}>{t("reception.cancelBooking")}</button>
+          </form>
+        </details>}
 
         {selected.status === "CheckedIn" && <>
-          <form onSubmit={reassign} aria-label={t("reception.reassignAria")}>
-            <h4>{t("reception.nextReassign")}</h4>
-            <select name="room_id" required><option value="">{t("reception.selectDestination")}</option>{rooms.filter(room => room.id !== selected.room_id && room.status === "Available").map(room => <option key={room.id} value={room.id}>{room.room_number}</option>)}</select>
-            <button>{t("reception.reassignRoom")}</button>
-          </form>
-          <form onSubmit={checkout} aria-label={t("reception.checkoutAria")}>
-            <h4>{t("reception.nextCheckout")}</h4>
-            <label>{t("reception.paymentPolicy")} <select name="policy" required><option value="settled">{t("reception.settled")}</option><option value="pending-approved">{t("reception.pendingApproved")}</option></select></label>
-            <label>{t("reception.closingReference")} <input name="reference" minLength={6} placeholder={t("reception.referenceHint")} /></label>
-            {([["charges", "reception.chargesReviewed"], ["release", "reception.roomReleaseConfirmed"], ["handoff", "reception.housekeepingHandoffConfirmed"]] as const satisfies ReadonlyArray<readonly [string, MessageKey]>).map(([name, label]) => <label key={name}><input type="checkbox" name={name} required />{t(label)}</label>)}
-            <button>{t("reception.completeCheckout")}</button>
-          </form>
+          <div className="reception-primary-action">
+            <p className="eyebrow">{t("reception.nextAction")}</p>
+            <form onSubmit={checkout} aria-label={t("reception.checkoutAria")}>
+              <h4>{t("reception.nextCheckout")}</h4>
+              <label>{t("reception.paymentPolicy")} <select name="policy" required><option value="settled">{t("reception.settled")}</option><option value="pending-approved">{t("reception.pendingApproved")}</option></select></label>
+              <label>{t("reception.closingReference")} <input name="reference" minLength={6} placeholder={t("reception.referenceHint")} /></label>
+              {([["charges", "reception.chargesReviewed"], ["release", "reception.roomReleaseConfirmed"], ["handoff", "reception.housekeepingHandoffConfirmed"]] as const satisfies ReadonlyArray<readonly [string, MessageKey]>).map(([name, label]) => <label key={name}><input type="checkbox" name={name} required />{t(label)}</label>)}
+              <button>{t("reception.completeCheckout")}</button>
+            </form>
+          </div>
+          <details className="reception-secondary-flow">
+            <summary>{t("reception.otherActions")}</summary>
+            <div className="locked-stay-details"><h4>{t("reception.stayDetails")}</h4><p className="muted">{t("reception.assignmentLocked")}</p></div>
+            <form onSubmit={reassign} aria-label={t("reception.reassignAria")}>
+              <h4>{t("reception.nextReassign")}</h4>
+              <select name="room_id" required><option value="">{t("reception.selectDestination")}</option>{rooms.filter(room => room.id !== selected.room_id && room.status === "Available").map(room => <option key={room.id} value={room.id}>{room.room_number}</option>)}</select>
+              <button>{t("reception.reassignRoom")}</button>
+            </form>
+          </details>
         </>}
+
+        {selected.status !== "Confirmed" && selected.status !== "CheckedIn" && <div className="locked-stay-details reception-finished-case"><h4>{t("reception.stayDetails")}</h4><p className="muted">{t("reception.assignmentLocked")}</p></div>}
       </article> : <div className="empty-case"><h3>{t("reception.selectCase")}</h3><p className="muted">{t("reception.selectCaseHint")}</p></div>}
     </div>
   </section>;
