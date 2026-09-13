@@ -3,74 +3,61 @@
 ## CURRENT AUTHORITATIVE STATE
 
 Project: HMS Cloudflare  
-Updated: 2026-08-30  
+Updated: 2026-09-13  
 Global Project Mode: `DELIVERY`  
-Phase: `ACP INTEGRATION — PHASE 2.5`  
-Runtime: `EXTERNAL_REVIEW`  
-Active task: `ACP-2.5-HMS-CONTROLLED-RESERVATION`
+Phase: `OPERATIONAL FLOW DEFINITION`  
+Runtime: `ANALYSIS`  
+Active task: `CF-OPS-FLOW-DEFINITION-001`
 
-The previous Cloudflare Access credential gate is closed and obsolete. HMS staging is already operational behind the private API / Worker boundary. The Human-authorized increment remains strictly **staging only**.
+Accepted staging baseline: `26239b76b919266de07d7bece5977296647f109c`.
 
-## HUMAN AUTHORIZATION
+The first UX/UI pass is complete on staging across Reception, Rooms, Guests, Housekeeping, Reports, Users and Network. The next wave is intentionally paused before product implementation while cross-module hotel workflows are defined.
+
+## CURRENT AUTHORIZATION
 
 Authorized:
-- `createReservation` against HMS staging;
-- persistent idempotency and replay safety;
-- policy / approval enforcement in Agent Core;
-- tenant + hotel capability enforcement;
-- durable mutation provenance in HMS;
-- token-bound `cancelReservation` for synthetic E2E cleanup;
-- staging verification.
+- inspect current staging code and behavior;
+- define product/domain flows;
+- persist decisions, evidence and invariants;
+- reconcile orchestration state;
+- run non-destructive analysis/review.
 
-Not authorized:
+Not authorized by this phase:
+- runtime/product implementation of new lifecycle behavior;
+- database migrations for the new flows;
 - production deployment/cutover;
 - real-data migration;
 - paid-resource expansion;
-- unrelated UX/product scope;
-- payment or other financial side effects.
+- new financial policy.
 
 ## ACTIVE CONTRACT
 
-Canonical Task Contract: `.orchestration/contracts/ACP-2.5-HMS-CONTROLLED-RESERVATION.md`.
+`.orchestration/contracts/CF-OPS-FLOW-DEFINITION-001.md`
 
-## FROZEN SUBSTANTIVE ARTIFACT
+## BINDING DEFINITION PACK
 
-`a9cf1fe45a510f82d4725236fa7693ba9a2b376e`
-
-Executable evidence on that exact artifact:
-- Foundation `33289871047` — PASS.
-- Product Flow / Worker+D1 / migration rehearsal / historical CF-I03→CF-I08 `33289871006` — PASS.
-- UX/mobile browser `33289870953` — PASS.
-- Additional branch Foundation `33289869352` — PASS.
-
-Publication evidence:
-- `.orchestration/evidence/ACP-2.5-HMS-INVARIANTS.md`
-- `.orchestration/evidence/ACP-2.5-HMS-PRECRITIC.md`
-
-## REVIEW FINDINGS CLOSED BEFORE FINAL FREEZE
-
-1. **Persisted authorization boundary** — obsolete Access gate was reconciled and a Phase 2.5 Task Contract was added.
-2. **Durable mutation provenance** — create/cancel persist tenant/hotel/actor/session/trace/action/booking/timestamp in hotel D1, without raw operation token.
-3. **Migration id collision** — initial 0012 collision was caught by rehearsal and moved to migration 0018 after existing migrations.
-4. **Cancellation winner attribution** — CANCEL provenance is claimed only while booking is CONFIRMED, before the conditional transition, in the same D1 transaction. A race loser cannot falsely attribute another caller's cancellation to ACP.
-5. **Zero-row create race classification** — the prior post-create revalidation approach was insufficient because state could become valid again. Final artifact returns the authoritative booking INSERT result from `D1BookingRepository.create` and maps `meta.changes !== 1` immediately to `CONFLICT`; focused adversarial coverage proves this branch independently of later revalidation.
-6. **Stale evidence after substantive rework** — invariant and Pre-Critic evidence were refreshed to the final artifact and exact successful CI runs.
+- `docs/operational-flows/README.md`
+- `docs/operational-flows/01-domain-model.md`
+- `docs/operational-flows/02a-reassignment.md`
+- `docs/operational-flows/02b-occupied-maintenance.md`
+- `docs/operational-flows/02c-no-show.md`
+- `docs/operational-flows/02d-stay-extension.md`
+- `docs/operational-flows/03a-frontdesk-continuity.md`
+- `docs/operational-flows/03b-context-navigation.md`
+- `docs/operational-flows/03c-refresh-read-model.md`
+- `docs/operational-flows/04-acceptance-and-sequencing.md`
+- `.orchestration/decisions/CF-OPS-FLOWS-001.md`
+- `.orchestration/OPERATIONAL-INVARIANTS.md`
+- `.orchestration/evidence/CF-OPS-FLOW-DEFINITION-001-BASELINE.md`
 
 ## CURRENT GATE
 
-Fresh Independent Critic review of PR #28 against:
-- substantive artifact `a9cf1fe45a510f82d4725236fa7693ba9a2b376e`;
-- Task Contract;
-- invariant evidence;
-- Pre-Critic evidence;
-- full PR patch.
+Implementation remains locked until the definition pack is reviewed for internal consistency, P0 completeness and conflict with existing invariants/current backend behavior.
 
-No merge to `deploy/staging` before fresh external PASS/no blocking finding.
+Required outcome: `PASS FOR IMPLEMENTATION PLANNING`.
 
-## NEXT AUTHORIZED ACTION AFTER CRITIC PASS
+A PASS authorizes only creation of bounded implementation Task Contracts. It does not authorize production or unrelated scope.
 
-Merge HMS PR #28 to `deploy/staging` → post-merge CI → promote to `acceptance/staging` → deploy HMS staging with migration 0018 + write RPCs → integrate/promote Agent Core → execute the full synthetic E2E:
+## NEXT ACTION
 
-`no approval -> blocked -> approved reservation -> replay -> changed-payload conflict -> inventory occupied -> token-bound cancellation -> cancellation replay -> availability restored`.
-
-No Human action is required unless a legitimate strategy/security/cost/irreversibility/product-acceptance gate appears.
+Independent definition review -> repair contradictions/omissions if any -> persist final definition verdict -> create first implementation contract for `P0.1 Reassignment correctness`.
