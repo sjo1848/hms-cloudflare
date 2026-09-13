@@ -8,7 +8,7 @@ import { useI18n } from "../../i18n";
 import "./rooms-operational.css";
 
 type RoomEditForm = { room_number: string; room_type: string; price_cents: string };
-type RoomContext = { booking: Booking | null; kind: "occupied" | "arrival-today" | "upcoming" | "none" };
+type RoomContext = { booking: Booking | null; kind: "occupied" | "arrival-due" | "upcoming" | "none" };
 
 function localTodayKey() {
   const now = new Date();
@@ -17,16 +17,23 @@ function localTodayKey() {
   return `${now.getFullYear()}-${month}-${day}`;
 }
 
+function normalizedStatus(status: string) {
+  return status.replace(/[\s_-]/g, "").toLowerCase();
+}
+
 function roomContext(room: Room, bookings: Booking[]): RoomContext {
   const today = localTodayKey();
   const relevant = bookings
-    .filter(booking => booking.room_id === room.id && booking.status !== "Cancelled" && booking.status !== "Canceled" && booking.status !== "CheckedOut")
+    .filter(booking => {
+      const status = normalizedStatus(booking.status);
+      return booking.room_id === room.id && status !== "cancelled" && status !== "canceled" && status !== "checkedout";
+    })
     .sort((a, b) => a.check_in.localeCompare(b.check_in));
-  const occupied = relevant.find(booking => booking.status === "CheckedIn");
+  const occupied = relevant.find(booking => normalizedStatus(booking.status) === "checkedin");
   if (occupied) return { booking: occupied, kind: "occupied" };
-  const arrivalToday = relevant.find(booking => booking.status === "Confirmed" && booking.check_in === today);
-  if (arrivalToday) return { booking: arrivalToday, kind: "arrival-today" };
-  const upcoming = relevant.find(booking => booking.status === "Confirmed" && booking.check_in > today);
+  const arrivalDue = relevant.find(booking => normalizedStatus(booking.status) === "confirmed" && booking.check_in <= today);
+  if (arrivalDue) return { booking: arrivalDue, kind: "arrival-due" };
+  const upcoming = relevant.find(booking => normalizedStatus(booking.status) === "confirmed" && booking.check_in > today);
   if (upcoming) return { booking: upcoming, kind: "upcoming" };
   return { booking: null, kind: "none" };
 }
@@ -141,13 +148,13 @@ export function RoomsPage() {
   const query = filter.trim().toLocaleLowerCase();
   const visible = roomRows.filter(({ room, context }) => `${room.room_number} ${room.room_type} ${room.status} ${context.booking?.guest_name ?? ""}`.toLocaleLowerCase().includes(query));
   const occupiedCount = roomRows.filter(item => item.context.kind === "occupied").length;
-  const arrivalCount = roomRows.filter(item => item.context.kind === "arrival-today").length;
+  const arrivalCount = roomRows.filter(item => item.context.kind === "arrival-due").length;
   const availableCount = roomRows.filter(item => item.room.status === "Available" && item.context.kind === "none").length;
   const selectedContext = selected ? roomContext(selected, bookings) : null;
 
   function contextLabel(context: RoomContext) {
     if (context.kind === "occupied") return t("rooms.contextOccupied");
-    if (context.kind === "arrival-today") return t("rooms.contextArrivalToday");
+    if (context.kind === "arrival-due") return t("rooms.contextArrivalDue");
     if (context.kind === "upcoming") return t("rooms.contextUpcoming");
     return t("rooms.contextNoBooking");
   }
@@ -157,7 +164,7 @@ export function RoomsPage() {
       <div><p className="eyebrow">{t("rooms.eyebrow")}</p><h2>{t("rooms.title")}</h2><p className="muted">{t("rooms.operationalSubtitle")}</p></div>
       <div className="rooms-heading-actions"><span className="case-count">{t("rooms.count", { count: rooms.length })}</span><button type="button" className="secondary-button" onClick={() => setShowCreate(current => !current)}>{showCreate ? t("rooms.cancelCreate") : t("rooms.manage")}</button></div>
     </div>
-    <div className="rooms-status-strip" aria-label={t("rooms.statusSummary")}><span><strong>{availableCount}</strong>{t("rooms.availableNow")}</span><span><strong>{occupiedCount}</strong>{t("rooms.occupiedNow")}</span><span><strong>{arrivalCount}</strong>{t("rooms.arrivalsToday")}</span></div>
+    <div className="rooms-status-strip" aria-label={t("rooms.statusSummary")}><span><strong>{availableCount}</strong>{t("rooms.availableNow")}</span><span><strong>{occupiedCount}</strong>{t("rooms.occupiedNow")}</span><span><strong>{arrivalCount}</strong>{t("rooms.arrivalsDue")}</span></div>
     {showCreate && <form className="resource-form rooms-create-form" onSubmit={submit}><div><label>{t("rooms.number")}<input required value={form.room_number} onChange={e => setForm({ ...form, room_number: e.target.value })} placeholder="101" /></label></div><div><label>{t("rooms.type")}<input required value={form.room_type} onChange={e => setForm({ ...form, room_type: e.target.value })} placeholder="STANDARD" /></label></div><div><label>{t("rooms.price")}<input required min="0" type="number" value={form.price_cents} onChange={e => setForm({ ...form, price_cents: e.target.value })} placeholder="18000" /></label></div><button type="submit" disabled={saving}>{saving ? t("rooms.adding") : t("rooms.add")}</button></form>}
     {formError && <p className="error" role="alert">{formError}</p>}
     <div className="resource-toolbar"><label>{t("rooms.search")}<input aria-label={t("rooms.search")} value={filter} onChange={e => setFilter(e.target.value)} placeholder={t("rooms.operationalSearchPlaceholder")} /></label><button type="button" onClick={() => void load()} disabled={loading}>{t("common.refresh")}</button></div>
