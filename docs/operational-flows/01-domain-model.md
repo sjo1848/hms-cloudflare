@@ -1,83 +1,52 @@
 # 01 — Domain model
 
-Status: `BINDING DEFINITION / SOURCE-PARITY PRESERVING`.
+Status: `BINDING DEFINITION / SOURCE-PARITY PLUS REGISTERED HARDENING`.
 
 ## Booking lifecycle
 
-Target states:
+`CONFIRMED -> CHECKED_IN -> CHECKED_OUT`, with terminal alternatives `CANCELLED` and `NO_SHOW`. No generic rollback. No-show is eligible when `hotel_local_date >= check_in` and the guest never occupied the room. Check-in/cancellation gain no new calendar cutoff.
 
-`CONFIRMED -> CHECKED_IN -> CHECKED_OUT`
-
-Alternative terminal paths from `CONFIRMED`:
-
-- `CANCELLED`
-- `NO_SHOW`
-
-`CANCELLED` and `NO_SHOW` are distinct terminal outcomes with accepted terminal evidence. `NO_SHOW` is eligible from the hotel-local arrival date (`hotel_local_date >= check_in`) when the guest never occupied the room. `CHECKED_OUT` means actual occupancy ended. A checked-in stay is extended through an explicit lifecycle command; shortening an occupied stay is checkout. Terminal states do not roll back through generic mutation.
-
-This definition does not add a new calendar cutoff to accepted source check-in or cancellation behavior.
+Late arrival is operational metadata on a still-CONFIRMED booking, not a state.
 
 ## Physical room state
 
-Physical states remain:
+States: `AVAILABLE`, `OCCUPIED`, `DIRTY`, `CLEANING`, `MAINTENANCE`, `OUT_OF_ORDER`.
 
-`AVAILABLE`, `OCCUPIED`, `DIRTY`, `CLEANING`, `MAINTENANCE`, `OUT_OF_ORDER`.
+Normal turnover: `AVAILABLE -> OCCUPIED -> DIRTY -> CLEANING -> AVAILABLE`.
 
-Normal turnover:
+If open BLOCKING maintenance remains at vacancy: occupied room becomes `MAINTENANCE`; resolution returns `DIRTY`, then normal cleaning. A room actually occupied never becomes directly AVAILABLE when vacated.
 
-`AVAILABLE -> OCCUPIED -> DIRTY -> CLEANING -> AVAILABLE`.
+## Sellability / readiness
 
-Blocking-maintenance turnover:
+Physical state, future sellability and immediate readiness are distinct. Future sellability combines physical-state policy, booking inventory, holds and BLOCKING maintenance. Immediate readiness requires physically AVAILABLE with no blocker.
 
-`AVAILABLE|DIRTY|CLEANING -> MAINTENANCE -> DIRTY -> CLEANING -> AVAILABLE`.
+## Maintenance case
 
-After a guest actually occupied a room, vacating it never makes it directly `AVAILABLE`.
-
-## Sellable availability and readiness
-
-Future sellability is derived from room-state policy, booking inventory, holds, open blocking maintenance and other explicit out-of-service rules. Immediate check-in readiness is stricter: the assigned room must be physically `AVAILABLE` with no blocking condition.
-
-Therefore:
-
-`physical room state != future sellable availability != immediate readiness`.
-
-## Maintenance case model
-
-A maintenance incident is a case independent from room physical state.
-
-Case impact:
-
-- `NON_BLOCKING` — advisory; it does not itself change physical state or block sale.
-- `BLOCKING` — room is not fit for new occupancy.
-
-Impact is separate from priority. If a blocking case opens on a vacant room, the room enters `MAINTENANCE`. If it opens while `OCCUPIED`, the room remains occupied until explicit relocation/checkout succeeds; future sale is blocked. When a blocking case remains open after vacancy, the room enters `MAINTENANCE`. Resolving from maintenance returns it to `DIRTY` before normal cleaning.
-
-V1 preserves one open case per room. Escalation from non-blocking to blocking is explicit; multiple simultaneous independent cases are deferred.
+Maintenance is independent from room physical state. `NON_BLOCKING` is advisory and may coexist with OCCUPIED/AVAILABLE/DIRTY/CLEANING without changing state or independently blocking sale/readiness. `BLOCKING` prevents new occupancy; occupied guest remains until explicit relocation/checkout. V1 one open case/room; escalation is explicit.
 
 ## Inventory ownership
 
-Booking inventory and room state change atomically when a lifecycle command affects both.
-
-- Check-in retains stay claims and makes the room occupied.
-- Checkout releases unneeded inventory and makes the old room `DIRTY` or `MAINTENANCE` according to open blocking maintenance.
-- Reassignment uses authoritative hotel-local operational date and moves only remaining stay inventory `[effective_date, check_out)` to the destination. Historical nights stay associated with the previous room.
-- Extension claims only added nights `[old_check_out, new_check_out)` and succeeds only if all remain available.
-- No-show releases reservation inventory without dirtying the room because no occupancy occurred.
-
-A partial booking/room/inventory transition is failure.
+Lifecycle operations affecting booking/room/inventory are atomic.
+- check-in retains claims and occupies room;
+- checkout releases unneeded claims and routes room to DIRTY/MAINTENANCE;
+- reassignment moves only remaining `[effective_date,check_out)` claims and preserves historical room nights;
+- extension claims only `[old_check_out,new_check_out)`;
+- no-show releases reservation claims without dirtying room.
 
 ## Operational time
 
-Where calendar date is an accepted business predicate, use server-derived `hotel_local_date` from the hotel's persisted IANA timezone. Browser-local or raw UTC date does not authorize such decisions. This foundation does not create new date gates for transitions that source behavior does not date-restrict.
+Genuine date predicates use server-derived hotel-local date from persisted IANA timezone. Browser/UTC date cannot authorize them. This does not create cutoffs absent from accepted business behavior.
 
-## Financial relationship and pricing
+## Financial relationship / D9 pricing boundary
 
-`booking.total_cents`, invoices and payments are distinct but related facts. Payment entries are immutable evidence. Any successful operation that changes authoritative booking total must reconcile any existing invoice in the same logical operation.
+Booking total, invoice and payments are distinct related facts. Payment entries are immutable evidence.
 
-For accepted source-covered room/date updates, accommodation pricing uses total stay nights × current selected room price, then extra charges are added. Reassignment therefore uses destination current room price; extension uses current assigned room price with new total nights. A future frozen/contracted-rate model requires an explicit product decision.
+Only an explicitly **pricing-affecting** operation may change booking total: room/date edit, reassignment, extension, extra charge or future explicitly priced command. For source-covered room/date pricing mutations, accommodation uses total stay nights × current selected-room price, then extras. Reassignment uses destination price; extension uses current assigned-room price.
 
-Checkout `settled` requires an authoritative fully paid account; `pending-approved` remains the governed positive-balance exception.
+**State/evidence-only** operations preserve booking total: check-in, cancellation, no-show, late-arrival recording and checkout. Checkout may create/reconcile invoice/settlement state against the existing total but cannot reprice accommodation. Cancellation/no-show preserve financial evidence and add no automatic refund/penalty. This is registered target hardening D9.
+
+Whenever a pricing-affecting mutation changes total, any existing invoice reconciles in the same logical operation. A PAID invoice cannot remain falsely settled. Checkout `settled` requires fully paid; `pending-approved` is the governed positive-balance exception.
 
 ## Audit principle
 
-Every successful lifecycle mutation records truthful audit/event data for the winning operation with actor, hotel, request identity and material transition details. Failed, stale or lost-race mutations create no success event.
+Every successful lifecycle/arrival/maintenance mutation records truthful actor/hotel/request/material details only when authoritative state mutation wins. Failed/stale/lost-race operations create no success event.
