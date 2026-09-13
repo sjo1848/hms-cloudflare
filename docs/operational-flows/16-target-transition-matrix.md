@@ -10,8 +10,8 @@ Status: `BINDING DEFINITION / SOURCE-PARITY PRESERVING`
 | CONFIRMED | cancel | accepted terminal reason/evidence; booking still confirmed | CANCELLED + inventory released |
 | CONFIRMED | check in | formal check-in evidence complete; room immediately ready; concurrency guards pass | CHECKED_IN; room OCCUPIED |
 | CONFIRMED | no-show | `hotel_local_date >= check_in`; never occupied; accepted terminal reason/evidence | NO_SHOW + inventory released |
-| CHECKED_IN | extend stay | new checkout later; all added nights available; `HG-FIN-001` resolved | CHECKED_IN, later checkout |
-| CHECKED_IN | reassign room | valid remaining-stay destination | CHECKED_IN on destination; old room DIRTY or MAINTENANCE according to BLOCKING case |
+| CHECKED_IN | extend stay | new checkout later; all added nights available | CHECKED_IN, later checkout; source-parity repricing + invoice reconciliation |
+| CHECKED_IN | reassign room | valid remaining-stay destination | CHECKED_IN on destination; old room DIRTY or MAINTENANCE; source-parity destination repricing + invoice reconciliation |
 | CHECKED_IN | checkout | source-parity payment/checklist/handoff rules satisfied | CHECKED_OUT; old room DIRTY or MAINTENANCE |
 | CHECKED_OUT | lifecycle mutation | none | rejected |
 | CANCELLED | lifecycle mutation | none | rejected |
@@ -19,7 +19,19 @@ Status: `BINDING DEFINITION / SOURCE-PARITY PRESERVING`
 
 No generic status rollback is authorized.
 
-Calendar date is not added as a new hard guard for check-in/cancellation because the accepted source does not impose one. A future cutoff requires an explicit product decision.
+Calendar date is not added as a new hard guard for check-in/cancellation because accepted source does not impose one. A future cutoff requires an explicit product decision.
+
+## Source-parity pricing on booking update
+
+For date/room changes covered by accepted source behavior:
+
+`accommodation_total = total_stay_nights × current selected room price_cents`
+
+then existing extra charges are added to derive authoritative booking total.
+
+Reassignment therefore uses destination current room price; extension uses current assigned room price with the new total night count. Existing invoice state is reconciled atomically to the authoritative total.
+
+A frozen/contracted-rate model is not part of this wave unless explicitly authorized later.
 
 ## Room physical transitions
 
@@ -41,19 +53,14 @@ Calendar date is not added as a new hard guard for check-in/cancellation because
 
 ## Availability overlay
 
-A room is excluded from new advance sale if any of the following holds:
-
-- physical state is not advance-reservable under status policy;
-- overlapping booking inventory exists;
-- overlapping room hold exists;
-- open maintenance impact is `BLOCKING`.
+A room is excluded from new advance sale if physical status policy disallows sale, overlapping booking inventory exists, an overlapping room hold exists, or an open maintenance case is `BLOCKING`.
 
 Immediate readiness additionally requires physical `AVAILABLE`. An open `NON_BLOCKING` case is advisory, not an independent blocker.
 
 ## Checkout policy parity
 
-`settled` requires authoritative account settlement as defined by the accepted source. `pending-approved` is the governed positive-balance exception with the accepted reference/override requirements. UI declarations alone do not bypass backend financial validation.
+`settled` requires authoritative account settlement as defined by accepted source. `pending-approved` is the governed positive-balance exception with accepted reference/override requirements. UI declarations alone do not bypass backend financial validation.
 
 ## Rejection principle
 
-When a command is not listed as permitted, default is reject. UI must not invent a path around domain transitions, and implementation must not add a stricter business cutoff without an approved product decision.
+When a command is not listed as permitted, default is reject. UI must not invent a path around domain transitions, and implementation must not add a stricter business cutoff/pricing model without an approved product decision.
