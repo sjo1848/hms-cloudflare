@@ -10,7 +10,9 @@ Target flow:
 
 `New reservation -> search guest -> select existing OR create guest inline -> dates -> check availability -> select room -> confirm`.
 
-Guest creation is subordinate to reservation creation and must not force a module switch. Because guest and booking live in the same hotel D1, the target is one atomic business operation for inline new-guest reservation creation: booking conflict/validation failure must not leave an unintended guest record. Exact endpoint/command shape is implementation latitude.
+Guest creation is subordinate to reservation creation and must not force a module switch. Because guest and booking live in the same hotel D1, the target is one atomic business operation: booking conflict/validation failure must not leave an unintended guest record.
+
+Canonical command is fixed by `19-api-command-contract-map.md` as `POST /api/v1/bookings/with-guest`, requiring both `guests.write` and `bookings.write`. Frontend choreography `POST guest` then `POST booking` is not the target.
 
 Standalone Guests remains available when the operator intentionally wants to create a guest without a reservation.
 
