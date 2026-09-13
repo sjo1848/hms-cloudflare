@@ -9,11 +9,11 @@ The second pass is successful only if primary hotel work can be completed withou
 The following flows should complete from their owning surface without requiring navigation to another module:
 
 - normal check-in from Reception;
-- normal checkout from Reception, including billing context needed for the checkout decision;
+- normal checkout from Reception, including Billing context needed for the checkout decision;
 - in-stay room reassignment from Reception;
 - reporting an occupied-room maintenance issue from Reception;
 - new reservation with a new guest from Reception;
-- extending a checked-in stay from Reception;
+- extending a checked-in stay from Reception after the applicable financial policy gate is resolved;
 - marking an eligible no-show from Reception;
 - dirty -> cleaning -> available from Housekeeping.
 
@@ -31,7 +31,7 @@ Clicks are not minimized at the expense of safety. Explicit confirmation remains
 - cancellation;
 - checkout/release;
 - room reassignment;
-- relocation-required maintenance consequence;
+- consequences of a `BLOCKING` maintenance incident and relocation;
 - cash/financial irreversible actions.
 
 ## Post-action continuity
@@ -46,13 +46,6 @@ After an action:
 
 ## Simulation measurements
 
-For each synthetic shift scenario record:
-
-- module switches required;
-- explicit confirmations;
-- duplicate data entry;
-- re-selection of already-known entities;
-- stale-state conflicts;
-- whether the next action is evident without scanning unrelated controls.
+For each synthetic shift scenario record module switches, confirmations, duplicate data entry, re-selection of already-known entities, stale-state conflicts, and whether the next action is evident without scanning unrelated controls.
 
 No hard click-count KPI is imposed. The optimization target is unnecessary context switching and redundant input, not removal of safety confirmations.
