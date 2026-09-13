@@ -1,45 +1,55 @@
-# 13 — Financial policy gate and deferred policy
+# 13 — Financial policy and source-parity register
 
-Status: `HUMAN GATE REGISTER / SOURCE-PARITY CLARIFICATION`
+Status: `BINDING CLARIFICATION`; no open Human Gate is required by the current operational-flow definition.
 
-Operational/domain work must not invent unsupported commercial rules. Accepted source financial semantics remain binding and are not reopened as Human Gates.
+Accepted source financial semantics are preserved by default. A future intentional commercial departure requires an explicit product decision before implementation.
 
-## HG-FIN-001 — Rate basis for extending a stay
+## Active-stay extension pricing — SOURCE PARITY
 
-The new dedicated active-stay extension flow requires an explicit price basis. Current target stores `total_cents`; accepted source stores `total_price_cents` and recalculates accommodation from room price during generic booking updates, but there is no explicit contracted-rate snapshot dedicated to extension semantics. Extra charges also make `total / nights` unsafe as a rate derivation.
+Accepted source behavior permits editing stay dates and recalculates accommodation using:
 
-Options:
+`total stay nights × current room price_cents`
 
-A. **Persist/preserve the originally contracted accommodation nightly rate** for added nights. Recommended for predictable commercial behavior; requires an explicit rate/accommodation snapshot.
+then adds existing extra charges.
 
-B. Apply the room's current price according to a specifically approved extension pricing rule.
+The dedicated extension command must preserve this behavior in v1 and reconcile any existing invoice atomically.
 
-C. Require an explicit extension rate/amount entered or approved by staff with an authorization policy.
+Do not derive a rate from `prior total / prior nights`; extra charges make that calculation invalid.
 
-Recommendation: **A**. Do not implement P0.4 price mutation until human approval.
+### Future alternative requiring explicit product decision
 
-## Checkout `settled` — NOT A HUMAN GATE
+A contracted/frozen nightly-rate snapshot may be commercially preferable because source-parity repricing can change the accommodation value of prior nights when room price changes. If adopted later, define migration/backfill and rate-change rules explicitly. It is not the default for this wave.
 
-Accepted source semantics are already explicit and binding:
+## Reassignment pricing — SOURCE PARITY
 
-- `settled` requires the account to be fully paid;
-- `pending-approved` is the positive-balance exception;
-- the accepted reference/override capability rules apply to `pending-approved`.
+Accepted source transactional behavior recalculates booking accommodation with the destination room's current price when a room changes, then adds extra charges.
 
-The target must restore/preserve this behavior. BUILD may not treat `settled` as a manual declaration independent of Billing truth.
+V1 preserves that observable rule. The operator must see the resulting total/balance before confirming an active-stay reassignment when price differs.
 
-## Cancellation/no-show money disposition — DEFERRED
+A future rule that preserves the old/contracted rate across room changes requires explicit product authorization.
 
-Cancellation/no-show may occur after advance payments. This operational wave does not automatically refund, retain, void or create a penalty.
+## Checkout `settled` — SOURCE PARITY
 
-- payment entries remain immutable evidence of received money;
-- invoice/payment context remains visible for financial follow-up;
-- refund/retention/penalty policy belongs to a dedicated future Billing decision if automation is requested.
+Accepted source semantics are binding:
 
-This deferred policy does not block operational cancellation/no-show because those transitions introduce no automatic money mutation.
+- `settled` requires a fully paid account;
+- `pending-approved` is the governed positive-balance exception;
+- operational reference and privileged override requirements remain in force.
 
-## Billing consistency regardless of policy
+This is not a Human Gate.
 
-If an invoice exists, any authoritative increase of booking total (extra charge or approved extension delta) must keep invoice amount/status consistent. A previously `PAID` invoice cannot remain `PAID` when the authoritative amount exceeds paid amount.
+## Cancellation/no-show money disposition — DEFERRED AUTOMATION
 
-This is an accounting invariant, not a commercial-policy choice.
+Cancellation/no-show do not automatically refund, retain, void or create a penalty in this wave.
+
+- payment entries remain immutable evidence;
+- invoice/payment context remains visible for manual financial follow-up;
+- refund/retention/penalty automation requires a dedicated future product/Billing decision.
+
+This deferred automation does not block the lifecycle implementation because no automatic money disposition is being added.
+
+## Accounting consistency
+
+Any operation that changes authoritative booking total must keep an existing invoice truthful in the same logical operation. A previously `PAID` invoice cannot remain `PAID` when authoritative amount exceeds paid amount.
+
+This is an invariant, not a commercial option.
