@@ -1,8 +1,8 @@
 # 06 — Booking temporal rules
 
-Status: `BINDING DEFINITION / SOURCE-PARITY PRESERVING`
+Status: `BINDING DEFINITION / SOURCE-PARITY PRESERVING EXCEPT EXPLICIT DEPARTURES`
 
-All genuinely date-sensitive rules use authoritative `hotel_local_date`. This document does not invent calendar restrictions that the accepted source does not contain.
+All genuinely date-sensitive rules use authoritative `hotel_local_date`. This document does not invent calendar restrictions unless they are explicitly registered in `20-intentional-target-departures.md`.
 
 ## Formal check-in
 
@@ -17,28 +17,34 @@ The accepted source does not add a hard `hotel_local_date` window to `Confirmed 
 
 ## Cancellation and no-show
 
-Both remain distinct terminal transitions from `CONFIRMED` and require the accepted terminal evidence/reason.
+Both remain distinct terminal transitions from `CONFIRMED` and require accepted terminal evidence/reason.
 
-- `CANCELLED`: no new arrival-date cutoff is introduced by this definition; eligibility ends when the booking leaves `CONFIRMED`.
-- `NO_SHOW`: allowed only when `hotel_local_date >= check_in` and the booking remains confirmed/never occupied.
+- `CANCELLED`: no new arrival-date cutoff; eligibility ends when booking leaves `CONFIRMED`.
+- `NO_SHOW`: allowed when `hotel_local_date >= check_in` and booking remains confirmed/never occupied.
 - future booking (`hotel_local_date < check_in`): no-show rejected.
 
-This preserves the source distinction without overloading cancellation or silently changing accepted timing.
+This preserves source timing while using hotel-local rather than UTC/browser date authority.
 
 ## Late arrival
 
-A late-arrival ETA/note keeps the booking `CONFIRMED` and preserves the accepted source semantics. The front desk read model may use it to explain/prioritize the case but it is not a new booking state.
+A late-arrival ETA/note keeps booking `CONFIRMED` and preserves accepted source semantics. The front-desk board may use it for explanation/priority but it is not a new booking state.
 
 ## Stay overrun
 
-If a booking is already `CHECKED_IN` and hotel-local date is at/after checkout, the read model treats it as an overdue departure/overrun attention case.
+If booking is `CHECKED_IN` and `hotel_local_date >= check_out`, the read model treats it as an overdue departure/overrun attention case.
 
-The normal operator choices are checkout or a separately authorized stay extension if inventory and financial policy permit. The overrun classification itself does not mutate state.
+Normal operator choices are:
+- checkout now; or
+- extend to a later checkout if added nights are available.
+
+Target-specific rule: an overrun stay cannot be reassigned to another room until a valid future checkout exists through extension. This restriction is deliberately stricter than accepted source behavior because reassignment otherwise has no authoritative remaining-night interval. It is explicitly governed by departure `D2` in `20-intentional-target-departures.md`.
+
+The overrun classification itself does not mutate state.
 
 ## Queue consequence
 
-Reception should distinguish future arrival, arrival due, overdue confirmed arrival, checked-in departure due, checked-in overdue departure and recorded late arrival. These are derived operational classifications; they must not silently narrow the accepted lifecycle transition graph.
+Reception distinguishes future arrival, arrival due, overdue confirmed arrival, checked-in departure due, checked-in overdue departure and recorded late arrival. These are derived classifications; they must not silently narrow lifecycle transitions beyond explicit target departures.
 
 ## Future policy boundary
 
-A product decision is required before adding a hard early-check-in date, late check-in cutoff, cancellation cutoff, or configurable no-show hour. BUILD cannot derive such cutoffs from browser time, hotel timezone or operational ranking.
+A new early-check-in date restriction, late check-in cutoff, cancellation cutoff or configurable no-show hour requires a product decision. BUILD cannot derive such cutoffs from browser time, hotel timezone or queue ranking.
