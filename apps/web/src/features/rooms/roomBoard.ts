@@ -53,7 +53,7 @@ function bookingDateSort(a: Booking, b: Booking) {
 }
 
 export function buildRoomBoard(rooms: Room[], bookings: Booking[], today = todayKey()): RoomBoardItem[] {
-  return rooms.map(room => {
+  return rooms.map<RoomBoardItem>(room => {
     const roomBookings = bookings.filter(booking => booking.room_id === room.id);
     const currentBooking = roomBookings
       .filter(booking => normalize(booking.status) === "checkedin")
