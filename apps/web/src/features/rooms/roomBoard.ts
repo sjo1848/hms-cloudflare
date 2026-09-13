@@ -71,7 +71,7 @@ export function buildRoomBoard(rooms: Room[], bookings: Booking[], today = today
     if (nextBooking && nextBooking.check_in < today) return { room, currentBooking, nextBooking, state: "arrival", reason: "arrival-overdue", attention: true, priority: 25 };
     if (nextBooking && nextBooking.check_in === today) return { room, currentBooking, nextBooking, state: "arrival", reason: "arrival-today", attention: true, priority: 30 };
     if (currentBooking || status === "occupied") return { room, currentBooking, nextBooking, state: "occupied", reason: "occupied", attention: false, priority: 40 };
-    if (status === "blocked" || status === "unavailable" || status === "outofservice") return { room, currentBooking, nextBooking, state: "blocked", reason: "blocked", attention: true, priority: 45 };
+    if (status === "blocked" || status === "unavailable" || status === "outofservice" || status === "outoforder") return { room, currentBooking, nextBooking, state: "blocked", reason: "blocked", attention: true, priority: 45 };
     if (status === "available" && nextBooking) return { room, currentBooking, nextBooking, state: "available", reason: "upcoming-arrival", attention: false, priority: 50 };
     if (status === "available") return { room, currentBooking, nextBooking, state: "available", reason: "available", attention: false, priority: 60 };
     return { room, currentBooking, nextBooking, state: "review", reason: "review", attention: true, priority: 35 };
