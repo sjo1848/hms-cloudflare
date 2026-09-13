@@ -1,13 +1,20 @@
 # DECISION — CF-OPS-FLOWS-002-REFINEMENTS
 
-Status: `BINDING`; where this file conflicts with `CF-OPS-FLOWS-001`, this refinement prevails.
+Status: `SUPERSEDED — HISTORY ONLY`.
 
-1. **Operational date:** lifecycle/date eligibility uses an explicit hotel IANA timezone. Browser timezone and implicit UTC are not authoritative.
-2. **No-show v1:** allowed only when `hotel_local_date > check_in`. Same-day configurable cutoff is deferred.
-3. **Reassignment inventory:** move only remaining nights from `effective_date = max(check_in, hotel_local_date)` through `check_out`; past nights must not be validated against or moved to the destination.
-4. **Vacancy with maintenance:** if any maintenance case is still open when checkout/reassignment vacates the room, old room becomes `MAINTENANCE`; otherwise it becomes `DIRTY`.
-5. **Relocation-required availability:** an occupied room with open `RELOCATION_REQUIRED` maintenance is excluded from future sellable availability even though physical state remains `OCCUPIED` until relocation.
-6. **Non-blocking availability:** occupied room with only `NON_BLOCKING` maintenance may remain advance-reservable under normal booking/hold rules.
-7. **Reassignment pricing:** room reassignment does not automatically reprice the booking.
-8. **Extension pricing v1:** keep existing accommodation total unchanged for already-booked nights; add `current_room_price_cents * added_nights`. Existing nights are never silently repriced.
-9. **Unresolved occupied maintenance on checkout:** the maintenance case survives checkout and drives `OCCUPIED -> MAINTENANCE`; after repair, `MAINTENANCE -> DIRTY -> CLEANING -> AVAILABLE`.
+This intermediate refinement captured useful findings about hotel-local operational date and remaining-night reassignment, but later adversarial review invalidated material parts of it:
+
+- maintenance vacancy depends on an open `BLOCKING` case, not any open case;
+- the canonical maintenance impact enum is `NON_BLOCKING | BLOCKING`, not `RELOCATION_REQUIRED`;
+- extension rate basis cannot be inferred from current room price because the accepted model does not preserve a trustworthy contracted nightly-rate snapshot independent from extra charges.
+
+Current authority is:
+
+- `.orchestration/decisions/CF-OPS-FLOWS-001.md` — consolidated binding decision and Human Gates;
+- `.orchestration/decisions/CF-OPS-FLOWS-003-MAINTENANCE-MODEL.md` — canonical maintenance details;
+- `docs/operational-flows/00-master-definition.md` — current master summary;
+- detailed canonical flow documents referenced by `docs/operational-flows/README.md`.
+
+Retained valid historical discoveries from this file are incorporated into those canonical artifacts: server-owned hotel-local date, no-show after arrival date, remaining-night reassignment and no automatic reassignment pricing.
+
+Do not use this file as an implementation contract.
