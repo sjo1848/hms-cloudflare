@@ -16,7 +16,7 @@ Maintenance impact is `NON_BLOCKING | BLOCKING`, separate from priority. Non-blo
 
 ## INV-OPS-NOSHOW-001 — No-show is not cancellation or occupancy
 
-`NO_SHOW` is an explicit eligible transition from `CONFIRMED`, releases reservation inventory, does not dirty the room and does not invent refund/penalty policy.
+`NO_SHOW` is an explicit transition from eligible `CONFIRMED`, allowed from `hotel_local_date >= check_in` in source parity, releases reservation inventory, does not dirty the room and does not invent refund/penalty policy.
 
 ## INV-OPS-EXTEND-001 — Active stay extension is atomic
 
@@ -30,9 +30,9 @@ Reception-selected booking governs embedded Billing and related contextual actio
 
 Every mutation revalidates authoritative preconditions. Stale cross-screen state produces conflict and refresh, never false success.
 
-## INV-OPS-TIME-001 — Hotel-local operational date is authoritative
+## INV-OPS-TIME-001 — Hotel-local date is authoritative only where date is a business predicate
 
-Check-in, cancellation/no-show, overstay, reassignment effective date and other date-sensitive business rules use server-derived hotel-local date from a persisted valid IANA timezone. Browser time and raw UTC date cannot authorize a lifecycle mutation.
+No-show, reassignment effective date, operational classification and other genuinely date-sensitive rules use server-derived hotel-local date from a persisted valid IANA timezone. Browser time and raw UTC date cannot authorize those decisions. Timezone work must not silently add a calendar cutoff to check-in or cancellation when accepted source semantics have none.
 
 ## INV-OPS-HISTORY-001 — Reassignment preserves physical history
 
@@ -42,6 +42,14 @@ Only remaining inventory nights move during an in-stay reassignment. Historical 
 
 If an invoice exists, any successful operation that increases authoritative booking total must reconcile invoice amount/status in the same logical operation. A `PAID` invoice cannot remain `PAID` when `paid_amount_cents < amount_cents`; prior payment entries remain immutable.
 
-## INV-OPS-POLICY-001 — Missing commercial policy is a Human Gate
+## INV-OPS-CHECKOUT-001 — Settlement policy preserves accepted source truth
 
-BUILD must not infer extension rate basis, checkout settlement meaning, refund, retention or penalty rules from incomplete data or UI defaults. Unresolved commercial semantics remain explicit Human Gates/deferred policy.
+Checkout policy `settled` requires an authoritative fully paid account. `pending-approved` is the governed positive-balance exception and retains its reference/override requirements. UI declarations cannot weaken this backend invariant.
+
+## INV-OPS-PARITY-001 — Definition work cannot silently add product restrictions
+
+When accepted source behavior permits a lifecycle transition, the target definition cannot add a stricter calendar, status or policy gate merely because it appears operationally reasonable. Such a departure requires an explicit product decision/Human Gate.
+
+## INV-OPS-POLICY-001 — Unsupported commercial policy is a Human Gate
+
+BUILD must not infer extension rate basis, refund, retention or penalty rules from incomplete data or UI defaults. Unresolved commercial semantics remain explicit Human Gates/deferred policy.
