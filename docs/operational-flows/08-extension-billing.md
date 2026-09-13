@@ -1,41 +1,33 @@
 # 08 — Stay extension and Billing consistency
 
-Status: `BINDING DEFINITION`
+Status: `BINDING CONSISTENCY`; extension price basis remains `HG-FIN-001`.
 
 ## Price delta
 
-V1 extension preserves the accommodation value already booked and adds:
+The extension must have one explicit `extension_delta_cents`, but how that delta is priced is a Human Gate documented in `13-financial-policy-gates.md`. BUILD must not infer current room rate, original rate or operator-entered rate until that gate is approved.
 
-`extension_delta_cents = current_room_price_cents * added_nights`.
-
-Existing nights are not silently repriced. Discounts, upgrade/downgrade adjustments and negotiated rates are separate explicit Billing policy.
+Existing booked nights are never silently repriced as a side effect of extension.
 
 ## Atomic financial consistency
 
-The extension operation changes booking total and inventory together. If an invoice already exists, its amount must be reconciled in the same logical operation.
+Once the approved price delta is known, inventory/date and financial total changes form one logical operation.
 
-Rules:
+If an invoice exists:
 
-- no invoice: update booking total; invoice may be created later by normal Billing flow;
-- `PENDING` invoice: increase `amount_cents` by the extension delta; preserve paid amount;
-- `PAID` invoice: increase `amount_cents`, change status to `PENDING`, clear `paid_at`, preserve prior payment entries and paid amount;
-- `VOIDED` invoice: extension is rejected pending explicit Billing recovery; do not silently resurrect a voided invoice.
+- `PENDING`: increase invoice amount by the approved delta; preserve paid amount;
+- `PAID`: increase amount, reopen to `PENDING` when new amount exceeds paid amount, and stop presenting it as fully settled;
+- `VOIDED`: reject extension pending explicit Billing recovery; never silently resurrect it.
 
-The schema invariant `paid_amount_cents <= amount_cents` must remain true.
+If no invoice exists, booking total changes and normal Billing may create the invoice later.
 
 ## Audit
 
-A successful extension records:
+Successful extension records lifecycle old/new dates plus the approved delta, and money-affecting evidence required by `INV-MONEY-001`. Failed/stale extension writes no success event.
 
-- lifecycle event identifying old/new checkout and added nights;
-- financial audit/event identifying `extension_delta_cents` when delta > 0.
+## UI consequence
 
-Both represent the same winning business operation; a failed extension writes neither success event.
-
-## Billing UI consequence
-
-After extension, embedded Billing refreshes and shows the new total/remaining balance. A previously paid stay that gains an extension visibly becomes pending for the additional balance.
+Preview must display the proposed new checkout and approved price delta before confirmation. After success, embedded Billing refreshes and shows authoritative total/paid/remaining state.
 
 ## Concurrency
 
-If payment, invoice state, room inventory or booking state changes concurrently so that the expected extension cannot be proven, extension returns conflict and refreshes authoritative data instead of partially applying the change.
+If payment, invoice, booking, hold or inventory state changes so the expected extension cannot be proven, the entire extension conflicts rather than partially applying.
