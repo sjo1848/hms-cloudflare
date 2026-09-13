@@ -24,23 +24,32 @@ Existing migrated/open cases that already place an unoccupied room in `MAINTENAN
 
 Current schema/trigger assumptions that every maintenance open implies room `MAINTENANCE` and every resolution returns `DIRTY` must be expanded. No event may claim a physical transition that did not occur.
 
-## Capabilities
+## Capabilities — binding
 
-Separate maintenance permissions from cleaning transitions:
+Maintenance permissions are separate from cleaning transitions:
 
 - `maintenance.read`
 - `maintenance.report`
 - `maintenance.resolve`
 
-Recommended role mapping:
+Binding role mapping:
 
-- `admin`: read/report/resolve;
-- `ops`: read/report/resolve;
-- `receptionist`: read/report;
-- `housekeeping`: read/report/resolve.
+- `admin`: `maintenance.read`, `maintenance.report`, `maintenance.resolve`;
+- `ops`: `maintenance.read`, `maintenance.report`, `maintenance.resolve`;
+- `receptionist`: `maintenance.read`, `maintenance.report`; no resolve;
+- `housekeeping`: `maintenance.read`, `maintenance.report`, `maintenance.resolve`;
+- `saas_admin`: none of the tenant maintenance capabilities.
 
-`housekeeping.write` continues to govern cleaning transitions rather than being the only route to report a guest-room defect.
+`maintenance.report` authorizes opening a case and escalating an existing `NON_BLOCKING` case to `BLOCKING`. Escalation is one-way in this wave because increasing impact is a safety/reporting action. Downgrade is not a generic edit: resolve when mitigated and reopen a non-blocking follow-up only if required.
+
+`maintenance.resolve` authorizes case closure/resolution. A receptionist may report or escalate a risk but cannot resolve/close it.
+
+`housekeeping.write` continues to govern cleaning transitions (`DIRTY -> CLEANING -> AVAILABLE`) and is not a substitute for maintenance capabilities. Existing target role intent remains: admin, ops and housekeeping can execute cleaning; receptionist cannot.
+
+## Checkout override boundary
+
+Maintenance capability changes do not broaden financial override authority. `bookings.checkout.override` remains admin-only, matching accepted source and target capability maps.
 
 ## UX consequence
 
-Reception can report an incident from the active stay without gaining cleaning/technical resolution rights. Housekeeping/ops can execute the maintenance case workflow.
+Reception can report or escalate an incident from the active stay without gaining cleaning or technical resolution rights. Housekeeping/ops/admin can resolve maintenance according to the binding map. UI visibility is convenience only; backend capability checks remain authoritative.
