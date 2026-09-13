@@ -2,40 +2,36 @@
 
 Status: `BINDING DEFINITION`
 
-## Problem
+## Core rule
 
-Operational dates cannot be derived from Worker UTC or from the browser's local timezone. No-show eligibility, housekeeping board date, Reception classification, reassignment remaining nights and report defaults must agree on the hotel's calendar day.
+Operational dates are not authorized by Worker UTC date or browser timezone. Every hotel has one authoritative IANA timezone. Server domain logic derives `hotel_local_date`; client clocks may display information but cannot decide date-sensitive eligibility.
 
-## Rule
+For the current Mendoza hotel the expected configuration is `America/Argentina/Mendoza`.
 
-Every hotel has one authoritative IANA timezone, for example `America/Argentina/Mendoza` for the current Mendoza hotel.
-
-Server-side domain operations derive `hotel_local_date` from that timezone. Client clocks may display information but do not decide date-sensitive lifecycle eligibility.
-
-## Required uses
+## Required hotel-local-date uses
 
 - no-show eligibility;
-- `today` / overdue arrival and departure classification;
+- overdue arrival/departure and overrun classification;
 - housekeeping default board date;
-- remaining-night range during in-stay reassignment;
+- remaining-night range for reassignment;
 - stay-extension date validation;
-- operational read-model date;
-- report/default range semantics where hotel-local day matters.
+- front-desk operational date;
+- report/default range semantics where hotel day matters.
 
-This timezone foundation does **not** introduce calendar restrictions absent from the accepted source. In particular, the current definition does not add a new arrival-date gate to formal check-in or cancellation.
+This foundation does not add a new date cutoff to check-in or cancellation.
+
+## Absolute instants versus hotel-local dates — D10
+
+A timestamp representing a real instant (for example late-arrival ETA or audit created_at) must be unambiguous on the wire and in storage.
+
+Late-arrival ETA uses RFC3339/ISO-8601 with explicit `Z` or numeric offset. Server parses the absolute instant, verifies it is future, then converts it to the hotel's IANA timezone to derive the stay date used by `check_in <= eta_hotel_local_date < check_out`. Timezone-less ETA is invalid rather than guessed from browser/server locale.
+
+Audit timestamps remain absolute instants. Hotel-local operational date is additional domain context, not a replacement timestamp.
 
 ## Configuration
 
-Timezone belongs to hotel configuration/control metadata and must be returned through trusted hotel/auth context or an equivalent server-owned configuration path.
-
-Existing Mendoza staging/demo hotels may be explicitly seeded/backfilled as `America/Argentina/Mendoza`. New hotel registration must provide/derive a valid IANA timezone rather than inheriting the operator browser timezone.
+Timezone belongs to hotel configuration/control metadata and is exposed through trusted server-owned hotel/auth context. Existing Mendoza staging/demo hotel data may be explicitly backfilled as `America/Argentina/Mendoza`; new hotel registration must provide/derive a valid IANA timezone.
 
 ## No-show parity
 
-Preserve accepted source behavior: a confirmed booking may be marked `NO_SHOW` from its arrival date, expressed with the correct hotel calendar as:
-
-`hotel_local_date >= check_in`.
-
-A future booking (`hotel_local_date < check_in`) cannot be marked no-show.
-
-A different same-day cutoff policy would be a future product decision, not an implementation detail.
+Preserve accepted business timing using the correct hotel calendar: `hotel_local_date >= check_in`. A future booking cannot be marked no-show. A new same-day hour cutoff would require a future product decision.
