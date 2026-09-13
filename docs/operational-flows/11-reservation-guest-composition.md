@@ -4,7 +4,7 @@ Status: `BINDING DEFINITION`
 
 ## Existing guest
 
-When search finds the guest, normal booking creation uses the existing guest identity.
+When search finds the guest, normal booking creation uses the existing guest identity through `POST /api/v1/bookings`.
 
 ## New guest
 
@@ -12,26 +12,28 @@ When the operator chooses `Create guest` inside the reservation flow, guest crea
 
 Binding outcome:
 
-- if guest validation or booking availability fails, no orphan guest should be persisted by default;
-- if the booking succeeds, guest and booking are both persisted and the new booking becomes the active Reception case;
+- if guest validation or booking availability fails, no unintended orphan guest is persisted;
+- if booking succeeds, guest and booking are both persisted and the new booking becomes active Reception case;
 - tenant/hotel identity is authoritative and cannot come from client guest/booking IDs.
 
-Because both records live in the same hotel D1, implementation should use one atomic business operation rather than relying on UI compensation.
+Because both records live in the same hotel D1, implementation uses one atomic business operation rather than UI compensation.
 
-Exact endpoint shape is implementation latitude: a dedicated command or nested create is acceptable. Generic frontend choreography `POST guest` then `POST booking` is not the target because a booking conflict can leave unintended guest data.
+Canonical command is `POST /api/v1/bookings/with-guest`, defined in `19-api-command-contract-map.md`, and requires both `guests.write` and `bookings.write`. Guest payload reuses the existing guest-create contract; booking payload uses normal room/dates/notes fields. Generic frontend choreography `POST guest` then `POST booking` is outside target scope because booking conflict can leave unintended guest data.
 
 ## Duplicate handling
 
-This flow does not auto-merge guests. Existing email uniqueness/schema rules remain authoritative. If identity appears to exist, UI should return to guest selection rather than inventing deduplication logic.
+This flow does not auto-merge guests. Existing identity/email uniqueness rules remain authoritative. If identity appears to exist, UI returns to guest selection rather than inventing deduplication logic.
 
 ## Explicit save-only guest
 
-Standalone Guests remains the place for intentionally creating a guest without a reservation. The inline flow should not expose an implicit `save guest anyway` recovery unless later product policy requests it.
+Standalone Guests remains the place for intentionally creating a guest without a reservation. Inline flow does not expose implicit `save guest anyway` recovery unless later product policy requests it.
 
 ## Acceptance
 
-- existing guest reservation succeeds normally;
-- new guest + available room succeeds atomically;
-- new guest + concurrently lost room leaves neither booking nor unintended new guest;
+- existing guest reservation succeeds through normal booking create;
+- new guest + available room succeeds atomically through `bookings/with-guest`;
+- new guest + concurrently lost room leaves neither booking nor unintended guest;
 - duplicate/invalid guest error leaves no booking;
-- resulting booking is selected in Reception without a module switch.
+- missing either required capability returns forbidden;
+- resulting booking is selected in Reception without module switch;
+- OpenAPI/client contract represents the atomic command before browser acceptance.
