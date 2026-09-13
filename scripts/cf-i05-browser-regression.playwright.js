@@ -9,6 +9,8 @@
   const apiStatuses = [];
   page.on("response", response => { if (response.url().includes("/api/v1/housekeeping/")) apiStatuses.push({ url: response.url(), status: response.status() }); });
   const waitForRoom = async (roomNumber) => {
+    const focusedTask = page.getByRole("dialog", { name: /Focused task room/ });
+    if (await focusedTask.count()) { await focusedTask.getByRole("button", { name: "Close task" }).click(); await focusedTask.waitFor({ state: "hidden", timeout: 5000 }); }
     await page.getByRole("button", { name: new RegExp(`Room ${roomNumber}`) }).click();
     await page.getByRole("heading", { name: new RegExp(`Room ${roomNumber}`) }).waitFor();
   };
