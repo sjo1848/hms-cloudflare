@@ -10,8 +10,10 @@ Purpose: bind which accepted target/source HTTP contracts are preserved, which e
 - Tenant/hotel context comes from authenticated server context, never client-supplied hotel ids.
 - Write commands enforce backend capability checks regardless of UI visibility.
 - Lifecycle commands are explicit; generic booking PATCH must not become a backdoor for checked-in lifecycle changes.
-- Stale/concurrent conflict returns a fail-closed conflict response with no partial mutation or success audit.
+- Material operator evidence is validated server-side; UI-only reason fields are insufficient.
+- Stale/concurrent conflict returns fail-closed conflict with no partial mutation or success audit.
 - Existing compatible response fields may be extended additively; breaking renames require a separate contract decision.
+- Unless stated otherwise, evidence text uses accepted minimum validation of 6 trimmed characters and current maximum validation limits.
 
 ## Front desk read model
 
@@ -19,18 +21,11 @@ Purpose: bind which accepted target/source HTTP contracts are preserved, which e
 
 Status: `PRESERVE AND EXTEND`.
 
-This is the canonical Reception operational read model inherited from the accepted source contract. Do not introduce a competing `/operations/front-desk` route.
+Canonical Reception operational read model. Do not introduce a competing `/operations/front-desk` route.
 
-Extend as needed with additive fields for:
-- authoritative operational date / generated timestamp;
-- queue lane and deterministic priority;
-- readiness and blocker details;
-- maintenance case id/impact when relevant;
-- late-arrival context;
-- current room context;
-- optional Billing summary only where authoritative and cheap to produce.
+Extend additively with operational date/generated timestamp, queue lane/priority, readiness/blockers, maintenance case id/impact, late-arrival context, current room context and optional authoritative Billing summary.
 
-It remains read-only and never performs lifecycle writes.
+It remains read-only.
 
 ## Booking creation and pre-occupancy editing
 
@@ -38,144 +33,204 @@ It remains read-only and never performs lifecycle writes.
 
 Status: `PRESERVE` for existing-guest reservation creation.
 
-### Atomic inline guest + reservation command
+### `POST /api/v1/bookings/with-guest`
 
-Status: `ADD BOUNDED COMMAND`.
+Status: `ADD BOUNDED ATOMIC COMMAND`.
 
-Canonical behavior requires one atomic business operation when Reception creates a new guest inline with a reservation. Exact path is fixed for this wave as:
-
-`POST /api/v1/bookings/with-guest`
-
-Payload contains guest data plus the same booking dates/room/notes required by normal booking creation. Authorization requires both `guests.write` and `bookings.write`. Success returns the created booking with guest identity; any guest/booking/availability conflict leaves neither unintended guest nor booking.
+Payload reuses the current guest-create fields plus normal booking `room_id`, `check_in`, `check_out`, optional notes. Authorization requires both `guests.write` and `bookings.write`. Success returns the created booking with guest identity; failure leaves neither unintended guest nor booking.
 
 ### `PATCH /api/v1/bookings/:id`
 
 Status: `PRESERVE FOR PRE-OCCUPANCY EDIT + CANCELLATION ONLY`.
 
-It may continue to edit `CONFIRMED` reservation data under existing availability rules and to perform the existing `CONFIRMED -> CANCELLED` terminal action with accepted terminal reason/evidence once that evidence is wired into target parity.
+For cancellation, canonical payload requires:
 
-It must not implement checked-in reassignment, extension, checkout or no-show as arbitrary generic field/status edits.
+```text
+status = CANCELLED
+terminal_reason = non-empty trimmed text, min 6 chars
+```
+
+Cancellation is allowed only while the booking is still `CONFIRMED`; this wave adds no arrival-date cutoff. Mutation releases reservation inventory, preserves physical room state and records terminal actor/time/reason.
+
+Generic PATCH must not implement checked-in reassignment, extension, checkout or no-show.
 
 ## Explicit lifecycle commands
 
 ### `POST /api/v1/bookings/:id/check-in`
 
 Status: `PRESERVE / HARDEN`.
+Authorization: `lifecycle.write`.
 
-Uses `lifecycle.write`. Preserve formal checklist and immediate readiness semantics. Additive response/evidence is allowed.
+Canonical payload preserves current target confirmations:
+- `document_verified = true`;
+- `contact_confirmed = true`;
+- `stay_confirmed = true`;
+- positive `check_in_guests_count`;
+- optional accepted reference/evidence fields may be carried additively.
+
+No new calendar-day cutoff is introduced.
 
 ### `POST /api/v1/bookings/:id/reassign`
 
 Status: `PRESERVE / HARDEN`.
+Authorization: `lifecycle.write`.
 
-Uses `lifecycle.write`. Extend implementation to remaining-night inventory semantics, old-room turnover, blocking-maintenance routing, source-parity destination repricing, invoice reconciliation and richer audit details.
+Canonical payload:
+
+```text
+room_id = destination id
+reason = trimmed operational reason, min 6 chars
+```
+
+The reason is required server-side for a checked-in move, aligning the accepted operator workflow and guaranteeing audit evidence. This is an intentional backend hardening recorded in `20-intentional-target-departures.md`.
+
+Implementation applies remaining-night inventory semantics, old-room turnover, blocking-maintenance routing, destination repricing, invoice reconciliation and detailed audit.
 
 ### `POST /api/v1/bookings/:id/check-out`
 
 Status: `PRESERVE / HARDEN`.
+Authorization: `lifecycle.write`; `pending-approved` additionally requires admin-only `bookings.checkout.override`.
 
-Uses `lifecycle.write`. `pending-approved` additionally requires `bookings.checkout.override`, which remains admin-only. Extend vacancy routing to `DIRTY` versus `MAINTENANCE` according to open `BLOCKING` case while preserving settlement truth and housekeeping handoff semantics.
+Preserve current required confirmations and payment fields:
+- `charge_reviewed = true`;
+- `release_confirmed = true`;
+- `handoff_confirmed = true`;
+- `check_out_payment_policy = settled | pending-approved`;
+- `check_out_reference` required with accepted min length for `pending-approved`.
+
+Vacancy result is `DIRTY` unless an open `BLOCKING` maintenance case requires `MAINTENANCE`.
 
 ### `POST /api/v1/bookings/:id/no-show`
 
 Status: `ADD EXPLICIT COMMAND`.
+Authorization: `lifecycle.write`.
 
-Uses `lifecycle.write`.
+Canonical payload:
 
-Preconditions: booking `CONFIRMED`, `hotel_local_date >= check_in`, never occupied, accepted terminal reason/evidence. Mutation releases reservation inventory, leaves physical room unchanged and records one truthful terminal lifecycle event. Financial refund/penalty automation is not part of this command.
+```text
+terminal_reason = trimmed text, min 6 chars
+```
 
-Generic booking PATCH must not become the primary no-show command in the new target workflow.
+Preconditions: `CONFIRMED`, never occupied, `hotel_local_date >= check_in`. Releases reservation inventory, leaves physical room unchanged and records terminal event/evidence. No refund/penalty automation.
 
 ### `POST /api/v1/bookings/:id/extend-stay`
 
 Status: `ADD EXPLICIT COMMAND`.
+Authorization: `lifecycle.write`.
 
-Uses `lifecycle.write`.
+Canonical payload:
 
-Payload requires `new_check_out`. Command claims all added nights atomically, keeps booking `CHECKED_IN` and room `OCCUPIED`, applies source-parity repricing, reconciles invoice and records extension event. It rejects partial extension and stale booking/room/Billing state.
+```text
+new_check_out = ISO hotel stay date later than current check_out
+```
+
+Claims all added nights atomically, keeps booking `CHECKED_IN` and room `OCCUPIED`, applies source-parity repricing, reconciles invoice and records extension event. Partial/stale success is forbidden.
 
 ## Housekeeping read/cleaning routes
 
 ### `GET /api/v1/housekeeping/board`
 
 Status: `PRESERVE AND EXTEND`.
+Authorization: existing `housekeeping.read`.
 
-Include occupied rooms only when an open maintenance case exists. Add maintenance impact and context fields additively.
+Include occupied rooms only when an open maintenance case exists. Add maintenance impact/context additively.
 
 ### `POST /api/v1/housekeeping/:id/start`
 
 Status: `PRESERVE`.
-
-Cleaning transition `DIRTY -> CLEANING`, governed by `housekeeping.write`.
+Authorization: `housekeeping.write`.
+Transition: `DIRTY -> CLEANING`.
 
 ### `POST /api/v1/housekeeping/:id/finish`
 
-Status: `PRESERVE`.
+Status: `PRESERVE / HARDEN`.
+Authorization: `housekeeping.write`.
+Transition: `CLEANING -> AVAILABLE` only when no blocking condition makes AVAILABLE untruthful.
 
-Cleaning transition `CLEANING -> AVAILABLE`, governed by `housekeeping.write`, and must fail if a blocking condition makes AVAILABLE untruthful.
+## Maintenance read/write commands
 
-## Maintenance commands
+### `GET /api/v1/housekeeping/:id/maintenance`
+
+Status: `ADD ROOM-SCOPED READ CONTRACT`.
+Authorization: `maintenance.read`.
+
+Returns HTTP 200 with:
+
+```text
+{ maintenance_case: <open case view> | null }
+```
+
+Room lookup remains tenant-scoped. No open case is not an error and returns `maintenance_case: null`. This gives receptionist/admin/ops/housekeeping a least-privilege case-detail read without granting the full housekeeping board.
 
 ### `POST /api/v1/housekeeping/:id/maintenance`
 
 Status: `PRESERVE PATH / EXPAND CONTRACT`.
+Authorization: `maintenance.report`.
 
-Authorization changes from generic `housekeeping.write` to `maintenance.report`.
+Canonical payload:
+- `impact = NON_BLOCKING | BLOCKING`;
+- `priority = LOW | MEDIUM | HIGH | URGENT`;
+- `reason` trimmed min 6 chars;
+- `assigned_to` trimmed min 2 chars.
 
-Payload adds mandatory `impact: NON_BLOCKING | BLOCKING` alongside accepted `priority`, `reason`, `assigned_to`.
-
-Opening behavior follows the canonical maintenance model, including occupied-room support and same-state events.
+Opening behavior follows the canonical maintenance model, including occupied-room support and truthful same-state events.
 
 ### `POST /api/v1/housekeeping/:id/maintenance/:case_id/escalate`
 
 Status: `ADD EXPLICIT COMMAND`.
+Authorization: `maintenance.report`.
 
-Requires `maintenance.report`. Only `OPEN NON_BLOCKING -> OPEN BLOCKING` is permitted in v1. It is idempotent/rejects stale or already-resolved case state. Physical room consequence depends on occupancy: occupied remains occupied and becomes blocked; vacant eligible states enter `MAINTENANCE`.
+Canonical payload:
+
+```text
+escalation_note = trimmed text, min 6 chars
+```
+
+Only `OPEN NON_BLOCKING -> OPEN BLOCKING` is allowed. Event records actor, prior/new impact and escalation note. Occupied room remains occupied but blocked; vacant eligible states enter `MAINTENANCE`.
 
 ### `POST /api/v1/housekeeping/:id/maintenance/:case_id/resolve`
 
 Status: `ADD EXPLICIT COMMAND`.
+Authorization: `maintenance.resolve`.
 
-Requires `maintenance.resolve` and a resolution note/evidence according to existing validation standards.
+Canonical payload:
 
-It supports both:
-- occupied/non-blocking or mitigated case resolution with no physical room-state change;
-- blocking case resolution from `MAINTENANCE -> DIRTY`.
+```text
+resolution_note = trimmed text, min 6 chars
+```
 
-Event details must truthfully reflect whether physical state changed.
+Supports occupied same-state resolution and blocking `MAINTENANCE -> DIRTY`. Event truthfully records whether physical state changed.
 
 ### `POST /api/v1/housekeeping/:id/dirty`
 
 Status: `LEGACY COMPATIBILITY ONLY`.
 
-The current route encodes the historical `MAINTENANCE -> DIRTY` resolve path. It must not be reused as the canonical general maintenance-resolution API because that name/contract cannot represent occupied same-state resolution.
+May remain only for an open `BLOCKING` case on a room currently `MAINTENANCE`, internally delegating to the same resolution domain command and requiring the same resolution evidence/capability. New UI must use `/maintenance/:case_id/resolve`. Removal later requires explicit deprecation decision.
 
-During migration it may remain as a compatibility alias only for an open blocking case on a room currently `MAINTENANCE`, internally delegating to the same resolution domain command. New HMS UI must use `/maintenance/:case_id/resolve`. Once compatibility consumers are proven absent, removal requires a separate API deprecation decision.
+## Authorization matrix
 
-## Authorization matrix for new/affected commands
+- lifecycle commands: `lifecycle.write` -> admin, ops, receptionist.
+- pre-occupancy booking writes/cancellation: existing booking write/update set -> admin, ops, receptionist.
+- guest+booking create: both `guests.write` + `bookings.write` -> admin, ops, receptionist.
+- maintenance: exactly `05-maintenance-data-rbac.md`.
+- cleaning: `housekeeping.write` -> admin, ops, housekeeping.
+- pending-balance checkout: lifecycle write + `bookings.checkout.override`; override admin-only.
+- saas_admin: none of the tenant operational commands above.
 
-- lifecycle commands (`check-in`, `reassign`, `check-out`, `no-show`, `extend-stay`): `lifecycle.write` -> admin, ops, receptionist.
-- booking cancellation/pre-occupancy booking writes: existing booking write/update capability set -> admin, ops, receptionist.
-- atomic guest+booking create: both `guests.write` + `bookings.write` -> admin, ops, receptionist.
-- maintenance read/report/resolve: exactly as `05-maintenance-data-rbac.md`.
-- cleaning start/finish: existing `housekeeping.write` -> admin, ops, housekeeping.
-- `pending-approved` checkout: `lifecycle.write` plus `bookings.checkout.override`; override remains admin-only.
-- `saas_admin` receives none of the tenant operational commands above.
+## Error semantics
 
-## Error/response contract expectations
-
-Use existing API error semantics and distinguish at minimum:
-- `400` malformed/invalid payload or unsupported transition input;
+At minimum:
+- `400` malformed/invalid payload or unsupported input;
 - `403` capability failure;
-- `404` tenant-scoped entity not found;
-- `409` stale state, invalid current lifecycle state, availability/hold/maintenance conflict or lost concurrency race.
+- `404` tenant-scoped entity/room/explicit case id not found;
+- `409` invalid current lifecycle/case state, stale state, availability/hold/maintenance conflict or lost concurrency race.
 
-A conflict response may add machine-readable reason codes later, but BUILD must not return success with partial state.
+No success response may accompany partial state.
 
 ## OpenAPI/client obligation
 
-Every new/additive route or field is reflected in the API contract/client types before browser acceptance is claimed. If the repo uses generated/client drift checks, those gates remain binding.
+Every new/additive route, payload, response field or enum is represented in the API contract/client types before browser acceptance. Existing drift checks remain binding.
 
 ## Completion rule
 
-A lifecycle/maintenance increment is not complete until implementation, tests, OpenAPI/client contract and browser flow all reference this canonical route map consistently. Parallel shadow endpoints or generic PATCH shortcuts that bypass these commands are scope violations.
+A lifecycle/maintenance increment is incomplete until implementation, tests, OpenAPI/client contract and browser flow use this map consistently. Parallel shadow endpoints, orphan capabilities or generic PATCH/direct-status shortcuts are scope violations.
