@@ -19,27 +19,27 @@ Exact persisted enum names are implementation latitude if tests and consumers re
 
 ### Check-in
 
-Operational date, room id, guest count and confirmed checklist facts.
+Room id, guest count and accepted formal checklist facts; include hotel-local operational date as context, not as a new eligibility cutoff.
 
 ### Reassignment
 
-Old room, new room, effective hotel-local date, moved remaining-night range, resulting old-room state, and blocking-maintenance case id when applicable.
+Old room, new room, effective hotel-local date, moved remaining-night range, resulting old-room state, blocking-maintenance case id when applicable, source-parity price input/result and invoice reconciliation outcome.
 
 ### Checkout
 
-Room id, resulting room state, downstream work target (`HOUSEKEEPING` or `MAINTENANCE`), payment policy/reference and required confirmations.
+Room id, resulting room state, downstream work target (`HOUSEKEEPING` or `MAINTENANCE`), payment policy/reference and required confirmations. `settled` must correspond to authoritative full settlement.
 
 ### No-show
 
-Assigned room, hotel-local operational date, original stay dates and inventory-release outcome. No financial penalty is implied.
+Assigned room, hotel-local operational date, original stay dates, terminal reason/evidence and inventory-release outcome. No financial penalty is implied.
 
 ### Extend stay
 
-Old/new checkout, added-night range and financial delta metadata once HG-FIN-001 is resolved.
+Old/new checkout, added-night range, current room price used by source-parity repricing, old/new authoritative booking total, extra-charge total and invoice reconciliation outcome.
 
 ### Cancellation
 
-Assigned room, stay dates, hotel-local operational date and inventory release.
+Assigned room, stay dates, terminal reason/evidence, operational date as audit context and inventory release. No new calendar cutoff is implied.
 
 ## Atomic truth rule
 
@@ -47,8 +47,8 @@ A success event exists iff the corresponding authoritative state mutation won. F
 
 ## Timestamp versus operational date
 
-Audit `created_at` remains an absolute timestamp. Hotel-local operational date is additional domain context where date eligibility matters; one must not replace the other.
+Audit `created_at` remains an absolute timestamp. Hotel-local operational date is additional domain context where date-sensitive semantics or traceability require it; one must not replace the other.
 
 ## Cancellation hardening
 
-Current human booking cancellation has no lifecycle event equivalent to check-in/reassign/checkout. The no-show implementation wave should close this audit gap while preserving any existing agent provenance semantics.
+Current target human booking cancellation lacks a lifecycle event equivalent to check-in/reassign/checkout. The arrival-exception implementation wave should close this audit gap while preserving existing agent provenance semantics.
