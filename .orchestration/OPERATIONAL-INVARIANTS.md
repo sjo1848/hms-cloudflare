@@ -48,7 +48,23 @@ If an invoice exists, any successful operation that changes authoritative bookin
 
 ## INV-OPS-CHECKOUT-001 — Settlement policy preserves accepted source truth
 
-Checkout policy `settled` requires an authoritative fully paid account. `pending-approved` is the governed positive-balance exception and retains its reference/override requirements. UI declarations cannot weaken this backend invariant.
+Checkout policy `settled` requires an authoritative fully paid account. `pending-approved` is the governed positive-balance exception and retains its reference/override requirements. `bookings.checkout.override` remains admin-only. UI declarations cannot weaken this backend invariant.
+
+## INV-OPS-RBAC-001 — Operational capabilities are explicit and least-privilege
+
+Maintenance capability mapping is binding: admin/ops/housekeeping have read-report-resolve; receptionist has read-report only; saas_admin has no tenant maintenance authority. `maintenance.report` may open/escalate risk; `maintenance.resolve` closes cases. Cleaning continues under `housekeeping.write`. Refactors cannot broaden these role boundaries silently.
+
+## INV-OPS-API-001 — Canonical commands cannot be bypassed
+
+`docs/operational-flows/19-api-command-contract-map.md` is authoritative for lifecycle/maintenance API ownership. Generic booking PATCH or direct room-status mutation cannot bypass explicit checked-in lifecycle or maintenance commands. Parallel shadow endpoints are forbidden unless a new decision explicitly supersedes the map.
+
+## INV-OPS-COMPAT-001 — Legacy compatibility cannot redefine domain truth
+
+The legacy housekeeping `dirty` resolution path may remain only as a compatibility alias for the historical blocking maintenance-room case. New UI and new domain behavior use the canonical maintenance resolve command. Compatibility code must delegate to the same domain semantics rather than preserve contradictory behavior.
+
+## INV-OPS-CONTRACT-001 — OpenAPI/client contract follows runtime API
+
+Every new/additive route, payload field, response field or enum used by the new workflow wave must be represented in the published API/client contract before browser acceptance. Client drift or undocumented runtime behavior blocks completion.
 
 ## INV-OPS-PARITY-001 — Definition work cannot silently add product restrictions
 
