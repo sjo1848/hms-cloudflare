@@ -1,0 +1,42 @@
+.reception-workspace,.reception-case-layout,.reception-queue-panel,.reception-case-queue,.reception-queue-row{min-width:0;max-width:100%}
+.reception-workspace>.workspace-heading{flex-wrap:wrap}
+.reception-workspace>.workspace-heading .case-count{max-width:100%;white-space:normal}
+.reception-case-layout{grid-template-columns:minmax(310px,360px) minmax(0,1fr)}
+.reception-queue-panel{position:sticky;top:18px;display:flex;flex-direction:column;max-height:calc(100vh - 36px);overflow:hidden}
+.reception-queue-heading{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;min-width:0;margin-bottom:12px}
+.reception-queue-heading>div{min-width:0}
+.reception-queue-heading h3{margin:0 0 4px!important}
+.reception-queue-heading .muted{font-size:12px}
+.reception-attention-count{display:grid;place-items:center;flex:0 0 auto;min-width:30px;height:30px;padding:0 8px;border-radius:999px;background:#fff1dd;color:#8b5713;font-size:12px;font-weight:800}
+.reception-queue-search{display:grid;gap:6px;min-width:0;max-width:100%;margin:0 0 10px;color:#536174;font-size:12px;font-weight:700}
+.reception-queue-search input{width:100%;min-width:0;max-width:100%}
+.reception-queue-filters{display:flex;flex-wrap:wrap;gap:6px;min-width:0;max-width:100%;margin-bottom:12px}
+.reception-queue-filters button{display:flex;align-items:center;gap:6px;min-height:34px;padding:6px 9px;border-color:#cbd5df;background:#fff;color:#31445a;font-size:12px;box-shadow:none}
+.reception-queue-filters button:hover{background:#eef4f9}
+.reception-queue-filters button.selected{border-color:#1f3651;background:#1f3651;color:#fff;box-shadow:0 0 0 2px #d99a36}
+.reception-queue-filters button span{color:inherit;opacity:.8}
+.reception-case-queue{min-height:160px;max-height:calc(100vh - 310px);overflow-y:auto;padding-right:4px;overscroll-behavior:contain}
+.case-queue .reception-queue-row{gap:5px;width:100%;padding:11px 12px;overflow:hidden}
+.reception-row-top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;max-width:100%;color:#213247!important}
+.reception-row-top>strong{min-width:0;font-size:12px}
+.reception-lane-badge{display:inline-flex;align-items:center;min-height:22px;max-width:100%;padding:3px 7px;border-radius:999px;background:#eaf1f5;color:#315268!important;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lane-departure .reception-lane-badge,.lane-attention .reception-lane-badge{background:#fff0ed;color:#9c3028!important}
+.lane-arrival .reception-lane-badge{background:#e9f8ed;color:#17623b!important}
+.lane-in-house .reception-lane-badge{background:#edf4ff;color:#2f5685!important}
+.lane-reservation .reception-lane-badge{background:#fff7e7;color:#8b5713!important}
+.lane-finished .reception-lane-badge{background:#eef1f4;color:#66717f!important}
+.reception-guest-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.reception-row-reason{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;color:#435369!important}
+.reception-row-action{margin-top:2px;color:#8b5713!important;font-size:11px;font-weight:800}
+.reception-queue-empty{display:grid;place-items:center;min-height:150px;padding:18px;text-align:center;border:1px dashed #cbd5df;border-radius:12px;color:#677587;background:#f8fafc;font-size:13px}
+@media(max-width:900px){
+  .reception-case-layout{grid-template-columns:minmax(0,1fr)}
+  .case-layout .reception-queue-panel{position:static;max-height:none;overflow:visible}
+  .reception-case-queue{max-height:52vh}
+  .reception-queue-filters{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;padding:2px 2px 5px}
+  .reception-queue-filters button{flex:0 0 auto}
+}
+@media(max-width:560px){
+  .reception-queue-heading{align-items:center}
+  .reception-case-queue{max-height:48vh}
+}

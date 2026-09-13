@@ -1,10 +1,39 @@
+import { useState } from "react";
 import { BillingWorkspace } from "../billing/BillingWorkspace";
 import { StatusBadge } from "../../components/StatusBadge";
 import { useReceptionWorkspace } from "./useReceptionWorkspace";
 import { useI18n } from "../../i18n";
 import type { MessageKey } from "../../i18n";
+import { buildQueue, filterQueue, queueCounts, queueFilters } from "./queue";
+import type { QueueFilter, QueueLane, QueueReason } from "./queue";
+import "./reception-queue.css";
 
 const checkInStepKeys: MessageKey[] = ["checkin.stepVerification", "checkin.stepStayData", "checkin.stepRoom", "checkin.stepConfirm"];
+const filterLabelKeys: Record<QueueFilter, MessageKey> = {
+  attention: "reception.queueFilterAttention",
+  arrivals: "reception.queueFilterArrivals",
+  departures: "reception.queueFilterDepartures",
+  "in-house": "reception.queueFilterInHouse",
+  all: "reception.queueFilterAll",
+};
+const laneLabelKeys: Record<QueueLane, MessageKey> = {
+  arrival: "reception.queueLaneArrival",
+  departure: "reception.queueLaneDeparture",
+  "in-house": "reception.queueLaneInHouse",
+  reservation: "reception.queueLaneReservation",
+  finished: "reception.queueLaneFinished",
+  attention: "reception.queueLaneAttention",
+};
+const reasonLabelKeys: Record<QueueReason, MessageKey> = {
+  "departure-overdue": "reception.queueReasonDepartureOverdue",
+  "departure-today": "reception.queueReasonDepartureToday",
+  "arrival-overdue": "reception.queueReasonArrivalOverdue",
+  "arrival-today": "reception.queueReasonArrivalToday",
+  "upcoming-arrival": "reception.queueReasonUpcomingArrival",
+  "in-house": "reception.queueReasonInHouse",
+  finished: "reception.queueReasonFinished",
+  review: "reception.queueReasonReview",
+};
 
 function Bookings() {
   const { t, statusLabel, formatDate } = useI18n();
@@ -15,12 +44,17 @@ function Bookings() {
     selectCase, closeCase, refreshAvailability, submit, checkIn, reassign, checkout,
     saveEdit, cancelBooking,
   } = useReceptionWorkspace();
+  const [queueFilter, setQueueFilter] = useState<QueueFilter>("attention");
+  const [queueSearch, setQueueSearch] = useState("");
   const mobileStep = checkInStep;
+  const queue = buildQueue(bookings);
+  const counts = queueCounts(queue);
+  const visibleQueue = filterQueue(queue, queueFilter, queueSearch);
 
   return <section className="reception-workspace">
     <div className="workspace-heading">
       <div><p className="eyebrow">{t("reception.eyebrow")}</p><h2>{t("reception.title")}</h2><p className="muted">{t("reception.subtitle")}</p></div>
-      <span className="case-count">{t("reception.activeCases", { count: bookings.length })}</span>
+      <span className="case-count">{t("reception.queueSummary", { attention: counts.attention, all: counts.all })}</span>
     </div>
 
     <form onSubmit={submit} aria-label={t("reception.createAria")} className="case-create">
@@ -41,10 +75,33 @@ function Bookings() {
     {error && <p className="error" role="alert">{error}</p>}
     {loading && <p className="muted" role="status">{t("reception.loadingQueue")}</p>}
 
-    <div className="case-layout">
-      <aside aria-label={t("reception.queueAria")}>
-        <h3>{t("reception.caseQueue")}</h3>
-        <div className="case-queue">{bookings.map(booking => <button className={selected?.id === booking.id ? "selected" : ""} key={booking.id} onClick={() => selectCase(booking)}><strong>{booking.guest_name}</strong><span>{statusLabel(booking.status)} · {t("common.room")} {booking.room_number}</span><small>{formatDate(booking.check_in)} → {formatDate(booking.check_out)}</small></button>)}</div>
+    <div className="case-layout reception-case-layout">
+      <aside className="reception-queue-panel" aria-label={t("reception.queueAria")}>
+        <div className="reception-queue-heading">
+          <div><h3>{t("reception.caseQueue")}</h3><p className="muted">{t("reception.queueNow")}</p></div>
+          <span className="reception-attention-count">{counts.attention}</span>
+        </div>
+        <label className="reception-queue-search">
+          <span>{t("reception.queueSearch")}</span>
+          <input value={queueSearch} onChange={event => setQueueSearch(event.target.value)} placeholder={t("reception.queueSearchPlaceholder")} />
+        </label>
+        <div className="reception-queue-filters" aria-label={t("reception.queueAria")}>
+          {queueFilters.map(filter => <button type="button" key={filter} className={queueFilter === filter ? "selected" : ""} onClick={() => setQueueFilter(filter)}>{t(filterLabelKeys[filter])} <span>{counts[filter]}</span></button>)}
+        </div>
+        <div className="case-queue reception-case-queue">
+          {visibleQueue.map(item => {
+            const booking = item.booking;
+            const actionKey: MessageKey = item.lane === "arrival" ? "reception.queueActionCheckIn" : item.lane === "departure" ? "reception.queueActionCheckout" : "reception.queueActionOpen";
+            return <button type="button" className={`reception-queue-row lane-${item.lane} ${selected?.id === booking.id ? "selected" : ""}`} key={booking.id} onClick={() => selectCase(booking)}>
+              <span className="reception-row-top"><span className="reception-lane-badge">{t(laneLabelKeys[item.lane])}</span><strong>{t("common.room")} {booking.room_number}</strong></span>
+              <strong className="reception-guest-name">{booking.guest_name}</strong>
+              <span className="reception-row-reason">{t(reasonLabelKeys[item.reason])}</span>
+              <small>{formatDate(booking.check_in)} → {formatDate(booking.check_out)}</small>
+              <span className="reception-row-action">{t(actionKey)} →</span>
+            </button>;
+          })}
+          {!loading && visibleQueue.length === 0 && <div className="reception-queue-empty"><strong>{queueFilter === "attention" ? t("reception.queueEmptyAttention") : t("reception.queueEmpty")}</strong></div>}
+        </div>
       </aside>
 
       {selected ? <article className="case-panel">
