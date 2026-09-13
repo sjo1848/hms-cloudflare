@@ -2,53 +2,65 @@
 
 Status: `BINDING DEFINITION`
 
-## Events required for next wave
+## Required event families
 
-Lifecycle audit must represent at least:
+The workflow wave must persist truthful evidence for at least:
+- `CHECK_IN`;
+- `CANCEL`;
+- `NO_SHOW`;
+- `LATE_ARRIVAL`;
+- `REASSIGN`;
+- `EXTEND_STAY`;
+- `CHECK_OUT`;
+- `MAINTENANCE_OPEN`;
+- `MAINTENANCE_ESCALATE`;
+- `MAINTENANCE_RESOLVE`;
+- cleaning start/finish using the existing housekeeping event contract.
 
-- `CHECK_IN`
-- `REASSIGN`
-- `CHECK_OUT`
-- `NO_SHOW`
-- `EXTEND_STAY`
-- booking cancellation (`CANCEL` or equivalent domain event)
+Exact enum/string names may vary only if API/tests/consumers remain explicit and semantically equivalent.
 
-Exact persisted enum names are implementation latitude if tests and consumers remain explicit.
+## Common event truth
 
-## Material details
+Every success event includes hotel/tenant, actor identity, request identity where available, absolute timestamp and command-specific material facts. Hotel-local operational date is included where date semantics/history matter but never replaces the absolute timestamp.
+
+A success event exists iff the authoritative mutation won. Invalid evidence, stale state, lost concurrency race or rolled-back transaction creates no success event.
+
+## Command details
 
 ### Check-in
-
-Room id, guest count and accepted formal checklist facts; include hotel-local operational date as context, not as a new eligibility cutoff.
-
-### Reassignment
-
-Old room, new room, effective hotel-local date, moved remaining-night range, resulting old-room state, blocking-maintenance case id when applicable, source-parity price input/result and invoice reconciliation outcome.
-
-### Checkout
-
-Room id, resulting room state, downstream work target (`HOUSEKEEPING` or `MAINTENANCE`), payment policy/reference and required confirmations. `settled` must correspond to authoritative full settlement.
-
-### No-show
-
-Assigned room, hotel-local operational date, original stay dates, terminal reason/evidence and inventory-release outcome. No financial penalty is implied.
-
-### Extend stay
-
-Old/new checkout, added-night range, current room price used by source-parity repricing, old/new authoritative booking total, extra-charge total and invoice reconciliation outcome.
+Room id, guest count, accepted checklist facts and operational-date context. Under D9, booking total is unchanged; event must not report a price delta.
 
 ### Cancellation
+Assigned room, stay dates, terminal reason, inventory-release result and operational-date context. Booking total remains unchanged; no refund/penalty is implied.
 
-Assigned room, stay dates, terminal reason/evidence, operational date as audit context and inventory release. No new calendar cutoff is implied.
+### No-show
+Assigned room, hotel-local date, stay dates, terminal reason and inventory-release result. Booking total remains unchanged; no automatic financial disposition.
 
-## Atomic truth rule
+### Late arrival
+ETA, note, actor/recorded timestamp and booking id. Booking remains CONFIRMED. No room/inventory/booking-total/invoice mutation; event must not imply one.
 
-A success event exists iff the corresponding authoritative state mutation won. Failed validation, stale-state conflict or lost concurrency race creates no success event.
+### Reassignment
+Old/new room, effective hotel-local date, moved remaining-night interval, resulting old-room state, blocking case id if applicable, operational reason, pricing inputs/result and invoice reconciliation outcome.
 
-## Timestamp versus operational date
+### Extension
+Old/new checkout, added-night interval, pricing input, old/new total, extra charges and invoice reconciliation outcome.
 
-Audit `created_at` remains an absolute timestamp. Hotel-local operational date is additional domain context where date-sensitive semantics or traceability require it; one must not replace the other.
+### Checkout
+Room id, resulting room state, downstream work target, payment policy/reference and confirmations. Settlement uses the pre-existing authoritative booking total; checkout itself has no accommodation repricing delta under D9.
 
-## Cancellation hardening
+### Maintenance open
+Room, case id, prior physical state, impact, priority, reason, assignee and resulting physical state (including truthful same-state events).
 
-Current target human booking cancellation lacks a lifecycle event equivalent to check-in/reassign/checkout. The arrival-exception implementation wave should close this audit gap while preserving existing agent provenance semantics.
+### Maintenance escalation
+Case id, old/new impact, escalation note, physical state before/after and actor.
+
+### Maintenance resolve
+Case id, resolution note, physical state before/after and actor; same-state resolution must be represented truthfully.
+
+## Pricing-event rule
+
+Only pricing-affecting commands (room/date changes, reassignment, extension, extra charges or future explicitly priced operations) may record a booking-total delta. State/evidence-only lifecycle events must preserve total and must not fabricate a financial change.
+
+## Existing target gaps to close
+
+Current Cloudflare target does not yet provide all terminal/arrival/maintenance event semantics above. Each implementation increment must close its corresponding event gap atomically with the business mutation.
