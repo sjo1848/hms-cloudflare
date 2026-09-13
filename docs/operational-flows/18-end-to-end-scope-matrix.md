@@ -12,7 +12,7 @@ Every row requires tenant-scoped backend authorization, concurrency guards, atom
 | E2E-03 | Check-in | CONFIRMED + checklist + readiness -> CHECKED_IN/OCCUPIED; stale rejects; booking total/invoice amount unchanged by check-in itself. |
 | E2E-04 | Cancellation | CONFIRMED PATCH + reason min 6; inventory released; room unchanged; booking total unchanged; financial evidence preserved; no auto money disposition. |
 | E2E-05 | No-show | CONFIRMED, never occupied, local date >= check_in, reason min 6; inventory released; room unchanged; booking total unchanged; financial evidence preserved. |
-| E2E-06 | Late arrival | Existing PATCH/front_desk ETA+note; bookings.write; CONFIRMED; future ETA inside stay; audit; room/inventory/booking total/invoice unchanged; rerecord allowed. |
+| E2E-06 | Late arrival | Existing PATCH/front_desk ETA+note; bookings.write; ETA RFC3339 with explicit Z/offset; parse absolute instant -> hotel-local date inside stay; CONFIRMED; audit; room/inventory/booking total/invoice unchanged; rerecord allowed. |
 | E2E-07 | Reassignment | CHECKED_IN non-overrun, valid destination, reason min 6; remaining claims move; room turnover/history; pricing-affecting destination repricing + invoice reconciliation atomic. |
 | E2E-08 | NON_BLOCKING maintenance | May open on OCCUPIED/AVAILABLE/DIRTY/CLEANING; physical state unchanged; no independent sale/readiness block; role boundaries enforced. |
 | E2E-09 | BLOCKING occupied maintenance | Guest remains; sale/readiness blocked; explicit reassign/checkout; vacancy -> MAINTENANCE; resolve -> DIRTY; future reservations attention only. |
@@ -25,12 +25,12 @@ Every row requires tenant-scoped backend authorization, concurrency guards, atom
 | E2E-16 | Context+freshness | Stable IDs context only; refresh after mutation/focus/entry/poll; backend revalidates. |
 | E2E-17 | Continuation | Preserve search/filter; reload board; next case same deterministic priority. |
 | E2E-18 | Audit | Lifecycle/arrival/maintenance success events iff mutation wins; material actor/hotel/request/evidence persisted. |
-| E2E-19 | Synthetic shift | Exercise all flows, negative evidence, stale races, RBAC 403s, no-repricing versus priced-mutation cases, legacy compatibility and desktop/mobile journey. |
-| E2E-20 | Contract conformance | Runtime/tests/OpenAPI/client/browser use canonical routes/capabilities/payloads/pricing effects; truthful errors; no unregistered drift. |
+| E2E-19 | Synthetic shift | Exercise all flows, negative evidence, stale races, RBAC 403s, no-repricing versus priced-mutation cases, timezone-aware ETA, legacy compatibility and desktop/mobile journey. |
+| E2E-20 | Contract conformance | Runtime/tests/OpenAPI/client/browser use canonical routes/capabilities/payloads/date-time/pricing effects; truthful errors; no unregistered drift. |
 
 ## Mandatory D9 financial regression proofs
 
-After creating a reservation, change the room's catalog price before each independent scenario:
+After creating a reservation, change the room catalog price before each independent scenario:
 1. PATCH only guest/name/ordinary notes -> stored booking total and existing invoice unchanged.
 2. Check-in -> total unchanged.
 3. Record or rerecord late arrival -> total/invoice unchanged.
@@ -41,9 +41,16 @@ After creating a reservation, change the room's catalog price before each indepe
 8. Extend stay -> current-room repricing occurs and invoice reconciles.
 9. Add extra charge -> total changes and invoice reconciles.
 
+## Mandatory late-arrival time proofs — D10
+
+- `...Z` and explicit-offset RFC3339 ETAs representing future instants are accepted when their hotel-local date is inside stay.
+- Two equivalent instants with different offsets produce the same authoritative instant and correct hotel-local date.
+- timezone-less ETA is 400; past instant is 400; hotel-local date before check-in or at/after checkout is 400.
+- browser timezone cannot change server eligibility.
+
 ## Other mandatory negative proofs
 
-Late arrival past/out-of-stay ETA, short note, non-confirmed booking; front-desk role 403s; NON_BLOCKING AVAILABLE/DIRTY/CLEANING state preservation; reassignment short reason/blocking destination/conflict/stale/overrun; false settled/non-admin override; extension conflict/concurrent Billing.
+Front-desk role 403s; NON_BLOCKING AVAILABLE/DIRTY/CLEANING state preservation; reassignment short reason/blocking destination/conflict/stale/overrun; false settled/non-admin override; extension conflict/concurrent Billing.
 
 ## Out of scope
 
