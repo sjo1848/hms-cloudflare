@@ -20,10 +20,11 @@ describe("rooms operational board", () => {
   const bookings = [
     booking("arrival", "r1", "Confirmed", today, "2026-09-15", "Pérez"),
     booking("stay", "r2", "CheckedIn", "2026-09-12", today, "López"),
+    booking("blocked-arrival", "r5", "Confirmed", today, "2026-09-14", "Gómez"),
   ];
 
-  it("puts operational blockers and due work first", () => {
-    expect(buildRoomBoard(rooms, bookings, today).map(item => item.room.id)).toEqual(["r4", "r3", "r2", "r1", "r5"]);
+  it("puts physical blockers ahead of due arrivals and departures", () => {
+    expect(buildRoomBoard(rooms, bookings, today).map(item => item.room.id)).toEqual(["r4", "r3", "r5", "r2", "r1"]);
   });
 
   it("marks due arrivals, departures and unavailable rooms as attention", () => {
@@ -38,6 +39,6 @@ describe("rooms operational board", () => {
     const board = buildRoomBoard(rooms, bookings, today);
     expect(filterRoomBoard(board, "available", "")).toHaveLength(0);
     expect(filterRoomBoard(board, "all", "perez").map(item => item.room.id)).toEqual(["r1"]);
-    expect(filterRoomBoard(board, "preparation", "").map(item => item.room.id)).toEqual(["r4", "r3", "r1", "r5"]);
+    expect(filterRoomBoard(board, "preparation", "").map(item => item.room.id)).toEqual(["r4", "r3", "r5", "r1"]);
   });
 });
