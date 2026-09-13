@@ -5,89 +5,62 @@ Status: `ANALYSIS / IMPLEMENTATION LOCKED`
 Baseline: `acceptance/staging@26239b76b919266de07d7bece5977296647f109c`  
 Accepted source: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`
 
-Canonical set:
-- `16-target-transition-matrix.md`
-- `18-end-to-end-scope-matrix.md`
-- `19-api-command-contract-map.md`
-- `20-intentional-target-departures.md`
-- `05-maintenance-data-rbac.md`
-- `.orchestration/OPERATIONAL-INVARIANTS.md`
+Canonical set: `16-target-transition-matrix.md`, `18-end-to-end-scope-matrix.md`, `19-api-command-contract-map.md`, `20-intentional-target-departures.md`, `05-maintenance-data-rbac.md`, `.orchestration/OPERATIONAL-INVARIANTS.md`.
 
 ## Governing rules
 
-HMS follows the hotel operator workflow. Physical room state, future sellability and immediate check-in readiness are distinct facts. Accepted source behavior is preserved unless a departure is explicitly registered in `20`. BUILD may not reinterpret domain, financial, authorization, evidence, API or cross-module rules as implementation details.
+HMS follows the hotel operator workflow. Physical room state, future sellability and immediate readiness are distinct. Source behavior is preserved unless a departure is explicitly registered in `20`; unregistered divergence is a defect.
 
 ## Booking lifecycle
 
-Primary path: `CONFIRMED -> CHECKED_IN -> CHECKED_OUT`.
+`CONFIRMED -> CHECKED_IN -> CHECKED_OUT`, with terminal alternatives `CANCELLED` and `NO_SHOW`. No generic rollback. No new calendar cutoff for check-in/cancellation. No-show from `hotel_local_date >= check_in`.
 
-Alternative terminal paths from `CONFIRMED`: `CANCELLED`, `NO_SHOW`.
+Late arrival is context on CONFIRMED, not a state: existing booking PATCH with `front_desk.late_arrival_eta` + note; ETA future and hotel-local date inside `[check_in,check_out)`; note min 6/max 250; actor/time/audit; no room/inventory/Billing mutation.
 
-No generic rollback is authorized. No new calendar cutoff is added to check-in/cancellation. No-show becomes eligible when `hotel_local_date >= check_in`.
+## Pricing mutation boundary — D9
 
-Late arrival is **not** a booking state: it is context on a still-`CONFIRMED` booking. Canonical source-compatible write is the existing booking PATCH with `front_desk.late_arrival_eta` and `late_arrival_note`; ETA must be future and its hotel-local date inside `[check_in,check_out)`, note min 6/max 250, with actor/time/audit persistence and no inventory/room/Billing mutation.
+Only an explicitly pricing-affecting operation may change authoritative booking total: booking room/date edit, reassignment, extension, extra charge, or another future priced command.
 
-## Room / maintenance model
+State/evidence-only operations **preserve the existing booking total**: check-in, cancellation, no-show, late-arrival recording and checkout. Checkout may create/reconcile invoice and settlement state against that existing total but does not reprice accommodation. Cancellation/no-show preserve total and financial evidence for follow-up. This intentionally removes the accepted source generic-PATCH side effect that can recalculate price on unrelated state/evidence writes.
 
-Normal occupied turnover: `OCCUPIED -> DIRTY -> CLEANING -> AVAILABLE`.
+## Room / maintenance
 
-Maintenance case impact is `NON_BLOCKING | BLOCKING`, separate from room state and priority.
+Normal occupied turnover: `OCCUPIED -> DIRTY -> CLEANING -> AVAILABLE`. Open BLOCKING maintenance at vacancy routes to MAINTENANCE, then resolution -> DIRTY.
 
-- `NON_BLOCKING` may coexist with `OCCUPIED`, `AVAILABLE`, `DIRTY` or `CLEANING`; it never independently changes physical state or blocks sale/readiness.
-- `BLOCKING` prevents new occupancy. On an occupied room the guest stays until explicit reassign/checkout; on vacant eligible states the room becomes `MAINTENANCE`; resolution from maintenance returns `DIRTY`.
-- V1 allows one open maintenance case per room.
+Maintenance impact is `NON_BLOCKING | BLOCKING`. NON_BLOCKING may coexist with OCCUPIED/AVAILABLE/DIRTY/CLEANING with physical state unchanged and no independent sale/readiness block. BLOCKING prevents new occupancy; occupied guest remains until explicit move/checkout. V1 one open case/room.
 
-Binding maintenance roles: admin/ops/housekeeping read-report-resolve; receptionist read-report/escalate but not resolve; saas_admin none. Cleaning remains separately governed by `housekeeping.write`.
+Roles: admin/ops/housekeeping maintenance read-report-resolve; receptionist read-report/escalate but not resolve; saas_admin none. Cleaning remains `housekeeping.write`.
 
-## Reassignment
+## Reassignment / extension
 
-Only `CHECKED_IN` with `hotel_local_date < check_out`. Destination must be ready and conflict-free for remaining stay; reason min 6.
+Reassignment: CHECKED_IN, `hotel_local_date < check_out`, ready/conflict-free destination, reason min 6. Move only `[max(check_in,hotel_local_date),check_out)`, preserve history, destination OCCUPIED, old DIRTY or MAINTENANCE. This is pricing-affecting: destination-current-price × total nights + extras, invoice reconciled. Overrun must extend or checkout first.
 
-`effective_date=max(check_in,hotel_local_date)`. Move only remaining inventory `[effective_date,check_out)`; preserve historical room-night truth. Destination -> OCCUPIED. Old room -> DIRTY unless open BLOCKING case requires MAINTENANCE. Source pricing uses total stay nights × destination current price + extras and reconciles invoice atomically. An overrun stay must extend first or checkout.
+Extension: explicit checked-in later checkout, all added nights atomic. Pricing-affecting: current assigned-room price × total nights + extras, invoice reconciled.
 
-## Extension and Billing
+## Billing / checkout
 
-Extension is an explicit checked-in command: later checkout only, all added nights atomic, source repricing using current assigned-room price + extras, invoice reconciliation, booking stays CHECKED_IN and room OCCUPIED.
-
-Payments are immutable evidence. Booking total and invoice cannot diverge. A PAID invoice cannot remain paid if authoritative amount exceeds paid amount. Checkout `settled` requires full payment; `pending-approved` is the positive-balance exception and requires reference plus admin-only `bookings.checkout.override`.
+Payments are immutable evidence. Any pricing-affecting total change reconciles invoice atomically. A PAID invoice cannot remain paid when coverage becomes insufficient. `settled` requires fully paid; positive balance uses `pending-approved` + reference + admin-only override. Checkout itself preserves booking total.
 
 ## API ownership
 
-`19-api-command-contract-map.md` is binding.
+`19-api-command-contract-map.md` is binding: preserve/harden check-in/reassign/checkout; booking PATCH owns confirmed pre-occupancy edits, cancellation and late-arrival context; add no-show/extend-stay; add atomic `/bookings/with-guest`; preserve/extend front-desk board; add maintenance read/escalate/resolve; legacy `/dirty` compatibility-only. Front-desk board requires `bookings.read` -> admin/ops/receptionist only.
 
-- Preserve/harden check-in, reassign, checkout.
-- Existing booking PATCH owns confirmed pre-occupancy edits, cancellation and late-arrival context.
-- Add explicit no-show and extend-stay commands.
-- Add atomic `/bookings/with-guest`.
-- Preserve/extend `GET /api/v1/front-desk/board`.
-- Front-desk board requires `bookings.read`: admin/ops/receptionist allowed; housekeeping/saas_admin denied.
-- Housekeeping board stays cleaning-oriented.
-- Add least-privilege room maintenance read and explicit maintenance escalate/resolve.
-- Legacy `/housekeeping/:id/dirty` is compatibility-only.
+Generic PATCH/direct room status cannot bypass canonical commands. New API surface must align OpenAPI/client types.
 
-Generic PATCH/direct room status cannot bypass canonical lifecycle/maintenance commands. New/additive contracts must update OpenAPI/client types.
+## Workflow continuity
 
-## Freshness / workflow continuity
+Reception booking controls embedded Billing. Stable query IDs carry context only. Revalidate after mutation, focus/context entry and modest visible polling. After success preserve filters/search and select next case by deterministic board priority.
 
-Reception-selected `booking_id` governs embedded Billing. Context query params preserve context, never authorization. Revalidate after mutation, on focus/context entry and via modest visible-screen polling. After successful action preserve filters/search and select the next case by deterministic board priority.
+## Technical prerequisites / waves
 
-## Technical prerequisites
+Before material UI growth: total generated raw JS `<=300000` without raising 320000 budget. Before date-sensitive P0: persisted IANA timezone + server hotel-local date. Historical migrations immutable.
 
-Before material UI growth: total generated raw JS `<=300000` without raising the 320000 budget. Before date-sensitive P0 behavior ships: persisted valid IANA timezone and trusted server hotel-local date. Historical migrations remain immutable.
+Wave 0: JS headroom + timezone. Wave 1: reassignment, maintenance, arrival exceptions, extension/Billing. Wave 2: board/Reception/Billing/guest+reservation/context continuity. Wave 3: optimization + synthetic shift. Each state-changing increment gets its own Task Contract and independent review.
 
-## Implementation waves
+## Outside scope
 
-- Wave 0: JS headroom; timezone foundation.
-- Wave 1: reassignment; occupied/vacant maintenance model; arrival exceptions/no-show/late arrival; extension/Billing consistency.
-- Wave 2: front-desk board; integrated Reception/Billing; atomic guest+reservation; contextual refresh/continuation.
-- Wave 3: optimization and full synthetic hotel-shift acceptance.
-
-Each state-changing increment gets its own Task Contract and independent review.
-
-## Out of scope / deferred
-
-No frozen contracted-rate model, new check-in/cancellation/no-show cutoff, automatic refund/penalty/retention, split stay/automatic relocation, multiple simultaneous maintenance cases, new OUT_OF_ORDER design, paid realtime dependency, production/cutover/real-data migration or unrelated Reports/Users/Network redesign.
+No frozen contracted-rate model, new arrival cutoffs, automatic refund/penalty/retention, split stay/automatic relocation, multiple simultaneous maintenance cases, new OUT_OF_ORDER design, paid realtime, production/cutover/real-data migration, or unrelated Reports/Users/Network redesign.
 
 ## Definition exit
 
-Analysis closes only when the canonical set is contradiction-free, all E2E rows are implementation-ready, source departures are closed-set, no Human Gate blocks scope, Pre-Critic passes, a fresh critic of immutable Artifact+Boundary returns PASS, and orchestration state points to that exact artifact. Until then implementation remains locked.
+Close analysis only when canonical documents are contradiction-free, all E2E rows are implementation-ready, source departures are closed-set, no Human Gate blocks scope, Pre-Critic passes, immutable Artifact+Boundary critic returns PASS, and orchestration points to that artifact. Until then implementation remains locked.
