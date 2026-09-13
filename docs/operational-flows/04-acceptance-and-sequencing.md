@@ -25,7 +25,7 @@ Checked-in guest -> review authoritative balance/charges -> confirm room vacated
 
 ### B — Reassignment without blocking maintenance
 
-Checked-in guest in 101 -> select valid 104 for remaining stay -> confirm -> booking/current room becomes 104 -> 104 occupied -> 101 dirty -> housekeeping cleans 101 -> 101 available. Past inventory nights remain traceable to 101.
+Checked-in guest in 101 -> select valid 104 for remaining stay -> show source-parity destination-price consequence -> confirm -> booking/current room becomes 104 -> 104 occupied -> 101 dirty -> booking total/invoice reconciled -> housekeeping cleans 101 -> 101 available. Past inventory nights remain traceable to 101.
 
 ### C — Blocking occupied incident
 
@@ -41,9 +41,9 @@ Confirmed arrival reaches its hotel-local arrival date and never occupies the ro
 
 ### F — Stay extension
 
-Checked-in guest requests later checkout -> added interval available -> `HG-FIN-001` pricing policy applied -> extension commits atomically -> booking remains checked in -> room remains occupied -> added inventory claimed -> invoice/balance reconciled.
+Checked-in guest requests later checkout -> added interval available -> show source-parity recalculated total (`new total nights × current room price + extra charges`) and resulting balance -> confirm -> extension commits atomically -> booking remains checked in -> room remains occupied -> added inventory claimed -> invoice/balance reconciled.
 
-Conflict variant: any added-night or concurrent Billing conflict rejects with zero partial mutation.
+Conflict variant: any added-night, price, booking or concurrent Billing conflict rejects with zero partial mutation.
 
 ### G — Checkout settlement parity
 
@@ -55,7 +55,7 @@ Use `04a-sequencing-refinement.md` as the authoritative wave order. Wave 0 prere
 
 ## Stop conditions
 
-Return to analysis/Human Gate if implementation discovers a new financial policy, need for multiple simultaneous maintenance cases, split-stay/multi-room extension, cross-D1 atomicity, paid/production dependency, UX that weakens backend lifecycle guards, or a proposed calendar cutoff absent from accepted source/product decisions.
+Return to analysis/Human Gate if implementation proposes a new financial policy, multiple simultaneous maintenance cases, split-stay/multi-room extension, cross-D1 atomicity, paid/production dependency, UX that weakens backend lifecycle guards, or a calendar/pricing restriction that intentionally departs from accepted source behavior.
 
 ## Product simulation gate
 
