@@ -4,62 +4,40 @@ Status: `BINDING DEFINITION`
 
 ## New reservation with new guest
 
-Current friction: Reception can only select an existing guest.
+Target: `New reservation -> search guest -> select existing OR create inline -> dates -> availability -> room -> confirm`.
 
-Target flow:
-
-`New reservation -> search guest -> select existing OR create guest inline -> dates -> check availability -> select room -> confirm`.
-
-Guest creation is subordinate to reservation creation and must not force a module switch. Because guest and booking live in the same hotel D1, the target is one atomic business operation: booking conflict/validation failure must not leave an unintended guest record.
-
-Canonical command is fixed by `19-api-command-contract-map.md` as `POST /api/v1/bookings/with-guest`, requiring both `guests.write` and `bookings.write`. Frontend choreography `POST guest` then `POST booking` is not the target.
-
-Standalone Guests remains available when the operator intentionally wants to create a guest without a reservation.
+Inline guest creation is subordinate to reservation intent and atomic with booking through `POST /api/v1/bookings/with-guest`, requiring `guests.write` + `bookings.write`. Conflict/validation must not leave unintended guest-only state. Standalone Guests remains explicit guest-only intent.
 
 ## Check-in readiness
 
-Reception must show readiness before the operator starts final check-in.
+Reception shows readiness before final check-in:
+- READY = physical AVAILABLE + no blocking condition;
+- CLEANING;
+- DIRTY;
+- MAINTENANCE;
+- OCCUPIED conflict;
+- OUT_OF_ORDER.
 
-Readiness values include:
+NON_BLOCKING maintenance is advisory and does not independently remove readiness from an otherwise AVAILABLE room. Calendar day is not an added check-in gate. Blocked states show reason/contextual action rather than relying on a late backend conflict.
 
-- `READY` — assigned room physically `AVAILABLE` and no blocking maintenance;
-- `CLEANING` — room is being prepared;
-- `DIRTY` — housekeeping required;
-- `MAINTENANCE` — room unavailable pending maintenance;
-- `OCCUPIED` — inconsistent/blocked for this arrival;
-- `OUT_OF_ORDER` — blocked.
+## Billing follows selected Reception case
 
-A `NON_BLOCKING` maintenance incident is advisory context and does not independently remove readiness when the room is otherwise available.
+Embedded Billing is governed by the same selected `booking_id`; it cannot silently retain another booking. Show authoritative booking/accommodation total, extra charges, paid amount, remaining balance and invoice/payment status.
 
-Primary check-in action is enabled only for `READY`. Calendar day is not an additional hard gate because accepted source does not impose one. Other blockers expose contextual action/navigation instead of making a backend conflict the first explanation.
+## Pricing continuity at lifecycle actions
 
-## Billing follows the Reception case
+Under D9, check-in and checkout are state/evidence operations and preserve the stored booking total. Recording late arrival, cancellation and no-show likewise do not reprice. Reception must not show a price delta for those actions merely because room catalog price changed.
 
-When Reception has a selected booking, Billing must use that booking as its primary context. It must not silently keep a different booking selected.
+Reassignment and stay extension are pricing-affecting and must disclose their resulting total/balance before confirmation because their defined pricing rule may change the booking total.
 
-Target selected-case workspace shows at least:
+## Checkout handoff
 
-- accommodation/booking total;
-- extra charges;
-- paid amount;
-- remaining balance;
-- invoice/payment status relevant to checkout.
+Operator confirms physical release. Backend routes:
+- no open BLOCKING case: OCCUPIED -> DIRTY -> Housekeeping;
+- open BLOCKING case: OCCUPIED -> MAINTENANCE -> repair -> DIRTY -> Housekeeping.
 
-Billing may still have a standalone mode, but embedded Reception billing is controlled by Reception `booking_id`.
+No duplicate manual housekeeping task is required. Checkout settlement operates against the pre-existing authoritative booking total; checkout itself does not reprice accommodation.
 
-## Checkout handoff semantics
+## Post-action continuation
 
-The operator confirms the physical fact:
-
-**Room vacated/released: downstream operational work may begin.**
-
-The backend performs the actual handoff through authoritative state:
-
-- no open `BLOCKING` maintenance -> `OCCUPIED -> DIRTY` -> Housekeeping;
-- open `BLOCKING` maintenance -> `OCCUPIED -> MAINTENANCE` -> Maintenance, then resolution -> `DIRTY` -> Housekeeping.
-
-No separate manual housekeeping task creation is required.
-
-## After successful lifecycle action
-
-Reception preserves current filter/search and reloads authoritative data. The completed item may disappear from current filter. The next visible item is selected by the same queue priority rules; if none remains, the queue stays empty without changing filters automatically.
+Preserve filter/search, reload authoritative context, let completed case move/disappear naturally, then select next visible case using the same queue priority. Empty queue remains empty without silently changing filters.
