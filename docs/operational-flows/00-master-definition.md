@@ -3,10 +3,13 @@
 Status: `ANALYSIS / IMPLEMENTATION LOCKED`
 Baseline: `acceptance/staging` @ `26239b76b919266de07d7bece5977296647f109c`
 Source reference: `sjo1848/hotel-management-system` @ `4df56a6217caab611f2f5fcbd98bde8386bb5629`
+Canonical E2E scope: `docs/operational-flows/18-end-to-end-scope-matrix.md`
 
 ## Governing rule
 
 HMS follows the real hotel workflow; the operator must not reconstruct state, eligibility or handoffs the system already knows. Physical room state, future sellability and immediate readiness are distinct concepts. Accepted source behavior is preserved unless an explicit product decision authorizes a departure.
+
+The next implementation wave is not considered defined by isolated feature documents alone. Its complete perimeter is the master + transition matrix + operational invariants + E2E scope matrix. BUILD may not omit a cross-module consequence, failure path, concurrency rule, financial consequence or acceptance proof that is listed there.
 
 ## Canonical domain
 
@@ -30,11 +33,13 @@ Date-sensitive rules use server-derived `hotel_local_date` from a persisted hote
 
 Payments are immutable evidence. Booking total and invoice amount/status must remain consistent. A paid invoice cannot remain `PAID` if authoritative total later exceeds paid amount. Checkout must display authoritative total, paid and remaining balance for the Reception-selected booking.
 
-Source parity fixes checkout policy semantics: `settled` requires a fully paid account; `pending-approved` is the governed positive-balance exception and requires the accepted reference/override rules. This is binding behavior, not a Human Gate.
+Source parity fixes checkout policy semantics: `settled` requires a fully paid account; `pending-approved` is the governed positive-balance exception and requires accepted reference/override rules. This is binding behavior, not a Human Gate.
 
 ## Cross-module flow
 
 Reception-selected `booking_id` governs embedded Billing. New reservation supports inline guest creation without forcing a module switch and without accidental partial guest-only state. Checkout/reassignment handoff is represented by room state: dirty goes to Housekeeping; blocking maintenance goes to Maintenance. Context query parameters preserve UI context only, never authorization.
+
+The accepted front-desk read-model contract is preserved/extended rather than replaced: `GET /api/v1/front-desk/board` owns authoritative queue/readiness/blocker context; `/housekeeping/board` remains the Housekeeping-oriented read model.
 
 Freshness v1: refresh after mutation, refresh on focus, modest visible-screen polling (about 30s initial target), reduced/paused while hidden. No WebSocket/paid real-time dependency is currently justified.
 
@@ -44,13 +49,19 @@ Current generated JS is approximately `319858/320000` raw bytes and the gate sum
 
 Before date-sensitive P0 work ships, persist hotel IANA timezone and expose a trusted server helper/context for hotel-local date. Schema changes are incremental; historical migrations are not rewritten.
 
+## Complete E2E perimeter
+
+`18-end-to-end-scope-matrix.md` is binding and includes technical foundations, reservation with existing/new guest, formal check-in, cancellation, no-show, late arrival, in-stay reassignment, non-blocking/blocking maintenance, vacant maintenance, housekeeping turnover, checkout, stay extension, extra-charge/Billing reconciliation, front-desk read model, contextual navigation/freshness, post-action continuation, audit/event evidence and synthetic-shift acceptance.
+
+No implementation increment is complete merely because its endpoint/UI is green. It must prove its row's domain mutation, failure/concurrency behavior, financial consequence where applicable, cross-module handoff, audit truth and responsive user journey.
+
 ## Sequence
 
 Wave 0: JS headroom; timezone foundation.
 
 Wave 1: reassignment; occupied maintenance; no-show/arrival-exception parity; extension/Billing consistency. Each gets a bounded Task Contract and independent review.
 
-Wave 2: front-desk read model; Reception lifecycle UX; Billing coupling; atomic guest+reservation; contextual navigation/revalidation; next-case continuation.
+Wave 2: front-desk board/read model; Reception lifecycle UX; Billing coupling; atomic guest+reservation; contextual navigation/revalidation; next-case continuation.
 
 Wave 3: performance/focus refinements and full synthetic hotel-shift acceptance.
 
@@ -58,6 +69,18 @@ Wave 3: performance/focus refinements and full synthetic hotel-shift acceptance.
 
 The current definition has no unresolved Human Gate. Future departures from source behavior require an explicit product decision, including a frozen/contracted nightly-rate model, new early/late check-in cutoff, cancellation cutoff, configurable no-show hour, automated cancellation/no-show refund/penalty, split-stay extension or multi-case maintenance.
 
+Explicitly outside this wave are production/cutover, real-data migration, paid real-time infrastructure and unrelated redesign of Reports, Users or Network.
+
 ## Exit condition
 
-Analysis closes only after canonical documents are contradiction-free, Pre-Critic passes, independent review finds no blocking definition defect, and orchestration state points to the immutable definition artifact. Until then implementation remains locked.
+Analysis closes only when:
+
+1. canonical documents are contradiction-free;
+2. every E2E scope row has unambiguous owner, trigger/preconditions, authoritative effects, failure/concurrency behavior, cross-module consequence and acceptance proof requirements;
+3. no source-parity behavior was silently narrowed or changed;
+4. no unresolved Human Gate blocks an in-scope row;
+5. Pre-Critic passes;
+6. a fresh adversarial review of the immutable artifact finds no blocking definition defect;
+7. orchestration state points to that exact immutable artifact.
+
+Until all seven conditions are true, implementation remains locked.
