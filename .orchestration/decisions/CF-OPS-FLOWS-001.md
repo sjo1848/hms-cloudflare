@@ -3,6 +3,8 @@
 Status: `BINDING DEFINITION / IMPLEMENTATION LOCKED`
 Baseline: `acceptance/staging` @ `26239b76b919266de07d7bece5977296647f109c`
 Canonical summary: `docs/operational-flows/00-master-definition.md`
+Canonical E2E scope: `docs/operational-flows/18-end-to-end-scope-matrix.md`
+Canonical API map: `docs/operational-flows/19-api-command-contract-map.md`
 
 ## Binding decisions
 
@@ -27,13 +29,16 @@ Canonical summary: `docs/operational-flows/00-master-definition.md`
 19. Payment entries remain immutable evidence; any authoritative increase in booking total must reconcile an existing invoice in the same logical operation.
 20. Accepted checkout financial semantics are binding: `settled` requires a fully paid account; `pending-approved` is the governed positive-balance exception with accepted reference/override requirements.
 21. Human cancellation, no-show, extension, reassignment and checkout emit truthful lifecycle/audit evidence only when the authoritative mutation wins.
+22. Maintenance RBAC is binding: admin/ops/housekeeping read-report-resolve; receptionist read-report only; saas_admin none. `maintenance.report` may escalate `NON_BLOCKING -> BLOCKING`; `maintenance.resolve` is required to close a case. Cleaning remains governed separately by `housekeeping.write`.
+23. `bookings.checkout.override` remains admin-only. Refactoring lifecycle routes must not broaden this authority.
+24. API ownership is binding to `19-api-command-contract-map.md`: preserve/harden existing check-in/reassign/check-out routes; keep confirmed-booking cancellation on existing update path; add explicit no-show and extend-stay commands; preserve/extend `/api/v1/front-desk/board`; expand maintenance-open and add explicit escalate/resolve commands.
+25. The legacy `/housekeeping/:id/dirty` route is compatibility-only for the historical blocking `MAINTENANCE -> DIRTY` resolution path. New UI uses the canonical maintenance resolve command.
+26. Generic booking PATCH must not become a backdoor for checked-in lifecycle transitions.
+27. New/additive API contracts must be reflected in OpenAPI/client types before browser acceptance.
 
 ## Human Gates
 
-None remain open in this definition package. Previously proposed `HG-FIN-001` and `HG-FIN-002` were closed by accepted source evidence during independent review:
-
-- pricing behavior for booking date/room updates is observable in source transactional logic;
-- checkout settlement semantics are explicit in source API/backend contract.
+None remain open in this definition package. Previously proposed financial gates were closed by accepted source evidence: pricing behavior for booking date/room updates and checkout settlement semantics are observable and contractual.
 
 ## Deferred product decisions
 
@@ -41,4 +46,4 @@ Any intentional departure from accepted source behavior requires explicit produc
 
 ## Implementation latitude after phase exit
 
-Once authorized, Codex may choose file/module layout, helpers, SQL organization, component decomposition and exact low-cost polling interval, provided all binding semantics, source-parity requirements and invariants remain satisfied.
+Once authorized, BUILD may choose internal module/file layout, helpers, SQL organization, component decomposition and exact low-cost polling interval. It may not change the binding states, transitions, pricing semantics, RBAC mapping, canonical API ownership, cross-module consequences or acceptance requirements without a new decision.
