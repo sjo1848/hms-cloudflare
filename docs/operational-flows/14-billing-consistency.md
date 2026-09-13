@@ -1,43 +1,53 @@
 # 14 — Billing consistency
 
-Status: `BINDING TECHNICAL/ACCOUNTING + SOURCE-PARITY INVARIANT`.
+Status: `BINDING ACCOUNTING CONTRACT`.
+
+## Pricing mutation boundary
+
+A booking total changes only through an explicitly pricing-affecting operation:
+- pre-occupancy room/date change;
+- in-stay reassignment;
+- stay extension;
+- explicit extra charge;
+- a future command explicitly defined as priced.
+
+State/evidence-only operations preserve the existing authoritative booking total:
+- check-in;
+- cancellation;
+- no-show;
+- late-arrival metadata;
+- checkout.
+
+This target rule is registered departure D9 and intentionally removes the accepted source generic-update side effect that can reprice accommodation on unrelated metadata/status writes.
 
 ## Booking total and invoice
 
-When an invoice exists for a booking, any successful operation that changes authoritative booking total must reconcile invoice amount/status in the same logical operation.
+When a pricing-affecting mutation changes authoritative total and an invoice exists, invoice amount/status must be reconciled in the same logical operation. If paid amount is below new amount, invoice cannot remain `PAID`; settlement metadata must stop claiming full settlement. Payment entries remain immutable.
 
-If authoritative amount exceeds `paid_amount_cents`:
+A state/evidence-only command must not change invoice amount merely because the current room catalog price changed. Checkout may create or reconcile invoice/settlement status against the already-authoritative booking total but does not recalculate accommodation price.
 
-- invoice status is `PENDING`;
-- prior payment entries remain immutable;
-- prior `paid_at` must not continue to represent current full settlement.
+## Source pricing where pricing is actually intended
 
-A `PAID` invoice cannot remain `PAID` with `paid_amount_cents < amount_cents`.
+For source-covered room/date pricing changes:
 
-## Source-parity booking repricing
+`accommodation_total = total_stay_nights × current selected room price_cents`
 
-Accepted source booking updates recalculate accommodation using total stay nights × current selected room price, then add extra charges. Therefore active-stay extension and in-stay reassignment in this wave preserve that pricing behavior and must reconcile the invoice to the resulting total.
+then add existing extra charges.
 
-A future contracted/frozen-rate model is a deliberate product departure, not an implementation default.
+Reassignment uses destination current price. Extension uses current assigned-room price with new total nights. A frozen/contracted-rate model is a future deliberate product decision.
 
 ## Extra charges
 
-Current target behavior updates invoices only when invoice status is already `PENDING`. This can leave a paid invoice stale if a later charge is added. Billing hardening must reconcile/reopen the invoice or reject the total-increasing operation atomically; stale paid state is forbidden.
+An extra charge is pricing-affecting. Current target behavior can leave a paid invoice stale after a later charge; the new workflow must reconcile/reopen invoice atomically or fail closed. A false PAID state is forbidden.
 
-## Checkout source parity
+## Checkout
 
-Checkout reads authoritative Billing state in the same decision window as checkout policy validation. UI checkbox/text alone is not evidence of settlement.
+Checkout reads authoritative Billing state in the same decision window. `settled` requires fully paid; `pending-approved` is the governed positive-balance exception with accepted reference and admin-only override. Checkout preserves booking total.
 
-Accepted source semantics are binding:
+## Cancellation / no-show / late arrival / check-in
 
-- `settled` requires the account to be fully paid;
-- `pending-approved` is the governed positive-balance exception;
-- existing operational reference and override capability requirements apply.
+These preserve booking total and any existing payment/invoice evidence. Cancellation/no-show add no automatic refund, retention or penalty. Late arrival changes only operational metadata. Check-in changes lifecycle/room occupancy only.
 
-## No-show / cancellation
+## Audit / concurrency
 
-Operational state changes do not delete payment entries and do not manufacture refunds or penalties. Financial follow-up remains visible and auditable unless a later policy explicitly authorizes automatic disposition.
-
-## Audit and concurrency
-
-Money-affecting mutations must meet `INV-MONEY-001`: no success without business mutation + truthful audit/event, no audit-only false success, exact rollback on stale/conflict paths, and idempotency/retry safety where relevant.
+Money-affecting mutations must be atomic with truthful audit; failed/stale operations leave booking total, invoice, payment evidence and events unchanged.
