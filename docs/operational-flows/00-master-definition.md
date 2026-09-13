@@ -6,7 +6,7 @@ Source reference: `sjo1848/hotel-management-system` @ `4df56a6217caab611f2f5fcbd
 
 ## Governing rule
 
-HMS follows the real hotel workflow; the operator must not reconstruct state, eligibility or handoffs the system already knows. Physical room state, future sellability and immediate readiness are distinct concepts.
+HMS follows the real hotel workflow; the operator must not reconstruct state, eligibility or handoffs the system already knows. Physical room state, future sellability and immediate readiness are distinct concepts. Accepted source behavior is preserved unless an explicit product decision authorizes a departure.
 
 ## Canonical domain
 
@@ -14,7 +14,7 @@ Booking lifecycle: `CONFIRMED -> CHECKED_IN -> CHECKED_OUT`, with alternative te
 
 Room turnover after real occupancy is always `OCCUPIED -> DIRTY -> CLEANING -> AVAILABLE`, unless an open blocking maintenance case makes vacancy become `MAINTENANCE`; maintenance resolution then returns to `DIRTY`.
 
-Date-sensitive rules use server-derived `hotel_local_date` from a persisted hotel IANA timezone.
+Date-sensitive rules use server-derived `hotel_local_date` from a persisted hotel IANA timezone where the accepted business rule is date-sensitive.
 
 ## P0 flows
 
@@ -22,13 +22,15 @@ Date-sensitive rules use server-derived `hotel_local_date` from a persisted hote
 
 **Maintenance:** case impact is `NON_BLOCKING | BLOCKING`, independent from priority and physical room state. Non-blocking is advisory. Blocking prevents new occupancy; if already occupied, guest remains until explicit relocation/checkout. V1 keeps one open case per room.
 
-**No-show:** normal check-in requires `check_in <= hotel_local_date < check_out` and immediate readiness. Cancellation is allowed through arrival date; after that, a never-occupied confirmed stay resolves as no-show. No-show releases inventory without dirtying the room.
+**Arrival exceptions:** source parity is binding. A `CONFIRMED` booking may check in when the formal checklist is complete and its room is immediately ready; no additional calendar-day block is introduced by this definition. Cancellation remains an explicit `CONFIRMED -> CANCELLED` terminal action with required reason and no new arrival-date cutoff. `NO_SHOW` is distinct and is allowed from the hotel's arrival date: `hotel_local_date >= check_in`. It releases inventory without dirtying the room.
 
-**Extension:** explicit command for a checked-in stay; checkout only moves later; all added nights are claimed atomically. Pricing remains `HG-FIN-001` because no reliable contracted nightly-rate snapshot currently exists.
+**Extension:** explicit command for a checked-in stay; checkout only moves later; all added nights are claimed atomically. Pricing remains `HG-FIN-001` because the new dedicated extension flow lacks a sufficiently explicit approved rate-basis contract.
 
 ## Billing truth
 
-Payments are immutable evidence. Booking total and invoice amount/status must remain consistent. A paid invoice cannot remain `PAID` if authoritative total later exceeds paid amount. Checkout must display authoritative total, paid and remaining balance for the Reception-selected booking. Meaning of `settled` remains `HG-FIN-002`.
+Payments are immutable evidence. Booking total and invoice amount/status must remain consistent. A paid invoice cannot remain `PAID` if authoritative total later exceeds paid amount. Checkout must display authoritative total, paid and remaining balance for the Reception-selected booking.
+
+Source parity fixes checkout policy semantics: `settled` requires a fully paid account; `pending-approved` is the governed positive-balance exception and requires the existing reference/override rules. This is binding behavior, not a Human Gate.
 
 ## Cross-module flow
 
@@ -46,17 +48,15 @@ Before date-sensitive P0 work ships, persist hotel IANA timezone and expose a tr
 
 Wave 0: JS headroom; timezone foundation.
 
-Wave 1: reassignment; occupied maintenance; no-show/cancellation boundary; extension/Billing consistency. Each gets a bounded Task Contract and independent review.
+Wave 1: reassignment; occupied maintenance; no-show/arrival-exception parity; extension/Billing consistency. Each gets a bounded Task Contract and independent review.
 
 Wave 2: front-desk read model; Reception lifecycle UX; Billing coupling; atomic guest+reservation; contextual navigation/revalidation; next-case continuation.
 
 Wave 3: performance/focus refinements and full synthetic hotel-shift acceptance.
 
-## Human Gates
+## Human Gate
 
-`HG-FIN-001`: extension rate basis. Recommendation: persist a contracted accommodation-rate snapshot and preserve it for ordinary extensions.
-
-`HG-FIN-002`: checkout `settled`. Recommendation: require authoritative remaining balance = 0; positive balance uses `pending-approved` with authorized reference.
+`HG-FIN-001`: extension rate basis. Recommendation: persist a contracted accommodation-rate snapshot and preserve it for ordinary extensions. This recommendation remains unapproved.
 
 No-show/cancellation refund, retention and penalty policy is deferred; lifecycle transitions do not invent automatic money mutation.
 
