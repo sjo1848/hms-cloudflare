@@ -1,23 +1,25 @@
 # 16 — Target transition matrix
 
-Status: `BINDING DEFINITION`
+Status: `BINDING DEFINITION / SOURCE-PARITY PRESERVING`
 
 ## Booking commands
 
 | Current booking | Command | Conditions | Result |
 |---|---|---|---|
-| CONFIRMED | edit reservation | before occupancy; availability valid | CONFIRMED |
-| CONFIRMED | cancel | `hotel_local_date <= check_in` | CANCELLED + inventory released |
-| CONFIRMED | check in | `check_in <= hotel_local_date < check_out`, room immediately ready | CHECKED_IN; room OCCUPIED |
-| CONFIRMED | no-show | `hotel_local_date > check_in` and never occupied | NO_SHOW + inventory released |
-| CHECKED_IN | extend stay | new checkout later; all added nights available; financial policy gate resolved | CHECKED_IN, later checkout |
+| CONFIRMED | edit reservation | pre-occupancy edit; availability valid | CONFIRMED |
+| CONFIRMED | cancel | accepted terminal reason/evidence; booking still confirmed | CANCELLED + inventory released |
+| CONFIRMED | check in | formal check-in evidence complete; room immediately ready; concurrency guards pass | CHECKED_IN; room OCCUPIED |
+| CONFIRMED | no-show | `hotel_local_date >= check_in`; never occupied; accepted terminal reason/evidence | NO_SHOW + inventory released |
+| CHECKED_IN | extend stay | new checkout later; all added nights available; `HG-FIN-001` resolved | CHECKED_IN, later checkout |
 | CHECKED_IN | reassign room | valid remaining-stay destination | CHECKED_IN on destination; old room DIRTY or MAINTENANCE according to BLOCKING case |
-| CHECKED_IN | checkout | release/payment/handoff rules satisfied | CHECKED_OUT; old room DIRTY or MAINTENANCE |
+| CHECKED_IN | checkout | source-parity payment/checklist/handoff rules satisfied | CHECKED_OUT; old room DIRTY or MAINTENANCE |
 | CHECKED_OUT | lifecycle mutation | none | rejected |
 | CANCELLED | lifecycle mutation | none | rejected |
 | NO_SHOW | lifecycle mutation | none in v1 | rejected |
 
 No generic status rollback is authorized.
+
+Calendar date is not added as a new hard guard for check-in/cancellation because the accepted source does not impose one. A future cutoff requires an explicit product decision.
 
 ## Room physical transitions
 
@@ -30,7 +32,7 @@ No generic status rollback is authorized.
 | CLEANING | cleaning finish | AVAILABLE |
 | AVAILABLE/DIRTY/CLEANING | open BLOCKING maintenance | MAINTENANCE |
 | OCCUPIED | open BLOCKING maintenance | OCCUPIED + blocked case; relocation required |
-| any allowed operational state | open NON_BLOCKING maintenance | physical state unchanged |
+| allowed operational state | open NON_BLOCKING maintenance | physical state unchanged |
 | MAINTENANCE | resolve BLOCKING case | DIRTY |
 | OCCUPIED | resolve maintenance after mitigation | OCCUPIED |
 | AVAILABLE/DIRTY/CLEANING | resolve NON_BLOCKING case | physical state unchanged |
@@ -46,8 +48,12 @@ A room is excluded from new advance sale if any of the following holds:
 - overlapping room hold exists;
 - open maintenance impact is `BLOCKING`.
 
-Immediate readiness additionally requires physical `AVAILABLE`. An open `NON_BLOCKING` case is an advisory, not a blocker.
+Immediate readiness additionally requires physical `AVAILABLE`. An open `NON_BLOCKING` case is advisory, not an independent blocker.
+
+## Checkout policy parity
+
+`settled` requires authoritative account settlement as defined by the accepted source. `pending-approved` is the governed positive-balance exception with the accepted reference/override requirements. UI declarations alone do not bypass backend financial validation.
 
 ## Rejection principle
 
-When a command is not listed as permitted, the default is reject; UI must not invent a path around the domain transition.
+When a command is not listed as permitted, default is reject. UI must not invent a path around domain transitions, and implementation must not add a stricter business cutoff without an approved product decision.
