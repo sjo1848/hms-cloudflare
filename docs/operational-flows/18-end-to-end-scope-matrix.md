@@ -10,6 +10,8 @@ Every mutation must enforce tenant/hotel context, backend RBAC, stale/concurrenc
 
 Accepted source behavior is preserved unless this package explicitly changes it. Physical room state, future sellability and immediate readiness remain separate facts. Date-sensitive rules use backend-derived `hotel_local_date` from persisted hotel IANA timezone. Money values use integer cents and Billing truth is authoritative.
 
+API/command ownership is binding in `19-api-command-contract-map.md`. Maintenance role permissions are binding in `05-maintenance-data-rbac.md`. BUILD may not add parallel lifecycle endpoints, broaden capabilities, or use generic booking PATCH as a shortcut around explicit checked-in lifecycle commands.
+
 ## E2E-00 — Technical foundations
 
 Owner: platform/domain foundation.
@@ -35,7 +37,7 @@ Authoritative effects: booking + inventory claims created atomically under hotel
 
 Failure paths: validation, overlap, hold, blocking maintenance, stale availability, tenant/RBAC. Failure creates no partial booking/inventory drift.
 
-Acceptance: result appears in Reception/read model and availability; no module switch required.
+Acceptance: result appears in Reception/front-desk board and availability; no module switch required. Canonical API remains `POST /api/v1/bookings`.
 
 ## E2E-02 — Reservation with new guest inline
 
@@ -45,11 +47,11 @@ Trigger: guest does not yet exist.
 
 Path: search -> create guest inline -> reservation data -> room -> confirm.
 
-Binding rule: guest + booking are one business intent. Default failure outcome is no unintended orphan guest. Same-hotel D1 should use one atomic command rather than frontend compensation.
+Binding rule: guest + booking are one business intent. Failure leaves no unintended orphan guest. Same-hotel D1 uses one atomic command rather than frontend compensation.
 
 Duplicate identity uses existing uniqueness semantics; no auto-merge is invented.
 
-Acceptance: success persists both and selects booking; concurrent room loss leaves neither unintended guest nor booking.
+Acceptance: success persists both and selects booking; concurrent room loss leaves neither unintended guest nor booking. Canonical command is `POST /api/v1/bookings/with-guest`, authorized only when both `guests.write` and `bookings.write` are present.
 
 ## E2E-03 — Formal check-in
 
@@ -63,7 +65,7 @@ Mutation: booking -> `CHECKED_IN`; room -> `OCCUPIED`; existing inventory remain
 
 UI: readiness/blocker visible before final action. If not ready, explain blocker and provide contextual navigation rather than failing late without context.
 
-Acceptance: successful check-in updates Reception, Rooms, Guests and Housekeeping/read models after authoritative refresh; stale readiness rejects without partial state.
+Acceptance: successful check-in updates Reception, Rooms, Guests and relevant boards after authoritative refresh; stale readiness rejects without partial state. Canonical command remains `POST /api/v1/bookings/:id/check-in` using `lifecycle.write`.
 
 ## E2E-04 — Arrival exception: cancellation
 
@@ -77,7 +79,7 @@ Mutation: `CONFIRMED -> CANCELLED`; release reservation inventory; physical room
 
 Financial boundary: no automatic refund, retention or penalty is added in this wave; existing payment/invoice evidence remains visible.
 
-Acceptance: booking leaves active arrival inventory, room is not dirtied, failed/stale transition creates no success event.
+Acceptance: booking leaves active arrival inventory, room is not dirtied, failed/stale transition creates no success event. Existing `PATCH /api/v1/bookings/:id` cancellation contract is preserved rather than creating a duplicate command in this wave.
 
 ## E2E-05 — Arrival exception: no-show
 
@@ -91,7 +93,7 @@ Future arrival (`hotel_local_date < check_in`) is rejected.
 
 Financial boundary: no automatic penalty/refund/retention in this wave.
 
-Acceptance: source-parity same-day eligibility; queue and availability revalidate immediately; concurrent check-in winning makes no-show fail cleanly.
+Acceptance: source-parity same-day eligibility; queue and availability revalidate immediately; concurrent check-in winning makes no-show fail cleanly. Canonical command is `POST /api/v1/bookings/:id/no-show` using `lifecycle.write`; generic PATCH is not the new no-show path.
 
 ## E2E-06 — Late-arrival note
 
@@ -113,23 +115,23 @@ Mutation: booking current room -> destination; destination -> `OCCUPIED`; old ro
 
 Source-parity pricing: accommodation becomes total stay nights × destination current room price; add existing extra charges; reconcile invoice atomically. Operator must see material price/balance change before confirm.
 
-Acceptance: old room never becomes directly available; history remains truthful; any conflict rolls back booking/rooms/inventory/Billing/events together.
+Acceptance: old room never becomes directly available; history remains truthful; any conflict rolls back booking/rooms/inventory/Billing/events together. Canonical command remains `POST /api/v1/bookings/:id/reassign` using `lifecycle.write`.
 
 ## E2E-08 — Non-blocking occupied maintenance
 
-Owners: Reception reports; Housekeeping/Ops resolve according to RBAC.
+Owners: Reception reports; Housekeeping/Ops/Admin resolve according to binding RBAC.
 
 Open case: impact `NON_BLOCKING`; room remains `OCCUPIED`; booking remains active; future sellability/readiness follows normal room/inventory policy because non-blocking is advisory.
 
-Cleaning/state transitions are not granted to Reception by maintenance reporting capability.
+Receptionist has `maintenance.read` + `maintenance.report`, not `maintenance.resolve`. Reporting capability may open or escalate a case, but cannot close it. Cleaning/state transitions are separately governed.
 
-Resolution while occupied closes case and leaves room `OCCUPIED`.
+Resolution while occupied closes case and leaves room `OCCUPIED` with truthful same-state event.
 
-Acceptance: case visible on operational board/context; truthful same-state maintenance event; no artificial room-state mutation.
+Acceptance: case visible on operational board/context; no artificial room-state mutation. Open uses expanded `/housekeeping/:id/maintenance`; resolve uses `/housekeeping/:id/maintenance/:case_id/resolve`.
 
 ## E2E-09 — Blocking occupied maintenance and relocation
 
-Owners: Reception + Housekeeping/Ops.
+Owners: Reception + Housekeeping/Ops/Admin.
 
 Open case: impact `BLOCKING`; occupied room remains `OCCUPIED`, future sale/readiness blocked and Reception gets relocation-required attention.
 
@@ -139,11 +141,11 @@ On vacancy with still-open blocking case: old room -> `MAINTENANCE`. Resolving f
 
 Existing future reservations are not auto-cancelled/reassigned; they become attention cases until repair or explicit Reception action.
 
-Acceptance: new sale excludes blocked room, current guest is not silently moved, future bookings remain intact but visibly blocked.
+Acceptance: new sale excludes blocked room, current guest is not silently moved, future bookings remain intact but visibly blocked. Existing non-blocking case may be escalated only through the canonical explicit escalate command.
 
 ## E2E-10 — Vacant-room blocking maintenance
 
-Owner: Housekeeping/Ops.
+Owner: Housekeeping/Ops/Admin.
 
 Opening `BLOCKING` on `AVAILABLE|DIRTY|CLEANING` moves room to `MAINTENANCE` and blocks sale. Resolution -> `DIRTY`; cleaning required before available.
 
@@ -151,15 +153,13 @@ One open maintenance case per room in v1. `NON_BLOCKING -> BLOCKING` escalation 
 
 ## E2E-11 — Housekeeping turnover
 
-Owner: Housekeeping.
+Owner: Housekeeping/Ops/Admin according to existing `housekeeping.write`.
 
-Normal path: `DIRTY -> CLEANING -> AVAILABLE`.
+Normal path: `DIRTY -> CLEANING -> AVAILABLE` using existing `/housekeeping/:id/start` and `/housekeeping/:id/finish`.
 
 Board remains authoritative housekeeping read model. Occupied rooms appear only when maintenance work exists; occupied rooms without case are not housekeeping tasks.
 
-Actions obey cleaning vs maintenance capabilities separately.
-
-Acceptance: checkout/reassignment-created dirty room appears without manual task creation; finish cleaning makes room immediately ready only when no blocking condition remains.
+Acceptance: checkout/reassignment-created dirty room appears without manual task creation; finish cleaning makes room available only when no blocking condition makes that state untruthful.
 
 ## E2E-12 — Checkout
 
@@ -169,13 +169,14 @@ Preconditions: booking `CHECKED_IN`; room occupied; accepted checkout checklist;
 
 Financial parity:
 - `settled` requires authoritative fully paid account;
-- positive balance requires governed `pending-approved`, required reference and accepted override capability.
+- positive balance requires governed `pending-approved`, required reference and `bookings.checkout.override`;
+- `bookings.checkout.override` remains admin-only.
 
 Mutation: booking -> `CHECKED_OUT`; room -> `DIRTY` or `MAINTENANCE` according to open blocking case; release unneeded inventory; create/reconcile invoice as required; persist checkout + optional override evidence atomically.
 
 UI: selected Reception booking controls embedded Billing. Show total, extra charges, paid, remaining and settlement state before confirmation.
 
-Acceptance: Housekeeping/Maintenance receives resulting work through room state; no duplicate manual handoff; failed financial/room check leaves lifecycle unchanged.
+Acceptance: Housekeeping/Maintenance receives resulting work through room state; no duplicate manual handoff; failed financial/room check leaves lifecycle unchanged. Canonical command remains `POST /api/v1/bookings/:id/check-out` using `lifecycle.write`, plus admin-only override capability when needed.
 
 ## E2E-13 — Checked-in stay extension
 
@@ -189,7 +190,7 @@ Source-parity pricing: total stay nights × current room price + existing extra 
 
 UI discloses added nights, current room price, recalculated total and resulting balance before confirmation.
 
-Acceptance: any added-night/Billing/concurrency conflict rolls back all parts; replay is idempotent/safe.
+Acceptance: any added-night/Billing/concurrency conflict rolls back all parts; replay is idempotent/safe. Canonical command is `POST /api/v1/bookings/:id/extend-stay` using `lifecycle.write`.
 
 ## E2E-14 — Extra charge after payment/invoice
 
@@ -203,11 +204,11 @@ Acceptance: booking total, invoice amount/status, remaining balance and UI agree
 
 Owner: API/read layer.
 
-Preserve/extend the accepted source contract `GET /api/v1/front-desk/board` instead of inventing a parallel route.
+Preserve/extend `GET /api/v1/front-desk/board`; do not invent a parallel route.
 
 It must provide enough authoritative joined/derived context for queue priority, arrival/departure classification, readiness, blockers, late-arrival context, maintenance impact and recommended action without becoming write authority.
 
-Housekeeping keeps `/housekeeping/board` as its own authoritative view.
+Housekeeping keeps `GET /api/v1/housekeeping/board` as its own authoritative view.
 
 Acceptance: Reception no longer reconstructs critical priority/readiness from unrelated endpoints where the board can own that meaning.
 
@@ -250,11 +251,25 @@ Before the wave is accepted, execute scenarios at minimum:
 12. stay extension success;
 13. extension conflict rollback;
 14. paid invoice followed by total increase;
-15. pending-balance checkout override;
+15. pending-balance checkout override including unauthorized-role rejection;
 16. stale/concurrent action rejection;
-17. cross-module focus/revalidation and next-case continuation.
+17. cross-module focus/revalidation and next-case continuation;
+18. maintenance role matrix: receptionist report/escalate but cannot resolve; housekeeping resolve/clean; saas_admin denied tenant operations;
+19. legacy `/housekeeping/:id/dirty` compatibility only for blocking maintenance-room resolution, while new UI uses canonical resolve endpoint.
 
 Record module switches, confirmations, duplicate data entry, stale/conflict outcomes, operator-memory dependencies and whether next action is obvious. Responsive browser proof must include contracted mobile and desktop widths.
+
+## E2E-20 — API/OpenAPI/RBAC conformance
+
+Every implemented row must conform to `19-api-command-contract-map.md` and `05-maintenance-data-rbac.md`.
+
+Acceptance requires:
+- canonical route used; no parallel shadow endpoint;
+- correct capability enforced backend-side;
+- OpenAPI/client types updated for every new/additive route/field;
+- legacy compatibility behavior explicitly tested where retained;
+- `400/403/404/409` semantics remain truthful;
+- browser client uses the canonical contract rather than bypassing it with generic PATCH or direct state mutation.
 
 ## Explicitly outside this implementation wave
 
@@ -262,4 +277,4 @@ No automatic refund/penalty/retention policy; no split stay or automatic relocat
 
 ## Completion rule
 
-The implementation wave is complete only when every in-scope E2E row has a bounded implementation contract, domain/API proof, regression coverage where applicable, responsive browser evidence, cross-module consequence proof and no unresolved contradiction with the canonical master/transition matrix/invariants. A green UI or isolated endpoint is not sufficient.
+The implementation wave is complete only when every in-scope E2E row has a bounded implementation contract, domain/API proof, regression coverage where applicable, responsive browser evidence, cross-module consequence proof and no unresolved contradiction with the master, transition matrix, invariants, RBAC contract or API command map. A green UI or isolated endpoint is not sufficient.
