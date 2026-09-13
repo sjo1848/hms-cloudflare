@@ -2,38 +2,27 @@
 
 Status: `BINDING DEFINITION`
 
-## One open case per room
+## Case cardinality
 
-Preserve the current one-open-maintenance-case-per-room rule for this wave. Multiple simultaneous open cases are deferred.
+Preserve one open maintenance case per room in this wave. Multiple independent simultaneous cases are deferred. An existing `NON_BLOCKING` case may be explicitly escalated to `BLOCKING`.
 
 ## Required case fields
 
-Existing case fields remain. Add operational `impact` with values:
+Existing fields remain. Add `impact`:
 
 - `NON_BLOCKING`
-- `RELOCATION_REQUIRED`
+- `BLOCKING`
 
-Existing cases can be backfilled safely because they were created only for unoccupied maintenance-state rooms; impact does not change their current blocking behavior.
+Existing migrated/open cases that already place an unoccupied room in `MAINTENANCE` must backfill as `BLOCKING` so migration does not weaken current protection.
 
-## Resolution result
+## Resolution and event semantics
 
-Maintenance resolution depends on current occupancy:
+- resolve case while room `OCCUPIED`: case -> `RESOLVED`, room remains `OCCUPIED`, truthful same-state event;
+- resolve NON_BLOCKING case while AVAILABLE/DIRTY/CLEANING: room state unchanged;
+- resolve BLOCKING case from `MAINTENANCE`: room -> `DIRTY`;
+- escalate NON_BLOCKING -> BLOCKING: if occupied, room remains OCCUPIED and future sale is blocked; otherwise room enters MAINTENANCE.
 
-- resolved while room still `OCCUPIED` -> case `RESOLVED`, room stays `OCCUPIED`, recorded return state is `OCCUPIED`;
-- resolved after room entered `MAINTENANCE` -> room becomes `DIRTY`, recorded return state is `DIRTY`.
-
-Therefore the current schema/trigger assumption that every resolved case returns `DIRTY` must be expanded.
-
-## Event semantics
-
-Opening or resolving a maintenance case may be a case-state change without a physical room-state change. Audit/event rules must allow:
-
-- open while `OCCUPIED`: `OCCUPIED -> OCCUPIED` with open case;
-- resolve while `OCCUPIED`: `OCCUPIED -> OCCUPIED` with resolved case;
-- open while unoccupied: current room state -> `MAINTENANCE`;
-- resolve from `MAINTENANCE`: `MAINTENANCE -> DIRTY`.
-
-No event may claim a room transition that did not occur.
+Current schema/trigger assumptions that every maintenance open implies room `MAINTENANCE` and every resolution returns `DIRTY` must be expanded. No event may claim a physical transition that did not occur.
 
 ## Capabilities
 
@@ -50,8 +39,8 @@ Recommended role mapping:
 - `receptionist`: read/report;
 - `housekeeping`: read/report/resolve.
 
-`housekeeping.write` continues to authorize cleaning transitions, not to be the only way to report a guest-room defect.
+`housekeeping.write` continues to govern cleaning transitions rather than being the only route to report a guest-room defect.
 
 ## UX consequence
 
-Reception can report an incident from the active stay without gaining permission to start/finish cleaning or resolve technical work. Housekeeping/ops can execute the maintenance workflow.
+Reception can report an incident from the active stay without gaining cleaning/technical resolution rights. Housekeeping/ops can execute the maintenance case workflow.
