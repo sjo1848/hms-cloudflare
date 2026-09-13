@@ -9,20 +9,23 @@ Read in this order:
 
 1. `00-master-definition.md` — binding product/domain summary.
 2. `18-end-to-end-scope-matrix.md` — complete E2E implementation and acceptance perimeter.
-3. `19-api-command-contract-map.md` — canonical API paths, compatibility rules and authorization surface.
-4. `16-target-transition-matrix.md` — booking/room transition authority.
-5. `05-maintenance-data-rbac.md` — binding maintenance capability map.
+3. `19-api-command-contract-map.md` — canonical API paths, payload/evidence contracts, compatibility and authorization.
+4. `20-intentional-target-departures.md` — every authorized departure from accepted source behavior.
+5. `16-target-transition-matrix.md` — booking/room transition authority.
+6. `05-maintenance-data-rbac.md` — binding maintenance capability map.
+7. `.orchestration/OPERATIONAL-INVARIANTS.md` — durable implementation invariants.
 
 Core rules:
 
 - HMS follows the operator workflow; the operator must not reconstruct known state.
-- Accepted source behavior is preserved unless an explicit decision authorizes a departure.
+- Accepted source behavior is preserved unless the departure is explicitly listed in `20`.
 - Physical room state, future sellability and immediate readiness are distinct.
+- No endpoint/UI is complete without its E2E, API/RBAC, audit, negative-path and cross-module proof.
 
 ## Detailed documents
 
 - `01-domain-model.md` — booking, room, inventory, maintenance and financial relationships.
-- `02a-reassignment.md` — in-stay reassignment, history, pricing and inventory.
+- `02a-reassignment.md` — in-stay reassignment, history, evidence, pricing and inventory.
 - `02b-canonical-maintenance-model.md` — `NON_BLOCKING | BLOCKING` maintenance model.
 - `02c-no-show.md` — no-show semantics.
 - `02d-stay-extension.md` — checked-in extension semantics.
@@ -32,7 +35,7 @@ Core rules:
 - `03d-operational-time.md` — hotel-local time foundation.
 - `04-acceptance-and-sequencing.md` / `04a-sequencing-refinement.md` — acceptance and wave order.
 - `05-maintenance-data-rbac.md` — binding maintenance data/RBAC.
-- `06-booking-temporal-rules.md` — source-parity temporal rules.
+- `06-booking-temporal-rules.md` — source-parity temporal rules plus explicit overrun departure.
 - `07-maintenance-future-reservations.md` — future-reservation consequences.
 - `08-extension-billing.md` — extension/Billing atomicity.
 - `09-technical-prerequisites.md` — bundle/timezone/migration gates.
@@ -45,7 +48,8 @@ Core rules:
 - `16-target-transition-matrix.md` — transition matrix.
 - `17-reassignment-history.md` — room-history semantics.
 - `18-end-to-end-scope-matrix.md` — full E2E scope.
-- `19-api-command-contract-map.md` — API/compatibility/RBAC/OpenAPI contract.
+- `19-api-command-contract-map.md` — API/compatibility/RBAC/OpenAPI/evidence contract.
+- `20-intentional-target-departures.md` — authorized target corrections/hardenings and non-authorized drift.
 
 ## Governance
 
@@ -55,9 +59,9 @@ Core rules:
 - `.orchestration/OPERATIONAL-INVARIANTS.md`
 - `.orchestration/evidence/CF-OPS-FLOW-DEFINITION-001-BASELINE.md`
 - `.orchestration/evidence/CF-OPS-FLOW-DEFINITION-001-DEEP-DIVE.md`
-- `.orchestration/evidence/CF-OPS-FLOW-DEFINITION-001-CRITIC-V2.md`
-- `.orchestration/STATE.md` / `STATUS.json`
+- `.orchestration/reviews/CF-OPS-FLOW-DEFINITION-001.md` — historical review ledger only.
+- `.orchestration/STATE.md` / `STATUS.json` — current phase authority.
 
-Files marked `SUPERSEDED` and the failed earlier Artifact A are history only.
+Files explicitly marked `SUPERSEDED` and failed prior artifacts are historical evidence, not implementation authority.
 
-Implementation remains forbidden until a fresh full-scope review passes across the master, E2E matrix, API map, RBAC, transition matrix and invariants.
+Implementation remains forbidden until a fresh immutable review passes across master, E2E matrix, API/evidence map, departure register, RBAC, transition matrix and invariants.
