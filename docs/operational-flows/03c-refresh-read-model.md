@@ -1,49 +1,55 @@
 # 03C — Revalidation and operational read model
 
-Status: `BINDING DEFINITION`
+Status: `BINDING DEFINITION / SOURCE-CONTRACT PRESERVING`
 
 ## Revalidation strategy
 
 For a ~20-room hotel, start simple. Do not introduce WebSockets by default.
 
-Operational screens should revalidate authoritative state:
+Operational screens revalidate authoritative state:
 
 - immediately after their own successful mutation;
-- when the browser/tab regains focus;
-- on a modest periodic interval while the operational screen is visible (target: about 30 seconds, implementation may tune within a reasonable low-cost range);
+- when browser/tab regains focus;
+- on a modest periodic interval while the operational screen is visible (target about 30 seconds; implementation may tune within a reasonable low-cost range);
 - when navigating into a context via query/deep link.
 
-Polling must pause or reduce when the page is hidden. Manual refresh remains available.
+Polling pauses or reduces when page is hidden. Manual refresh remains available.
 
 ## Stale-action rule
 
 UI previews are advisory. Every mutation is revalidated by backend guards. If state changed between preview and confirmation, return conflict and refresh the case rather than forcing or replaying stale intent.
 
-## Read-model direction
+## Front-desk read-model direction
 
-Current Reception, Rooms and Guests independently derive operational meaning from `/bookings`, `/rooms` and `/guests`. This is acceptable at current scale but duplicates rules.
+Accepted source already defines the `/api/v1/front-desk/board` contract and an `action_queue` so frontend does not reconstruct turn priority locally. The next wave must preserve/restore and extend that contract rather than invent a parallel `/operations/front-desk` endpoint.
 
-Before adding more derived rules, create one server-owned operational read model for front-desk work. Preferred direction:
+Target direction:
 
-`GET /operations/front-desk?date=<hotel-local-date>`
+`GET /api/v1/front-desk/board?date=<hotel-local-date>`
 
-It should return enough joined/derived context to drive Reception priority and room readiness without moving write authority into the read model.
+It remains a read model only. It may join/derive enough context to drive Reception priority/readiness without moving write authority out of explicit domain commands.
 
-Minimum candidate fields:
+Minimum target context:
 
-- generated timestamp and operational date;
+- generated timestamp and authoritative operational date;
 - booking identity/status/dates;
 - guest identity/name;
 - room identity/number/physical state;
-- derived lane/reason/priority;
+- accepted source queue lane/title/detail/primary action semantics;
+- deterministic priority/order;
 - immediate room readiness;
-- maintenance blocker/impact when relevant;
-- optional billing summary only if it can be produced without weakening money invariants.
+- maintenance case/impact when relevant;
+- contextual arrival/overdue/late-arrival classification;
+- optional Billing summary only when produced without weakening money invariants.
 
 ## Housekeeping read model
 
-The existing `/housekeeping/board` remains the authoritative housekeeping-oriented read model. Do not duplicate it unless a later contract proves a specific gap.
+Existing `/api/v1/housekeeping/board` remains authoritative for housekeeping-oriented work. Do not duplicate it unless a later contract proves a specific gap.
 
 ## Boundary
 
-Read models may derive and aggregate. They never perform lifecycle writes. Check-in, checkout, reassignment, extension, no-show, cleaning and maintenance transitions remain explicit domain commands.
+Read models derive and aggregate; they never perform lifecycle writes. Check-in, checkout, reassignment, extension, cancellation/no-show, cleaning and maintenance transitions remain explicit domain commands.
+
+## Acceptance
+
+Browser and API evidence must prove Reception priority from known fixtures independently of storage order, preserve source queue semantics, and revalidate after cross-module mutations.
