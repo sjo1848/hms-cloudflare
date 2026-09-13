@@ -15,6 +15,7 @@ describe("rooms operational board", () => {
     room("r2", "102", "Occupied"),
     room("r3", "103", "Dirty"),
     room("r4", "104", "Maintenance"),
+    room("r5", "105", "OutOfOrder"),
   ];
   const bookings = [
     booking("arrival", "r1", "Confirmed", today, "2026-09-15", "Pérez"),
@@ -22,20 +23,21 @@ describe("rooms operational board", () => {
   ];
 
   it("puts operational blockers and due work first", () => {
-    expect(buildRoomBoard(rooms, bookings, today).map(item => item.room.id)).toEqual(["r4", "r3", "r2", "r1"]);
+    expect(buildRoomBoard(rooms, bookings, today).map(item => item.room.id)).toEqual(["r4", "r3", "r2", "r1", "r5"]);
   });
 
-  it("marks due arrivals and departures as attention", () => {
+  it("marks due arrivals, departures and unavailable rooms as attention", () => {
     const board = buildRoomBoard(rooms, bookings, today);
     expect(board.find(item => item.room.id === "r1")?.reason).toBe("arrival-today");
     expect(board.find(item => item.room.id === "r2")?.reason).toBe("checkout-today");
-    expect(roomBoardCounts(board).attention).toBe(4);
+    expect(board.find(item => item.room.id === "r5")?.reason).toBe("blocked");
+    expect(roomBoardCounts(board).attention).toBe(5);
   });
 
   it("filters by operational state and searches guests accent-insensitively", () => {
     const board = buildRoomBoard(rooms, bookings, today);
     expect(filterRoomBoard(board, "available", "")).toHaveLength(0);
     expect(filterRoomBoard(board, "all", "perez").map(item => item.room.id)).toEqual(["r1"]);
-    expect(filterRoomBoard(board, "preparation", "").map(item => item.room.id)).toEqual(["r4", "r3", "r1"]);
+    expect(filterRoomBoard(board, "preparation", "").map(item => item.room.id)).toEqual(["r4", "r3", "r1", "r5"]);
   });
 });
