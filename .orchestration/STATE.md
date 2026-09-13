@@ -6,58 +6,62 @@ Project: HMS Cloudflare
 Updated: 2026-09-13  
 Global Project Mode: `DELIVERY`  
 Phase: `OPERATIONAL FLOW DEFINITION`  
-Runtime: `ANALYSIS`  
+Runtime: `EXTERNAL_REVIEW`  
 Active task: `CF-OPS-FLOW-DEFINITION-001`
 
 Accepted staging baseline: `26239b76b919266de07d7bece5977296647f109c`.
 
-The first UX/UI pass is complete on staging across Reception, Rooms, Guests, Housekeeping, Reports, Users and Network. The next wave is intentionally paused before product implementation while cross-module hotel workflows are defined.
+## IMPLEMENTATION LOCK
 
-## CURRENT AUTHORIZATION
+This phase is analysis/definition only. Product/runtime implementation, schema migrations for the new flows, production/cutover, real-data migration, paid-resource expansion and new financial policy remain unauthorized.
 
-Authorized:
-- inspect current staging code and behavior;
-- define product/domain flows;
-- persist decisions, evidence and invariants;
-- reconcile orchestration state;
-- run non-destructive analysis/review.
+## PUBLISHED DEFINITION ARTIFACT
 
-Not authorized by this phase:
-- runtime/product implementation of new lifecycle behavior;
-- database migrations for the new flows;
-- production deployment/cutover;
-- real-data migration;
-- paid-resource expansion;
-- new financial policy.
+Artifact A: `3ad6d84124a7b3da803d8ae2eb4c439a3e411fa4`
 
-## ACTIVE CONTRACT
+Canonical entry points:
 
-`.orchestration/contracts/CF-OPS-FLOW-DEFINITION-001.md`
-
-## BINDING DEFINITION PACK
-
+- `docs/operational-flows/00-master-definition.md`
 - `docs/operational-flows/README.md`
-- `docs/operational-flows/01-domain-model.md`
-- `docs/operational-flows/02a-reassignment.md`
-- `docs/operational-flows/02b-occupied-maintenance.md`
-- `docs/operational-flows/02c-no-show.md`
-- `docs/operational-flows/02d-stay-extension.md`
-- `docs/operational-flows/03a-frontdesk-continuity.md`
-- `docs/operational-flows/03b-context-navigation.md`
-- `docs/operational-flows/03c-refresh-read-model.md`
-- `docs/operational-flows/04-acceptance-and-sequencing.md`
+- `.orchestration/contracts/CF-OPS-FLOW-DEFINITION-001.md`
 - `.orchestration/decisions/CF-OPS-FLOWS-001.md`
+- `.orchestration/decisions/CF-OPS-FLOWS-003-MAINTENANCE-MODEL.md`
 - `.orchestration/OPERATIONAL-INVARIANTS.md`
 - `.orchestration/evidence/CF-OPS-FLOW-DEFINITION-001-BASELINE.md`
+- `.orchestration/evidence/CF-OPS-FLOW-DEFINITION-001-DEEP-DIVE.md`
+- `.orchestration/evidence/CF-OPS-FLOW-DEFINITION-001-PRECRITIC.md`
+
+`CF-OPS-FLOWS-002-REFINEMENTS.md` and files explicitly marked `SUPERSEDED` are history only and not implementation authority.
+
+## PRE-CRITIC
+
+Verdict: `PASS FOR EXTERNAL DEFINITION REVIEW`.
+
+The definition package now explicitly covers P0 reassignment, occupied maintenance, no-show, stay extension, operational time, Billing consistency, Reception/Housekeeping/Billing continuity, contextual navigation, revalidation, acceptance evidence and implementation sequencing.
+
+## OPEN HUMAN GATES
+
+### HG-FIN-001 — extension rate basis
+
+Recommended direction: persist a contracted accommodation-rate snapshot and preserve it for ordinary extensions. Not yet human-authorized.
+
+### HG-FIN-002 — checkout `settled`
+
+Recommended direction: `settled` requires authoritative remaining balance = 0; positive balance uses authorized `pending-approved` + reference. Not yet human-authorized.
+
+These gates are explicit product/financial policy and may not be decided by BUILD.
 
 ## CURRENT GATE
 
-Implementation remains locked until the definition pack is reviewed for internal consistency, P0 completeness and conflict with existing invariants/current backend behavior.
+External Independent Definition Critic must review Artifact A plus this publication boundary for:
 
-Required outcome: `PASS FOR IMPLEMENTATION PLANNING`.
-
-A PASS authorizes only creation of bounded implementation Task Contracts. It does not authorize production or unrelated scope.
+- internal semantic consistency;
+- contract/P0/P1 coverage;
+- agreement with accepted source/target evidence;
+- compatibility with durable invariants;
+- truthful Human Gate isolation;
+- absence of runtime implementation in the analysis artifact.
 
 ## NEXT ACTION
 
-Independent definition review -> repair contradictions/omissions if any -> persist final definition verdict -> create first implementation contract for `P0.1 Reassignment correctness`.
+Run Independent Definition Critic. On PASS, mark the definition phase complete and authorize only bounded implementation planning/Task Contracts. Do not start product implementation automatically from the review verdict; retain Human Gate restrictions for any affected increment.

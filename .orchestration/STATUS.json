@@ -2,45 +2,22 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "phase": "OPERATIONAL_FLOW_DEFINITION",
-  "runtime_status": "ANALYSIS",
+  "runtime_status": "EXTERNAL_REVIEW",
   "resume_authorized": false,
   "active_task": "CF-OPS-FLOW-DEFINITION-001",
-  "last_completed_task": "UX_UI_FIRST_PASS",
-  "last_completed_head": "26239b76b919266de07d7bece5977296647f109c",
   "work_branch": "analysis/operational-flow-definition",
-  "next_action": "INDEPENDENT_DEFINITION_REVIEW",
-  "stop_reason": "IMPLEMENTATION_LOCKED_PENDING_FLOW_DEFINITION_PASS",
-  "event": {
-    "seq": 116,
-    "id": "CF-OPS-FLOW-DEFINITION-STARTED",
-    "type": "ANALYSIS"
-  },
+  "next_action": "INDEPENDENT_DEFINITION_CRITIC",
   "definition_review": {
     "required": true,
-    "last_verdict": null,
-    "contract": ".orchestration/contracts/CF-OPS-FLOW-DEFINITION-001.md",
-    "decision": ".orchestration/decisions/CF-OPS-FLOWS-001.md",
-    "evidence": ".orchestration/evidence/CF-OPS-FLOW-DEFINITION-001-BASELINE.md"
+    "artifact_head": "3ad6d84124a7b3da803d8ae2eb4c439a3e411fa4",
+    "master": "docs/operational-flows/00-master-definition.md"
   },
-  "human_gate": null,
-  "blocker": null,
+  "human_gate": {
+    "status": "OPEN",
+    "ids": ["HG-FIN-001", "HG-FIN-002"]
+  },
   "authorization": {
     "scope": "ANALYSIS_ONLY",
-    "product_implementation": false,
-    "database_migration": false,
-    "production": false,
-    "paid_expansion": false,
-    "real_data_migration": false,
-    "new_financial_policy": false
-  },
-  "method": {
-    "technical_rework_autonomous": true,
-    "definition_before_implementation": true,
-    "independent_review_before_implementation_contract": true
-  },
-  "cost_guard": {
-    "target": "$0/month / Cloudflare Free",
-    "paid_transition_requires_human_gate": true,
-    "frontend_budget_must_not_be_raised_by_default": true
+    "product_implementation": false
   }
 }
