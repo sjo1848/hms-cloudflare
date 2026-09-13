@@ -10,7 +10,7 @@ const required = (name) => {
 const config = {
   $schema: "../../node_modules/wrangler/config-schema.json",
   name: "hms-cloudflare-api-staging",
-  main: "src/index.ts",
+  main: "src/entrypoint.ts",
   compatibility_date: "2026-08-23",
   compatibility_flags: ["nodejs_compat"],
   workers_dev: false,

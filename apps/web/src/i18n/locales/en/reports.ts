@@ -1,0 +1,22 @@
+export const reportsEn = {
+  "reports.analytics": "Analytics",
+  "reports.title": "Reports",
+  "reports.subtitle": "Source-equivalent daily revenue and occupancy series",
+  "reports.days": "{count} days",
+  "reports.startAria": "Report start",
+  "reports.endAria": "Report end",
+  "reports.loading": "Loading…",
+  "reports.refresh": "Refresh report",
+  "reports.retry": "Retry",
+  "reports.loadingReports": "Loading reports…",
+  "reports.noData": "No report data in this range",
+  "reports.noDataHint": "Choose another date range and refresh the report.",
+  "reports.revenue": "Revenue",
+  "reports.occupancyDays": "Occupancy days",
+  "reports.occupiedRooms": "Occupied rooms",
+  "reports.roomsPerDay": "Rooms/day",
+  "reports.revenueByArrival": "Revenue by arrival date",
+  "reports.noRevenue": "No revenue in this range.",
+  "reports.dailyOccupancy": "Daily occupancy",
+  "reports.noOccupancy": "No occupancy in this range."
+} as const;

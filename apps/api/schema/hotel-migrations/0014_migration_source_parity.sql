@@ -22,16 +22,16 @@ ALTER TABLE bookings ADD COLUMN late_arrival_recorded_by TEXT;
 CREATE TRIGGER IF NOT EXISTS bookings_migrated_snapshot_insert_guard
 BEFORE INSERT ON bookings
 BEGIN
-  SELECT CASE
+  SELECT (CASE
     WHEN (NEW.terminal_reason IS NULL) <> (NEW.terminal_recorded_at IS NULL)
       OR (NEW.terminal_reason IS NULL) <> (NEW.terminal_recorded_by IS NULL)
     THEN RAISE(ABORT, 'incomplete terminal booking provenance')
-  END;
-  SELECT CASE
+  END);
+  SELECT (CASE
     WHEN NEW.late_arrival_eta IS NOT NULL
       AND (NEW.late_arrival_note IS NULL OR NEW.late_arrival_recorded_at IS NULL OR NEW.late_arrival_recorded_by IS NULL)
     THEN RAISE(ABORT, 'incomplete late-arrival provenance')
-  END;
+  END);
 END;
 
 CREATE TABLE IF NOT EXISTS migration_rehearsals (
