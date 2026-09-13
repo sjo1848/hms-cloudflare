@@ -2,116 +2,119 @@
 
 Status: `BINDING API CONTRACT / IMPLEMENTATION LOCKED`
 
-This file binds canonical routes, payload/evidence rules, authorization, pricing side effects, compatibility and OpenAPI obligations. BUILD must not invent parallel APIs or bypass these commands.
+This file binds canonical routes, payload/evidence rules, authorization, pricing side effects, compatibility and OpenAPI obligations. No parallel API or direct-state bypass is permitted.
 
 ## Global API rules
 
-- API remains under `/api/v1`; tenant/hotel identity comes only from authenticated server context.
-- UI visibility never substitutes backend capability checks.
+- API remains under `/api/v1`; hotel identity comes only from authenticated server context.
+- Backend capability checks are authoritative.
 - Material evidence is validated server-side.
-- Stale/concurrent conflicts fail closed with no partial domain mutation or success audit.
+- Stale/concurrent conflicts fail closed with no partial mutation or success event.
 - Compatible response growth is additive; breaking changes require a new decision.
-- Evidence text uses accepted validation limits unless specified otherwise.
 
-### Pricing-mutation boundary — D9
+## D9 pricing-mutation boundary
 
-Commands must distinguish **pricing-affecting** from **state/evidence-only** writes.
+A booking total changes only when the command is explicitly pricing-affecting.
 
-Pricing-affecting writes: room/date changes, extension/reassignment, extra charges, or another command explicitly defined as priced. These may change authoritative booking total under their defined pricing rule and must reconcile any existing invoice.
+Pricing-affecting in this wave:
+- reservation room change;
+- reservation stay-date change;
+- in-stay reassignment;
+- stay extension;
+- extra charge;
+- a future command explicitly declared priced.
 
-State/evidence-only writes: check-in, cancellation, no-show, late-arrival metadata and checkout. These **preserve the existing booking total**. They must not copy the accepted source generic-update side effect that recalculates accommodation from the current room catalog price. Checkout may create/reconcile invoice/settlement state against the existing total, but does not reprice accommodation by itself.
+All other booking metadata/state/evidence writes preserve the stored authoritative total unless a future decision says otherwise. This includes guest reassociation/name, ordinary notes-only update, check-in, cancellation, no-show, late-arrival metadata and checkout.
 
-## Front desk read model
+Checkout may create/reconcile invoice/settlement state against the preserved total but cannot reprice accommodation by itself. Any actual total change must reconcile an existing invoice atomically.
+
+## Front desk board
 
 ### `GET /api/v1/front-desk/board`
 
-Status: `PRESERVE AND EXTEND`. Authorization: `bookings.read`.
+Status: preserve/extend. Authorization: `bookings.read`.
 
-Roles: admin/ops/receptionist allowed; housekeeping/saas_admin denied tenant board access.
+Allowed: admin, ops, receptionist. Denied: housekeeping, saas_admin.
 
-Canonical Reception read model; no competing board route. Read-only. May add operational date/timestamp, queue lane/priority, readiness/blockers, late-arrival context, room, maintenance case impact/id and optional authoritative Billing summary.
+Canonical Reception read model; read-only. May add operational date/timestamp, queue lane/priority, readiness/blockers, late-arrival context, room, maintenance impact/id and authoritative Billing summary. No competing board route.
 
-## Booking creation and confirmed-booking updates
+## Booking creation / confirmed booking updates
 
 ### `POST /api/v1/bookings`
-Authorization: `bookings.write`. Existing-guest reservation creation; initial total uses the normal booking pricing rule.
+Authorization: `bookings.write`. Existing-guest reservation creation; initial total follows normal booking pricing.
 
 ### `POST /api/v1/bookings/with-guest`
-Authorization: both `guests.write` and `bookings.write`. Atomic guest+booking intent. Validation/duplicate/availability failure leaves no unintended guest or booking.
+Authorization: both `guests.write` + `bookings.write`. Atomic guest+booking. Validation/duplicate/availability/lost-room failure leaves neither unintended guest nor booking.
 
 ### `PATCH /api/v1/bookings/:id`
-Status: confirmed pre-occupancy edits, cancellation and late-arrival context only. Authorization: `bookings.write`.
+Authorization: `bookings.write`. Allowed for CONFIRMED pre-occupancy data, cancellation and late-arrival context.
 
-A pre-occupancy room/date edit is pricing-affecting and uses accepted source repricing. A cancellation or late-arrival-only write is state/evidence-only and preserves booking total.
+Pricing rule:
+- room or stay-date change -> pricing-affecting, accepted current-room repricing + extras;
+- guest reassociation/name-only, ordinary notes-only, cancellation-only or late-arrival-only -> total unchanged.
 
 #### Cancellation
-`status=CANCELLED`, `terminal_reason` min 6. CONFIRMED only; no arrival-date cutoff. Release inventory, room unchanged, total unchanged, payment/invoice evidence preserved; no automatic refund/penalty.
+`status=CANCELLED`, `terminal_reason` min 6. No arrival-date cutoff. Release inventory; room unchanged; total unchanged; payment/invoice evidence preserved; no automatic refund/penalty.
 
 #### Late arrival
-Source-compatible nested metadata:
-- `front_desk.late_arrival_eta`
-- `front_desk.late_arrival_note` min 6/max 250.
-
-CONFIRMED only; ETA future and hotel-local ETA date in `[check_in,check_out)`. Persist ETA/note/actor/recorded timestamp/audit. No room, inventory, total or invoice mutation. Re-record allowed under same guards.
+`front_desk.late_arrival_eta` + `front_desk.late_arrival_note` (min 6/max 250). CONFIRMED only; ETA future and hotel-local ETA date in `[check_in,check_out)`. Persist actor/recorded timestamp/audit. No room, inventory, total or invoice mutation. Re-record allowed under same guards.
 
 Generic PATCH must not implement checked-in reassignment, extension, checkout or no-show.
 
-## Explicit lifecycle commands
+## Lifecycle commands
 
 ### `POST /api/v1/bookings/:id/check-in`
-Authorization: `lifecycle.write`. Required check-in confirmations + positive guest count. No new calendar cutoff. **Preserve booking total**; this command changes lifecycle/room state, not price.
+`lifecycle.write`; accepted confirmations + positive guest count; no new date cutoff; booking CHECKED_IN, room OCCUPIED; total unchanged.
 
 ### `POST /api/v1/bookings/:id/reassign`
-Authorization: `lifecycle.write`. Payload `room_id` + reason min 6. Pricing-affecting: move remaining inventory, preserve history, room turnover, destination-current-price repricing + extras, invoice reconciliation and audit atomically. Registered overrun guard applies.
+`lifecycle.write`; payload destination `room_id` + reason min 6; overrun guard; remaining-night inventory only; preserve history; room turnover; pricing-affecting destination-current-price repricing + extras; invoice reconciliation and audit atomic.
 
 ### `POST /api/v1/bookings/:id/check-out`
-Authorization: `lifecycle.write`; `pending-approved` additionally requires admin-only `bookings.checkout.override`. Preserve current checklist/policy/reference contract. Room becomes DIRTY or MAINTENANCE according to blocking maintenance. **Preserve booking total**; invoice creation/reconciliation and settlement validation use that existing total.
+`lifecycle.write`; pending-approved additionally requires admin-only `bookings.checkout.override`. Preserve checklist/policy/reference contract. Room -> DIRTY or MAINTENANCE. Booking total unchanged; invoice/settlement uses existing total.
 
 ### `POST /api/v1/bookings/:id/no-show`
-Authorization: `lifecycle.write`. `terminal_reason` min 6. CONFIRMED, never occupied, `hotel_local_date >= check_in`. Release inventory, room unchanged, **booking total unchanged**, payment/invoice evidence preserved, no automatic financial disposition.
+`lifecycle.write`; terminal_reason min 6; CONFIRMED, never occupied, `hotel_local_date >= check_in`. Release inventory; room unchanged; total unchanged; financial evidence preserved; no automatic disposition.
 
 ### `POST /api/v1/bookings/:id/extend-stay`
-Authorization: `lifecycle.write`. `new_check_out` later than current. Pricing-affecting: atomically claim all added nights, update checkout, source repricing using current assigned-room price + extras, reconcile invoice, audit. Booking remains CHECKED_IN; room remains OCCUPIED.
+`lifecycle.write`; later `new_check_out`; all added nights atomic; pricing-affecting current-room repricing + extras; invoice reconcile; booking CHECKED_IN, room OCCUPIED.
 
-## Housekeeping read and cleaning
+## Housekeeping
 
 `GET /api/v1/housekeeping/board`: `housekeeping.read`, preserve/extend cleaning board.
 
 `POST /api/v1/housekeeping/:id/start`: `housekeeping.write`, DIRTY -> CLEANING.
 
-`POST /api/v1/housekeeping/:id/finish`: `housekeeping.write`, CLEANING -> AVAILABLE only if no blocking condition makes result false.
+`POST /api/v1/housekeeping/:id/finish`: `housekeeping.write`, CLEANING -> AVAILABLE only if no blocker makes result false.
 
-## Maintenance commands
+## Maintenance
 
-`GET /api/v1/housekeeping/:id/maintenance`: `maintenance.read`; returns `{maintenance_case:<open case>|null}` tenant-scoped.
+`GET /api/v1/housekeeping/:id/maintenance`: `maintenance.read`; returns `{maintenance_case:<open>|null}` tenant-scoped.
 
-`POST /api/v1/housekeeping/:id/maintenance`: `maintenance.report`; requires impact NON_BLOCKING|BLOCKING, priority, reason min 6, assigned_to min 2. Opening behavior follows transition matrix.
+`POST /api/v1/housekeeping/:id/maintenance`: `maintenance.report`; impact NON_BLOCKING|BLOCKING, priority, reason min 6, assigned_to min 2; physical consequence follows transition matrix.
 
 `POST /api/v1/housekeeping/:id/maintenance/:case_id/escalate`: `maintenance.report`; escalation_note min 6; OPEN NON_BLOCKING -> OPEN BLOCKING only.
 
-`POST /api/v1/housekeeping/:id/maintenance/:case_id/resolve`: `maintenance.resolve`; resolution_note min 6; same-state resolution where appropriate or MAINTENANCE -> DIRTY for blocking case after vacancy.
+`POST /api/v1/housekeeping/:id/maintenance/:case_id/resolve`: `maintenance.resolve`; resolution_note min 6; same-state resolution where appropriate or MAINTENANCE -> DIRTY after blocking vacancy.
 
-`POST /api/v1/housekeeping/:id/dirty`: legacy compatibility only for historical open BLOCKING case on MAINTENANCE, delegating to canonical resolution semantics. New UI uses explicit resolve.
+`POST /api/v1/housekeeping/:id/dirty`: legacy compatibility only for historical blocking MAINTENANCE resolution; delegate to canonical resolution. New UI uses explicit resolve.
 
-## Authorization matrix
+## Authorization summary
 
-- front-desk board `bookings.read`: admin/ops/receptionist.
-- confirmed booking writes/cancel/late arrival `bookings.write`: admin/ops/receptionist.
-- lifecycle write: admin/ops/receptionist.
-- inline guest+booking: both guests.write + bookings.write.
+- front-desk `bookings.read`: admin/ops/receptionist.
+- confirmed booking `bookings.write`: admin/ops/receptionist.
+- lifecycle.write: admin/ops/receptionist.
+- guest+booking: guests.write + bookings.write.
 - maintenance: exactly `05-maintenance-data-rbac.md`.
 - cleaning: admin/ops/housekeeping via housekeeping.write.
 - pending balance override: admin-only.
-- saas_admin: none of these tenant operational actions.
+- saas_admin: none of these tenant operations.
 
-## Error semantics
+## Error / contract obligations
 
-400 invalid payload/evidence; 403 capability; 404 tenant-scoped not found; 409 invalid/stale/conflicting domain state. No partial success.
+400 invalid payload/evidence; 403 capability; 404 tenant-scoped not found; 409 invalid/stale/conflicting state. No partial success.
 
-## OpenAPI/client obligation
-
-Every additive route/payload/response/enum and pricing side-effect contract is reflected in API/client types and tests before browser acceptance.
+Every additive route/payload/response/enum and pricing side-effect rule must be represented in tests and published API/client contracts before browser acceptance.
 
 ## Completion rule
 
-Implementation, automated tests, OpenAPI/client and browser flow must all use this canonical contract. Shadow endpoints, orphan capabilities, undocumented pricing side effects or direct-state shortcuts are scope violations.
+Runtime, automated tests, OpenAPI/client and browser flow must all use this map. Shadow endpoints, orphan capabilities, hidden repricing or direct-state shortcuts are scope violations.
