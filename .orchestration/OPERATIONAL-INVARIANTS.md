@@ -20,7 +20,7 @@ Maintenance impact is `NON_BLOCKING | BLOCKING`, separate from priority. Non-blo
 
 ## INV-OPS-EXTEND-001 — Active stay extension is atomic
 
-Extending a `CHECKED_IN` stay claims every added night and updates booking/Billing as one logical operation after the approved price policy is known. Any conflict leaves dates, totals, invoice, inventory and events unchanged.
+Extending a `CHECKED_IN` stay claims every added night, applies accepted source repricing, reconciles Billing and updates dates as one logical operation. Any conflict leaves dates, totals, invoice, inventory and events unchanged.
 
 ## INV-OPS-CONTEXT-001 — One active case governs embedded context
 
@@ -38,9 +38,13 @@ No-show, reassignment effective date, operational classification and other genui
 
 Only remaining inventory nights move during an in-stay reassignment. Historical nights remain associated with the room actually occupied; event history identifies old/new rooms and effective date.
 
-## INV-OPS-BILLING-001 — Increased booking total cannot leave a stale invoice
+## INV-OPS-PRICE-001 — Booking date/room changes preserve accepted source repricing
 
-If an invoice exists, any successful operation that increases authoritative booking total must reconcile invoice amount/status in the same logical operation. A `PAID` invoice cannot remain `PAID` when `paid_amount_cents < amount_cents`; prior payment entries remain immutable.
+For source-covered date/room updates, authoritative accommodation total is `total stay nights × current selected room price_cents`, plus extra charges. Reassignment uses destination room price; extension uses current assigned room price with the new total night count. A frozen/contracted-rate model requires a future explicit product decision.
+
+## INV-OPS-BILLING-001 — Booking total and invoice cannot diverge
+
+If an invoice exists, any successful operation that changes authoritative booking total must reconcile invoice amount/status in the same logical operation. A `PAID` invoice cannot remain `PAID` when `paid_amount_cents < amount_cents`; prior payment entries remain immutable.
 
 ## INV-OPS-CHECKOUT-001 — Settlement policy preserves accepted source truth
 
@@ -48,8 +52,8 @@ Checkout policy `settled` requires an authoritative fully paid account. `pending
 
 ## INV-OPS-PARITY-001 — Definition work cannot silently add product restrictions
 
-When accepted source behavior permits a lifecycle transition, the target definition cannot add a stricter calendar, status or policy gate merely because it appears operationally reasonable. Such a departure requires an explicit product decision/Human Gate.
+When accepted source behavior permits a lifecycle transition or defines pricing/financial semantics, the target definition cannot silently add a stricter calendar/status/policy gate or substitute a different pricing model because it appears operationally preferable. Such a departure requires an explicit product decision.
 
-## INV-OPS-POLICY-001 — Unsupported commercial policy is a Human Gate
+## INV-OPS-POLICY-001 — Unsupported new commercial automation requires a decision
 
-BUILD must not infer extension rate basis, refund, retention or penalty rules from incomplete data or UI defaults. Unresolved commercial semantics remain explicit Human Gates/deferred policy.
+BUILD must not invent automated refund, retention, penalty, contracted-rate migration or other new commercial behavior absent from accepted source/product decisions. Such changes require an explicit future product contract.
