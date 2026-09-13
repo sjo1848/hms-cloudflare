@@ -1,47 +1,46 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "phase": "ACP_INTEGRATION_PHASE_2_5",
-  "runtime_status": "EXTERNAL_REVIEW",
+  "phase": "OPERATIONAL_FLOW_DEFINITION",
+  "runtime_status": "ANALYSIS",
   "resume_authorized": false,
-  "active_task": "ACP-2.5-HMS-CONTROLLED-RESERVATION",
-  "last_completed_task": "ACP-2.4-E1-REAL",
-  "last_completed_head": "8821cd2971f66e1d7711027554649374750036b3",
-  "work_branch": "feature/acp-2-5-controlled-reservation",
-  "next_action": "INDEPENDENT_CRITIC_ON_FINAL_EXECUTING_D1_ARTIFACT",
-  "stop_reason": "PRECRITIC_PASS_AWAITING_EXTERNAL_REVIEW",
+  "active_task": "CF-OPS-FLOW-DEFINITION-001",
+  "last_completed_task": "UX_UI_FIRST_PASS",
+  "last_completed_head": "26239b76b919266de07d7bece5977296647f109c",
+  "work_branch": "analysis/operational-flow-definition",
+  "next_action": "INDEPENDENT_DEFINITION_REVIEW",
+  "stop_reason": "IMPLEMENTATION_LOCKED_PENDING_FLOW_DEFINITION_PASS",
   "event": {
-    "seq": 115,
-    "id": "ACP-2.5-HMS-EXECUTING-D1-PRECRITIC-PASS",
-    "type": "EXTERNAL_REVIEW"
+    "seq": 116,
+    "id": "CF-OPS-FLOW-DEFINITION-STARTED",
+    "type": "ANALYSIS"
   },
-  "external_review": {
+  "definition_review": {
     "required": true,
-    "last_audited_head": null,
     "last_verdict": null,
-    "artifact_head": "70fae5c902af557eadc2802ba773f44b9f95fd46",
-    "review_path": ".orchestration/evidence/ACP-2.5-HMS-PRECRITIC.md"
+    "contract": ".orchestration/contracts/CF-OPS-FLOW-DEFINITION-001.md",
+    "decision": ".orchestration/decisions/CF-OPS-FLOWS-001.md",
+    "evidence": ".orchestration/evidence/CF-OPS-FLOW-DEFINITION-001-BASELINE.md"
   },
   "human_gate": null,
   "blocker": null,
   "authorization": {
-    "scope": "STAGING_ONLY",
-    "create_reservation": true,
-    "cancel_cleanup": true,
+    "scope": "ANALYSIS_ONLY",
+    "product_implementation": false,
+    "database_migration": false,
     "production": false,
     "paid_expansion": false,
     "real_data_migration": false,
-    "payment_mutation": false
+    "new_financial_policy": false
   },
   "method": {
-    "human_routine_relay_forbidden": true,
     "technical_rework_autonomous": true,
-    "independent_critic_before_merge": true,
-    "product_acceptance_after_secure_staging_only": true
+    "definition_before_implementation": true,
+    "independent_review_before_implementation_contract": true
   },
   "cost_guard": {
     "target": "$0/month / Cloudflare Free",
     "paid_transition_requires_human_gate": true,
-    "production_forbidden_without_separate_authorization": true
+    "frontend_budget_must_not_be_raised_by_default": true
   }
 }
