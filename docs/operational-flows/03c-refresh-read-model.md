@@ -2,54 +2,35 @@
 
 Status: `BINDING DEFINITION / SOURCE-CONTRACT PRESERVING`
 
-## Revalidation strategy
+## Revalidation
 
-For a ~20-room hotel, start simple. Do not introduce WebSockets by default.
+For a ~20-room hotel, no WebSockets by default. Revalidate authoritative state after successful mutation, on focus regain, on contextual entry, and at a modest visible-screen interval (~30 s starting target). Reduce/pause while hidden. Manual refresh remains available.
 
-Operational screens revalidate authoritative state:
+UI preview is advisory; backend guards every write. Stale state returns conflict + authoritative refresh, never forced replay.
 
-- immediately after their own successful mutation;
-- when browser/tab regains focus;
-- on a modest periodic interval while the operational screen is visible (target about 30 seconds; implementation may tune within a reasonable low-cost range);
-- when navigating into a context via query/deep link.
+## Front-desk board
 
-Polling pauses or reduces when page is hidden. Manual refresh remains available.
+Preserve/restore accepted `GET /api/v1/front-desk/board`; do not invent a parallel board.
 
-## Stale-action rule
+Authorization is binding: `bookings.read` -> admin/ops/receptionist; housekeeping/saas_admin denied tenant board access.
 
-UI previews are advisory. Every mutation is revalidated by backend guards. If state changed between preview and confirmation, return conflict and refresh the case rather than forcing or replaying stale intent.
+Read model only. It owns enough joined/derived context for Reception:
+- generated timestamp + authoritative hotel-local operational date;
+- booking/guest/current-room identity and states;
+- deterministic lane/priority/action semantics;
+- immediate readiness/blockers;
+- maintenance case/impact where relevant;
+- arrival/overdue/overrun and late-arrival context;
+- optional authoritative Billing summary only if money invariants remain intact.
 
-## Front-desk read-model direction
+Late-arrival context is rendered from validated server data; the board does not reinterpret browser-local ETA eligibility.
 
-Accepted source already defines the `/api/v1/front-desk/board` contract and an `action_queue` so frontend does not reconstruct turn priority locally. The next wave must preserve/restore and extend that contract rather than invent a parallel `/operations/front-desk` endpoint.
+## Housekeeping board
 
-Target direction:
+`GET /api/v1/housekeeping/board` remains the cleaning-oriented read model under `housekeeping.read`. Reception does not need that capability merely to inspect room maintenance; least-privilege room maintenance detail uses the canonical maintenance.read route.
 
-`GET /api/v1/front-desk/board?date=<hotel-local-date>`
+## Boundary / acceptance
 
-It remains a read model only. It may join/derive enough context to drive Reception priority/readiness without moving write authority out of explicit domain commands.
+Read models derive/aggregate only. Lifecycle, cancellation/no-show, arrival metadata, cleaning and maintenance writes remain on canonical commands from `19`.
 
-Minimum target context:
-
-- generated timestamp and authoritative operational date;
-- booking identity/status/dates;
-- guest identity/name;
-- room identity/number/physical state;
-- accepted source queue lane/title/detail/primary action semantics;
-- deterministic priority/order;
-- immediate room readiness;
-- maintenance case/impact when relevant;
-- contextual arrival/overdue/late-arrival classification;
-- optional Billing summary only when produced without weakening money invariants.
-
-## Housekeeping read model
-
-Existing `/api/v1/housekeeping/board` remains authoritative for housekeeping-oriented work. Do not duplicate it unless a later contract proves a specific gap.
-
-## Boundary
-
-Read models derive and aggregate; they never perform lifecycle writes. Check-in, checkout, reassignment, extension, cancellation/no-show, cleaning and maintenance transitions remain explicit domain commands.
-
-## Acceptance
-
-Browser and API evidence must prove Reception priority from known fixtures independently of storage order, preserve source queue semantics, and revalidate after cross-module mutations.
+API/browser evidence proves deterministic priority independent of storage order, source queue semantics, role authorization, tenant isolation and refresh after cross-module mutations.
