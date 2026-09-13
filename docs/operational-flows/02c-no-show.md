@@ -4,56 +4,54 @@ Status: `BINDING DEFINITION`
 
 ## Meaning
 
-`NO_SHOW` is not cancellation. It means the arrival date was reached or passed, the reservation remained confirmed, and the guest did not occupy the room.
+`NO_SHOW` is not cancellation. In v1 it means the arrival date has **passed**, the reservation remained confirmed, and the guest never occupied the room.
 
 ## Preconditions
 
 - booking status is `CONFIRMED`;
-- current hotel-local date is on or after `check_in`;
+- authoritative `hotel_local_date > check_in`;
 - guest has not checked in;
 - actor has booking/lifecycle write capability;
 - booking state has not changed concurrently.
 
+The full calendar arrival date remains available for normal check-in/cancellation semantics. A configurable same-day cutoff is deferred product policy.
+
 ## Authoritative mutation
 
-A no-show operation must:
+A no-show operation must atomically:
 
 1. transition booking `CONFIRMED -> NO_SHOW`;
-2. release all remaining inventory claims for that reservation;
+2. release reservation inventory claims;
 3. leave physical room state unchanged because no occupancy occurred;
-4. record exactly one lifecycle/audit event with actor, hotel, booking and previous assigned room;
-5. remove the booking from arrival/attention work after the transition.
+4. record exactly one truthful lifecycle/audit event with actor, hotel, booking, operational date and prior assigned room;
+5. remove the booking from active arrival work after authoritative reload.
 
-## Financial policy
+## Financial boundary
 
-Financial penalty, retained deposit or first-night charge is explicitly `DEFERRED`. The operational no-show transition must not invent a charge policy. A later billing contract may attach financial consequences without redefining the booking state transition.
+Penalty, retained deposit, first-night charge, refund or other money disposition is deferred. No-show does not invent an automatic financial mutation. Existing payments/invoice context remains auditable for later Billing follow-up.
 
 ## UI flow
 
-For an overdue confirmed arrival, Reception offers three explicit paths when applicable:
+When a confirmed arrival is overdue (`hotel_local_date > check_in`), Reception may offer `Mark no-show`. The confirmation states that reservation inventory is released and that no-show is distinct from cancellation.
 
-- complete check-in;
-- mark no-show;
-- cancel reservation only if cancellation is still an accepted business action.
-
-`Mark no-show` requires a confirmation that explains that the reservation inventory will be released and that the action is distinct from cancellation.
+On the arrival date itself, normal check-in remains possible while `hotel_local_date < check_out`; no-show is not yet enabled under v1.
 
 ## Postconditions
 
-- booking cannot be checked in without a separate explicit recovery/rebooking path;
-- room does not become dirty;
-- future inventory previously claimed by the reservation is released;
-- queue counts and room availability revalidate immediately.
+- booking cannot be checked in without a separately authorized recovery/rebooking path;
+- physical room state is unchanged;
+- reservation inventory is released;
+- Reception/availability counts revalidate immediately.
 
 ## Concurrency
 
-If the guest checks in or the reservation changes before no-show wins the transition, no-show returns conflict and produces no audit/event side effect.
+If check-in or another booking transition wins first, no-show returns conflict and writes no success event/audit side effect.
 
-## Acceptance scenarios
+## Acceptance
 
-1. arrival date today: confirmed booking can become no-show;
-2. overdue confirmed arrival: can become no-show;
-3. future arrival: no-show rejected;
-4. checked-in booking: no-show rejected;
-5. concurrent check-in wins: no-show fails with zero state drift;
-6. no-show releases inventory but preserves room physical state.
+1. arrival date today -> no-show rejected;
+2. day after arrival, still confirmed/never occupied -> no-show succeeds;
+3. future arrival -> rejected;
+4. checked-in booking -> rejected;
+5. concurrent check-in wins -> no-show fails with zero state drift;
+6. success releases inventory but preserves physical room state.
