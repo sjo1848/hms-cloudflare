@@ -1,6 +1,6 @@
 # 01 — Domain model
 
-Status: `BINDING DEFINITION`.
+Status: `BINDING DEFINITION / SOURCE-PARITY PRESERVING`.
 
 ## Booking lifecycle
 
@@ -13,7 +13,9 @@ Alternative terminal paths from `CONFIRMED`:
 - `CANCELLED`
 - `NO_SHOW`
 
-`CANCELLED` means the reservation ended before occupancy inside the authorized cancellation window. `NO_SHOW` means the arrival date passed without occupancy. `CHECKED_OUT` means actual occupancy ended. A checked-in stay is extended through an explicit lifecycle command, never generic status/date CRUD. Shortening an occupied stay is checkout. Terminal states do not roll back through generic mutation.
+`CANCELLED` and `NO_SHOW` are distinct terminal outcomes with accepted terminal evidence. `NO_SHOW` is eligible from the hotel-local arrival date (`hotel_local_date >= check_in`) when the guest never occupied the room. `CHECKED_OUT` means actual occupancy ended. A checked-in stay is extended through an explicit lifecycle command; shortening an occupied stay is checkout. Terminal states do not roll back through generic mutation.
+
+This definition does not add a new calendar cutoff to accepted source check-in or cancellation behavior.
 
 ## Physical room state
 
@@ -66,11 +68,15 @@ A partial booking/room/inventory transition is failure.
 
 ## Operational time
 
-Date-sensitive eligibility is server-derived from the hotel's persisted IANA timezone. Browser-local or UTC date does not authorize lifecycle transitions. Audit timestamps remain absolute; hotel-local operational date is additional domain context.
+Where calendar date is an accepted business predicate, use server-derived `hotel_local_date` from the hotel's persisted IANA timezone. Browser-local or raw UTC date does not authorize such decisions. This foundation does not create new date gates for transitions that source behavior does not date-restrict.
 
-## Financial relationship
+## Financial relationship and pricing
 
-`booking.total_cents`, invoices and payments are distinct but related facts. Payment entries are immutable evidence. Any successful operation that increases authoritative booking total must reconcile any existing invoice in the same logical operation. Commercial pricing rules unsupported by authoritative data remain Human Gates.
+`booking.total_cents`, invoices and payments are distinct but related facts. Payment entries are immutable evidence. Any successful operation that changes authoritative booking total must reconcile any existing invoice in the same logical operation.
+
+For accepted source-covered room/date updates, accommodation pricing uses total stay nights × current selected room price, then extra charges are added. Reassignment therefore uses destination current room price; extension uses current assigned room price with new total nights. A future frozen/contracted-rate model requires an explicit product decision.
+
+Checkout `settled` requires an authoritative fully paid account; `pending-approved` remains the governed positive-balance exception.
 
 ## Audit principle
 
