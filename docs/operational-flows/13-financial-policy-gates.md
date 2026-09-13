@@ -1,55 +1,38 @@
 # 13 — Financial policy and source-parity register
 
-Status: `BINDING CLARIFICATION`; no open Human Gate is required by the current operational-flow definition.
+Status: `BINDING CLARIFICATION`; no open Human Gate for the defined operational-flow wave.
 
-Accepted source financial semantics are preserved by default. A future intentional commercial departure requires an explicit product decision before implementation.
+## Pricing-affecting mutations
 
-## Active-stay extension pricing — SOURCE PARITY
+Accepted source pricing remains binding when price is intentionally recalculated:
+- reservation room/date edit;
+- active-stay reassignment -> total stay nights × destination current price + extras;
+- stay extension -> total stay nights × current assigned-room price + extras;
+- explicit extra charge.
 
-Accepted source behavior permits editing stay dates and recalculates accommodation using:
+Existing invoice must reconcile atomically to any new authoritative total.
 
-`total stay nights × current room price_cents`
+## D9 — State/evidence-only writes preserve total
 
-then adds existing extra charges.
+Accepted source generic booking update recalculates price even when a write is only lifecycle/evidence metadata. Target intentionally removes this incidental behavior.
 
-The dedicated extension command must preserve this behavior in v1 and reconcile any existing invoice atomically.
+The following preserve the already-authoritative booking total:
+- check-in;
+- cancellation;
+- no-show;
+- late-arrival recording/re-recording;
+- checkout.
 
-Do not derive a rate from `prior total / prior nights`; extra charges make that calculation invalid.
+Checkout may create/reconcile invoice/settlement status against that total, but does not reprice accommodation. Cancellation/no-show preserve total, payments and invoice evidence for follow-up; no automatic refund/retention/penalty is added. Late arrival changes only operational metadata.
 
-### Future alternative requiring explicit product decision
+## Checkout settlement
 
-A contracted/frozen nightly-rate snapshot may be commercially preferable because source-parity repricing can change the accommodation value of prior nights when room price changes. If adopted later, define migration/backfill and rate-change rules explicitly. It is not the default for this wave.
+Source semantics remain binding: `settled` requires fully paid; `pending-approved` is the governed positive-balance exception with accepted reference and admin-only override.
 
-## Reassignment pricing — SOURCE PARITY
+## Future product choices
 
-Accepted source transactional behavior recalculates booking accommodation with the destination room's current price when a room changes, then adds extra charges.
+A frozen/contracted-rate snapshot for actual priced room/date changes may be commercially preferable, but requires an explicit future decision and migration/backfill rules. Automated cancellation/no-show refund/penalty/retention likewise remains deferred.
 
-V1 preserves that observable rule. The operator must see the resulting total/balance before confirming an active-stay reassignment when price differs.
+## Accounting invariant
 
-A future rule that preserves the old/contracted rate across room changes requires explicit product authorization.
-
-## Checkout `settled` — SOURCE PARITY
-
-Accepted source semantics are binding:
-
-- `settled` requires a fully paid account;
-- `pending-approved` is the governed positive-balance exception;
-- operational reference and privileged override requirements remain in force.
-
-This is not a Human Gate.
-
-## Cancellation/no-show money disposition — DEFERRED AUTOMATION
-
-Cancellation/no-show do not automatically refund, retain, void or create a penalty in this wave.
-
-- payment entries remain immutable evidence;
-- invoice/payment context remains visible for manual financial follow-up;
-- refund/retention/penalty automation requires a dedicated future product/Billing decision.
-
-This deferred automation does not block the lifecycle implementation because no automatic money disposition is being added.
-
-## Accounting consistency
-
-Any operation that changes authoritative booking total must keep an existing invoice truthful in the same logical operation. A previously `PAID` invoice cannot remain `PAID` when authoritative amount exceeds paid amount.
-
-This is an invariant, not a commercial option.
+Only a defined pricing mutation may change booking total. Whenever it does, existing invoice truth must change with it in the same logical operation. State/evidence-only writes cannot cause hidden repricing.
