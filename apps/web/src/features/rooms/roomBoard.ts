@@ -62,16 +62,17 @@ export function buildRoomBoard(rooms: Room[], bookings: Booking[], today = today
       .filter(booking => normalize(booking.status) === "confirmed")
       .sort(bookingDateSort)[0] ?? null;
     const status = normalize(room.status);
+    const physicallyBlocked = status === "blocked" || status === "unavailable" || status === "outofservice" || status === "outoforder";
 
     if (status === "maintenance") return { room, currentBooking, nextBooking, state: "maintenance", reason: "maintenance", attention: true, priority: 0 };
     if (status === "dirty") return { room, currentBooking, nextBooking, state: "dirty", reason: "dirty", attention: true, priority: 5 };
     if (status === "cleaning") return { room, currentBooking, nextBooking, state: "cleaning", reason: "cleaning", attention: true, priority: 10 };
+    if (physicallyBlocked) return { room, currentBooking, nextBooking, state: "blocked", reason: "blocked", attention: true, priority: 12 };
     if (currentBooking && currentBooking.check_out < today) return { room, currentBooking, nextBooking, state: "occupied", reason: "checkout-overdue", attention: true, priority: 15 };
     if (currentBooking && currentBooking.check_out === today) return { room, currentBooking, nextBooking, state: "occupied", reason: "checkout-today", attention: true, priority: 20 };
     if (nextBooking && nextBooking.check_in < today) return { room, currentBooking, nextBooking, state: "arrival", reason: "arrival-overdue", attention: true, priority: 25 };
     if (nextBooking && nextBooking.check_in === today) return { room, currentBooking, nextBooking, state: "arrival", reason: "arrival-today", attention: true, priority: 30 };
     if (currentBooking || status === "occupied") return { room, currentBooking, nextBooking, state: "occupied", reason: "occupied", attention: false, priority: 40 };
-    if (status === "blocked" || status === "unavailable" || status === "outofservice" || status === "outoforder") return { room, currentBooking, nextBooking, state: "blocked", reason: "blocked", attention: true, priority: 45 };
     if (status === "available" && nextBooking) return { room, currentBooking, nextBooking, state: "available", reason: "upcoming-arrival", attention: false, priority: 50 };
     if (status === "available") return { room, currentBooking, nextBooking, state: "available", reason: "available", attention: false, priority: 60 };
     return { room, currentBooking, nextBooking, state: "review", reason: "review", attention: true, priority: 35 };
