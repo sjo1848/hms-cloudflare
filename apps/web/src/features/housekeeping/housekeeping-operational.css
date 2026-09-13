@@ -1,0 +1,8 @@
+.housekeeping-status-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.housekeeping-status-controls button{display:flex;align-items:center;gap:6px;min-height:34px;padding:5px 9px;border:1px solid #d8e0e8;border-radius:999px;color:#536174;background:#fff;font-size:12px;box-shadow:none}
+.housekeeping-status-controls button strong{color:#1f3651}.housekeeping-status-controls button span{color:inherit}
+.housekeeping-status-controls button:hover{background:#eef4f9}
+.housekeeping-status-controls button.selected{color:#fff;background:#1f3651;border-color:#1f3651;box-shadow:0 0 0 2px #d99a36}
+.housekeeping-status-controls button.selected strong{color:#fff}
+.housekeeping-status-controls small{margin-left:auto;color:#78879a}
+@media(max-width:560px){.housekeeping-status-controls{display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;padding:8px 10px}.housekeeping-status-controls button{flex:0 0 auto}.housekeeping-status-controls small{flex:0 0 auto;margin-left:0;padding:0 4px;align-self:center}}

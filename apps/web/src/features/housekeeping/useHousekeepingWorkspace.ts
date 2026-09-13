@@ -6,7 +6,12 @@ import {
   newHousekeepingDraft,
   type HousekeepingBoard,
   type HousekeepingDraft,
+  type HousekeepingQueueItem,
 } from "./model";
+
+function actionableTasks(items: HousekeepingQueueItem[]) {
+  return items.filter(item => item.priorityRank < 8);
+}
 
 export function useHousekeepingWorkspace() {
   const [board, setBoard] = useState<HousekeepingBoard>({ date: "", rooms: [], departures_today: [] });
@@ -25,19 +30,21 @@ export function useHousekeepingWorkspace() {
   const taskHeadingRef = useRef<HTMLHeadingElement | null>(null);
   const boardRequestRef = useRef(0);
 
-  async function load(date = boardDate) {
+  async function load(date = boardDate): Promise<HousekeepingBoard | null> {
     const nextDate = date || new Date().toISOString().slice(0, 10);
     const requestId = ++boardRequestRef.current;
     setLoading(true);
     setError("");
     try {
       const nextBoard = await loadHousekeepingBoard(nextDate);
-      if (requestId !== boardRequestRef.current) return;
+      if (requestId !== boardRequestRef.current) return null;
       setBoard(nextBoard);
       setBoardDate(nextDate);
       setLastUpdated(new Date().toISOString());
+      return nextBoard;
     } catch (e) {
       if (requestId === boardRequestRef.current) setError((e as Error).message);
+      return null;
     } finally {
       if (requestId === boardRequestRef.current) setLoading(false);
     }
@@ -50,7 +57,9 @@ export function useHousekeepingWorkspace() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const visible = filterHousekeepingQueue(buildHousekeepingQueue(board.rooms, board.departures_today), filter, search);
+  const queue = buildHousekeepingQueue(board.rooms, board.departures_today);
+  const visible = filterHousekeepingQueue(queue, filter, search);
+  const actionableVisible = actionableTasks(visible);
   useEffect(() => {
     if (visible.length && !visible.some(room => room.room_id === selectedId)) setSelectedId(visible[0].room_id);
   }, [visible, selectedId]);
@@ -60,7 +69,7 @@ export function useHousekeepingWorkspace() {
   const draft = selected ? draftFor(selected.room_id) : newHousekeepingDraft();
   const updateDraft = (roomId: string, patch: Partial<HousekeepingDraft>) => setDrafts(current => ({ ...current, [roomId]: { ...draftFor(roomId), ...patch } }));
 
-  async function action(path: string, roomId: string, body?: Record<string, unknown>) {
+  async function action(path: string, roomId: string, body?: Record<string, unknown>, options?: { advance?: boolean }) {
     if (actionBusy) return;
     const actionDate = boardDate;
     setActionBusy(true);
@@ -68,7 +77,17 @@ export function useHousekeepingWorkspace() {
     try {
       await runHousekeepingAction(path, body);
       setDrafts(current => ({ ...current, [roomId]: newHousekeepingDraft() }));
-      await load(actionDate);
+      const nextBoard = await load(actionDate);
+      if (options?.advance && nextBoard) {
+        const nextVisible = filterHousekeepingQueue(buildHousekeepingQueue(nextBoard.rooms, nextBoard.departures_today), filter, search);
+        const nextTasks = actionableTasks(nextVisible).filter(item => item.room_id !== roomId);
+        const fallback = nextVisible.find(item => item.room_id !== roomId);
+        const next = nextTasks[0] ?? fallback;
+        if (next) {
+          setSelectedId(next.room_id);
+          if (window.innerWidth < 768) setMobileFocus(true);
+        }
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -88,7 +107,11 @@ export function useHousekeepingWorkspace() {
   }
 
   function nextTask(event: { currentTarget: HTMLButtonElement }) {
-    if (visible.length) focusRoom(visible[0].room_id, event.currentTarget);
+    const tasks = actionableVisible.length ? actionableVisible : visible;
+    if (!tasks.length) return;
+    const currentIndex = tasks.findIndex(item => item.room_id === selectedId);
+    const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % tasks.length : 0;
+    focusRoom(tasks[nextIndex].room_id, event.currentTarget);
   }
 
   function closeFocusedTask() { setMobileFocus(false); }
@@ -104,7 +127,7 @@ export function useHousekeepingWorkspace() {
   const blocked = Boolean(selected?.isOrphanDeparture || (selected?.isBlocked && selected.room_status !== "Maintenance"));
 
   return {
-    boardDate, loading, actionBusy, error, filter, search, visible, selected, draft, mobileFocus, isMobile, lastUpdated,
+    boardDate, loading, actionBusy, error, filter, search, queue, visible, actionableVisible, selected, draft, mobileFocus, isMobile, lastUpdated,
     taskHeadingRef,
     setFilter, setSearch, setDrafts,
     load, updateDraft, action, focusRoom, nextTask, closeFocusedTask,
