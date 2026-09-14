@@ -1,1 +1,1 @@
-{"schema_version":1,"project":"HMS Cloudflare","phase":"OPERATIONAL_FLOW_DEFINITION","runtime_status":"REWORK_V5","resume_authorized":false,"active_task":"CF-OPS-FLOW-DEFINITION-001","next_action":"PRECRITIC_V6","human_gate":{"status":"NONE_OPEN","ids":[]},"authorization":{"product_implementation":false,"implementation_planning":false}}
+{"schema_version":1,"artifact_head":"35ac11f3eb88b33f9ecb4b071a08965a84558cfb","review_required":true,"resume":false,"implementation":false}
