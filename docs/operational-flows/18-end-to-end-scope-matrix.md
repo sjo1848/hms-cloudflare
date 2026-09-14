@@ -18,44 +18,30 @@ Every row requires tenant-scoped backend authorization, concurrency guards, atom
 | E2E-09 | BLOCKING occupied maintenance | Guest remains; sale/readiness blocked; explicit reassign/checkout; vacancy -> MAINTENANCE; resolve -> DIRTY; future reservations attention only. |
 | E2E-10 | Vacant BLOCKING | AVAILABLE/DIRTY/CLEANING -> MAINTENANCE; resolve -> DIRTY; one open case; escalation evidence. |
 | E2E-11 | Housekeeping | DIRTY -> CLEANING -> AVAILABLE; finish rejects if blocking condition; handoff automatic from room state. |
-| E2E-12 | Checkout+Billing | Settlement/checklist valid; CHECKED_OUT; room DIRTY/MAINTENANCE; booking total preserved; invoice/settlement uses existing total; admin-only pending override. |
-| E2E-13 | Extension | Added nights atomic; later checkout; pricing-affecting current-room repricing + invoice reconciliation; stale/conflict full rollback. |
-| E2E-14 | Extra charge | Pricing-affecting total increase reconciles invoice atomically; payments immutable; stale PAID forbidden. |
+| E2E-12 | Checkout+Billing | Settlement/checklist valid; CHECKED_OUT; room DIRTY/MAINTENANCE; booking total preserved; invoice/settlement uses existing total; admin-only pending override. D11 validity rules also apply. |
+| E2E-13 | Extension | Added nights atomic; later checkout; pricing-affecting current-room repricing + invoice reconciliation under D11; stale/conflict full rollback. |
+| E2E-14 | Billing reconciliation | Every priced mutation must satisfy the complete D11 contract in `20-intentional-target-departures.md`; no partial domain or invoice state is accepted. |
 | E2E-15 | Front-desk board | bookings.read -> admin/ops/receptionist; housekeeping/saas_admin denied; authoritative queue/readiness/late-arrival/maintenance context; read-only. |
 | E2E-16 | Context+freshness | Stable IDs context only; refresh after mutation/focus/entry/poll; backend revalidates. |
 | E2E-17 | Continuation | Preserve search/filter; reload board; next case same deterministic priority. |
 | E2E-18 | Audit | Lifecycle/arrival/maintenance success events iff mutation wins; material actor/hotel/request/evidence persisted. |
-| E2E-19 | Synthetic shift | Exercise all flows, negative evidence, stale races, RBAC 403s, no-repricing versus priced-mutation cases, timezone-aware ETA, legacy compatibility and desktop/mobile journey. |
-| E2E-20 | Contract conformance | Runtime/tests/OpenAPI/client/browser use canonical routes/capabilities/payloads/date-time/pricing effects; truthful errors; no unregistered drift. |
+| E2E-19 | Synthetic shift | Exercise all flows, negative evidence, stale races, RBAC 403s, D9 no-repricing, D10 ETA, complete D11 reconciliation cases, legacy compatibility and desktop/mobile journey. |
+| E2E-20 | Contract conformance | Runtime/tests/OpenAPI/client/browser use canonical routes/capabilities/payloads/date-time/pricing/Billing effects; truthful errors; no unregistered drift. |
 
 ## Mandatory D9 financial regression proofs
+After creating a reservation, change room catalog price before each independent scenario: guest/name/notes-only PATCH, check-in, late arrival, cancellation, no-show and checkout preserve stored total. Reassignment, extension and extra charge perform their defined pricing effects.
 
-After creating a reservation, change the room catalog price before each independent scenario:
-1. PATCH only guest/name/ordinary notes -> stored booking total and existing invoice unchanged.
-2. Check-in -> total unchanged.
-3. Record or rerecord late arrival -> total/invoice unchanged.
-4. Cancel -> total unchanged; payment/invoice evidence preserved.
-5. Mark no-show -> total unchanged; payment/invoice evidence preserved.
-6. Checkout -> settlement uses stored authoritative total; checkout does not reprice.
-7. Reassign room -> destination-price repricing occurs and invoice reconciles.
-8. Extend stay -> current-room repricing occurs and invoice reconciles.
-9. Add extra charge -> total changes and invoice reconciles.
+## Mandatory D10 time proofs
+Explicit-offset/Z ETAs representing valid future instants succeed; equivalent instants behave consistently; timezone-less, past and out-of-stay inputs fail; browser timezone cannot change server eligibility.
 
-## Mandatory late-arrival time proofs — D10
-
-- `...Z` and explicit-offset RFC3339 ETAs representing future instants are accepted when their hotel-local date is inside stay.
-- Two equivalent instants with different offsets produce the same authoritative instant and correct hotel-local date.
-- timezone-less ETA is 400; past instant is 400; hotel-local date before check-in or at/after checkout is 400.
-- browser timezone cannot change server eligibility.
+## Mandatory D11 proof
+Run the full D11 reconciliation matrix from `20-intentional-target-departures.md` across room/date edit, reassignment, extension and extra charge, and prove the checkout boundary against each resulting invoice condition.
 
 ## Other mandatory negative proofs
-
 Front-desk role 403s; NON_BLOCKING AVAILABLE/DIRTY/CLEANING state preservation; reassignment short reason/blocking destination/conflict/stale/overrun; false settled/non-admin override; extension conflict/concurrent Billing.
 
 ## Out of scope
-
 No automatic refund/penalty/retention; no frozen contracted-rate model for actual room/date pricing changes; no split stay/auto relocation; no multi-case maintenance; no new OUT_OF_ORDER; no paid realtime; no new arrival cutoffs; no production/cutover/real-data migration; no unrelated Reports/Users/Network redesign.
 
 ## Completion rule
-
 Every row requires bounded Task Contract, implementation, automated/domain/API proof, cross-module proof and browser evidence with no contradiction against canonical documents.
