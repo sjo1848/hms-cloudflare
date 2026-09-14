@@ -2,52 +2,17 @@
 
 Status: `BINDING ACCOUNTING CONTRACT`.
 
-## Pricing mutation boundary
+D9 defines which operations may change the booking total. D11 in `20-intentional-target-departures.md` is the authoritative contract for reconciliation when a priced mutation changes an existing invoice, including credit/overpayment representation, settlement-state derivation, `paid_at` handling, payment immutability, the legacy invoice constraint migration, and the fail-closed boundary for a VOIDED invoice.
 
-A booking total changes only through an explicitly pricing-affecting operation:
-- pre-occupancy room/date change;
-- in-stay reassignment;
-- stay extension;
-- explicit extra charge;
-- a future command explicitly defined as priced.
+This document therefore binds the following high-level rules:
+- only explicitly priced operations may reprice a booking;
+- every real total change and invoice reconciliation are one atomic business mutation;
+- state/evidence-only commands preserve booking total;
+- payment history is immutable;
+- checkout evaluates the already-authoritative financial state and never reprices accommodation;
+- no automatic refund, credit transfer, or VOIDED recovery workflow is introduced by this wave;
+- D11 regression proofs are mandatory before acceptance.
 
-State/evidence-only operations preserve the existing authoritative booking total:
-- check-in;
-- cancellation;
-- no-show;
-- late-arrival metadata;
-- checkout.
+Room/date repricing continues to use total stay nights × current selected-room price plus existing extra charges. Reassignment uses destination price; extension uses the currently assigned room price. Extra charges are priced mutations.
 
-This target rule is registered departure D9 and intentionally removes the accepted source generic-update side effect that can reprice accommodation on unrelated metadata/status writes.
-
-## Booking total and invoice
-
-When a pricing-affecting mutation changes authoritative total and an invoice exists, invoice amount/status must be reconciled in the same logical operation. If paid amount is below new amount, invoice cannot remain `PAID`; settlement metadata must stop claiming full settlement. Payment entries remain immutable.
-
-A state/evidence-only command must not change invoice amount merely because the current room catalog price changed. Checkout may create or reconcile invoice/settlement status against the already-authoritative booking total but does not recalculate accommodation price.
-
-## Source pricing where pricing is actually intended
-
-For source-covered room/date pricing changes:
-
-`accommodation_total = total_stay_nights × current selected room price_cents`
-
-then add existing extra charges.
-
-Reassignment uses destination current price. Extension uses current assigned-room price with new total nights. A frozen/contracted-rate model is a future deliberate product decision.
-
-## Extra charges
-
-An extra charge is pricing-affecting. Current target behavior can leave a paid invoice stale after a later charge; the new workflow must reconcile/reopen invoice atomically or fail closed. A false PAID state is forbidden.
-
-## Checkout
-
-Checkout reads authoritative Billing state in the same decision window. `settled` requires fully paid; `pending-approved` is the governed positive-balance exception with accepted reference and admin-only override. Checkout preserves booking total.
-
-## Cancellation / no-show / late arrival / check-in
-
-These preserve booking total and any existing payment/invoice evidence. Cancellation/no-show add no automatic refund, retention or penalty. Late arrival changes only operational metadata. Check-in changes lifecycle/room occupancy only.
-
-## Audit / concurrency
-
-Money-affecting mutations must be atomic with truthful audit; failed/stale operations leave booking total, invoice, payment evidence and events unchanged.
+Any contradiction between this summary and D11 is resolved in favor of D11.
