@@ -29,27 +29,38 @@ Restore/extend accepted `GET /api/v1/front-desk/board` so queue/readiness/blocke
 Every actual booking-total change reconciles an existing invoice atomically; false PAID state is forbidden; payments remain immutable.
 
 ## D9 — Only explicit pricing mutations may change booking total
-
 Accepted source generic update can recalculate accommodation on unrelated status/metadata writes. Target removes that coupling.
 
-Pricing-affecting in this wave: reservation room change, stay-date change, reassignment, extension, extra charge, or future explicitly priced command.
+Pricing-affecting in this wave: reservation room/date change, reassignment, extension, extra charge, or future explicitly priced command.
 
 All other booking metadata/state/evidence writes preserve the stored total, including guest/name/ordinary notes-only update, check-in, cancellation, no-show, late arrival and checkout. Checkout may alter invoice/settlement lifecycle against the preserved total but does not reprice accommodation. Cancellation/no-show preserve financial evidence and add no automatic disposition.
 
 ## D10 — Timezone-aware late-arrival ETA wire
-
 Accepted source OpenAPI declares `late_arrival_eta` as `date-time`, while source UI serializes a UTC instant and strips the timezone suffix before sending a naive datetime. Target removes that ambiguity.
 
-Target wire contract requires an RFC3339/ISO-8601 date-time with an explicit `Z` or numeric UTC offset. Server parses it as an absolute instant, verifies it is in the future, converts it to the hotel's persisted IANA timezone, and validates the resulting hotel-local date against `check_in <= eta_date < check_out`.
+Target wire contract requires RFC3339/ISO-8601 date-time with explicit `Z` or numeric UTC offset. Server parses it as an absolute instant, verifies it is future, converts it to hotel IANA timezone, and validates hotel-local date against `check_in <= eta_date < check_out`. Timezone-less ETA is rejected.
 
-Audit stores an absolute timestamp/instant representation; UI renders in hotel/user context as appropriate. A timezone-less ETA is rejected as malformed instead of being guessed.
+## D11 — Overpayment credit and VOIDED fail-closed reconciliation
+Current target schema forbids `paid_amount_cents > amount_cents`, but a legitimate priced mutation can reduce the authoritative total after prior payments. Target permits this financial truth rather than rewriting payment history.
 
-Reason: future-time and hotel-day semantics cannot be authoritative when the payload omits its offset. This hardening aligns the target with the OpenAPI `date-time` intent while correcting the accepted source serialization ambiguity.
+Binding rules:
+- payment entries remain immutable;
+- invoice may have `paid_amount_cents > amount_cents`;
+- `remaining_cents = max(amount_cents - paid_amount_cents, 0)`;
+- `credit_cents = max(paid_amount_cents - amount_cents, 0)`;
+- non-VOIDED invoice status is `PAID` when `paid_amount_cents >= amount_cents`, otherwise `PENDING`;
+- if reconciliation changes PENDING -> PAID because price fell, `paid_at` becomes the reconciliation timestamp;
+- if reconciliation changes PAID -> PENDING because price rose, `paid_at` is cleared;
+- if invoice remains PAID, preserve existing `paid_at` when already present;
+- credit is visible financial truth only: no automatic refund, wallet credit, transfer to another booking, penalty offset or cash movement is introduced;
+- new payment attempts are rejected while `remaining_cents = 0`.
+
+An existing `VOIDED` invoice is a fail-closed boundary. Reservation room/date repricing, reassignment, extension and extra-charge mutations must return conflict and write no partial state until a separately authorized financial recovery flow restores valid invoice authority. State/evidence-only commands may preserve a VOIDED invoice, but checkout cannot claim settlement from a VOIDED invoice.
+
+The required forward migration relaxes the legacy `paid_amount_cents <= amount_cents` constraint without rewriting historical migration files. `credit_cents` and `remaining_cents` are derived values; no new CREDIT invoice status is introduced.
 
 ## Non-authorized departures
-
-Without a new decision, remain outside scope: frozen contracted-rate pricing on actual priced room/date mutations; new arrival cutoffs; automatic refund/retention/penalty; automatic relocation/split stay; multiple simultaneous maintenance cases; new OUT_OF_ORDER design; paid realtime; production/cutover/real-data migration.
+Without a new decision, remain outside scope: automatic refund/credit payout or application, cross-booking credit transfer, manual VOIDED recovery workflow, frozen contracted-rate pricing on actual priced room/date mutations, new arrival cutoffs, automatic refund/retention/penalty, automatic relocation/split stay, multiple simultaneous maintenance cases, new OUT_OF_ORDER design, paid realtime, production/cutover/real-data migration.
 
 ## Governance rule
-
 If BUILD needs behavior different from source and this register, stop and return to definition.
