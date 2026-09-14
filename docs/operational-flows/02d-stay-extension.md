@@ -2,55 +2,10 @@
 
 Status: `BINDING DEFINITION / SOURCE-PARITY PRICING`.
 
-A checked-in guest may extend the stay to a later checkout date. This is an explicit lifecycle operation because it changes active occupancy, future inventory and Billing.
+A checked-in stay may extend only to a later checkout in the same room when every added night passes inventory, hold and blocking-maintenance validation. The command claims the added interval, updates checkout, preserves CHECKED_IN/OCCUPIED, applies accepted current-room pricing across total stay nights plus existing extra charges, reconciles Billing, and writes evidence atomically.
 
-## Preconditions
+D11 in `20-intentional-target-departures.md` is authoritative for every invoice outcome after repricing. Any older assumption that invoice paid amount can never be greater than a newly recalculated amount is superseded. If D11 marks the current invoice state ineligible for a priced mutation, extension fails before any partial domain change.
 
-- booking is `CHECKED_IN`;
-- new checkout is later than current checkout;
-- same room is intended;
-- every added night is free of booking claims, holds and blocking maintenance;
-- actor is authorized;
-- booking/inventory/Billing state have not changed concurrently.
+Earlier departure is checkout, not extension. No automatic room move or split stay is introduced. Frozen-rate pricing remains future product scope.
 
-## Mutation
-
-One logical atomic operation must validate `[old_check_out, new_check_out)`, claim every added night, update `check_out`, recalculate the authoritative booking total using accepted source pricing semantics, reconcile any existing invoice, preserve booking `CHECKED_IN` and room `OCCUPIED`, and record truthful lifecycle/financial evidence.
-
-Partial extension is forbidden. Failed inventory, booking, price or Billing correlation leaves all involved state unchanged.
-
-## Pricing parity
-
-Accepted source behavior permits booking date edits and recalculates accommodation as:
-
-`total stay nights × current room price_cents`
-
-then adds existing extra charges.
-
-V1 extension preserves that observable behavior. This means extending an active stay can reprice the accommodation portion of the whole stay if the room price changed since the original reservation.
-
-A future change to a frozen contracted-rate snapshot is a product/commercial decision and requires explicit authorization; it is not the default implementation path.
-
-## Other boundaries
-
-- Earlier departure is checkout, not date editing.
-- Extension does not automatically move the guest.
-- Extension does not silently split a stay across rooms.
-- If the same room is unavailable for any added night, reject without mutation.
-- Combined `extend + planned relocation` is deferred.
-
-## UI
-
-`Extend stay -> choose new checkout -> validate added nights -> show recalculated accommodation total + extra charges + resulting balance -> confirm -> authoritative reload`.
-
-Because accepted pricing may reprice the whole accommodation portion, the confirmation must make the resulting total visible before the operator commits.
-
-## Acceptance
-
-1. one-night and multi-night extensions succeed only when every added night is valid;
-2. any booking/hold/blocking-maintenance conflict rejects the whole extension;
-3. source-parity total uses new total nights × current room price plus extra charges;
-4. existing invoice is reconciled atomically to the new authoritative total;
-5. replay cannot duplicate inventory/event/financial effects;
-6. non-checked-in bookings cannot use the dedicated extension command;
-7. concurrent invoice/payment/price change cannot produce partial success.
+UI shows checkout change, added nights, price consequence and authoritative Billing consequence before confirm. Acceptance includes both directions of repricing, Billing/inventory concurrency, ineligible invoice state and exact rollback.
