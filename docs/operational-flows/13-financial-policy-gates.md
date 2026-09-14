@@ -2,37 +2,12 @@
 
 Status: `BINDING CLARIFICATION`; no open Human Gate for the defined operational-flow wave.
 
-## Pricing-affecting mutations
+Accepted pricing remains binding for intentional room/date repricing, reassignment, extension and extra charges.
 
-Accepted source pricing remains binding when price is intentionally recalculated:
-- reservation room/date edit;
-- active-stay reassignment -> total stay nights × destination current price + extras;
-- stay extension -> total stay nights × current assigned-room price + extras;
-- explicit extra charge.
+D9 binds the opposite side: guest/name/notes-only updates, check-in, cancellation, no-show, late arrival and checkout preserve the stored booking total.
 
-Existing invoice must reconcile atomically to any new authoritative total.
+D11 in `20-intentional-target-departures.md` is authoritative when a priced mutation changes an invoice after prior collection. It defines derived remaining/credit values, invoice status and timestamp reconciliation, preservation of payment history, the required schema correction, and fail-closed handling of an existing VOIDED invoice.
 
-## D9 — State/evidence-only writes preserve total
+Checkout uses the resulting authoritative Billing truth. `settled` requires no remaining balance on a valid invoice; `pending-approved` remains the governed positive-balance exception with admin-only override.
 
-Accepted source generic booking update recalculates price even when a write is only lifecycle/evidence metadata. Target intentionally removes this incidental behavior.
-
-The following preserve the already-authoritative booking total:
-- check-in;
-- cancellation;
-- no-show;
-- late-arrival recording/re-recording;
-- checkout.
-
-Checkout may create/reconcile invoice/settlement status against that total, but does not reprice accommodation. Cancellation/no-show preserve total, payments and invoice evidence for follow-up; no automatic refund/retention/penalty is added. Late arrival changes only operational metadata.
-
-## Checkout settlement
-
-Source semantics remain binding: `settled` requires fully paid; `pending-approved` is the governed positive-balance exception with accepted reference and admin-only override.
-
-## Future product choices
-
-A frozen/contracted-rate snapshot for actual priced room/date changes may be commercially preferable, but requires an explicit future decision and migration/backfill rules. Automated cancellation/no-show refund/penalty/retention likewise remains deferred.
-
-## Accounting invariant
-
-Only a defined pricing mutation may change booking total. Whenever it does, existing invoice truth must change with it in the same logical operation. State/evidence-only writes cannot cause hidden repricing.
+Future commercial/accounting behavior beyond D11 requires a separate decision. Any contradiction here is resolved in favor of D9/D11.
