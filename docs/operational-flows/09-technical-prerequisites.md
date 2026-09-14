@@ -3,44 +3,24 @@
 Status: `BINDING DELIVERY GATE`
 
 ## Frontend JavaScript headroom
-
-Accepted staging is approximately `319858 / 320000` raw JS and the budget script sums all generated JS assets. Before material new workflow UI, reduce total raw JS to `<=300000` without raising the budget or removing accepted behavior. Existing gzip/CSS/browser gates remain green. Code splitting may improve initial load but does not count as total budget reduction by itself.
+Accepted staging is approximately `319858 / 320000` raw JS and the budget script sums all generated JS assets. Before material new workflow UI, reduce total raw JS to `<=300000` without raising the budget or removing accepted behavior. Existing gzip/CSS/browser gates remain green.
 
 ## Operational timezone / instant foundation
+Before date-sensitive P0/late-arrival behavior ships, persist server-owned valid IANA timezone, configure current Mendoza data explicitly, expose trusted context, derive hotel-local date server-side, and enforce explicit-offset RFC3339 for absolute ETA inputs. Browser/server timezone must not alter eligibility.
 
-Before date-sensitive P0/late-arrival behavior ships:
-- each hotel has a server-owned valid IANA timezone;
-- existing Mendoza staging/demo data is explicitly backfilled/configured for `America/Argentina/Mendoza`;
-- trusted application context can read it;
-- backend helpers derive hotel-local date from authoritative instant/timezone;
-- target date-time parser accepts RFC3339/ISO-8601 only with explicit Z/numeric offset where an absolute instant is required;
-- timezone-less late-arrival ETA is rejected rather than guessed;
-- tests prove browser/server timezone cannot alter eligibility.
+## Pricing / Billing foundation — D8/D9/D11
+Backend update paths must distinguish priced from non-priced mutations. State/evidence-only commands never call generic repricing. Every real total change reconciles existing invoice atomically under D11.
 
-Exact schema/helper organization is implementation latitude; semantics are not.
+A forward Billing migration is required before priced workflows can claim completeness:
+- historical migration `0010_billing.sql` remains immutable;
+- remove the legacy constraint that forbids a prior paid amount from being above a later invoice amount;
+- preserve invoice status vocabulary `PENDING|PAID|VOIDED`;
+- expose D11 derived Billing values through domain/API views rather than inventing a new status;
+- centralize D11 reconciliation so room/date edit, reassignment, extension and extra charge cannot diverge;
+- priced mutations detect an ineligible VOIDED invoice before any partial domain write.
 
-## Pricing mutation / Billing foundation — D8/D9
+## Other migration coordination
+Incremental changes also include hotel timezone configuration; no-show/extension/arrival lifecycle events; maintenance impact/occupied semantics/capabilities; and reassignment remaining-night/history guards.
 
-Before later flows rely on no-repricing guarantees, backend update paths must distinguish priced from non-priced mutations.
-
-- priced mutation may recalculate total only under its explicit pricing contract;
-- guest/name/notes-only, check-in, cancel, no-show, late-arrival and checkout preserve stored total;
-- any actual total change reconciles existing invoice atomically;
-- checkout settlement reads the preserved authoritative total;
-- shared helpers must not accidentally call generic repricing for state/evidence-only commands.
-
-## Schema / migration coordination
-
-Likely coordinated incremental changes include:
-- hotel timezone configuration;
-- no-show/extension/arrival lifecycle events;
-- maintenance case `impact`, occupied open/resolve/escalate semantics and same-state event guards;
-- reassignment remaining-night/history guards;
-- dedicated maintenance capabilities/routes;
-- Billing reconciliation support where current paid invoices can become stale after a true total increase.
-
-Do not rewrite historical migrations. Rehearse forward migration and backfill semantics.
-
-## Why these precede feature UI
-
-They remove systemic blockers: near-zero JS margin, ambiguous operational day/ETA instant semantics, and generic update paths that can cause hidden pricing drift. No feature should claim operational correctness until its prerequisite invariants are available.
+## Delivery rule
+Historical migrations are never rewritten. Forward migrations/backfills are rehearsal-tested. No UI increment can claim E2E correctness before the prerequisite invariants it depends on are available.
