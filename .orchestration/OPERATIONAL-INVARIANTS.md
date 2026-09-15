@@ -11,8 +11,10 @@ Status: `BINDING SUPPLEMENT`
 - OVERRUN: checked-in overrun must extend or checkout before reassignment.
 - EVIDENCE: material reasons and notes are enforced by backend.
 - PRICING: D9 exclusively defines which operations may alter booking total.
-- BILLING: D11 in `docs/operational-flows/20-intentional-target-departures.md` is the single reconciliation invariant for every priced command. No command may implement a different D11 outcome or rejection rule.
-- CHECKOUT: settlement uses the authoritative Billing result and cannot bypass D11.
+- BILLING: D11 in `docs/operational-flows/20-intentional-target-departures.md` is the single reconciliation invariant for every priced command. No command may implement a different outcome or rejection rule.
+- LEDGER: after every successful payment or reconciliation, `invoice.paid_amount_cents` equals the sum of immutable payment entries for that invoice. Repricing creates no payment row, changes no payment row and fabricates no payment method/reference.
+- RECONCILE-AUDIT: price reconciliation is audited distinctly from payment receipt; ledger mismatch or VOIDED state fails closed before priced domain mutation.
+- CHECKOUT: settlement uses authoritative Billing and cannot bypass D11/ledger validity.
 - CONTEXT: Reception-selected booking governs embedded Billing.
 - REVALIDATE: stale previews yield conflict plus authoritative reload.
 - RBAC: maintenance/cleaning permissions follow `05-maintenance-data-rbac.md`.
