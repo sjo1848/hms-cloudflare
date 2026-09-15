@@ -18,7 +18,7 @@ Canonical authority: master, transition matrix, E2E matrix, API map, departure r
 10. Front-desk board is canonical Reception read model and requires bookings.read for admin/ops/receptionist only.
 11. Reception-selected booking governs embedded Billing and post-action continuation.
 12. D9 is the closed-set pricing boundary: only expressly priced operations may change booking total; state/evidence-only writes preserve it.
-13. D11 is the single invoice-reconciliation decision for every priced operation. It governs prior-payment edge cases, derived Billing values, status/timestamp outcomes, required schema compatibility, and fail-closed handling of ineligible invoice state. Commands may not define local alternatives.
+13. D11 is the single invoice-reconciliation decision for every priced operation. `invoice.paid_amount_cents` must equal the sum of immutable payment entries after every successful payment/reconciliation. Repricing creates no payment evidence, fabricates no payment method/reference and is audited distinctly from payment receipt. Ledger mismatch or VOIDED state fails closed before priced mutation.
 14. Checkout uses authoritative D11 Billing truth and never reprices accommodation; positive-balance override remains admin-only.
 15. Cancellation/no-show preserve existing financial evidence and add no automatic disposition.
 16. API ownership follows `19`; generic PATCH/direct room status cannot bypass lifecycle/maintenance commands.
@@ -33,7 +33,7 @@ Canonical authority: master, transition matrix, E2E matrix, API map, departure r
 None remain open for this definition. D9-D11 are registered correctness/accounting decisions for the target wave.
 
 ## Deferred
-Frozen contracted-rate redesign; new arrival cutoffs; separate treatment of D11 derived credit; explicit VOIDED recovery workflow; split stay/automatic relocation; multiple maintenance cases; richer SLA/category; paid realtime; production/cutover/real-data migration.
+Frozen contracted-rate redesign; new arrival cutoffs; automatic disposition of D11 derived credit; explicit VOIDED recovery workflow; split stay/automatic relocation; multiple maintenance cases; richer SLA/category; paid realtime; production/cutover/real-data migration.
 
 ## Implementation latitude after phase exit
-BUILD may choose internal module/SQL/component organization and tune low-cost polling. It may not alter states, transitions, pricing boundary/formulas, D11 outcomes, ETA semantics, evidence, RBAC, route ownership, registered departures, cross-module consequences or acceptance criteria without a new decision.
+BUILD may choose internal module/SQL/component organization and tune low-cost polling. It may not alter states, transitions, pricing boundary/formulas, D11 ledger/outcome semantics, ETA semantics, evidence, RBAC, route ownership, registered departures, cross-module consequences or acceptance criteria without a new decision.
