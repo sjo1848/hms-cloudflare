@@ -77,6 +77,9 @@ export class D1PaymentRepository implements BillingPaymentRepository {
     const invoiceId = existingInvoice?.id ?? null;
     const invoiceStatus = existingInvoice?.status ?? null;
     const paidAmount = existingInvoice?.paid_amount_cents ?? 0;
+    const chargeId = crypto.randomUUID();
+    const businessEventId = crypto.randomUUID();
+    const reconciliationEventId = crypto.randomUUID();
     const auditDetails = reconciliationAudit(
       write.expectedTotalCents,
       nextTotal,
@@ -103,24 +106,34 @@ export class D1PaymentRepository implements BillingPaymentRepository {
                 AND i.paid_amount_cents=(SELECT COALESCE(SUM(p.amount_cents),0) FROM payment_entries p WHERE p.invoice_id=i.id)
             )
           )`).bind(
-            crypto.randomUUID(), write.bookingId, write.description, write.amountCents, write.category,
+            chargeId, write.bookingId, write.description, write.amountCents, write.category,
             now, write.expectedTotalCents, invoiceId, invoiceStatus, paidAmount,
           ),
-      this.db.prepare("UPDATE bookings SET total_cents=total_cents+?2, updated_at=?3 WHERE id=?1 AND total_cents=?4 AND changes()=1").bind(
-        write.bookingId, write.amountCents, now, write.expectedTotalCents,
-      ),
-      this.db.prepare("INSERT INTO financial_events (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at) SELECT ?1,'EXTRA_CHARGE',?2,?3,?4,?5,?6,?7 WHERE changes()=1").bind(
-        crypto.randomUUID(), write.bookingId, write.forceAuditFailure ? null : write.actor.subject,
-        write.actor.requestId, write.actor.hotelId,
-        JSON.stringify({ amount_cents: write.amountCents, category: write.category }),
-        now,
-      ),
-      this.db.prepare("INSERT INTO financial_events (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at) SELECT ?1,'PRICE_RECONCILIATION',?2,?3,?4,?5,?6,?7 WHERE changes()=1").bind(
-        crypto.randomUUID(), write.bookingId, write.actor.subject, write.actor.requestId, write.actor.hotelId,
-        JSON.stringify({ reason: "EXTRA_CHARGE", ...auditDetails }),
-        now,
-      ),
+      this.db.prepare(`UPDATE bookings
+        SET total_cents=total_cents+?2, updated_at=?3
+        WHERE id=?1 AND total_cents=?4
+          AND EXISTS (SELECT 1 FROM extra_charges WHERE id=?5 AND booking_id=?1)`).bind(
+            write.bookingId, write.amountCents, now, write.expectedTotalCents, chargeId,
+          ),
+      this.db.prepare(`INSERT INTO financial_events
+        (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at)
+        SELECT ?1,'EXTRA_CHARGE',?2,?3,?4,?5,?6,?7
+        WHERE EXISTS (SELECT 1 FROM extra_charges WHERE id=?8 AND booking_id=?2)
+          AND EXISTS (SELECT 1 FROM bookings WHERE id=?2 AND total_cents=?9)`).bind(
+            businessEventId, write.bookingId, write.forceAuditFailure ? null : write.actor.subject,
+            write.actor.requestId, write.actor.hotelId,
+            JSON.stringify({ amount_cents: write.amountCents, category: write.category }),
+            now, chargeId, nextTotal,
+          ),
+      this.db.prepare(`INSERT INTO financial_events
+        (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at)
+        SELECT ?1,'PRICE_RECONCILIATION',?2,?3,?4,?5,?6,?7
+        WHERE EXISTS (SELECT 1 FROM financial_events WHERE id=?8 AND booking_id=?2)
+          AND EXISTS (SELECT 1 FROM bookings WHERE id=?2 AND total_cents=?9)`).bind(
+            reconciliationEventId, write.bookingId, write.actor.subject, write.actor.requestId, write.actor.hotelId,
+            JSON.stringify({ reason: "EXTRA_CHARGE", ...auditDetails }),
+            now, businessEventId, nextTotal,
+          ),
     ]);
     return results[0]?.meta.changes === 1 && results[1]?.meta.changes === 1 && results[2]?.meta.changes === 1 && results[3]?.meta.changes === 1;
-  }
-}
+  }}
