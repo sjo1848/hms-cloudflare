@@ -16,7 +16,9 @@ This matrix converts the interaction contract into implementation-sized behavior
 | Loading refresh | several workspaces replace content with text loading | first-load skeleton; refresh preserves known data with subtle refreshing state |
 | Feedback | plain error/status blocks dominate | inline validation, blocking banner, conflict state, toast for non-blocking success |
 
-Bootstrap requirement: `/api/v1/auth/me` (or its canonical bootstrap equivalent) supplies effective capabilities from backend authority. Local duplicate role maps are not accepted as the navigation authorization source.
+Bootstrap requirement: `/api/v1/auth/me` supplies deterministic `capabilities[]` and `network_capabilities[]` derived from backend authority. Local duplicate role maps are not accepted as the navigation authorization source.
+
+Unauthorized direct URL behavior: shell remains visible, protected workspace is not mounted before capability guard resolves, and an in-app Forbidden state is shown. Backend 403 remains independently tested.
 
 ## B. Reception transition matrix
 
@@ -204,6 +206,7 @@ The later BUILD must remove or replace these behaviors:
 A UX implementation increment fails if:
 - a task technically works but loses filters/selection unnecessarily;
 - Back returns to an unrelated top-of-page state;
+- a protected module briefly mounts or fires ordinary module data fetches before a known capability denial;
 - mobile requires reopening navigation repeatedly for core modules;
 - destructive action uses native browser confirmation;
 - Billing can drift to another booking than Reception selection;
