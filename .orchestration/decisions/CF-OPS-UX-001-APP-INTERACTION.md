@@ -9,7 +9,7 @@ Binding decisions:
 2. Desktop operational work favors master/detail; mobile favors focused full-screen task surfaces.
 3. Multi-step context work uses drawer/full-screen sheet; destructive/material confirmation uses product dialog; low-risk metadata uses compact dialog/popover; success may use toast.
 4. Native browser confirm/alert is not accepted product UX.
-5. Core mobile operations use role-aware direct primary navigation for authorized modules; hamburger-only access is insufficient, and navigation never grants capabilities absent from backend RBAC.
+5. Core mobile operations use capability-aware direct primary navigation for authorized modules; effective capabilities come from server bootstrap/canonical backend authority, not a duplicated frontend role map. Hamburger-only access is insufficient, and navigation visibility never substitutes backend authorization.
 6. Filters/search/selection/history are application state and survive ordinary refresh/mutation/Back-Forward under `21`.
 7. Reception-selected booking exclusively governs embedded Billing.
 8. Known authoritative data remains visible during refresh; first load uses skeletons; conflicts keep task context and never auto-replay mutation.
