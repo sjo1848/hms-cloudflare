@@ -88,7 +88,7 @@ export class D1PaymentRepository implements BillingPaymentRepository {
       existingInvoice?.paid_at ?? null,
       now,
     );
-    const results = await this.db.batch([
+    await this.db.batch([
       this.db.prepare(`INSERT INTO extra_charges (id,booking_id,description,amount_cents,category,created_at)
         SELECT ?1,b.id,?3,?4,?5,?6
         FROM bookings b
@@ -117,9 +117,13 @@ export class D1PaymentRepository implements BillingPaymentRepository {
           ),
       this.db.prepare(`INSERT INTO financial_events
         (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at)
-        SELECT ?1,'EXTRA_CHARGE',?2,?3,?4,?5,?6,?7
-        WHERE EXISTS (SELECT 1 FROM extra_charges WHERE id=?8 AND booking_id=?2)
-          AND EXISTS (SELECT 1 FROM bookings WHERE id=?2 AND total_cents=?9)`).bind(
+        VALUES (?1,'EXTRA_CHARGE',?2,
+          CASE
+            WHEN EXISTS (SELECT 1 FROM extra_charges WHERE id=?8 AND booking_id=?2)
+              AND EXISTS (SELECT 1 FROM bookings WHERE id=?2 AND total_cents=?9)
+            THEN ?3 ELSE NULL
+          END,
+          ?4,?5,?6,?7)`).bind(
             businessEventId, write.bookingId, write.forceAuditFailure ? null : write.actor.subject,
             write.actor.requestId, write.actor.hotelId,
             JSON.stringify({ amount_cents: write.amountCents, category: write.category }),
@@ -127,14 +131,18 @@ export class D1PaymentRepository implements BillingPaymentRepository {
           ),
       this.db.prepare(`INSERT INTO financial_events
         (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at)
-        SELECT ?1,'PRICE_RECONCILIATION',?2,?3,?4,?5,?6,?7
-        WHERE EXISTS (SELECT 1 FROM financial_events WHERE id=?8 AND booking_id=?2)
-          AND EXISTS (SELECT 1 FROM bookings WHERE id=?2 AND total_cents=?9)`).bind(
+        VALUES (?1,'PRICE_RECONCILIATION',?2,
+          CASE
+            WHEN EXISTS (SELECT 1 FROM financial_events WHERE id=?8 AND booking_id=?2)
+              AND EXISTS (SELECT 1 FROM bookings WHERE id=?2 AND total_cents=?9)
+            THEN ?3 ELSE NULL
+          END,
+          ?4,?5,?6,?7)`).bind(
             reconciliationEventId, write.bookingId, write.actor.subject, write.actor.requestId, write.actor.hotelId,
             JSON.stringify({ reason: "EXTRA_CHARGE", ...auditDetails }),
             now, businessEventId, nextTotal,
           ),
     ]);
-    return results[0]?.meta.changes === 1 && results[1]?.meta.changes === 1 && results[2]?.meta.changes === 1 && results[3]?.meta.changes === 1;
+    return true;
   }
 }
