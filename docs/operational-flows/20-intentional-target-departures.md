@@ -56,6 +56,30 @@ An existing VOIDED invoice is fail-closed for priced mutations: reservation room
 
 A forward migration relaxes the legacy `paid_amount_cents <= amount_cents` constraint without rewriting historical migrations. Remaining and credit are derived values; no CREDIT invoice status is added. Financial audit must identify price reconciliation separately from payment receipt and include old/new amount, paid, remaining, credit and status.
 
+
+## D12 — Application interaction and navigation modernization
+
+The user explicitly expanded target UX after A7/B7 so HMS behaves as one operational app rather than a set of CRUD pages. Accepted source interaction mechanics are therefore not pixel/structure parity for this wave, but source domain semantics and required task information remain binding.
+
+Authorized differences are limited to:
+- persistent-shell transitions, desktop master/detail and mobile focused-task surfaces from `21/22`;
+- drawers/full-screen sheets, product confirmation dialogs, compact contextual dialogs/popovers and non-blocking toasts;
+- filter/search/selection/history/scroll preservation and deterministic focused-task Back behavior;
+- capability-aware desktop/mobile navigation and guarded direct URLs;
+- additive `/api/v1/auth/me` effective `capabilities[]` / `network_capabilities[]` derived from canonical backend authority instead of relying on a duplicated frontend role map for navigation presentation;
+- canonical landing chosen from the currently accepted Cloudflare target route set. This interaction wave does not restore the source Dashboard route merely to mimic source home redirection;
+- short CSS/native/progressive motion and reduced-motion behavior, subject to the JS budget.
+
+D12 does **not** authorize:
+- weaker backend authorization;
+- removal of a business capability, required workflow data or evidence;
+- changes to booking/room/maintenance/Billing domain semantics;
+- hidden/direct-state bypasses;
+- treating UI visibility as an authorization boundary;
+- silent removal/restoration of Calendar, Dashboard or any other product surface outside a separately bounded scope decision.
+
+Reception remains canonically routed at `/bookings`, preserving the accepted source route and current target route.
+
 ## Non-authorized departures
 Outside scope without new decision: automatic credit disposition/refund, cross-booking credit transfer, VOIDED recovery command, frozen contracted-rate pricing, new arrival cutoffs, automatic relocation/split stay, multiple maintenance cases, new OUT_OF_ORDER design, paid realtime, production/cutover/real-data migration.
 
