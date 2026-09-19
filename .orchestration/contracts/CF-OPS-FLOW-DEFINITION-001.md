@@ -4,7 +4,7 @@ TASK ID: `CF-OPS-FLOW-DEFINITION-001`
 PROJECT: HMS Cloudflare
 PHASE: `OPERATIONAL FLOW DEFINITION`
 STATUS: `IN_ANALYSIS / IMPLEMENTATION LOCKED`
-BASELINE: `acceptance/staging@26239b76b919266de07d7bece5977296647f109c`
+BASELINE: `acceptance/staging@721eee83280ebee727e18ecb8ec60cd91d81b2b9`
 SOURCE REFERENCE: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`
 
 ## Objective
@@ -28,6 +28,16 @@ The active contract is defined by:
 - binding decisions under `.orchestration/decisions/**`.
 
 If summaries conflict, the most specific binding canonical document controls. BUILD may not invent an alternate semantic.
+
+## Baseline reconciliation
+
+The prior immutable A10 review target used `acceptance/staging@26239b76b919266de07d7bece5977296647f109c`.
+Accepted staging later advanced by exactly one product commit to `721eee83280ebee727e18ecb8ec60cd91d81b2b9`, modifying only Reception queue presentation in:
+- `apps/web/src/features/reception/ReceptionPage.tsx`;
+- `apps/web/src/features/reception/reception-queue.css`.
+
+That delta is explicitly reconciled by `.orchestration/evidence/CF-OPS-FLOW-DEFINITION-001-BASELINE-RECONCILIATION-V11.md`.
+It changes scan density/hierarchy only and does not alter lifecycle, API ownership, queue classification/priority, search semantics, Billing ownership, RBAC, persistence or the target obligations in 21/22.
 
 ## Domain scope
 
