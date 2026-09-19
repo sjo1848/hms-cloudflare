@@ -7,6 +7,7 @@ const memberships: Membership[] = [
     role: "admin",
     email: "user@example.test",
     operationalBinding: "HOTEL_A_DB",
+    timeZone: "America/Argentina/Mendoza",
   },
 ];
 
