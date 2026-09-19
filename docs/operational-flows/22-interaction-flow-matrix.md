@@ -166,16 +166,19 @@ Rules:
 - changing major filter/date creates navigable history when useful;
 - selection may create/replace history according to task intent, but Back from contextual navigation must restore the prior selection/list state.
 
+Filter-count rule: category badges are computed from the authoritative board/date/base scope before free-text search. Text search narrows the visible result count without making category totals oscillate on every keystroke.
+
 ## H. Overlay/back-stack rules
 
 1. Opening a focused task creates a closeable task state without losing underlying workspace.
-2. Browser Back while task is open closes the task before leaving the module when feasible.
-3. Selecting another module while a dirty task is open triggers discard confirmation before navigation.
-4. Dirty task intercepts explicit close/Back with discard dialog.
-5. Success clears dirty state before closing.
-6. Contextual cross-module navigation creates a real history entry so Back returns to the originating workspace state.
-7. Escape follows the same close rules as explicit close.
-8. No overlay may trap the operator after its underlying entity becomes invalid; conflict refresh provides a safe close/return path.
+2. Only one primary drawer/sheet is open at once; subordinate creation/edit steps stay inside it. A confirmation dialog may overlay the task temporarily and returns to it on cancel.
+3. Browser Back while task is open closes the task before leaving the module when feasible.
+4. Selecting another module while a dirty task is open triggers discard confirmation before navigation.
+5. Dirty task intercepts explicit close/Back with discard dialog.
+6. Success clears dirty state before closing.
+7. Contextual cross-module navigation creates a real history entry so Back returns to the originating workspace state.
+8. Escape follows the same close rules as explicit close.
+9. No overlay may trap the operator after its underlying entity becomes invalid; conflict refresh provides a safe close/return path.
 
 ## I. Motion rules
 
