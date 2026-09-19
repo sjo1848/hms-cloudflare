@@ -2,24 +2,57 @@
 
 Status: `BINDING DEFINITION`
 
-## New reservation with new guest
-Target: `New reservation -> search guest -> select existing OR create inline -> dates -> availability -> room -> confirm`.
+Reception is a queue-driven workspace. `21-app-interaction-contract.md` owns the interaction surface.
 
-Inline guest creation is atomic with booking through `POST /api/v1/bookings/with-guest`, requiring `guests.write` + `bookings.write`. Conflict/validation cannot leave unintended guest-only state. Standalone Guests remains explicit guest-only intent.
+## Queue and selected case
 
-## Check-in readiness
-Reception shows readiness before final check-in: READY, CLEANING, DIRTY, MAINTENANCE, OCCUPIED conflict or OUT_OF_ORDER. READY requires physical AVAILABLE and no blocking condition. NON_BLOCKING maintenance is advisory. Calendar day is not an added check-in gate.
+Queue filters/search/scroll remain stable while the operator handles a selected case. Desktop uses master/detail. Mobile opens the selected case as a focused full-screen surface and returns to the same queue position.
 
-## Billing follows selected Reception case
-Embedded Billing uses the same selected `booking_id`; it cannot silently retain another booking. It shows authoritative booking/accommodation total, extra charges, invoice amount/status, paid amount, remaining balance and the D11 derived credit when present. Ineligible invoice state is visible as a blocker rather than being hidden behind a failed lifecycle action.
+After a successful mutation, authoritative refresh occurs and the next visible case is selected by canonical queue priority if the prior case leaves the active filter.
 
-## Pricing continuity
-Under D9, guest/name/notes-only edits, check-in, checkout, late arrival, cancellation and no-show preserve stored total. Reception must not show a price delta for those actions merely because catalog price changed.
+## New reservation
 
-Reassignment and extension are priced operations and disclose resulting total plus D11 Billing consequence before confirmation. An ineligible invoice state blocks the priced command before any room/inventory mutation.
+`New reservation` opens a drawer/full-screen sheet, not an inline page-expanding form.
 
-## Checkout handoff
-Operator confirms physical release. Backend routes normal vacancy to DIRTY/Housekeeping and vacancy with open BLOCKING maintenance to MAINTENANCE before later DIRTY/Housekeeping. Checkout uses the already-authoritative D11 Billing truth and never reprices accommodation.
+Flow:
+`guest search/select or inline create -> dates -> availability -> room -> review -> confirm`.
 
-## Post-action continuation
-Preserve filter/search, reload authoritative context, let completed case move/disappear naturally, then select next visible case using the same deterministic queue priority.
+Inline guest creation is atomic with booking through `POST /api/v1/bookings/with-guest`; failure leaves no unintended guest-only record.
+
+## Check-in
+
+Focused task stepper:
+1. identity/document;
+2. stay/contact;
+3. room readiness;
+4. final review.
+
+Success closes the focused task, refreshes board/Billing context and advances according to queue priority. Conflict stays in context and explains the refreshed blocker.
+
+## Reassignment
+
+Focused drawer shows current room, valid destinations, maintenance advisory/blockers, resulting old-room state, price/Billing consequence and required reason before explicit confirmation.
+
+## Extension
+
+Focused drawer shows current/requested checkout, added nights, availability, repriced total and D11 remaining/credit consequence before confirmation.
+
+## Checkout
+
+Focused checkout surface combines checklist, room release, authoritative selected-booking Billing, maintenance consequence and housekeeping handoff. `pending-approved` admin override is an explicit privileged branch, not an ordinary checkbox.
+
+## Late arrival
+
+Compact dialog/popover with ETA + note + booking summary. No lifecycle wizard and no pricing UI.
+
+## Cancellation / no-show
+
+Use product danger dialogs with booking consequence and required reason. Native `window.confirm` is forbidden.
+
+## Billing coupling
+
+Embedded Billing always uses the same Reception-selected booking and never exposes a separate booking selector inside the Reception task.
+
+## Navigation handoff
+
+Contextual links to room/guest/housekeeping carry stable IDs and return/back semantics from `03b` and `21`.
