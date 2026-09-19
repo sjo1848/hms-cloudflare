@@ -21,7 +21,7 @@ Back/Forward restores:
 - module;
 - meaningful query filters;
 - selected entity where valid;
-- prior list/queue context and scroll position when practical.
+- prior list/queue context and scroll position. If data reflow makes the exact pixel offset invalid, restore the prior selected row/card into view as the deterministic fallback.
 
 A contextual navigation must not unconditionally force `scrollTo(0,0)`. Top-level module navigation may use remembered/top workspace position, but returning via Back must restore the prior operational context.
 
