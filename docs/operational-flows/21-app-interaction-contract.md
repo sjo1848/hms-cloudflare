@@ -274,6 +274,7 @@ A drawer/sheet with unsaved meaningful changes:
 - can close immediately when pristine;
 - asks to discard only when dirty;
 - Back/Escape follows the same rule;
+- a focused drawer/full-screen task opened from a workspace participates in app history: Back closes the top confirmation first, then the focused task, before leaving the underlying workspace;
 - successful submit clears dirty state before close.
 
 Do not add confirmation prompts to harmless navigation when there are no unsaved changes.
