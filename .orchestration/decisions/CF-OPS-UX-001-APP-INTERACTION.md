@@ -2,7 +2,7 @@
 
 Status: `BINDING DEFINITION / IMPLEMENTATION LOCKED`
 
-The accepted HMS operational domain remains unchanged. This decision expands the UX definition before implementation.
+The accepted HMS operational domain remains unchanged. This decision expands the UX definition before implementation and is registered as source-departure D12 in `20-intentional-target-departures.md`.
 
 Binding decisions:
 1. HMS uses a persistent application shell; module work transitions inside it.
