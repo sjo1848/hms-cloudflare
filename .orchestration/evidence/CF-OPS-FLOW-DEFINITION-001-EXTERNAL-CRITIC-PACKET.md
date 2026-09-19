@@ -1,28 +1,45 @@
-# EXTERNAL INDEPENDENT CRITIC PACKET — V10
+# EXTERNAL INDEPENDENT CRITIC PACKET — V11
 
 Status: `READY / HUMAN GATE`
 
 Review exactly:
-- Artifact A10: `7e81b59d2066be95c3ff7274ee3aa18d1e555f6a`
-- Boundary B10: `723822652ff9f3c9e8955b902814093aa56f3e09`
-- Baseline: `acceptance/staging@26239b76b919266de07d7bece5977296647f109c`
+- Artifact A11: `1033fd1eb7c886b9fa1ee2f941a88a03772e9ac2`
+- Boundary B11: `e03e618fa7de2d062f7366864beaf9398f860adc`
+- Baseline: `acceptance/staging@721eee83280ebee727e18ecb8ec60cd91d81b2b9`
 - Source reference: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`
 
+## V10 repair context
+
+Independent Critic V10 returned one blocker:
+`F-V10-01 — FROZEN BASELINE DRIFT`.
+
+V11 repairs only that blocker:
+- adopts the current accepted staging baseline;
+- reanchors the definition branch onto that baseline;
+- proves the one-commit Reception delta is presentation-only and compatible with D12/E2E-21/21/22;
+- preserves A10/B10 as historical immutable targets.
+
+Do not assume the repair is valid merely because Pre-Critic V11 and Controller Review V11 passed.
+
 ## Critic mandate
-Review A10+B10 independently. Do not rely on controller PASS. Attack:
-1. D1-D12 source-parity/departure closure.
-2. Booking/room/maintenance transition truth and concurrency implications.
-3. D9-D11 pricing/Billing/payment-ledger consistency.
-4. API route ownership, auth bootstrap, effective capabilities and backend-authoritative RBAC.
-5. E2E-00..21 completeness.
-6. 21/22 app interaction: shell, navigation/landing/Forbidden, overlays/back stack, dirty guards, filters/history/scroll, Billing coupling, refresh/conflict, responsive/accessibility/motion.
-7. JS-budget/sequence feasibility.
-8. Active Task Contract consistency with master/E2E/decisions/invariants.
-9. Any hidden product decision left to BUILD.
-10. Scope isolation: no product runtime/schema/CI/deploy changes.
+
+Review A11+B11 independently. Attack:
+
+1. F-V10-01 closure: baseline identity, ancestry and scope isolation.
+2. D1-D12 source-parity/departure closure.
+3. Booking/room/maintenance transition truth and concurrency implications.
+4. D9-D11 pricing/Billing/payment-ledger consistency.
+5. API route ownership, auth bootstrap, effective capabilities and backend-authoritative RBAC.
+6. E2E-00..21 completeness.
+7. 21/22 app interaction: shell, navigation/landing/Forbidden, overlays/back stack, dirty guards, filters/history/scroll, Billing coupling, refresh/conflict, responsive/accessibility/motion.
+8. JS-budget/sequence feasibility.
+9. Active Task Contract consistency with master/E2E/decisions/invariants.
+10. Any hidden product decision left to BUILD.
+11. Boundary integrity: A11 -> B11 exactly one metadata-only commit.
+12. Scope isolation: no product runtime/schema/CI/deploy/staging/main change authored by the definition package.
 
 Return exactly one substantive verdict:
 - `PASS FOR IMPLEMENTATION PLANNING`, or
 - `REWORK` with numbered blocking findings and concrete repair requirements.
 
-Independent critic must be a separate reviewer/agent from the controller that authored/reconciled the definition.
+Independent critic must be a separate reviewer/agent from the controller that authored/reconciled V11.
