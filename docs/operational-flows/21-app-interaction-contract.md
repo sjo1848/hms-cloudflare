@@ -37,7 +37,7 @@ Top-level module navigation and contextual navigation are different:
 
 - top-level module switch may place the new workspace at its remembered/top position;
 - contextual navigation to a known booking/room/guest focuses that entity instead of dumping the operator at an unrelated page top;
-- Back/Forward restores route, query context, selected entity and filter/search state where still valid;
+- Back/Forward restores route, query context, selected entity, filter/search state and prior list/queue scroll; if reflow invalidates the exact offset, restore the prior selected item into view;
 - no unconditional global `scrollTo(0,0)` is allowed for contextual navigation;
 - invalid/deleted selected IDs fail safely and keep valid filters.
 
@@ -45,7 +45,9 @@ Query IDs remain authorization-neutral.
 
 The root/unknown-safe landing is capability-derived using the canonical map in `19`; the app must not default every authenticated identity to Reception.
 
-Navigation is capability-aware for presentation. Before mounting a protected module, the shell resolves bootstrap capabilities. Unauthorized direct URLs render an in-shell Forbidden/access-denied state rather than briefly exposing the module and failing later. Backend capability checks remain authoritative.
+Navigation is capability-aware for presentation. The shell/bootstrap chrome may render while access is resolving, but a protected module must not mount/fetch before effective capabilities are known. Unauthorized direct URLs render an in-shell Forbidden/access-denied state rather than briefly exposing the module and failing later. Backend capability checks remain authoritative.
+
+When a backend 403 reveals that previously bootstrapped access has changed, refresh bootstrap capabilities once, update visible navigation and route state, and never auto-retry the denied mutation.
 
 ## 3. Desktop master/detail and mobile focused-task model
 
