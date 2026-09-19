@@ -1,11 +1,17 @@
 # HMS Cloudflare — Operational Flow Master Definition
 
-Status: `ANALYSIS / UX INTERACTION REFINEMENT / IMPLEMENTATION LOCKED`
+Status: `ANALYSIS / BASELINE RECONCILED / IMPLEMENTATION LOCKED`
 
-Baseline: `acceptance/staging@26239b76b919266de07d7bece5977296647f109c`
+Baseline: `acceptance/staging@721eee83280ebee727e18ecb8ec60cd91d81b2b9`
 Accepted source: `sjo1848/hotel-management-system@4df56a6217caab611f2f5fcbd98bde8386bb5629`
 
 Canonical set: `18`, `19`, `20`, `21`, `22`, `16`, `05`, operational invariants and binding decisions.
+
+## Baseline reconciliation
+
+A10 was frozen against `26239b76b919266de07d7bece5977296647f109c`. Accepted staging subsequently advanced by one Reception presentation commit to `721eee83280ebee727e18ecb8ec60cd91d81b2b9`.
+The delta only compacts queue row hierarchy and filter density. It does not alter operational classification, lifecycle, API/RBAC, persistence, Billing ownership or target interaction semantics.
+The exact proof is recorded in `.orchestration/evidence/CF-OPS-FLOW-DEFINITION-001-BASELINE-RECONCILIATION-V11.md`.
 
 ## Governing rules
 
@@ -62,4 +68,4 @@ Frozen rate redesign, new arrival cutoffs, automatic credit disposition, VOIDED 
 
 ## Definition exit
 
-Close only when domain + E2E + API + RBAC + D1-D12 + E2E-21 + `21/22` are contradiction-free, Pre-Critic passes, a fresh immutable Artifact+Boundary is reviewed, and orchestration points to that artifact. Previous A7/B7 are superseded after UX scope expansion.
+Close only when domain + E2E + API + RBAC + D1-D12 + E2E-21 + `21/22` are contradiction-free, Pre-Critic passes, a fresh immutable Artifact+Boundary is reviewed, and orchestration points to that artifact. A10/B10 are superseded as final-review targets only because their frozen implementation baseline became stale.
