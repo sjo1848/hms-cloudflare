@@ -17,10 +17,12 @@ Minimum bootstrap data for app navigation:
 - authenticated identity;
 - active hotel context when present;
 - role/network context as already supported;
-- effective tenant capabilities for the active membership;
-- effective network capabilities when relevant to SaaS/network surfaces.
+- `capabilities: string[]` — effective tenant capabilities for the active membership;
+- `network_capabilities: string[]` — effective network capabilities when relevant, otherwise empty.
 
-These capability lists are UX hints only: every API request remains backend-authorized. A hidden control is never the security boundary.
+Both arrays are server-derived from the canonical capability authority and deterministically ordered for stable clients/tests.
+
+These capability lists are UX hints only: every API request remains backend-authorized. A hidden control/client route guard is never the security boundary. A direct URL to a module lacking its required effective capability renders the in-app forbidden state and performs no ordinary protected module fetch before the guard resolves.
 
 ## Pricing / Billing boundary — D9/D11
 Pricing-affecting: reservation room/date change, reassignment, extension, extra charge, or future explicitly priced command. Other booking metadata/state/evidence writes preserve stored total.
