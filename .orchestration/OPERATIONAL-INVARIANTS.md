@@ -22,3 +22,13 @@ Status: `BINDING SUPPLEMENT`
 - API: `19-api-command-contract-map.md` owns routes, payloads, capabilities and side effects; no shadow/direct-state shortcut.
 - CONTRACT: additive API/Billing fields must be represented in OpenAPI/client types before browser acceptance.
 - DEPARTURE: only `20-intentional-target-departures.md` authorizes source divergence.
+- UX-SHELL: module changes preserve one mounted application shell; protected workspaces wait for capability bootstrap before mount/fetch.
+- UX-NAV-RBAC: desktop/mobile navigation visibility and canonical landing derive from server effective capabilities; frontend visibility never substitutes backend authorization.
+- UX-HISTORY: meaningful filters/selection/context survive refresh and Back/Forward; contextual return restores prior scroll or selected item into view; contextual navigation cannot globally reset scroll.
+- UX-TASK: one primary focused task surface at a time; multi-step work uses drawer/sheet, destructive/material confirmation uses product dialog, and native browser confirm/alert is forbidden.
+- UX-DIRTY: dirty task close, Escape, Back or module exit requires discard confirmation; pristine task closes without unnecessary prompt.
+- UX-BILLING-CONTEXT: Reception-embedded Billing is controlled exclusively by Reception-selected booking and cannot independently reselect another booking.
+- UX-REFRESH: after initial load, revalidation keeps known data visible; stale/conflict refresh never auto-replays a state-changing command or unnecessarily loses safe operator input.
+- UX-FILTER: category counts use authoritative base scope before text search; ordinary refresh/mutation preserves active filters; next item follows canonical priority when current item leaves the view.
+- UX-MOTION: motion is short, functional, reduced-motion aware and never gates authoritative completion; heavy animation/component frameworks cannot bypass the raw-JS budget.
+- UX-FOCUS: focused overlays move focus in and restore it on close; modal focus containment and mobile focused-task return are browser-tested.
