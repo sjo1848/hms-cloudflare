@@ -1,35 +1,16 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { commonEn } from "./locales/en/common";
-import { commonEsAR } from "./locales/es-AR/common";
-import { receptionEn } from "./locales/en/reception";
-import { receptionEsAR } from "./locales/es-AR/reception";
-import { billingEn } from "./locales/en/billing";
-import { billingEsAR } from "./locales/es-AR/billing";
-import { roomsEn } from "./locales/en/rooms";
-import { roomsEsAR } from "./locales/es-AR/rooms";
-import { guestsEn } from "./locales/en/guests";
-import { guestsEsAR } from "./locales/es-AR/guests";
-import { housekeepingEn } from "./locales/en/housekeeping";
-import { housekeepingEsAR } from "./locales/es-AR/housekeeping";
-import { reportsEn } from "./locales/en/reports";
-import { reportsEsAR } from "./locales/es-AR/reports";
-import { usersEn } from "./locales/en/users";
-import { usersEsAR } from "./locales/es-AR/users";
-import { networkEn } from "./locales/en/network";
-import { networkEsAR } from "./locales/es-AR/network";
+import { en, esAR } from "./generated-catalog";
+import type { MessageKey } from "./generated-catalog";
+
+export { en, esAR };
+export type { MessageKey } from "./generated-catalog";
 
 export type Locale = "es-AR" | "en";
 const STORAGE_KEY = "hms.locale";
 const DEFAULT_LOCALE: Locale = "es-AR";
 
-export const en = { ...commonEn, ...receptionEn, ...billingEn, ...roomsEn, ...guestsEn, ...housekeepingEn, ...reportsEn, ...usersEn, ...networkEn } as const;
-
-export type MessageKey = keyof typeof en;
-type Catalog = { [K in MessageKey]: string };
-
-export const esAR: Catalog = { ...commonEsAR, ...receptionEsAR, ...billingEsAR, ...roomsEsAR, ...guestsEsAR, ...housekeepingEsAR, ...reportsEsAR, ...usersEsAR, ...networkEsAR };
-
+type Catalog = Record<MessageKey, string>;
 const catalogs: Record<Locale, Catalog> = { en, "es-AR": esAR };
 
 function interpolate(template: string, values?: Record<string, string | number>) {
