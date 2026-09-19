@@ -6,51 +6,48 @@ Status: `BINDING DEFINITION`; ordering refined by `04a-sequencing-refinement.md`
 
 Each increment proves domain/API transition, invalid-state and stale/concurrency rejection, exact state, truthful audit, authorization, OpenAPI/client alignment, responsive browser journey and cross-module consequence. Green UI alone is insufficient.
 
+UX-bearing increments additionally prove `21-app-interaction-contract.md`: persistent shell, focused task surfaces, filter/history continuity, product dialogs, feedback/focus and reduced-motion behavior.
+
 ## Representative operational scenarios
 
 ### A — Normal departure
-Checked-in guest -> authoritative Billing review -> checkout -> booking checked out -> room DIRTY (or MAINTENANCE with blocking case) -> downstream work -> cleaning -> AVAILABLE. Checkout settlement uses stored authoritative booking total and does not reprice accommodation under D9.
+Checked-in guest -> authoritative Billing review -> checkout -> booking checked out -> room DIRTY or MAINTENANCE -> downstream work -> cleaning -> AVAILABLE.
 
 ### B — Reassignment
-Checked-in guest -> valid destination for remaining stay -> show destination-price consequence -> confirm -> remaining inventory moves; destination OCCUPIED; old room DIRTY/MAINTENANCE; history preserved; booking total/invoice reconciled; downstream turnover completes.
+Checked-in guest -> valid remaining-stay destination -> show destination/Billing consequence -> reason -> confirm -> atomic move/history/turnover/reconciliation.
 
 ### C — Blocking occupied incident
-Guest OCCUPIED -> BLOCKING case -> relocation attention -> explicit reassignment -> old room MAINTENANCE -> resolve -> DIRTY -> clean -> AVAILABLE. No automatic guest move.
+OCCUPIED -> BLOCKING case -> Reception attention -> explicit move/checkout -> MAINTENANCE -> resolve -> DIRTY -> clean -> AVAILABLE.
 
 ### D — Non-blocking incident
-Open NON_BLOCKING on OCCUPIED, AVAILABLE, DIRTY or CLEANING -> physical state unchanged -> advisory case -> resolve with physical state unchanged. On AVAILABLE the case does not independently remove sellability/readiness.
+NON_BLOCKING on eligible state -> physical state unchanged -> advisory -> resolve with physical state unchanged.
 
 ### E — Arrival exceptions
-No-show from hotel-local arrival date: CONFIRMED never occupied -> NO_SHOW -> inventory release -> room unchanged -> **booking total unchanged** -> financial evidence preserved. Cancellation is separate CONFIRMED terminal intent and likewise preserves total; neither adds automatic refund/penalty.
+No-show/cancellation preserve total and financial evidence; no automatic refund/penalty. Late arrival is contextual metadata.
 
 ### F — Stay extension
-Checked-in guest -> later checkout -> added nights free -> display source pricing result (`total nights × current room price + extras`) -> confirm -> dates/inventory/total/invoice atomic. Conflict rolls all parts back.
+Checked-in -> later checkout -> added-night availability -> repricing/D11 preview -> confirm -> atomic inventory/date/Billing mutation.
 
 ### G — Checkout settlement
-`settled` succeeds only when authoritative account is fully paid. Positive balance uses pending-approved + reference + admin-only override. Catalog price changes after booking do not cause checkout repricing; validation uses the stored authoritative total.
+Settled requires authoritative valid Billing; pending-approved is explicit admin-only branch.
 
-### H — Metadata/state no-repricing regression
-After reservation creation, change the room catalog price, then independently:
-- edit only guest/name/ordinary notes;
-- record/rerecord late arrival;
-- check in;
-- cancel;
-- mark no-show;
-- checkout.
-
-Each state/evidence-only action preserves the stored booking total (and invoice amount where one exists), except checkout may alter settlement/invoice lifecycle against that same total. By contrast a room/date edit, reassignment, extension or extra charge demonstrates the defined pricing mutation and invoice reconciliation.
+### H — D9 no-repricing regression
+Guest/name/notes-only, late arrival, check-in, cancellation, no-show and checkout preserve stored total after catalog-price change. Priced mutations demonstrate the opposite.
 
 ### I — Late arrival
-Confirmed booking -> valid future ETA whose hotel-local date is inside stay + note min 6 -> persist front-desk metadata/actor/time/audit -> remains CONFIRMED -> board shows context. Past/out-of-stay ETA, short note or non-confirmed booking rejects without state/financial drift.
+Valid explicit-offset future ETA inside hotel-local stay persists context; invalid time/note/state rejects without drift.
+
+### J — App interaction continuity
+Reception filters/search active -> open case -> open focused task -> navigate contextually to Room -> Back -> exact Reception filter/selection/list context restored. Destructive actions use product dialog, not native confirm. Mobile queue -> full-screen task -> success/back returns to preserved queue context. Refresh/conflict keeps known data visible.
 
 ## Sequence
 
-`04a-sequencing-refinement.md` is authoritative. Wave 0 prerequisites precede material UI growth. Every Wave 1 state-changing domain item gets a bounded Task Contract and independent review.
+`04a` is authoritative. Wave 0 prerequisites precede material UI growth. Wave 2.0 interaction primitives precede conversion of individual module flows to the new app-like model.
 
 ## Stop conditions
 
-Return to definition/Human Gate if BUILD proposes new commercial policy, multiple simultaneous maintenance cases, split-stay/automatic relocation, cross-D1 atomicity, paid/production dependency, weakened lifecycle guards, unregistered source departure, or hidden pricing side effect.
+Return to definition/Human Gate if BUILD proposes new commercial policy, multiple simultaneous maintenance cases, split-stay/automatic relocation, cross-D1 atomicity, paid/production dependency, weakened lifecycle guards, unregistered source departure, hidden pricing side effect, or interaction behavior that contradicts `21`.
 
 ## Product simulation gate
 
-Before acceptance execute the full `18-end-to-end-scope-matrix.md` synthetic shift, including scenarios A-I, and record context switches, confirmations, conflict recovery, operator-memory burden, next-action clarity and contracted mobile/desktop evidence.
+Before acceptance execute the full `18-end-to-end-scope-matrix.md` synthetic shift, including scenarios A-J. Record context switches, confirmations, filter/selection loss, conflict recovery, Back/Forward continuity, operator-memory burden, next-action clarity and contracted mobile/tablet/desktop evidence.
