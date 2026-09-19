@@ -1,17 +1,55 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { en, esAR } from "./generated-catalog";
-import type { MessageKey } from "./generated-catalog";
+import type { MessageKey } from "./message-key";
 
-export { en, esAR };
-export type { MessageKey } from "./generated-catalog";
+export type { MessageKey } from "./message-key";
 
 export type Locale = "es-AR" | "en";
 const STORAGE_KEY = "hms.locale";
 const DEFAULT_LOCALE: Locale = "es-AR";
+const EXPECTED_MESSAGE_COUNT = 462;
 
 type Catalog = Record<MessageKey, string>;
+export const en = {} as Catalog;
+export const esAR = {} as Catalog;
 const catalogs: Record<Locale, Catalog> = { en, "es-AR": esAR };
+let catalogLoadPromise: Promise<void> | null = null;
+
+function replaceCatalog(target: Catalog, next: Catalog) {
+  for (const key of Object.keys(target)) delete target[key as MessageKey];
+  Object.assign(target, next);
+}
+
+function validateCatalog(value: unknown, locale: Locale): Catalog {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`Invalid i18n catalog: ${locale}`);
+  const catalog = value as Catalog;
+  if (Object.keys(catalog).length !== EXPECTED_MESSAGE_COUNT) throw new Error(`Incomplete i18n catalog: ${locale}`);
+  return catalog;
+}
+
+export function installCatalogsForTest(next: Record<Locale, Catalog>) {
+  replaceCatalog(en, validateCatalog(next.en, "en"));
+  replaceCatalog(esAR, validateCatalog(next["es-AR"], "es-AR"));
+}
+
+export function preloadI18n(fetcher: typeof fetch = fetch): Promise<void> {
+  if (Object.keys(en).length === EXPECTED_MESSAGE_COUNT && Object.keys(esAR).length === EXPECTED_MESSAGE_COUNT) return Promise.resolve();
+  if (catalogLoadPromise) return catalogLoadPromise;
+  catalogLoadPromise = Promise.all([
+    fetcher("/i18n/en.json"),
+    fetcher("/i18n/es-AR.json"),
+  ]).then(async ([enResponse, esResponse]) => {
+    if (!enResponse.ok || !esResponse.ok) throw new Error("Unable to load HMS translations");
+    installCatalogsForTest({
+      en: validateCatalog(await enResponse.json(), "en"),
+      "es-AR": validateCatalog(await esResponse.json(), "es-AR"),
+    });
+  }).catch(error => {
+    catalogLoadPromise = null;
+    throw error;
+  });
+  return catalogLoadPromise;
+}
 
 function interpolate(template: string, values?: Record<string, string | number>) {
   if (!values) return template;
