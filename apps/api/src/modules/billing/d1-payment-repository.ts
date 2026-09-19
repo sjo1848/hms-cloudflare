@@ -136,4 +136,5 @@ export class D1PaymentRepository implements BillingPaymentRepository {
           ),
     ]);
     return results[0]?.meta.changes === 1 && results[1]?.meta.changes === 1 && results[2]?.meta.changes === 1 && results[3]?.meta.changes === 1;
-  }}
+  }
+}
