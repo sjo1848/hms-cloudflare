@@ -21,7 +21,7 @@ Status: `BINDING SUPPLEMENT`
 - FRONTDESK: board requires bookings.read under the canonical role map.
 - API: `19-api-command-contract-map.md` owns routes, payloads, capabilities and side effects; no shadow/direct-state shortcut.
 - CONTRACT: additive API/Billing fields must be represented in OpenAPI/client types before browser acceptance.
-- DEPARTURE: only `20-intentional-target-departures.md` authorizes source divergence.
+- DEPARTURE: only `20-intentional-target-departures.md` authorizes source divergence; D12 narrowly owns interaction/navigation modernization and cannot weaken domain/RBAC/source capability coverage.
 - UX-SHELL: module changes preserve one mounted application shell; protected workspaces wait for capability bootstrap before mount/fetch.
 - UX-NAV-RBAC: desktop/mobile navigation visibility and canonical landing derive from server effective capabilities; frontend visibility never substitutes backend authorization.
 - UX-HISTORY: meaningful filters/selection/context survive refresh and Back/Forward; contextual return restores prior scroll or selected item into view; contextual navigation cannot globally reset scroll.
