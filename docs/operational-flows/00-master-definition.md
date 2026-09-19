@@ -9,7 +9,7 @@ Canonical set: `18`, `19`, `20`, `21`, `22`, `16`, `05`, operational invariants 
 
 ## Governing rules
 
-HMS follows hotel operator workflow. Physical room state, sellability and immediate readiness are distinct. Source behavior is preserved unless registered in `20`. UX continuity in `21/22` is product behavior, not cosmetic latitude.
+HMS follows hotel operator workflow. Physical room state, sellability and immediate readiness are distinct. Source behavior is preserved unless registered in `20`. D12 is the narrow user-authorized interaction/navigation modernization boundary; UX continuity in `21/22` is product behavior, not cosmetic latitude.
 
 ## Booking lifecycle / arrival
 
@@ -46,7 +46,7 @@ Required product behavior:
 - Reception-selected booking controls embedded Billing;
 - skeleton/refresh/conflict/dirty-close/focus behavior;
 - short reduced-motion-aware transitions with no heavy animation dependency;
-- direct core mobile navigation for Reception/Rooms/Guests/Housekeeping;
+- capability-aware direct mobile navigation for the current user's authorized core operational modules;
 - focused flow-specific transitions for reservation, check-in, late arrival, cancellation/no-show, reassignment, extension, checkout, maintenance, payments/charges and cash close.
 
 ## Technical waves
@@ -62,4 +62,4 @@ Frozen rate redesign, new arrival cutoffs, automatic credit disposition, VOIDED 
 
 ## Definition exit
 
-Close only when domain + E2E + API + RBAC + D1-D11 + E2E-21 + `21/22` are contradiction-free, Pre-Critic passes, a fresh immutable Artifact+Boundary is reviewed, and orchestration points to that artifact. Previous A7/B7 are superseded after UX scope expansion.
+Close only when domain + E2E + API + RBAC + D1-D12 + E2E-21 + `21/22` are contradiction-free, Pre-Critic passes, a fresh immutable Artifact+Boundary is reviewed, and orchestration points to that artifact. Previous A7/B7 are superseded after UX scope expansion.
