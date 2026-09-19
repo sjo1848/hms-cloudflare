@@ -79,7 +79,7 @@ describe("API foundation", () => {
       prepare: (query: string) => ({
         bind: (...values: string[]) => ({
           first: async () => query.includes("network_memberships") ? null : { name: "Hotel Norte" },
-          all: async () => ({ results: [{ hotel_id: "hotel-a", role: "receptionist", email: "a@example.test", operational_binding: "HOTEL_DEMO_DB" }] }),
+          all: async () => ({ results: [{ hotel_id: "hotel-a", role: "receptionist", email: "a@example.test", operational_binding: "HOTEL_DEMO_DB", timezone: "America/Argentina/Mendoza" }] }),
         }),
       }),
     } as unknown as D1Database;
@@ -91,7 +91,14 @@ describe("API foundation", () => {
       HOTEL_SECOND_DB: control,
     },);
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({ hotel_id: "hotel-a", hotel_name: "Hotel Norte" });
+    const payload = await response.json() as Record<string, unknown>;
+    expect(payload).toMatchObject({
+      hotel_id: "hotel-a",
+      hotel_name: "Hotel Norte",
+      hotel_timezone: "America/Argentina/Mendoza",
+    });
+    expect(payload.hotel_local_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(payload.server_now).toMatch(/Z$/);
   });
 
 });
