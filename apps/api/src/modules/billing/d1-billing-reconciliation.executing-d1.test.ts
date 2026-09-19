@@ -44,7 +44,22 @@ async function database() {
   ]);
 
   const migration = readFileSync(new URL("../../../schema/hotel-migrations/0019_billing_reconciliation.sql", import.meta.url), "utf8");
-  await db.exec(migration);
+  const statements: string[] = [];
+  let buffer = "";
+  let inTrigger = false;
+  for (const rawLine of migration.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("--")) continue;
+    if (!inTrigger && /^CREATE TRIGGER\b/i.test(line)) inTrigger = true;
+    buffer += `${rawLine}\n`;
+    if ((inTrigger && /^END;$/i.test(line)) || (!inTrigger && line.endsWith(";"))) {
+      statements.push(buffer.trim());
+      buffer = "";
+      inTrigger = false;
+    }
+  }
+  if (buffer.trim()) throw new Error("Unterminated migration statement");
+  for (const statement of statements) await db.prepare(statement).run();
   return db;
 }
 
