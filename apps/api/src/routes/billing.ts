@@ -5,7 +5,7 @@ import { ApiError } from "../errors";
 import { jsonBody, requiredText } from "../validation";
 import { hasCapability } from "../auth/capabilities";
 import { D1PaymentRepository } from "../modules/billing/d1-payment-repository";
-import { integerCents, normalizePaymentMethod, paymentTarget, priorPaymentMatches } from "../modules/billing/domain";
+import { integerCents, normalizePaymentMethod, paymentTarget, priorPaymentMatches, reconciliationProblem } from "../modules/billing/domain";
 
 type BillingApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 type Db = ApiVariables["operationalDatabase"];
@@ -34,10 +34,6 @@ async function bookingExists(db: Db, id: string) {
   return db.prepare("SELECT id, total_cents FROM bookings WHERE id = ?1").bind(id).first<{ id: string; total_cents: number }>();
 }
 
-async function invoiceView(db: Db, bookingId: string) {
-  return db.prepare("SELECT id, booking_id, amount_cents, paid_amount_cents, status, payment_method, payment_reference, paid_at, created_at FROM invoices WHERE booking_id = ?1").bind(bookingId).first();
-}
-
 async function shiftOpening(db: Db): Promise<string> {
   const last = await db.prepare("SELECT closing_time FROM cash_closures ORDER BY closing_time DESC LIMIT 1").first<{ closing_time: string }>();
   if (last?.closing_time) return last.closing_time;
@@ -60,8 +56,11 @@ async function recordPayment(c: Ctx, id: string, body: Body, settle: boolean) {
   const note = body.note == null ? null : requiredText(body.note, "note", 1, 250);
   const operationToken = body.operation_token == null ? crypto.randomUUID() : requiredText(body.operation_token, "operation_token", 8, 120);
   const invoice = await repository.findInvoice(id);
+  const problem = reconciliationProblem(invoice);
+  if (problem === "VOIDED") throw ApiError.conflict("Invoice is voided");
+  if (problem === "LEDGER_MISMATCH") throw ApiError.conflict("Invoice payment ledger is inconsistent");
   const target = paymentTarget(amount, booking, invoice);
-  if (target == null) throw ApiError.conflict("Booking is already settled");
+  if (target == null) throw ApiError.conflict("Payment exceeds the current remaining balance or booking is already settled");
   const prior = await repository.findPriorPayment(operationToken);
   if (prior) {
     if (!priorPaymentMatches(prior, id, target, pm, reference, note)) throw ApiError.conflict("Payment operation token was reused with different details");
@@ -89,16 +88,37 @@ export function createBillingRoutes(): BillingApp {
   const app = new Hono<{ Bindings: Env; Variables: ApiVariables }>();
   app.get("/bookings/:id/extra-charges", async c => { requireCap(c, "bookings.extra_charges.read"); const rows = await c.get("operationalDatabase").prepare("SELECT id, booking_id, description, amount_cents, category, created_at FROM extra_charges WHERE booking_id = ?1 ORDER BY created_at, id").bind(c.req.param("id")).all(); return c.json(rows.results); });
   app.post("/bookings/:id/extra-charges", async c => {
-    requireCap(c, "bookings.extra_charges.write"); const id = c.req.param("id"); const db = c.get("operationalDatabase"); if (!await bookingExists(db, id)) throw ApiError.notFound("Booking not found");
-    const body = await jsonBody<Body>(c.req.raw); const description = requiredText(body.description, "description", 1, 200); const amount = cents(body.amount_cents, "amount_cents", true); const category = body.category == null ? "OTHER" : requiredText(body.category, "category", 1, 40).toUpperCase(); const now = new Date().toISOString();
-    const audit = String(c.env.LOCAL_DEV_AUTH) === "true" && c.req.header("x-test-fail-financial-write") === "extra-charge"
-      ? db.prepare("INSERT INTO financial_events (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at) VALUES (?1,'EXTRA_CHARGE',?2,NULL,?3,?4,?5,?6)").bind(crypto.randomUUID(), id, c.get("requestId"), c.get("membership").hotelId, JSON.stringify({ amount_cents: amount, category }), now)
-      : db.prepare("INSERT INTO financial_events (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at) VALUES (?1,'EXTRA_CHARGE',?2,?3,?4,?5,?6,?7)").bind(crypto.randomUUID(), id, c.get("identity").subject, c.get("requestId"), c.get("membership").hotelId, JSON.stringify({ amount_cents: amount, category }), now);
-    try { await db.batch([db.prepare("INSERT INTO extra_charges (id,booking_id,description,amount_cents,category,created_at) VALUES (?1,?2,?3,?4,?5,?6)").bind(crypto.randomUUID(), id, description, amount, category, now), audit]); } catch { throw ApiError.conflict("Extra charge could not be recorded atomically"); }
-    return c.json({ ok: true, amount_cents: amount }, 201);
+    requireCap(c, "bookings.extra_charges.write");
+    const id = c.req.param("id");
+    const repository = new D1PaymentRepository(c.get("operationalDatabase"));
+    const booking = await repository.findBooking(id);
+    if (!booking) throw ApiError.notFound("Booking not found");
+    const body = await jsonBody<Body>(c.req.raw);
+    const description = requiredText(body.description, "description", 1, 200);
+    const amount = cents(body.amount_cents, "amount_cents", true);
+    const category = body.category == null ? "OTHER" : requiredText(body.category, "category", 1, 40).toUpperCase();
+    const invoice = await repository.findInvoice(id);
+    const problem = reconciliationProblem(invoice);
+    if (problem === "VOIDED") throw ApiError.conflict("Invoice is voided");
+    if (problem === "LEDGER_MISMATCH") throw ApiError.conflict("Invoice payment ledger is inconsistent");
+    try {
+      const won = await repository.recordExtraCharge({
+        bookingId: id,
+        expectedTotalCents: booking.total_cents,
+        description,
+        amountCents: amount,
+        category,
+        actor: { subject: c.get("identity").subject, requestId: c.get("requestId"), hotelId: c.get("membership").hotelId },
+        forceAuditFailure: String(c.env.LOCAL_DEV_AUTH) === "true" && c.req.header("x-test-fail-financial-write") === "extra-charge",
+      }, invoice);
+      if (!won) throw new Error("priced mutation did not win");
+    } catch {
+      throw ApiError.conflict("Extra charge could not be recorded atomically");
+    }
+    return c.json({ ok: true, amount_cents: amount, invoice: await repository.invoiceView(id) }, 201);
   });
-  app.get("/bookings/:id/invoice", async c => { requireCap(c, "billing.invoice.read"); const db = c.get("operationalDatabase"); if (!await bookingExists(db, c.req.param("id"))) throw ApiError.notFound("Booking not found"); return c.json(await invoiceView(db, c.req.param("id"))); });
-  app.get("/invoices", async c => { requireCap(c, "billing.invoices.read"); const rows = await c.get("operationalDatabase").prepare("SELECT id, booking_id, amount_cents, paid_amount_cents, status, payment_method, payment_reference, paid_at, created_at FROM invoices ORDER BY created_at DESC").all(); return c.json(rows.results); });
+  app.get("/bookings/:id/invoice", async c => { requireCap(c, "billing.invoice.read"); const repository = new D1PaymentRepository(c.get("operationalDatabase")); if (!await repository.findBooking(c.req.param("id"))) throw ApiError.notFound("Booking not found"); return c.json(await repository.invoiceView(c.req.param("id"))); });
+  app.get("/invoices", async c => { requireCap(c, "billing.invoices.read"); const rows = await c.get("operationalDatabase").prepare("SELECT id, booking_id, amount_cents, paid_amount_cents, MAX(amount_cents-paid_amount_cents,0) AS remaining_cents, MAX(paid_amount_cents-amount_cents,0) AS credit_cents, status, payment_method, payment_reference, paid_at, created_at FROM invoices ORDER BY created_at DESC").all(); return c.json(rows.results); });
   app.get("/bookings/:id/payments", async c => { requireCap(c, "billing.invoice.read"); const rows = await c.get("operationalDatabase").prepare("SELECT id, invoice_id, booking_id, amount_cents, payment_method, payment_reference, note, received_by_user_id, received_at FROM payment_entries WHERE booking_id = ?1 ORDER BY received_at DESC, id DESC").bind(c.req.param("id")).all(); return c.json(rows.results); });
   app.post("/bookings/:id/payments", async c => c.json(await recordPayment(c, c.req.param("id"), await jsonBody<Body>(c.req.raw), false)));
   app.post("/bookings/:id/settle-payment", async c => c.json(await recordPayment(c, c.req.param("id"), await jsonBody<Body>(c.req.raw), true)));
