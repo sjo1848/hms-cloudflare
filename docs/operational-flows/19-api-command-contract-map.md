@@ -7,6 +7,21 @@ Canonical routes, authorization, evidence, pricing/Billing side effects and comp
 ## Global rules
 API remains under `/api/v1`; hotel identity comes only from authenticated context. Backend capability/evidence checks are authoritative. Stale/conflicting writes fail closed with no partial mutation/success event.
 
+## Application bootstrap / navigation capabilities
+
+`GET /api/v1/auth/me` remains the application bootstrap contract.
+
+Target additive response must expose the effective capability set used for UI presentation/navigation, derived server-side from the same canonical capability authority that protects routes. The frontend must not maintain an independent role -> capability matrix for authorization-sensitive visibility.
+
+Minimum bootstrap data for app navigation:
+- authenticated identity;
+- active hotel context when present;
+- role/network context as already supported;
+- effective tenant capabilities for the active membership;
+- effective network capabilities when relevant to SaaS/network surfaces.
+
+These capability lists are UX hints only: every API request remains backend-authorized. A hidden control is never the security boundary.
+
 ## Pricing / Billing boundary — D9/D11
 Pricing-affecting: reservation room/date change, reassignment, extension, extra charge, or future explicitly priced command. Other booking metadata/state/evidence writes preserve stored total.
 
