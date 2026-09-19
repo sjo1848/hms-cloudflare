@@ -43,6 +43,8 @@ Top-level module navigation and contextual navigation are different:
 
 Query IDs remain authorization-neutral.
 
+Navigation is capability-aware for presentation. Before mounting a protected module, the shell resolves bootstrap capabilities. Unauthorized direct URLs render an in-shell Forbidden/access-denied state rather than briefly exposing the module and failing later. Backend capability checks remain authoritative.
+
 ## 3. Desktop master/detail and mobile focused-task model
 
 Desktop >= 1024 px:
@@ -319,8 +321,8 @@ Transitions must never delay an operation or block input longer than their visua
 
 The UX contract is not complete until browser tests prove at least:
 
-1. switch Reception -> Rooms -> Back with shell stable and prior Reception filters/context restored;
-2. mobile primary navigation without hamburger-only dependency for core operations;
+1. as an authorized admin/ops user, switch Reception -> Rooms -> Back with shell stable and prior Reception filters/context restored;
+2. mobile primary navigation directly exposes the current user's authorized core operations without hamburger-only dependency; unauthorized core modules are absent, and direct URL access shows Forbidden while backend remains protected;
 3. new reservation opens focused sheet/drawer and returns to queue after success;
 4. check-in step transition + success -> authoritative next case;
 5. reassignment shows price/room consequence before confirmation;
