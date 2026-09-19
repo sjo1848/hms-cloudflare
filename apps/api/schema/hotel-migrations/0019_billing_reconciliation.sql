@@ -39,26 +39,20 @@ BEFORE UPDATE OF total_cents ON bookings
 WHEN NEW.total_cents <> OLD.total_cents
   AND EXISTS (SELECT 1 FROM invoices WHERE booking_id = OLD.id)
 BEGIN
-  SELECT CASE
-    WHEN EXISTS (
-      SELECT 1 FROM invoices
-      WHERE booking_id = OLD.id AND status = 'VOIDED'
-    )
-    THEN RAISE(ABORT, 'D11 invoice is voided')
-  END;
-  SELECT CASE
-    WHEN EXISTS (
-      SELECT 1
-      FROM invoices i
-      WHERE i.booking_id = OLD.id
-        AND i.paid_amount_cents <> (
-          SELECT COALESCE(SUM(p.amount_cents), 0)
-          FROM payment_entries p
-          WHERE p.invoice_id = i.id
-        )
-    )
-    THEN RAISE(ABORT, 'D11 payment ledger mismatch')
-  END;
+  SELECT CASE WHEN EXISTS (
+    SELECT 1 FROM invoices
+    WHERE booking_id = OLD.id AND status = 'VOIDED'
+  ) THEN RAISE(ABORT, 'D11 invoice is voided') END;
+  SELECT CASE WHEN EXISTS (
+    SELECT 1
+    FROM invoices i
+    WHERE i.booking_id = OLD.id
+      AND i.paid_amount_cents <> (
+        SELECT COALESCE(SUM(p.amount_cents), 0)
+        FROM payment_entries p
+        WHERE p.invoice_id = i.id
+      )
+  ) THEN RAISE(ABORT, 'D11 payment ledger mismatch') END;
 END;
 
 CREATE TRIGGER billing_reconcile_total_apply
