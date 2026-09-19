@@ -3,7 +3,7 @@
 Status: `BINDING DEFINITION / IMPLEMENTATION LOCKED`
 
 Baseline: `acceptance/staging@26239b76b919266de07d7bece5977296647f109c`.
-Canonical authority: master, E2E matrix, API map, departure register, app interaction contract, transition matrix, maintenance RBAC and operational invariants.
+Canonical authority: master, E2E matrix, API map, departure register, app interaction contract + interaction flow matrix, transition matrix, maintenance RBAC and operational invariants.
 
 ## Binding decisions
 1. Physical room state, future sellability and immediate readiness are distinct.
@@ -28,11 +28,11 @@ Canonical authority: master, E2E matrix, API map, departure register, app intera
 20. Raw generated JS <=300000 before material UI growth.
 21. Success audit exists iff authoritative mutation wins.
 22. Only departures in `20` are authorized.
-23. App interaction follows `21-app-interaction-contract.md` and `CF-OPS-UX-001`: persistent shell, focused task surfaces, product dialogs, filter/history continuity, selected-context Billing, accessible short motion and responsive master/detail/focused-task behavior are binding product semantics.
+23. D12 app interaction follows `21-app-interaction-contract.md`, `22-interaction-flow-matrix.md` and `CF-OPS-UX-001`: persistent shell, capability-aware navigation/landing, focused task surfaces, product dialogs, filter/history continuity, selected-context Billing, accessible short motion and responsive master/detail/focused-task behavior are binding product semantics.
 
-## Human Gates
+## Review / Human Gate boundary
 
-None open while UX definition is being reconciled. A7/B7 external-critic gate is superseded by the explicit UX scope expansion and must not be used as final authorization.
+No unresolved product-policy Human Gate remains inside this definition. A fresh immutable external independent definition review is mandatory before implementation planning. Artifact/version bookkeeping belongs in orchestration state/evidence, not this binding business decision.
 
 ## Deferred
 
