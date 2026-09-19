@@ -11,12 +11,13 @@ This matrix converts the interaction contract into implementation-sized behavior
 | Area | Current behavior | Target behavior |
 |---|---|---|
 | Module switch | page component replacement inside shell, router always calls `scrollTo(0,0)` | persistent shell + short content transition; contextual navigation restores target entity and Back restores prior list position |
+| Default route | unknown/root path effectively falls through to Reception | bootstrap capabilities choose canonical authorized landing; housekeeping/network-only users never mount Reception first |
 | Mobile primary navigation | hamburger dialog contains all modules | capability-aware direct primary navigation for authorized core modules; visibility comes from server bootstrap capabilities; More sheet for authorized secondary modules |
 | Filter/history | most filters live only in component state | meaningful filter/selection state survives refresh and Back/Forward; shareable pieces use query params |
 | Loading refresh | several workspaces replace content with text loading | first-load skeleton; refresh preserves known data with subtle refreshing state |
 | Feedback | plain error/status blocks dominate | inline validation, blocking banner, conflict state, toast for non-blocking success |
 
-Bootstrap requirement: `/api/v1/auth/me` supplies deterministic `capabilities[]` and `network_capabilities[]` derived from backend authority. Local duplicate role maps are not accepted as the navigation authorization source.
+Bootstrap requirement: `/api/v1/auth/me` supplies deterministic `capabilities[]` and `network_capabilities[]` derived from backend authority. Module visibility and root landing use the single mapping in `19`. Local duplicate role maps are not accepted as the navigation authorization source.
 
 Unauthorized direct URL behavior: shell remains visible, protected workspace is not mounted before capability guard resolves, and an in-app Forbidden state is shown. Backend 403 remains independently tested.
 
