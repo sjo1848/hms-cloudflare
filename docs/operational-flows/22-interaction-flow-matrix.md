@@ -11,10 +11,12 @@ This matrix converts the interaction contract into implementation-sized behavior
 | Area | Current behavior | Target behavior |
 |---|---|---|
 | Module switch | page component replacement inside shell, router always calls `scrollTo(0,0)` | persistent shell + short content transition; contextual navigation restores target entity and Back restores prior list position |
-| Mobile primary navigation | hamburger dialog contains all modules | role-aware direct primary navigation for authorized core modules among Reception, Rooms, Guests, Housekeeping; More sheet for authorized secondary modules |
+| Mobile primary navigation | hamburger dialog contains all modules | capability-aware direct primary navigation for authorized core modules; visibility comes from server bootstrap capabilities; More sheet for authorized secondary modules |
 | Filter/history | most filters live only in component state | meaningful filter/selection state survives refresh and Back/Forward; shareable pieces use query params |
 | Loading refresh | several workspaces replace content with text loading | first-load skeleton; refresh preserves known data with subtle refreshing state |
 | Feedback | plain error/status blocks dominate | inline validation, blocking banner, conflict state, toast for non-blocking success |
+
+Bootstrap requirement: `/api/v1/auth/me` (or its canonical bootstrap equivalent) supplies effective capabilities from backend authority. Local duplicate role maps are not accepted as the navigation authorization source.
 
 ## B. Reception transition matrix
 
