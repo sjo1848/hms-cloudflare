@@ -27,13 +27,13 @@ Every row requires tenant authorization, concurrency guards, atomic truth, truth
 | E2E-18 | Audit | Success evidence iff authoritative operation wins. |
 | E2E-19 | Synthetic shift | Positive/negative flows including D9-D11. |
 | E2E-20 | Contract conformance | Runtime/tests/OpenAPI/client/browser match canonical semantics. |
-| E2E-21 | App interaction continuity | Persistent shell; module/task transitions; drawer/sheet/dialog taxonomy; no native confirm; filters/history/scroll preserved; selected Reception booking controls Billing; skeleton/refresh/conflict states; focus return; reduced-motion; mobile primary nav and focused-task return. |
+| E2E-21 | App interaction continuity | Persistent shell; capability-derived landing/navigation/Forbidden; module/task transitions; drawer/sheet/dialog taxonomy; no native confirm; filters/history/scroll preserved; selected Reception booking controls Billing; skeleton/refresh/conflict states; focus return; reduced-motion; mobile focused-task return. |
 
 ## Mandatory D11 proof
 Use the exact D11 matrix from `20`, including ledger equality and no fabricated payment evidence.
 
 ## Mandatory UX proof — E2E-21
-Browser tests cover the scenarios in `21-app-interaction-contract.md`: Reception -> Rooms -> Back restoration, mobile primary navigation, reservation/check-in/reassignment/checkout focused surfaces, product cancellation/no-show dialogs, selected-booking Billing coupling, conflict recovery, filter persistence and reduced-motion.
+Browser tests cover the scenarios in `21-app-interaction-contract.md`: Reception -> Rooms -> Back restoration, capability-aware desktop/mobile navigation and denied direct URL behavior, reservation/check-in/reassignment/checkout focused surfaces, product cancellation/no-show dialogs, selected-booking Billing coupling, conflict recovery, filter persistence and reduced-motion.
 
 ## Out of scope
 Frozen-rate redesign, automatic credit disposition/refund, VOIDED recovery command, new arrival cutoffs, split-stay/auto relocation, multi-case maintenance, new OUT_OF_ORDER, paid realtime, production/cutover/data migration, unrelated redesign.
