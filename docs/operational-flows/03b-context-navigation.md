@@ -2,7 +2,7 @@
 
 Status: `BINDING DEFINITION`
 
-The booking is the primary context when the operator is handling a reservation/stay. For cleaning or maintenance, the room is primary context.
+Booking is primary context for reservation/stay work; room is primary for cleaning/maintenance. Interaction/history semantics are additionally governed by `21-app-interaction-contract.md`.
 
 ## Deep-link contract
 
@@ -11,12 +11,31 @@ The booking is the primary context when the operator is handling a reservation/s
 - `/guests?guest_id=<id>`
 - `/housekeeping?room_id=<id>&date=<yyyy-mm-dd>`
 
-Query context never authorizes access. Each page must validate the requested entity through the authorized API response. Missing/invalid IDs fall back safely.
+Query context never authorizes access. Missing/invalid IDs fail safely.
 
-Selecting an entity may update the URL so refresh/back/forward preserve context. Context navigation should not clear unrelated filters/search without need.
+## App-navigation semantics
+
+The shell remains mounted across module switches. Contextual navigation focuses the referenced entity rather than merely loading the module top.
+
+Back/Forward restores:
+- module;
+- meaningful query filters;
+- selected entity where valid;
+- prior list/queue context and scroll position when practical.
+
+A contextual navigation must not unconditionally force `scrollTo(0,0)`. Top-level module navigation may use remembered/top workspace position, but returning via Back must restore the prior operational context.
 
 ## Contextual actions
 
-Reception can open the assigned room, guest, and relevant housekeeping task. Rooms can open active/upcoming booking, guest, and housekeeping/maintenance. Guests can open a stay in Reception or its room. Housekeeping can open a related departure/booking when lifecycle state blocks the task.
+Reception -> assigned room, guest, housekeeping/maintenance context.
+Rooms -> active/upcoming booking, guest, housekeeping/maintenance.
+Guests -> stay in Reception or related room.
+Housekeeping -> blocking booking/departure in Reception.
 
-Reception-selected booking governs embedded Billing. Billing must never silently retain a different booking.
+## Selected Billing context
+
+Reception-selected booking governs embedded Billing. Billing cannot silently retain/reselect another booking.
+
+## Filter state
+
+Meaningful filters/search belong to application navigation state per `21`: query params for shareable/history-relevant state, optional session memory only when URL does not specify them.
