@@ -11,7 +11,7 @@ This matrix converts the interaction contract into implementation-sized behavior
 | Area | Current behavior | Target behavior |
 |---|---|---|
 | Module switch | page component replacement inside shell, router always calls `scrollTo(0,0)` | persistent shell + short content transition; contextual navigation restores target entity and Back restores prior list position |
-| Mobile primary navigation | hamburger dialog contains all modules | bottom/direct primary navigation for Reception, Rooms, Guests, Housekeeping; More sheet for secondary modules |
+| Mobile primary navigation | hamburger dialog contains all modules | role-aware direct primary navigation for authorized core modules among Reception, Rooms, Guests, Housekeeping; More sheet for authorized secondary modules |
 | Filter/history | most filters live only in component state | meaningful filter/selection state survives refresh and Back/Forward; shareable pieces use query params |
 | Loading refresh | several workspaces replace content with text loading | first-load skeleton; refresh preserves known data with subtle refreshing state |
 | Feedback | plain error/status blocks dominate | inline validation, blocking banner, conflict state, toast for non-blocking success |
@@ -165,11 +165,12 @@ Rules:
 
 1. Opening a focused task creates a closeable task state without losing underlying workspace.
 2. Browser Back while task is open closes the task before leaving the module when feasible.
-3. Dirty task intercepts close/Back with discard dialog.
-4. Success clears dirty state before closing.
-5. Contextual cross-module navigation creates a real history entry so Back returns to the originating workspace state.
-6. Escape follows the same close rules as explicit close.
-7. No overlay may trap the operator after its underlying entity becomes invalid; conflict refresh provides a safe close/return path.
+3. Selecting another module while a dirty task is open triggers discard confirmation before navigation.
+4. Dirty task intercepts explicit close/Back with discard dialog.
+5. Success clears dirty state before closing.
+6. Contextual cross-module navigation creates a real history entry so Back returns to the originating workspace state.
+7. Escape follows the same close rules as explicit close.
+8. No overlay may trap the operator after its underlying entity becomes invalid; conflict refresh provides a safe close/return path.
 
 ## I. Motion rules
 
@@ -192,7 +193,7 @@ The later BUILD must remove or replace these behaviors:
 - Reception-embedded Billing independent booking selector;
 - Rooms inline create form;
 - Guests inline create form;
-- hamburger-only mobile access to core operational modules;
+- hamburger-only mobile access to the current user's authorized core operational modules;
 - plain loading replacement where authoritative prior data can remain visible;
 - filter/search state that disappears on refresh/history navigation.
 
