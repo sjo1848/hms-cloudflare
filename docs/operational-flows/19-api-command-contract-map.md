@@ -22,6 +22,23 @@ Minimum bootstrap data for app navigation:
 
 Both arrays are server-derived from the canonical capability authority and deterministically ordered for stable clients/tests.
 
+Canonical module visibility:
+- Reception `/bookings` -> `bookings.read`;
+- Rooms `/rooms` -> `rooms.read`;
+- Guests `/guests` -> `guests.read`;
+- Housekeeping `/housekeeping` -> `housekeeping.read`;
+- Reports `/reports` -> `reports.revenue.read` under the current module contract;
+- Users `/users` -> `users.read`;
+- Network `/network` -> `saas.hotels.read` from effective network capabilities.
+
+Canonical landing from `/` after bootstrap:
+1. `/bookings` when `bookings.read` exists;
+2. otherwise `/housekeeping` when `housekeeping.read` exists;
+3. otherwise `/network` when `saas.hotels.read` exists in network capabilities;
+4. otherwise the first explicitly authorized configured module, or `/forbidden` when none exists.
+
+This landing rule preserves the current operational emphasis while avoiding a false Reception mount for housekeeping/network-only users.
+
 These capability lists are UX hints only: every API request remains backend-authorized. A hidden control/client route guard is never the security boundary. A direct URL to a module lacking its required effective capability renders the in-app forbidden state and performs no ordinary protected module fetch before the guard resolves.
 
 ## Pricing / Billing boundary — D9/D11
