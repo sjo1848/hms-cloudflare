@@ -1,5 +1,9 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { en, esAR, formatCurrencyForLocale, formatDateForLocale, initialLocale, pluralForLocale, translateForLocale } from "./index";
+import { en, esAR, formatCurrencyForLocale, formatDateForLocale, initialLocale, installCatalogsForTest, pluralForLocale, translateForLocale } from "./index";
+
+const readCatalog = (name: string) => JSON.parse(readFileSync(new URL(`../../public/i18n/${name}.json`, import.meta.url), "utf8"));
+installCatalogsForTest({ en: readCatalog("en"), "es-AR": readCatalog("es-AR") });
 
 describe("typed HMS i18n", () => {
   it("keeps exact catalog parity and defaults to es-AR outside the browser", () => {

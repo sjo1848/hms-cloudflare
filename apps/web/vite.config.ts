@@ -4,6 +4,6 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   root: "apps/web",
-  build: { outDir: "dist", emptyOutDir: true },
+  build: { outDir: "dist", emptyOutDir: true, modulePreload: { polyfill: false } },
   server: { proxy: { "/api": "http://127.0.0.1:8787" } },
 });
