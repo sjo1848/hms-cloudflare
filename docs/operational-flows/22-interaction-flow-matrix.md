@@ -173,9 +173,9 @@ Filter-count rule: category badges are computed from the authoritative board/dat
 
 1. Opening a focused task creates a closeable task state without losing underlying workspace.
 2. Only one primary drawer/sheet is open at once; subordinate creation/edit steps stay inside it. A confirmation dialog may overlay the task temporarily and returns to it on cancel.
-3. Browser Back while task is open closes the task before leaving the module when feasible.
+3. Focused task open/close participates in app history. Browser Back closes the top confirmation dialog first if present, otherwise the focused task, before it can leave the underlying workspace.
 4. Selecting another module while a dirty task is open triggers discard confirmation before navigation.
-5. Dirty task intercepts explicit close/Back with discard dialog.
+5. Dirty task intercepts explicit close/Back with discard dialog; cancelling discard leaves both history position and task open.
 6. Success clears dirty state before closing.
 7. Contextual cross-module navigation creates a real history entry so Back returns to the originating workspace state.
 8. Escape follows the same close rules as explicit close.
