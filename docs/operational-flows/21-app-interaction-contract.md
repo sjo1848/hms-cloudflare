@@ -106,6 +106,13 @@ Toast is never the only evidence for a blocking failure.
 
 Native `window.confirm` / `window.alert` are not accepted product UX.
 
+Overlay stack rules:
+- one primary task drawer/sheet at a time;
+- do not open a second drawer on top of a drawer;
+- subordinate work such as inline guest creation stays inside the parent reservation flow as a step/subview;
+- a confirmation dialog may temporarily overlay the current task and returns focus/state to that task if cancelled;
+- closing a child confirmation never silently closes the parent task.
+
 ## 5. Reception flow transitions
 
 Reception is a queue-driven workspace.
@@ -209,6 +216,7 @@ Filters are first-class application state, not disposable component state.
 Common behavior:
 - search input;
 - filter chips/toggles with counts;
+- category counts represent the authoritative selected board/date scope before free-text search; the currently visible filtered-result count is shown separately when useful;
 - active-filter indicator;
 - one-click `Clear filters`;
 - filters do not reset after ordinary mutation/refresh;
