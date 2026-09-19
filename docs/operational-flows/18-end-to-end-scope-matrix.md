@@ -2,34 +2,40 @@
 
 Status: `BINDING SCOPE CONTRACT / IMPLEMENTATION LOCKED`
 
-Every row requires tenant-scoped backend authorization, concurrency guards, atomic truth, success audit only when mutation wins, authoritative reload and browser proof where UI exists. Canonical companions: `16`, `19`, `20`, `05`, operational invariants.
+Every row requires tenant authorization, concurrency guards, atomic truth, truthful audit, authoritative reload and browser proof where UI exists. Canonical companions: `16`, `19`, `20`, `21`, `05`, operational invariants.
 
 | ID | Flow | Binding E2E result / acceptance boundary |
 |---|---|---|
-| E2E-00 | Foundations | Raw JS <=300000; hotel IANA timezone/server local date; incremental migrations; shared D11 financial foundation; existing gates green. |
-| E2E-01 | Reservation/edit | Atomic create. Confirmed room/date change is priced; guest/name/notes-only edit preserves total. |
-| E2E-02 | Inline guest+reservation | Atomic guest+booking under both required capabilities. |
-| E2E-03 | Check-in | CONFIRMED + checklist + readiness -> CHECKED_IN/OCCUPIED; total unchanged. |
-| E2E-04 | Cancellation | CONFIRMED + reason; inventory released; room/total unchanged; financial evidence preserved. |
-| E2E-05 | No-show | Eligible CONFIRMED + reason -> NO_SHOW; inventory released; room/total unchanged. |
-| E2E-06 | Late arrival | Existing PATCH; explicit-offset ETA; valid hotel-local stay date; context/audit only. |
-| E2E-07 | Reassignment | Remaining claims move; room turnover/history; destination repricing + D11 reconciliation atomic. |
-| E2E-08 | NON_BLOCKING maintenance | OCCUPIED/AVAILABLE/DIRTY/CLEANING allowed; physical state preserved; RBAC enforced. |
-| E2E-09 | BLOCKING occupied maintenance | Guest remains until explicit vacancy; sale/readiness blocked; vacancy routes MAINTENANCE. |
-| E2E-10 | Vacant BLOCKING | Vacant eligible state -> MAINTENANCE; resolve -> DIRTY. |
+| E2E-00 | Foundations | Raw JS <=300000; hotel timezone/local date; migrations; shared D11 financial foundation; gates green. |
+| E2E-01 | Reservation/edit | Atomic create; room/date priced; metadata-only preserves total. |
+| E2E-02 | Inline guest+reservation | Atomic guest+booking. |
+| E2E-03 | Check-in | CONFIRMED + checklist/readiness -> CHECKED_IN/OCCUPIED; total unchanged. |
+| E2E-04 | Cancellation | CONFIRMED + reason; inventory release; financial evidence preserved. |
+| E2E-05 | No-show | Eligible CONFIRMED + reason -> NO_SHOW; inventory release; room/total unchanged. |
+| E2E-06 | Late arrival | Explicit-offset ETA; valid local stay date; context/audit only. |
+| E2E-07 | Reassignment | Remaining claims move; room turnover/history; repricing + D11 atomic. |
+| E2E-08 | NON_BLOCKING maintenance | Eligible room states preserved; RBAC enforced. |
+| E2E-09 | BLOCKING occupied maintenance | Guest remains; sale/readiness blocked; vacancy -> MAINTENANCE. |
+| E2E-10 | Vacant BLOCKING | Eligible vacant state -> MAINTENANCE; resolve -> DIRTY. |
 | E2E-11 | Housekeeping | DIRTY -> CLEANING -> AVAILABLE only when truthful. |
-| E2E-12 | Checkout+Billing | Total preserved; settlement follows authoritative Billing; D11-ineligible invoice fails closed. |
-| E2E-13 | Extension | Added nights atomic; current-room repricing + D11 reconciliation; conflict full rollback. |
-| E2E-14 | Billing reconciliation | Every priced mutation satisfies complete D11, including payment-ledger correlation, derived remaining/credit, status/timestamps and ineligible-invoice rejection. |
-| E2E-15 | Front-desk board | bookings.read -> admin/ops/receptionist; housekeeping/saas_admin denied. |
-| E2E-16 | Context+freshness | Stable IDs context only; refresh after mutation/focus/entry/poll. |
-| E2E-17 | Continuation | Preserve search/filter; authoritative reload; next case deterministic. |
-| E2E-18 | Audit | Success evidence iff authoritative operation wins; financial audit distinguishes price reconciliation from payment received. |
-| E2E-19 | Synthetic shift | Exercise all positive/negative flows including D9-D11 and ledger correlation. |
-| E2E-20 | Contract conformance | Runtime/tests/OpenAPI/client/browser match canonical routes/capabilities/time/pricing/Billing semantics. |
+| E2E-12 | Checkout+Billing | Stored total; authoritative Billing; ineligible invoice fails closed. |
+| E2E-13 | Extension | Added nights atomic; repricing + D11; conflict rollback. |
+| E2E-14 | Billing reconciliation | Full D11 including ledger correlation and derived remaining/credit. |
+| E2E-15 | Front-desk board | Canonical authorization and deterministic queue/readiness. |
+| E2E-16 | Context+freshness | Stable IDs; refresh after mutation/focus/entry/poll. |
+| E2E-17 | Continuation | Preserve search/filter; next case deterministic. |
+| E2E-18 | Audit | Success evidence iff authoritative operation wins. |
+| E2E-19 | Synthetic shift | Positive/negative flows including D9-D11. |
+| E2E-20 | Contract conformance | Runtime/tests/OpenAPI/client/browser match canonical semantics. |
+| E2E-21 | App interaction continuity | Persistent shell; module/task transitions; drawer/sheet/dialog taxonomy; no native confirm; filters/history/scroll preserved; selected Reception booking controls Billing; skeleton/refresh/conflict states; focus return; reduced-motion; mobile primary nav and focused-task return. |
 
-Mandatory D11 proof uses the exact matrix in `20`: price increase/decrease/credit, PAID/PENDING timestamp outcomes, zero-remaining payment rejection, VOIDED conflicts, and after every case `invoice.paid_amount_cents == SUM(payment_entries.amount_cents)`. Repricing must leave payment-entry count/content and payment method/reference unchanged while recording a distinct reconciliation audit.
+## Mandatory D11 proof
+Use the exact D11 matrix from `20`, including ledger equality and no fabricated payment evidence.
 
-Out of scope: frozen-rate redesign, automatic credit disposition/refund, VOIDED recovery command, new arrival cutoffs, split-stay/auto relocation, multi-case maintenance, new OUT_OF_ORDER, paid realtime, production/cutover/data migration, unrelated module redesign.
+## Mandatory UX proof — E2E-21
+Browser tests cover the scenarios in `21-app-interaction-contract.md`: Reception -> Rooms -> Back restoration, mobile primary navigation, reservation/check-in/reassignment/checkout focused surfaces, product cancellation/no-show dialogs, selected-booking Billing coupling, conflict recovery, filter persistence and reduced-motion.
 
-The wave completes only with bounded implementation, automated/domain/API proof, cross-module proof and required browser evidence for every row.
+## Out of scope
+Frozen-rate redesign, automatic credit disposition/refund, VOIDED recovery command, new arrival cutoffs, split-stay/auto relocation, multi-case maintenance, new OUT_OF_ORDER, paid realtime, production/cutover/data migration, unrelated redesign.
+
+The wave completes only with bounded implementation, automated/domain/API proof, cross-module proof and required browser evidence for every applicable row.
