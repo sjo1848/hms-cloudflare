@@ -15,9 +15,11 @@ Desktop:
 - module switch does not produce a blank/full-page flash.
 
 Mobile:
-- primary operations use a bottom navigation bar: Reception, Rooms, Guests, Housekeeping;
-- secondary areas (Reports, Users, Network, settings/language) live behind a `More` sheet/menu according to authorization;
-- opening/closing navigation must preserve the active task.
+- primary navigation is role-aware and exposes direct entries only for authorized core operational modules among Reception, Rooms, Guests and Housekeeping;
+- admin/ops may see the full core set; receptionist/housekeeping see only modules their backend capability model permits;
+- secondary authorized areas (Reports, Users, Network, settings/language) live behind a `More` sheet/menu;
+- opening/closing navigation chrome must preserve the active task;
+- selecting another module while a dirty task is open invokes the same discard guard as closing that task; clean task exit may navigate normally.
 
 Navigation motion:
 - module content transition target: 140–220 ms, opacity + small horizontal/vertical translation;
