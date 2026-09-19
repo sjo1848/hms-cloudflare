@@ -16,7 +16,8 @@ Desktop:
 
 Mobile:
 - primary navigation is role-aware and exposes direct entries only for authorized core operational modules among Reception, Rooms, Guests and Housekeeping;
-- admin/ops may see the full core set; receptionist/housekeeping see only modules their backend capability model permits;
+- direct navigation visibility is driven by server-derived effective capabilities from the application bootstrap contract; the frontend must not copy an independent role/capability authorization matrix;
+- admin/ops may see the full core set when their effective capabilities allow it; receptionist/housekeeping see only authorized modules;
 - secondary authorized areas (Reports, Users, Network, settings/language) live behind a `More` sheet/menu;
 - opening/closing navigation chrome must preserve the active task;
 - selecting another module while a dirty task is open invokes the same discard guard as closing that task; clean task exit may navigate normally.
