@@ -2,7 +2,7 @@
 
 Status: `BINDING SCOPE CONTRACT / IMPLEMENTATION LOCKED`
 
-Every row requires tenant authorization, concurrency guards, atomic truth, truthful audit, authoritative reload and browser proof where UI exists. Canonical companions: `16`, `19`, `20`, `21`, `05`, operational invariants.
+Every row requires tenant authorization, concurrency guards, atomic truth, truthful audit, authoritative reload and browser proof where UI exists. Canonical companions: `16`, `19`, `20`, `21`, `22`, `05`, operational invariants.
 
 | ID | Flow | Binding E2E result / acceptance boundary |
 |---|---|---|
