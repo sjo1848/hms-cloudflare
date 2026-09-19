@@ -97,11 +97,18 @@ function Bookings() {
             const booking = item.booking;
             const actionKey: MessageKey = item.lane === "arrival" ? "reception.queueActionCheckIn" : item.lane === "departure" ? "reception.queueActionCheckout" : "reception.queueActionOpen";
             return <button type="button" className={`reception-queue-row lane-${item.lane} ${selected?.id === booking.id ? "selected" : ""}`} key={booking.id} onClick={() => selectCase(booking)}>
-              <span className="reception-row-top"><span className="reception-lane-badge">{t(laneLabelKeys[item.lane])}</span><strong>{t("common.room")} {booking.room_number}</strong></span>
-              <strong className="reception-guest-name">{booking.guest_name}</strong>
-              <span className="reception-row-reason">{t(reasonLabelKeys[item.reason])}</span>
-              <small>{formatDate(booking.check_in)} → {formatDate(booking.check_out)}</small>
-              <span className="reception-row-action">{t(actionKey)} →</span>
+              <span className="reception-row-primary">
+                <strong className="reception-guest-name">{booking.guest_name}</strong>
+                <strong className="reception-room-number">{t("common.room")} {booking.room_number}</strong>
+              </span>
+              <span className="reception-row-context">
+                <span className="reception-lane-badge">{t(laneLabelKeys[item.lane])}</span>
+                <span className="reception-row-reason">{t(reasonLabelKeys[item.reason])}</span>
+              </span>
+              <span className="reception-row-footer">
+                <small>{formatDate(booking.check_in)} → {formatDate(booking.check_out)}</small>
+                <span className="reception-row-action">{t(actionKey)} →</span>
+              </span>
             </button>;
           })}
           {!loading && visibleQueue.length === 0 && <div className="reception-queue-empty"><strong>{queueFilter === "attention" ? t("reception.queueEmptyAttention") : t("reception.queueEmpty")}</strong></div>}
