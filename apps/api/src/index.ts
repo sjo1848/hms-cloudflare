@@ -17,6 +17,7 @@ import { createBillingRoutes } from "./routes/billing";
 import { createAdminRoutes } from "./routes/admin";
 import { OperationalRoutingError, resolveOperationalDatabase } from "./routing";
 import { createAnalyticsRoutes } from "./routes/analytics";
+import { createHotelTimeContext } from "./time/hotel-time";
 
 const app = new Hono<{ Bindings: Env; Variables: ApiVariables }>();
 
@@ -117,6 +118,7 @@ app.use("/api/v1/*", async (context, next) => {
   context.set("membership", membership);
   context.set("networkRole", network?.role);
   context.set("operationalDatabase", operationalDatabase);
+  context.set("hotelTime", createHotelTimeContext(membership.timeZone));
   await next();
 });
 
@@ -136,6 +138,9 @@ app.get("/api/v1/auth/me", async (context) => {
     hotel_name: hotel?.name ?? null,
     role: membership?.role ?? null,
     operational_binding: membership?.operationalBinding ?? null,
+    hotel_timezone: membership?.timeZone ?? null,
+    hotel_local_date: context.get("hotelTime")?.localDate ?? null,
+    server_now: context.get("hotelTime")?.nowIso ?? new Date().toISOString(),
     network_role: networkRole ?? null,
   });
 });

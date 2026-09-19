@@ -5,26 +5,28 @@ import { ApiError } from "../errors";
 import { isoDate } from "../validation";
 import type { OperationalDatabase } from "../routing";
 import { loadNetworkHotelMetrics } from "../modules/analytics/network-metrics";
+import { hotelLocalDate } from "../time/hotel-time";
 
 type AnalyticsApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 type Db = OperationalDatabase;
 type DateRange = { start: string; end: string };
 
 function hotelCapability(context: any, capability: string): void { if (!hasCapability(context.get("membership").role, capability)) throw ApiError.forbidden(); }
-function optionalRange(context: any): DateRange {
-  const current = new Date().toISOString().slice(0, 10);
+function requestLocalDate(context: any): string {
+  return context.get("hotelTime")?.localDate ?? hotelLocalDate("UTC");
+}
+function optionalRange(context: any, current = requestLocalDate(context)): DateRange {
   const end = context.req.query("end") ?? current;
   const start = context.req.query("start") ?? new Date(Date.parse(`${current}T00:00:00Z`) - 30 * 86400000).toISOString().slice(0, 10);
   const normalized = { start: isoDate(start, "start"), end: isoDate(end, "end") };
   if (normalized.end < normalized.start) throw ApiError.badRequest("end must be on or after start");
   return normalized;
 }
-function today(): string { return new Date().toISOString().slice(0, 10); }
 function monthStart(value: string): string { return `${value.slice(0, 8)}01`; }
 function derived(occupancyRate: number, revenue: number, activeBookings: number) { const adr = activeBookings > 0 ? Math.trunc(revenue / activeBookings) : 0; return { adr_cents: adr, rev_par_cents: Math.trunc((occupancyRate * adr) / 100) }; }
 
-async function dashboard(db: Db) {
-  const now = today(); const month = monthStart(now);
+async function dashboard(db: Db, now: string) {
+  const month = monthStart(now);
   const row = await db.prepare(`SELECT
     (SELECT COALESCE(SUM(total_cents),0) FROM bookings WHERE status NOT IN ('CANCELLED','NO_SHOW') AND check_in >= ?1) AS revenue_month_cents,
     (SELECT COUNT(*) FROM bookings WHERE status='CONFIRMED' AND check_in=?2) AS today_check_ins,
@@ -40,8 +42,8 @@ async function dashboard(db: Db) {
   return { revenue_month_cents: Number(row?.revenue_month_cents ?? 0), occupancy_rate: occupancyRate, today_check_ins: Number(row?.today_check_ins ?? 0), active_bookings_count: Number(row?.active_bookings_count ?? 0), arrivals_today: alerts.results.map(alert), departures_today: departures.results.map(alert), ...derived(occupancyRate, Number(row?.revenue_month_cents ?? 0), Number(row?.active_bookings_count ?? 0)) };
 }
 
-async function hotelMetrics(db: Db, range: DateRange) {
-  const summary = await dashboard(db);
+async function hotelMetrics(db: Db, range: DateRange, current: string) {
+  const summary = await dashboard(db, current);
   const revenue = await db.prepare("SELECT COALESCE(SUM(total_cents),0) AS total FROM bookings WHERE status NOT IN ('CANCELLED','NO_SHOW') AND check_in >= ?1 AND check_in <= ?2").bind(range.start, range.end).first<{ total: number }>();
   const rows = await db.prepare(`WITH RECURSIVE days(day) AS (SELECT ?1 UNION ALL SELECT date(day,'+1 day') FROM days WHERE day < ?2) SELECT day AS date, (SELECT COUNT(DISTINCT b.room_id) FROM bookings b WHERE b.status IN ('CONFIRMED','CHECKED_IN') AND b.check_in <= days.day AND b.check_out > days.day) AS occupied_rooms, (SELECT COUNT(*) FROM rooms) AS total_rooms FROM days ORDER BY day`).bind(range.start, range.end).all<{ date: string; occupied_rooms: number; total_rooms: number }>();
   return { dashboard: summary, revenue_cents: Number(revenue?.total ?? 0), occupancy: rows.results.map(row => ({ date: row.date, occupied_rooms: Number(row.occupied_rooms ?? 0), total_rooms: Number(row.total_rooms ?? 0), occupancy_rate: Number(row.total_rooms ?? 0) === 0 ? 0 : (Number(row.occupied_rooms) * 100) / Number(row.total_rooms) })) };
@@ -56,16 +58,16 @@ function configuredDb(env: Env, binding: string): Db {
 
 export function createAnalyticsRoutes(): AnalyticsApp {
   const app = new Hono<{ Bindings: Env; Variables: ApiVariables }>();
-  app.get("/analytics/kpis", async context => { hotelCapability(context, "analytics.kpis.read"); return context.json(await dashboard(context.get("operationalDatabase"))); });
+  app.get("/analytics/kpis", async context => { hotelCapability(context, "analytics.kpis.read"); return context.json(await dashboard(context.get("operationalDatabase"), requestLocalDate(context))); });
   app.get("/reports/revenue", async context => { hotelCapability(context, "reports.revenue.read"); const range = optionalRange(context); const result = await context.get("operationalDatabase").prepare("SELECT check_in AS date, COALESCE(SUM(total_cents),0) AS revenue_cents FROM bookings WHERE status NOT IN ('CANCELLED','NO_SHOW') AND check_in >= ?1 AND check_in <= ?2 GROUP BY check_in ORDER BY check_in").bind(range.start, range.end).all(); return context.json(result.results); });
-  app.get("/reports/occupancy", async context => { hotelCapability(context, "reports.occupancy.read"); return context.json((await hotelMetrics(context.get("operationalDatabase"), optionalRange(context))).occupancy); });
+  app.get("/reports/occupancy", async context => { hotelCapability(context, "reports.occupancy.read"); const current = requestLocalDate(context); return context.json((await hotelMetrics(context.get("operationalDatabase"), optionalRange(context, current), current)).occupancy); });
   app.get("/hotels/network-kpis", async context => {
     if (!hasCapability(context.get("networkRole") ?? "", "saas.hotels.read")) throw ApiError.forbidden();
-    const range = optionalRange(context);
-    const current = today();
-    const hotels = await context.env.CONTROL_DB.prepare("SELECT h.id,h.slug,h.operational_binding,COALESCE(m.name,'') AS name,m.plan_tier FROM control_hotels h LEFT JOIN hotel_admin_metadata m ON m.hotel_id=h.id WHERE h.active=1 ORDER BY h.slug").all<any>();
+    const range = optionalRange(context, hotelLocalDate("UTC"));
+    const hotels = await context.env.CONTROL_DB.prepare("SELECT h.id,h.slug,h.operational_binding,COALESCE(m.name,'') AS name,m.plan_tier,COALESCE(m.timezone,'America/Argentina/Mendoza') AS timezone FROM control_hotels h LEFT JOIN hotel_admin_metadata m ON m.hotel_id=h.id WHERE h.active=1 ORDER BY h.slug").all<any>();
     const rows = [];
     for (const hotel of hotels.results) {
+      const current = hotelLocalDate(hotel.timezone);
       const metrics = await loadNetworkHotelMetrics(configuredDb(context.env, hotel.operational_binding), range, current, monthStart(current));
       rows.push({ hotel_id: hotel.id, hotel_name: hotel.name, plan_tier: hotel.plan_tier ?? "BASIC", ...metrics });
     }
