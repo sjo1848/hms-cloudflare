@@ -16,6 +16,7 @@ This matrix converts the interaction contract into implementation-sized behavior
 | Filter/history | most filters live only in component state | meaningful filter/selection state survives refresh and Back/Forward; shareable pieces use query params |
 | Loading refresh | several workspaces replace content with text loading | first-load skeleton; refresh preserves known data with subtle refreshing state |
 | Feedback | plain error/status blocks dominate | inline validation, blocking banner, conflict state, toast for non-blocking success |
+| Access bootstrap | modules can mount while `/auth/me` context is still resolving | shell may render, protected workspace waits for capability bootstrap; stale-access 403 refreshes bootstrap once and corrects nav without replaying mutation |
 
 Bootstrap requirement: `/api/v1/auth/me` supplies deterministic `capabilities[]` and `network_capabilities[]` derived from backend authority. Module visibility and root landing use the single mapping in `19`. Local duplicate role maps are not accepted as the navigation authorization source.
 
