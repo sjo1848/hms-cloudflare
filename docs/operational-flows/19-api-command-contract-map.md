@@ -35,11 +35,17 @@ Canonical landing from `/` after bootstrap:
 1. `/bookings` when `bookings.read` exists;
 2. otherwise `/housekeeping` when `housekeeping.read` exists;
 3. otherwise `/network` when `saas.hotels.read` exists in network capabilities;
-4. otherwise the first explicitly authorized configured module, or `/forbidden` when none exists.
+4. otherwise `/rooms` when `rooms.read` exists;
+5. otherwise `/guests` when `guests.read` exists;
+6. otherwise `/reports` when `reports.revenue.read` exists;
+7. otherwise `/users` when `users.read` exists;
+8. otherwise render the in-shell Forbidden/no-authorized-module state.
 
 This landing rule preserves the current operational emphasis while avoiding a false Reception mount for housekeeping/network-only users.
 
 These capability lists are UX hints only: every API request remains backend-authorized. A hidden control/client route guard is never the security boundary. A direct URL to a module lacking its required effective capability renders the in-app forbidden state and performs no ordinary protected module fetch before the guard resolves.
+
+If a previously authorized module later receives backend `403` because membership/capabilities changed, the client refreshes `/auth/me` once, updates navigation/landing truth and presents Forbidden/redirect as appropriate. It must not retry the denied business mutation automatically.
 
 ## Pricing / Billing boundary — D9/D11
 Pricing-affecting: reservation room/date change, reassignment, extension, extra charge, or future explicitly priced command. Other booking metadata/state/evidence writes preserve stored total.
