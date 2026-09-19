@@ -9,7 +9,7 @@ Purpose: HMS must behave like an operational application, not a collection of CR
 The application shell remains mounted while modules change. Sidebar/header/mobile navigation do not remount with page content.
 
 Desktop:
-- persistent left navigation;
+- persistent left navigation with the same capability-aware module visibility as mobile;
 - persistent hotel/role context;
 - main workspace changes inside the shell;
 - module switch does not produce a blank/full-page flash.
@@ -42,6 +42,8 @@ Top-level module navigation and contextual navigation are different:
 - invalid/deleted selected IDs fail safely and keep valid filters.
 
 Query IDs remain authorization-neutral.
+
+The root/unknown-safe landing is capability-derived using the canonical map in `19`; the app must not default every authenticated identity to Reception.
 
 Navigation is capability-aware for presentation. Before mounting a protected module, the shell resolves bootstrap capabilities. Unauthorized direct URLs render an in-shell Forbidden/access-denied state rather than briefly exposing the module and failing later. Backend capability checks remain authoritative.
 
