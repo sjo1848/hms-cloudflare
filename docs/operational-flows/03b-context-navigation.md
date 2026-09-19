@@ -6,7 +6,7 @@ Booking is primary context for reservation/stay work; room is primary for cleani
 
 ## Deep-link contract
 
-- `/reception?booking_id=<id>`
+- `/bookings?booking_id=<id>`
 - `/rooms?room_id=<id>`
 - `/guests?guest_id=<id>`
 - `/housekeeping?room_id=<id>&date=<yyyy-mm-dd>`
