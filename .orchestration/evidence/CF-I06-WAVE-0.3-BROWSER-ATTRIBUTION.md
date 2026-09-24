@@ -17,7 +17,7 @@ Baseline reference: `010d2ce08a0922bc24c0d42eb1d5c21c217ffd43`.
 | current | 1 | `CI_BROWSER_STANDARD=1 bash scripts/cf-i05-browser-regression.sh` | 1 | Reports: timeout waiting for exact `Daily occupancy`; logs showed concurrent report requests, local `workerd` broken pipe and Vite `socket hang up` |
 | current | 2 | same | 1 | Users: timeout in the admin flow; not the same surface as run 1 |
 | baseline | 1 | same | 1 | Housekeeping: timeout waiting for `Reason`; baseline does not reach Reports because it lacks the Wave 0.3 housekeeping refresh-race repair |
-| baseline | 2 | same | not completed | The baseline full runner remained blocked by the same earlier Housekeeping surface; no equivalent Reports assertion was reached |
+| baseline | 2 | same | 1 | Housekeeping: timeout in `waitForRoom`; baseline again does not reach Reports |
 
 ## Attribution
 
