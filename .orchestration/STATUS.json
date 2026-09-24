@@ -3,34 +3,34 @@
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
   "phase": "WAVE_1_1A_MAINTENANCE_IMPACT",
-  "runtime_status": "WAITING_EXTERNAL_REVIEW",
-  "resume_authorized": false,
-  "active_task": "WAVE-1.1A-MAINTENANCE-IMPACT",
+  "runtime_status": "RUNNING",
+  "resume_authorized": true,
+  "active_task": "WAVE-1.1-REASSIGNMENT",
   "last_completed_task": "WAVE-1.1A-MAINTENANCE-IMPACT-ARTIFACT",
-  "last_completed_head": "c3eeb8470dea17876c2d8e14f6d6ca554c741924",
-  "work_branch": "impl/wave-1.1a-maintenance-impact",
-  "pr": "#46 (Draft)",
-  "wave": "1.1a — Maintenance Impact Foundation",
-  "status_label": "DEVELOPMENT GATE PASS WITH SHARED/PREEXISTING BROWSER FINDING; PROMOTION BLOCKED",
-  "next_action": "EXTERNAL_INDEPENDENT_CRITIC_REVIEW_OF_ARTIFACT_C3EEB84",
+  "last_completed_head": "b28595ddf90056d39d31e331a85b1a193936f9ec",
+  "work_branch": "impl/wave-1.1-reassignment",
+  "pr": "#47 (Draft)",
+  "wave": "1.1 — In-Stay Reassignment",
+  "status_label": "OPEN / DEVELOPMENT IN PROGRESS; PROMOTION BLOCKED",
+  "next_action": "IMPLEMENT_WAVE_1_1_REASSIGNMENT_CONTRACT",
   "stop_reason": "NONE",
   "event": {
-    "seq": 120,
-    "id": "WAVE-1.1A-ARTIFACT-PUBLISHED-AWAITING-CRITIC",
-    "type": "EXTERNAL_REVIEW_REQUIRED"
+    "seq": 121,
+    "id": "WAVE-1.1-REASSIGNMENT-CONTRACT-AUTHORIZED",
+    "type": "RUNNING"
   },
   "external_review": {
     "required": true,
     "last_audited_head": null,
     "last_verdict": null,
     "artifact_head": "c3eeb8470dea17876c2d8e14f6d6ca554c741924",
-    "review_path": "Independent Critic via GitHub PR #46"
+    "review_path": "Independent Critic for later frozen integration/promotion"
   },
   "human_gate": null,
   "blocker": {
     "kind": "TECHNICAL",
     "surface": "ux-mobile-browser",
-    "area": "Shared browser promotion finding remains open; Wave 1.1a implementation active",
+    "area": "Shared browser promotion finding remains open; Wave 1.1 implementation active",
     "wave_pass": true,
     "attribution": "BROWSER_HARNESS_INFRA_FLAKINESS_SHARED_FINDING"
   },

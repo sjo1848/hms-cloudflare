@@ -4,20 +4,20 @@
 
 Project: HMS Cloudflare  
 Working directory: `/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare`
-Active branch: `impl/wave-1.1a-maintenance-impact`
-Current implementation artifact head: `c3eeb8470dea17876c2d8e14f6d6ca554c741924`
-PR: `#46 (Draft)`
-Wave: `1.1a — Maintenance Impact Foundation`
-Status: `DEVELOPMENT GATE PASS WITH SHARED/PREEXISTING BROWSER FINDING; PROMOTION BLOCKED`
-Runtime: `EXTERNAL REVIEW REQUIRED`
+Active branch: `impl/wave-1.1-reassignment`
+Base implementation boundary: `b28595ddf90056d39d31e331a85b1a193936f9ec`
+PR: `#47 (Draft)`
+Wave: `1.1 — In-Stay Reassignment`
+Status: `OPEN / DEVELOPMENT IN PROGRESS; PROMOTION BLOCKED`
+Runtime: `RUNNING`
 
-Wave 0.3 is recorded as `DEVELOPMENT GATE: PASS WITH SHARED/PREEXISTING BROWSER HARNESS FINDING`; its promotion gate remains blocked. Wave 1.1a is authorized from the validated Wave 0.3 artifact, using the remote V11 definition branch as read-only contract authority. Artifact commit `c3eeb84` contains the implementation, targeted regression evidence and invariant evidence and awaits Independent Critic review; this is not a self-approved substantive PASS.
+Wave 0.3 and Wave 1.1a are recorded as development passes with the shared/preexisting Reports browser finding; promotion remains blocked. Wave 1.1 is authorized from the immutable Wave 1.1a boundary, using the remote V11 definition branch as read-only contract authority. The external review remains required for later frozen integration/promotion and is not marked completed.
 
 ## VALIDATED EVIDENCE
 
 - D11 executing D1: `4/4 PASS`.
 - Foundation CI: PASS.
-- Unit/integration suite: `87/87 PASS`.
+- Unit/integration suite: inherited `87/87 PASS` before Wave 1.1 changes.
 - TypeScript/types: PASS.
 - Web build: PASS.
 - Cloudflare budgets: PASS.
@@ -57,11 +57,11 @@ The original investigation categories were:
 - No main mutation.
 - No production changes.
 - PR remains isolated/draft.
-- Wave 1.1a may proceed for development under its active Task Contract; the browser gate remains a promotion blocker and must not be hidden or promoted around.
+- Wave 1.1 may proceed for development under its active Task Contract; the browser gate remains a promotion blocker and must not be hidden or promoted around.
 
 ## NEXT AUTHORIZED ACTION
 
-Independent Critic review of artifact `c3eeb8470dea17876c2d8e14f6d6ca554c741924` via Draft PR #46. Do not modify Reports for this finding, do not merge/deploy/promote, and do not start reassignment until the external review boundary is resolved.
+Implement and validate the active `WAVE-1.1-REASSIGNMENT` contract. Do not modify Reports, do not merge/deploy/promote, and preserve the later external-review requirement.
 
 ## MODEL ROUTING
 
