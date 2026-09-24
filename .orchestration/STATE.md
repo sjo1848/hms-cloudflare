@@ -4,15 +4,14 @@
 
 Project: HMS Cloudflare  
 Working directory: `/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare`
-Active branch: `impl/wave-0.3-billing-reconciliation`
-Validated implementation artifact head: `1e900490d8958a4afaa601a18c0c0a177a916f12`  
-Current branch tip: orchestration-only evidence commits after that artifact (`130745dda8a93c92751be3cee9b7869b0a85fc43`)
-PR: `#45`
-Wave: `0.3 — D9/D11 Billing Reconciliation`
-Status: `OPEN / DEVELOPMENT CONTINUES; PROMOTION BLOCKED`
-Runtime: `BLOCKED ON V11 CONTRACT ARTIFACTS FOR NEXT WAVE`
+Active branch: `impl/wave-1.1a-maintenance-impact`
+Base artifact head: `efcbaf6fd98086ba29df0b839d29eb953655497d`
+PR: `draft / pending creation`
+Wave: `1.1a — Maintenance Impact Foundation`
+Status: `OPEN / DEVELOPMENT AUTHORIZED; PROMOTION BLOCKED`
+Runtime: `READY TO IMPLEMENT`
 
-Wave 0.3 is not declared global PASS. Its development implementation is complete for the validated scope; the browser/promotion gate remains open. Wave 1.1a is authorized in principle but has not started because the required V11 contract artifacts are absent from this repository.
+Wave 0.3 is recorded as `DEVELOPMENT GATE: PASS WITH SHARED/PREEXISTING BROWSER HARNESS FINDING`; its promotion gate remains blocked. Wave 1.1a is authorized from the validated Wave 0.3 artifact, using the remote V11 definition branch as read-only contract authority.
 
 ## VALIDATED EVIDENCE
 
@@ -39,7 +38,7 @@ Housekeeping initial board/date and mutation-refresh race is repaired and the br
 
 The A/B attribution is recorded in `.orchestration/evidence/CF-I06-WAVE-0.3-BROWSER-ATTRIBUTION.md`. Current runs failed on Reports and Users; the baseline full run fails earlier in Housekeeping because the Wave 0.3 repair is absent. The Wave 0.3 diff contains no Reports or analytics implementation changes.
 
-The next wave is blocked separately: the requested V11 files under `docs/operational-flows/` and the previously referenced `analysis/operational-flow-definition-v11` path are absent from the repository and visible history. Since those documents are the contract authority, no maintenance-impact semantics may be invented.
+The V11 contracts were fetched read-only from `origin/analysis/operational-flow-definition-v11` and are not merged into the implementation branch.
 
 The original investigation categories were:
 
@@ -58,11 +57,11 @@ The original investigation categories were:
 - No main mutation.
 - No production changes.
 - PR remains isolated/draft.
-- Wave 1.1a may proceed for development after its V11 contract artifacts are available; the browser gate remains a promotion blocker and must not be hidden or promoted around.
+- Wave 1.1a may proceed for development under its active Task Contract; the browser gate remains a promotion blocker and must not be hidden or promoted around.
 
 ## NEXT AUTHORIZED ACTION
 
-Obtain/restore the authoritative V11 contract artifacts, then create `impl/wave-1.1a-maintenance-impact` from the validated Wave 0.3 implementation head. Do not modify Reports for this finding, do not start reassignment, and do not promote while the browser/promotion gate remains open.
+Implement only the active `WAVE-1.1A-MAINTENANCE-IMPACT` contract. Do not modify Reports for this finding, do not start reassignment, and do not promote while the browser/promotion gate remains open.
 
 ## MODEL ROUTING
 
