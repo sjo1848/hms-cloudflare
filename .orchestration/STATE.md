@@ -8,10 +8,10 @@ Active branch: `impl/wave-0.3-billing-reconciliation`
 Head: `1e900490d8958a4afaa601a18c0c0a177a916f12`
 PR: `#45`
 Wave: `0.3 — D9/D11 Billing Reconciliation`
-Status: `OPEN / BLOCKED ON BROWSER GATE`
-Runtime: `BLOCKED`
+Status: `OPEN / DEVELOPMENT CONTINUES; PROMOTION BLOCKED`
+Runtime: `BLOCKED ON V11 CONTRACT ARTIFACTS FOR NEXT WAVE`
 
-Wave 0.3 is not PASS. Wave 1.1a has not started.
+Wave 0.3 is not declared global PASS. Its development implementation is complete for the validated scope; the browser/promotion gate remains open. Wave 1.1a is authorized in principle but has not started because the required V11 contract artifacts are absent from this repository.
 
 ## VALIDATED EVIDENCE
 
@@ -32,11 +32,15 @@ Successful extra-charge batch observation: `[1, 2, 1, 1]`. The second result may
 
 ## CURRENT BLOCKER
 
-Required gate: `ux-mobile-browser` — FAIL.
+Required promotion gate: `ux-mobile-browser` — FAIL / FLAKY SHARED RUNNER FINDING.
 
 Housekeeping initial board/date and mutation-refresh race is repaired and the browser trace reaches the end of housekeeping successfully. The full gate now fails afterward in Reports: concurrent `/reports/revenue` and `/reports/occupancy` requests cause local `workerd` to terminate with `broken pipe`, and Vite observes `socket hang up`. This is recorded as an additional runner/runtime finding; CF-I08 Reports code is out of CF-I06 scope and has not been modified.
 
-Investigation must distinguish:
+The A/B attribution is recorded in `.orchestration/evidence/CF-I06-WAVE-0.3-BROWSER-ATTRIBUTION.md`. Current runs failed on Reports and Users; the baseline full run fails earlier in Housekeeping because the Wave 0.3 repair is absent. The Wave 0.3 diff contains no Reports or analytics implementation changes.
+
+The next wave is blocked separately: the requested V11 files under `docs/operational-flows/` and the previously referenced `analysis/operational-flow-definition-v11` path are absent from the repository and visible history. Since those documents are the contract authority, no maintenance-impact semantics may be invented.
+
+The original investigation categories were:
 
 1. test race;
 2. application initialization race;
@@ -53,11 +57,11 @@ Investigation must distinguish:
 - No main mutation.
 - No production changes.
 - PR remains isolated/draft.
-- Wave 1.1a must not begin until the browser gate is reproducibly green.
+- Wave 1.1a may proceed for development after its V11 contract artifacts are available; the browser gate remains a promotion blocker and must not be hidden or promoted around.
 
 ## NEXT AUTHORIZED ACTION
 
-Investigate the remaining `ux-mobile-browser` Reports/workerd failure without absorbing CF-I08 product scope; establish a reproducible full-gate result or a valid equivalent runner diagnosis, then rerun Foundation CI and browser regression. After a reproducibly green browser gate, execute the Pre-Critic Gate and invariant evidence for the exact artifact before external review.
+Obtain/restore the authoritative V11 contract artifacts, then create `impl/wave-1.1a-maintenance-impact` from the validated Wave 0.3 implementation head. Do not modify Reports for this finding, do not start reassignment, and do not promote while the browser/promotion gate remains open.
 
 ## MODEL ROUTING
 

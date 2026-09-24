@@ -2,21 +2,21 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "WAVE_0_3_D9_D11_BILLING_RECONCILIATION",
+  "phase": "WAVE_1_1A_PREPARATION",
   "runtime_status": "BLOCKED",
   "resume_authorized": false,
-  "active_task": "CF-I06-WAVE-0.3-BROWSER-GATE",
+  "active_task": "WAVE-1.1A-CONTRACT-ARTIFACT-RECONCILIATION",
   "last_completed_task": "CF-I06-D11-RECONCILIATION-IMPLEMENTATION",
   "last_completed_head": "1e900490d8958a4afaa601a18c0c0a177a916f12",
   "work_branch": "impl/wave-0.3-billing-reconciliation",
   "pr": "#45",
   "wave": "0.3 — D9/D11 Billing Reconciliation",
   "status_label": "OPEN / BLOCKED ON BROWSER GATE",
-  "next_action": "INVESTIGATE_UX_MOBILE_BROWSER_REPORTS_WORKER_RUNTIME_FAILURE_WITHOUT_CF_I08_SCOPE",
-  "stop_reason": "HOUSEKEEPING_REPAIRED_FULL_GATE_BLOCKED_BY_REPORTS_WORKER_RUNTIME_FAILURE",
+  "next_action": "OBTAIN_AUTHORITATIVE_V11_MAINTENANCE_CONTRACT_ARTIFACTS_BEFORE_IMPLEMENTATION",
+  "stop_reason": "V11_CONTRACT_FILES_ABSENT;_BROWSER_PROMOTION_GATE_REMAINS_OPEN",
   "event": {
-    "seq": 117,
-    "id": "WAVE-0.3-BROWSER-GATE-REPORTS-RUNTIME-BLOCKED",
+    "seq": 118,
+    "id": "WAVE-1.1A-CONTRACT-ARTIFACTS-MISSING",
     "type": "BLOCKED"
   },
   "external_review": {
@@ -30,8 +30,9 @@
   "blocker": {
     "kind": "TECHNICAL",
     "surface": "ux-mobile-browser",
-    "area": "Reports browser surface / concurrent report requests / local workerd broken pipe after housekeeping passes",
-    "wave_pass": false
+    "area": "V11 maintenance-impact contract artifacts absent; browser promotion gate remains flaky/open",
+    "wave_pass": false,
+    "attribution": "BROWSER_HARNESS_INFRA_FLAKINESS_SHARED_FINDING"
   },
   "authorization": {
     "scope": "IMPLEMENTATION_BRANCH_ONLY",
@@ -40,7 +41,8 @@
     "main": false,
     "merge": false,
     "deploy": false,
-    "wave_1_1a": false
+    "wave_1_1a": false,
+    "development_continuation": true
   },
   "validated": {
     "d11_executing_d1": "4/4 PASS",
@@ -56,7 +58,8 @@
     "extra_charge_atomic_rollback": "CONFIRMED",
     "browser_gate": "FAIL",
     "housekeeping_browser_flow": "PASS THROUGH HOUSEKEEPING",
-    "reports_browser_flow": "FAIL: LOCAL_WORKER_BROKEN_PIPE_SOCKET_HANG_UP"
+    "reports_browser_flow": "FAIL: SHARED_RUNNER_RUNTIME_FINDING",
+    "browser_attribution": "CURRENT_REPORTS_AND_USERS_FAILURES; BASELINE_BLOCKED_EARLIER_IN_HOUSEKEEPING"
   },
   "method": {
     "human_routine_relay_forbidden": true,
