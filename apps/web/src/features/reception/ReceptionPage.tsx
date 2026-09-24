@@ -148,6 +148,7 @@ function Bookings() {
           <form onSubmit={reassign} aria-label={t("reception.reassignAria")}>
             <h4>{t("reception.nextReassign")}</h4>
             <select name="room_id" required><option value="">{t("reception.selectDestination")}</option>{rooms.filter(room => room.id !== selected.room_id && room.status === "Available").map(room => <option key={room.id} value={room.id}>{room.room_number}</option>)}</select>
+            <label>{t("common.reason")} <input name="reason" minLength={6} maxLength={250} required /></label>
             <button>{t("reception.reassignRoom")}</button>
           </form>
           <form onSubmit={checkout} aria-label={t("reception.checkoutAria")}>

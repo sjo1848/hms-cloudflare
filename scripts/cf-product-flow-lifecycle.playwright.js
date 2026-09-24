@@ -117,6 +117,7 @@
 
   const reassign = page.locator('form[aria-label="Reasignar habitación"]');
   await reassign.locator('select[name="room_id"]').selectOption("integral-ready-b");
+  await reassign.locator('input[name="reason"]').fill("Guest requested room move");
   const reassignResponse = page.waitForResponse(response =>
     response.url().includes("/reassign") && response.request().method() === "POST",
   );

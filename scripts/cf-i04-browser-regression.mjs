@@ -50,7 +50,7 @@ async page => {
     await page.setViewportSize({ width, height }); await page.goto("http://127.0.0.1:4173/bookings");
     await completeCheckIn(width, width === 375);
     await openCase();
-    await page.locator('form[aria-label="Reassign room"] select').selectOption("room-b"); await page.getByRole("button", { name: "Reassign room" }).click();
+    await page.locator('form[aria-label="Reassign room"] select').selectOption("room-b"); await page.locator('form[aria-label="Reassign room"] input[name="reason"]').fill("Guest requested room move"); await page.getByRole("button", { name: "Reassign room" }).click();
     await openCase();
     const checkout = page.locator('form[aria-label="Checkout"]');
     await checkout.locator('select[name="policy"]').selectOption(width === 390 || width === 430 ? "pending-approved" : "settled");

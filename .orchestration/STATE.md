@@ -4,20 +4,20 @@
 
 Project: HMS Cloudflare  
 Working directory: `/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare`
-Active branch: `impl/wave-1.1a-maintenance-impact`
-Current implementation artifact head: `c3eeb8470dea17876c2d8e14f6d6ca554c741924`
-PR: `#46 (Draft)`
-Wave: `1.1a — Maintenance Impact Foundation`
-Status: `DEVELOPMENT GATE PASS WITH SHARED/PREEXISTING BROWSER FINDING; PROMOTION BLOCKED`
-Runtime: `EXTERNAL REVIEW REQUIRED`
+Active branch: `impl/wave-1.1-reassignment`
+Base implementation boundary: `b28595ddf90056d39d31e331a85b1a193936f9ec`
+PR: `#47 (Draft)`
+Wave: `1.1 — In-Stay Reassignment`
+Status: `OPEN / WAVE 1.1 DEVELOPMENT CHECKPOINT; PROMOTION BLOCKED`
+Runtime: `READY_TO_RESUME at Controller checkpoint`
 
-Wave 0.3 is recorded as `DEVELOPMENT GATE: PASS WITH SHARED/PREEXISTING BROWSER HARNESS FINDING`; its promotion gate remains blocked. Wave 1.1a is authorized from the validated Wave 0.3 artifact, using the remote V11 definition branch as read-only contract authority. Artifact commit `c3eeb84` contains the implementation, targeted regression evidence and invariant evidence and awaits Independent Critic review; this is not a self-approved substantive PASS.
+Wave 0.3 and Wave 1.1a are recorded as development passes with the shared/preexisting browser finding; promotion remains blocked. Wave 1.1 backend/domain work reached Controller checkpoint at artifact `b8ed06521d4221fcaac08b838887405339c9cd1e`, using the remote V11 definition branch as read-only contract authority. The external review remains required and is not marked completed.
 
 ## VALIDATED EVIDENCE
 
 - D11 executing D1: `4/4 PASS`.
 - Foundation CI: PASS.
-- Unit/integration suite: `87/87 PASS`.
+- Unit/integration suite: `21 files / 88 tests PASS`.
 - TypeScript/types: PASS.
 - Web build: PASS.
 - Cloudflare budgets: PASS.
@@ -25,6 +25,8 @@ Wave 0.3 is recorded as `DEVELOPMENT GATE: PASS WITH SHARED/PREEXISTING BROWSER 
 - Wrangler dry-runs: PASS.
 - Staging SPA configuration validation: PASS.
 - `scripts/cf-i06-regression.sh`: PASS.
+- `scripts/cf-i03-regression.sh`: PASS after final reassignment trigger and financial-event assertions.
+- `scripts/cf-i05-regression.sh`: PASS.
 - Extra-charge D1 atomic rollback: confirmed.
 - `recordExtraCharge()` no longer uses SQLite `changes()` for causal chaining.
 
@@ -34,7 +36,7 @@ Successful extra-charge batch observation: `[1, 2, 1, 1]`. The second result may
 
 Required promotion gate: `ux-mobile-browser` — FAIL / FLAKY SHARED RUNNER FINDING.
 
-Housekeeping initial board/date and mutation-refresh race is repaired and the browser trace reaches the end of housekeeping successfully. The full gate now fails afterward in Reports waiting for `Daily occupancy`; prior runs also recorded concurrent `/reports/revenue` and `/reports/occupancy` requests, local `workerd` `broken pipe`, and Vite `socket hang up`. This is recorded as an additional runner/runtime finding; CF-I08 Reports code is out of CF-I06 scope and has not been modified.
+Housekeeping initial board/date and mutation-refresh race is repaired and the browser trace reaches the end of housekeeping successfully. The shared full gate fails afterward in Reports (`Daily occupancy`) or Users (`No users match this search`) depending on the run; prior runs also recorded concurrent report requests, local `workerd` `broken pipe`, and Vite `socket hang up`. This remains a shared/preexisting runner finding; Reports and Users code were not modified.
 
 The A/B attribution is recorded in `.orchestration/evidence/CF-I06-WAVE-0.3-BROWSER-ATTRIBUTION.md`. The current run passes Housekeeping and fails in Reports; the baseline full run fails earlier in Housekeeping because the Wave 0.3 repair is absent. The Wave 0.3 diff contains no Reports or analytics implementation changes.
 
@@ -57,11 +59,11 @@ The original investigation categories were:
 - No main mutation.
 - No production changes.
 - PR remains isolated/draft.
-- Wave 1.1a may proceed for development under its active Task Contract; the browser gate remains a promotion blocker and must not be hidden or promoted around.
+- Wave 1.1 may proceed for development under its active Task Contract; the browser gate remains a promotion blocker and must not be hidden or promoted around.
 
 ## NEXT AUTHORIZED ACTION
 
-Independent Critic review of artifact `c3eeb8470dea17876c2d8e14f6d6ca554c741924` via Draft PR #46. Do not modify Reports for this finding, do not merge/deploy/promote, and do not start reassignment until the external review boundary is resolved.
+Hold at the Wave 1.1 Controller checkpoint for external review/controller disposition. The next scoped product increment is Reception reassignment UX/UI. Do not modify Reports or Users, and do not merge/deploy/promote.
 
 ## MODEL ROUTING
 

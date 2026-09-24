@@ -50,8 +50,8 @@ export async function runReassignmentRace() {
   const bookingB = await createCheckedIn("integral-race-source-b", "reassign-race-b");
 
   const [moveA, moveB] = await Promise.all([
-    request(`/bookings/${bookingA}/reassign`, { method: "POST", body: { room_id: "integral-race-target" } }),
-    request(`/bookings/${bookingB}/reassign`, { method: "POST", body: { room_id: "integral-race-target" } }),
+    request(`/bookings/${bookingA}/reassign`, { method: "POST", body: { room_id: "integral-race-target", reason: "Concurrent room move" } }),
+    request(`/bookings/${bookingB}/reassign`, { method: "POST", body: { room_id: "integral-race-target", reason: "Concurrent room move" } }),
   ]);
 
   const statuses = [moveA.status, moveB.status].sort((left, right) => left - right);
@@ -77,7 +77,7 @@ export async function runReassignmentRace() {
 
   const roomMap = new Map(rooms.payload.map(room => [room.id, room]));
   assert(roomMap.get("integral-race-target")?.status === "Occupied", "target room is not occupied by winner");
-  assert(roomMap.get(winnerSource)?.status === "Available", "winner source room was not released");
+  assert(roomMap.get(winnerSource)?.status === "Dirty", "winner source room was not handed to housekeeping");
   assert(roomMap.get(loserSource)?.status === "Occupied", "loser source room was partially released");
 
   const availableIds = new Set(availability.payload.map(room => room.id));

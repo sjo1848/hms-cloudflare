@@ -159,10 +159,10 @@ export async function runProductFlowApiAudit() {
   });
   await request(`/bookings/${lifecycleBooking.payload.id}/reassign`, {
     method: "POST",
-    body: { room_id: "integral-ready-b" },
+    body: { room_id: "integral-ready-b", reason: "Guest requested room move" },
   });
   let rooms = (await request("/rooms")).payload;
-  assert(rooms.find((room) => room.id === "integral-ready-a")?.status === "Available", "reassign must release old occupied room");
+  assert(rooms.find((room) => room.id === "integral-ready-a")?.status === "Dirty", "reassign must hand old occupied room to housekeeping");
   assert(rooms.find((room) => room.id === "integral-ready-b")?.status === "Occupied", "reassign must occupy destination room");
   await request(`/bookings/${lifecycleBooking.payload.id}/check-out`, {
     method: "POST",

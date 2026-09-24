@@ -148,8 +148,8 @@ export function useReceptionWorkspace() {
   async function reassign(event: FormEvent) {
     event.preventDefault();
     if (!selected) return;
-    const roomId = new FormData(event.currentTarget as HTMLFormElement).get("room_id");
-    await runLifecycle(() => reassignBooking(selected.id, roomId));
+    const data = new FormData(event.currentTarget as HTMLFormElement);
+    await runLifecycle(() => reassignBooking(selected.id, data.get("room_id"), data.get("reason")));
   }
 
   async function checkout(event: FormEvent) {

@@ -10,6 +10,7 @@ import {
   normalizedCheckoutReference,
   pendingReferenceValid,
   positiveGuestCount,
+  reassignmentReason,
   requiredConfirmations,
   requiresCheckoutOverride,
   type LifecycleActor,
@@ -53,6 +54,8 @@ export function createLifecycleRoutes(): LifecycleApp {
     requireLifecycle(context);
     const body = await jsonBody<LifecycleBody>(context.req.raw);
     const roomId = requiredText(body.room_id, "room_id", 1, 100);
+    const reason = reassignmentReason(body.reason);
+    if (!reason) throw ApiError.badRequest("reason must be between 6 and 250 characters");
     const id = context.req.param("id");
     const repository = new D1LifecycleRepository(context.get("operationalDatabase"));
     const current = await repository.findBooking(id);
@@ -60,11 +63,12 @@ export function createLifecycleRoutes(): LifecycleApp {
     if (current.status !== "CHECKED_IN") throw ApiError.conflict("Only checked-in bookings can be reassigned");
     if (roomId === current.room_id) throw ApiError.badRequest("room_id must change");
     try {
-      if (!(await repository.reassign(current, roomId, actor(context))).ok) throw new Error("destination unavailable");
+      const result = await repository.reassign(current, roomId, reason, context.get("hotelTime")?.localDate ?? new Date().toISOString().slice(0, 10), actor(context));
+      if (!result.ok || !result.reassignment) throw new Error("destination unavailable");
+      return context.json({ id, status: "CheckedIn", room_id: roomId, room_status: "Occupied", ...result.reassignment });
     } catch {
       throw ApiError.conflict("Room reassignment failed without changing the booking");
     }
-    return context.json({ id, status: "CheckedIn", room_id: roomId, room_status: "Occupied" });
   });
 
   app.post("/bookings/:id/check-out", async context => {

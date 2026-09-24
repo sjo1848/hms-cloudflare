@@ -41,8 +41,8 @@ export function checkInBooking(bookingId: string, data: CheckInData) {
   });
 }
 
-export function reassignBooking(bookingId: string, roomId: FormDataEntryValue | null) {
-  return api(`/bookings/${bookingId}/reassign`, { method: "POST", body: JSON.stringify({ room_id: roomId }) });
+export function reassignBooking(bookingId: string, roomId: FormDataEntryValue | null, reason: FormDataEntryValue | null) {
+  return api(`/bookings/${bookingId}/reassign`, { method: "POST", body: JSON.stringify({ room_id: roomId, reason }) });
 }
 
 export function checkoutBooking(bookingId: string, data: FormData) {
