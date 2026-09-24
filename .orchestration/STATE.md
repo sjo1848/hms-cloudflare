@@ -5,7 +5,8 @@
 Project: HMS Cloudflare  
 Working directory: `/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare`
 Active branch: `impl/wave-0.3-billing-reconciliation`
-Head: `1e900490d8958a4afaa601a18c0c0a177a916f12`
+Validated implementation artifact head: `1e900490d8958a4afaa601a18c0c0a177a916f12`  
+Current branch tip: orchestration-only evidence commits after that artifact (`130745dda8a93c92751be3cee9b7869b0a85fc43`)
 PR: `#45`
 Wave: `0.3 — D9/D11 Billing Reconciliation`
 Status: `OPEN / DEVELOPMENT CONTINUES; PROMOTION BLOCKED`
