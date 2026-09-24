@@ -91,7 +91,7 @@ try {
 
   const booking = await request(first, first.hotel_id, "/bookings", { method: "POST", body: JSON.stringify({ guest_id: guest.id, room_id: roomA.id, check_in: today, check_out: tomorrow, notes: "CF-I09 integrated smoke" }) }, 201);
   await request(first, first.hotel_id, `/bookings/${booking.id}/check-in`, { method: "POST", body: JSON.stringify({ document_verified: true, contact_confirmed: true, stay_confirmed: true, check_in_guests_count: 1 }) });
-  await request(first, first.hotel_id, `/bookings/${booking.id}/reassign`, { method: "POST", body: JSON.stringify({ room_id: roomB.id }) });
+  await request(first, first.hotel_id, `/bookings/${booking.id}/reassign`, { method: "POST", body: JSON.stringify({ room_id: roomB.id, reason: "Local smoke room move" }) });
   const charge = await request(first, first.hotel_id, `/bookings/${booking.id}/extra-charges`, { method: "POST", body: JSON.stringify({ description: "Smoke minibar", amount_cents: 321, category: "MINIBAR" }) }, 201);
   assert(charge.ok === true && charge.amount_cents === 321, "extra charge exact cents mismatch");
   const charges = await request(first, first.hotel_id, `/bookings/${booking.id}/extra-charges`);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkoutPolicy, normalizedCheckoutReference, pendingReferenceValid, positiveGuestCount, requiredConfirmations } from "./domain";
+import { checkoutPolicy, effectiveReassignmentDate, normalizedCheckoutReference, pendingReferenceValid, positiveGuestCount, reassignmentReason, requiredConfirmations } from "./domain";
 
 describe("lifecycle domain rules", () => {
   it("validates check-in confirmations and guest count", () => {
@@ -20,5 +20,13 @@ describe("lifecycle domain rules", () => {
     expect(pendingReferenceValid("settled", null)).toBe(true);
     expect(pendingReferenceValid("pending-approved", null)).toBe(false);
     expect(pendingReferenceValid("pending-approved", "ABC123")).toBe(true);
+  });
+
+  it("derives reassignment effective dates and enforces the trimmed reason contract", () => {
+    expect(effectiveReassignmentDate("2026-09-20", "2026-09-24")).toBe("2026-09-24");
+    expect(effectiveReassignmentDate("2026-09-30", "2026-09-24")).toBe("2026-09-30");
+    expect(reassignmentReason("  Guest requested move  ")).toBe("Guest requested move");
+    expect(reassignmentReason("short")).toBeNull();
+    expect(reassignmentReason("      ")).toBeNull();
   });
 });

@@ -8,6 +8,16 @@ export function claimDates(start: string, end: string): string[] {
   return result;
 }
 
+export function effectiveReassignmentDate(checkIn: string, hotelLocalDate: string): string {
+  return checkIn > hotelLocalDate ? checkIn : hotelLocalDate;
+}
+
+export function reassignmentReason(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  return normalized.length >= 6 && normalized.length <= 250 ? normalized : null;
+}
+
 export function positiveGuestCount(value: unknown): number | null {
   return Number.isInteger(value) && (value as number) >= 1 && (value as number) <= 100 ? value as number : null;
 }
