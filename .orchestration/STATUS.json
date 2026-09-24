@@ -1,47 +1,65 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "phase": "ACP_INTEGRATION_PHASE_2_5",
-  "runtime_status": "EXTERNAL_REVIEW",
+  "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
+  "phase": "WAVE_0_3_D9_D11_BILLING_RECONCILIATION",
+  "runtime_status": "BLOCKED",
   "resume_authorized": false,
-  "active_task": "ACP-2.5-HMS-CONTROLLED-RESERVATION",
-  "last_completed_task": "ACP-2.4-E1-REAL",
-  "last_completed_head": "8821cd2971f66e1d7711027554649374750036b3",
-  "work_branch": "feature/acp-2-5-controlled-reservation",
-  "next_action": "INDEPENDENT_CRITIC_ON_FINAL_EXECUTING_D1_ARTIFACT",
-  "stop_reason": "PRECRITIC_PASS_AWAITING_EXTERNAL_REVIEW",
+  "active_task": "CF-I06-WAVE-0.3-BROWSER-GATE",
+  "last_completed_task": "CF-I06-D11-RECONCILIATION-IMPLEMENTATION",
+  "last_completed_head": "077ebf18af935e00579f590d4a6bb8c0bffb9abd",
+  "work_branch": "impl/wave-0.3-billing-reconciliation",
+  "pr": "#45",
+  "wave": "0.3 — D9/D11 Billing Reconciliation",
+  "status_label": "OPEN / BLOCKED ON BROWSER GATE",
+  "next_action": "INVESTIGATE_AND_REPAIR_UX_MOBILE_BROWSER_HOUSEKEEPING_GATE",
+  "stop_reason": "BROWSER_GATE_FAIL_REQUIRES_ROOT_CAUSE_INVESTIGATION",
   "event": {
-    "seq": 115,
-    "id": "ACP-2.5-HMS-EXECUTING-D1-PRECRITIC-PASS",
-    "type": "EXTERNAL_REVIEW"
+    "seq": 116,
+    "id": "WAVE-0.3-BROWSER-GATE-BLOCKED",
+    "type": "BLOCKED"
   },
   "external_review": {
-    "required": true,
+    "required": false,
     "last_audited_head": null,
     "last_verdict": null,
-    "artifact_head": "70fae5c902af557eadc2802ba773f44b9f95fd46",
-    "review_path": ".orchestration/evidence/ACP-2.5-HMS-PRECRITIC.md"
+    "artifact_head": null,
+    "review_path": null
   },
   "human_gate": null,
-  "blocker": null,
+  "blocker": {
+    "kind": "TECHNICAL",
+    "surface": "ux-mobile-browser",
+    "area": "housekeeping browser flow / initial board loading / hotel-local-date interaction",
+    "wave_pass": false
+  },
   "authorization": {
-    "scope": "STAGING_ONLY",
-    "create_reservation": true,
-    "cancel_cleanup": true,
+    "scope": "IMPLEMENTATION_BRANCH_ONLY",
     "production": false,
-    "paid_expansion": false,
-    "real_data_migration": false,
-    "payment_mutation": false
+    "acceptance_staging": false,
+    "main": false,
+    "merge": false,
+    "deploy": false,
+    "wave_1_1a": false
+  },
+  "validated": {
+    "d11_executing_d1": "4/4 PASS",
+    "foundation_ci": "PASS",
+    "unit_integration": "86/86 PASS",
+    "types": "PASS",
+    "web_build": "PASS",
+    "cloudflare_budgets": "PASS",
+    "d1_query_plans": "PASS",
+    "wrangler_dry_runs": "PASS",
+    "staging_spa_config": "PASS",
+    "cf_i06_regression": "PASS",
+    "extra_charge_atomic_rollback": "CONFIRMED",
+    "browser_gate": "FAIL"
   },
   "method": {
     "human_routine_relay_forbidden": true,
     "technical_rework_autonomous": true,
     "independent_critic_before_merge": true,
-    "product_acceptance_after_secure_staging_only": true
-  },
-  "cost_guard": {
-    "target": "$0/month / Cloudflare Free",
-    "paid_transition_requires_human_gate": true,
-    "production_forbidden_without_separate_authorization": true
+    "model_policy": "Luna LOW orchestrator; Luna MEDIUM investigation/QA; Luna LOW/MEDIUM repair; Sol MEDIUM only after insufficient Luna MEDIUM"
   }
 }
