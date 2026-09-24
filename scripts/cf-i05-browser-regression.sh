@@ -23,6 +23,7 @@ trap on_exit EXIT
 cd "$repo_dir"
 mkdir -p output/playwright
 wrangler="$repo_dir/node_modules/.bin/wrangler"
+hotel_local_date=$(TZ=America/Argentina/Mendoza date +%F)
 
 CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc >"$tmp_dir/migrations.log" 2>&1
 CI=1 "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >>"$tmp_dir/migrations.log" 2>&1
@@ -51,11 +52,11 @@ CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --c
     VALUES ('browser-case-d','browser-d','OPEN','HIGH','Existing maintenance case','ops','subject-a','2026-01-01T00:00:00Z');
   INSERT OR REPLACE INTO guests (id,full_name,email,created_at) VALUES ('browser-guest-f','Orphan Departure Guest','orphan@example.test','2026-08-20');
   INSERT OR REPLACE INTO bookings (id,guest_id,room_id,check_in,check_out,status,total_cents,created_at,updated_at)
-    VALUES ('browser-booking-f','browser-guest-f','browser-f','2026-08-20',date('now'),'CHECKED_IN',16000,'2026-08-20T00:00:00Z','2026-08-20T00:00:00Z');
+    VALUES ('browser-booking-f','browser-guest-f','browser-f','2026-08-20','$hotel_local_date','CHECKED_IN',16000,'2026-08-20T00:00:00Z','2026-08-20T00:00:00Z');
   INSERT OR REPLACE INTO guests (id,full_name,email,created_at) VALUES ('browser-guest-g','Eligible Checked-In Guest','checked-in@example.test','2026-08-20'),('browser-guest-h','Eligible Confirmed Guest','confirmed@example.test','2026-08-20');
   INSERT OR REPLACE INTO bookings (id,guest_id,room_id,check_in,check_out,status,total_cents,created_at,updated_at)
-    VALUES ('browser-booking-g','browser-guest-g','browser-g','2026-08-20',date('now'),'CHECKED_IN',17000,'2026-08-20T00:00:00Z','2026-08-20T00:00:00Z'),
-      ('browser-booking-h','browser-guest-h','browser-h','2026-08-20',date('now'),'CONFIRMED',18000,'2026-08-20T00:00:00Z','2026-08-20T00:00:00Z');
+    VALUES ('browser-booking-g','browser-guest-g','browser-g','2026-08-20','$hotel_local_date','CHECKED_IN',17000,'2026-08-20T00:00:00Z','2026-08-20T00:00:00Z'),
+      ('browser-booking-h','browser-guest-h','browser-h','2026-08-20','$hotel_local_date','CONFIRMED',18000,'2026-08-20T00:00:00Z','2026-08-20T00:00:00Z');
   INSERT OR REPLACE INTO guests (id,full_name,email,created_at) VALUES ('browser-report-guest','Report Fixture Guest','report@example.test','2026-08-20');
   INSERT OR REPLACE INTO bookings (id,guest_id,room_id,check_in,check_out,status,total_cents,created_at,updated_at)
     VALUES ('browser-report-booking','browser-report-guest','browser-report','2026-09-02','2026-09-04','CONFIRMED',40000,'2026-08-20T00:00:00Z','2026-08-20T00:00:00Z');

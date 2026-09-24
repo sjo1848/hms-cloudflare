@@ -15,7 +15,7 @@ function actionableTasks(items: HousekeepingQueueItem[]) {
 
 export function useHousekeepingWorkspace() {
   const [board, setBoard] = useState<HousekeepingBoard>({ date: "", rooms: [], departures_today: [] });
-  const [boardDate, setBoardDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [boardDate, setBoardDate] = useState("");
   const [loading, setLoading] = useState(true);
   const [actionBusy, setActionBusy] = useState(false);
   const [error, setError] = useState("");
@@ -30,16 +30,16 @@ export function useHousekeepingWorkspace() {
   const taskHeadingRef = useRef<HTMLHeadingElement | null>(null);
   const boardRequestRef = useRef(0);
 
-  async function load(date = boardDate): Promise<HousekeepingBoard | null> {
-    const nextDate = date || new Date().toISOString().slice(0, 10);
+  async function load(date?: string): Promise<HousekeepingBoard | null> {
+    const requestedDate = date || boardDate || undefined;
     const requestId = ++boardRequestRef.current;
     setLoading(true);
     setError("");
     try {
-      const nextBoard = await loadHousekeepingBoard(nextDate);
+      const nextBoard = await loadHousekeepingBoard(requestedDate);
       if (requestId !== boardRequestRef.current) return null;
       setBoard(nextBoard);
-      setBoardDate(nextDate);
+      setBoardDate(nextBoard.date);
       setLastUpdated(new Date().toISOString());
       return nextBoard;
     } catch (e) {
@@ -50,7 +50,7 @@ export function useHousekeepingWorkspace() {
     }
   }
 
-  useEffect(() => { void load(new URLSearchParams(location.search).get("date") ?? boardDate); }, []);
+  useEffect(() => { void load(new URLSearchParams(location.search).get("date") ?? undefined); }, []);
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", onResize);
@@ -85,7 +85,6 @@ export function useHousekeepingWorkspace() {
         const next = nextTasks[0] ?? fallback;
         if (next) {
           setSelectedId(next.room_id);
-          if (window.innerWidth < 768) setMobileFocus(true);
         }
       }
     } catch (e) {
