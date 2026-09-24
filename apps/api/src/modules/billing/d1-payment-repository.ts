@@ -88,7 +88,7 @@ export class D1PaymentRepository implements BillingPaymentRepository {
       existingInvoice?.paid_at ?? null,
       now,
     );
-    await this.db.batch([
+    const results = await this.db.batch([
       this.db.prepare(`INSERT INTO extra_charges (id,booking_id,description,amount_cents,category,created_at)
         SELECT ?1,b.id,?3,?4,?5,?6
         FROM bookings b
@@ -143,6 +143,9 @@ export class D1PaymentRepository implements BillingPaymentRepository {
             now, businessEventId, nextTotal,
           ),
     ]);
-    return true;
+    return results[0]?.meta.changes === 1
+      && (results[1]?.meta.changes ?? 0) >= 1
+      && results[2]?.meta.changes === 1
+      && results[3]?.meta.changes === 1;
   }
 }

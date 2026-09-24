@@ -1,47 +1,76 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "phase": "ACP_INTEGRATION_PHASE_2_5",
-  "runtime_status": "EXTERNAL_REVIEW",
+  "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
+  "phase": "WAVE_1_1A_MAINTENANCE_IMPACT",
+  "runtime_status": "WAITING_EXTERNAL_REVIEW",
   "resume_authorized": false,
-  "active_task": "ACP-2.5-HMS-CONTROLLED-RESERVATION",
-  "last_completed_task": "ACP-2.4-E1-REAL",
-  "last_completed_head": "8821cd2971f66e1d7711027554649374750036b3",
-  "work_branch": "feature/acp-2-5-controlled-reservation",
-  "next_action": "INDEPENDENT_CRITIC_ON_FINAL_EXECUTING_D1_ARTIFACT",
-  "stop_reason": "PRECRITIC_PASS_AWAITING_EXTERNAL_REVIEW",
+  "active_task": "WAVE-1.1A-MAINTENANCE-IMPACT",
+  "last_completed_task": "WAVE-1.1A-MAINTENANCE-IMPACT-ARTIFACT",
+  "last_completed_head": "c3eeb8470dea17876c2d8e14f6d6ca554c741924",
+  "work_branch": "impl/wave-1.1a-maintenance-impact",
+  "pr": "#46 (Draft)",
+  "wave": "1.1a — Maintenance Impact Foundation",
+  "status_label": "DEVELOPMENT GATE PASS WITH SHARED/PREEXISTING BROWSER FINDING; PROMOTION BLOCKED",
+  "next_action": "EXTERNAL_INDEPENDENT_CRITIC_REVIEW_OF_ARTIFACT_C3EEB84",
+  "stop_reason": "NONE",
   "event": {
-    "seq": 115,
-    "id": "ACP-2.5-HMS-EXECUTING-D1-PRECRITIC-PASS",
-    "type": "EXTERNAL_REVIEW"
+    "seq": 120,
+    "id": "WAVE-1.1A-ARTIFACT-PUBLISHED-AWAITING-CRITIC",
+    "type": "EXTERNAL_REVIEW_REQUIRED"
   },
   "external_review": {
     "required": true,
     "last_audited_head": null,
     "last_verdict": null,
-    "artifact_head": "70fae5c902af557eadc2802ba773f44b9f95fd46",
-    "review_path": ".orchestration/evidence/ACP-2.5-HMS-PRECRITIC.md"
+    "artifact_head": "c3eeb8470dea17876c2d8e14f6d6ca554c741924",
+    "review_path": "Independent Critic via GitHub PR #46"
   },
   "human_gate": null,
-  "blocker": null,
+  "blocker": {
+    "kind": "TECHNICAL",
+    "surface": "ux-mobile-browser",
+    "area": "Shared browser promotion finding remains open; Wave 1.1a implementation active",
+    "wave_pass": true,
+    "attribution": "BROWSER_HARNESS_INFRA_FLAKINESS_SHARED_FINDING"
+  },
   "authorization": {
-    "scope": "STAGING_ONLY",
-    "create_reservation": true,
-    "cancel_cleanup": true,
+    "scope": "IMPLEMENTATION_BRANCH_ONLY",
     "production": false,
-    "paid_expansion": false,
-    "real_data_migration": false,
-    "payment_mutation": false
+    "acceptance_staging": false,
+    "main": false,
+    "merge": false,
+    "deploy": false,
+    "wave_1_1a": true,
+    "development_continuation": true
+  },
+  "validated": {
+    "d11_executing_d1": "4/4 PASS",
+    "foundation_ci": "PASS",
+    "unit_integration": "87/87 PASS",
+    "types": "PASS",
+    "web_build": "PASS",
+    "cloudflare_budgets": "PASS",
+    "d1_query_plans": "PASS",
+    "wrangler_dry_runs": "PASS",
+    "staging_spa_config": "PASS",
+    "cf_i06_regression": "PASS",
+    "extra_charge_atomic_rollback": "CONFIRMED",
+    "browser_gate": "FAIL",
+    "housekeeping_browser_flow": "PASS THROUGH HOUSEKEEPING",
+    "reports_browser_flow": "FAIL: SHARED_RUNNER_RUNTIME_FINDING (Daily occupancy timeout)",
+    "wave_1_1a_types_check": "PASS",
+    "wave_1_1a_unit_integration": "21 files / 87 tests PASS",
+    "wave_1_1a_housekeeping_regression": "PASS",
+    "wave_1_1a_browser": "FAIL: SHARED_REPORTS_RUNNER_FINDING_AFTER_HOUSEKEEPING",
+    "wave_1_1a_artifact_head": "c3eeb8470dea17876c2d8e14f6d6ca554c741924",
+    "browser_attribution": "CURRENT_REPORTS_AND_USERS_FAILURES; BASELINE_BLOCKED_EARLIER_IN_HOUSEKEEPING",
+    "v11_contract_source": "origin/analysis/operational-flow-definition-v11"
   },
   "method": {
     "human_routine_relay_forbidden": true,
     "technical_rework_autonomous": true,
     "independent_critic_before_merge": true,
-    "product_acceptance_after_secure_staging_only": true
-  },
-  "cost_guard": {
-    "target": "$0/month / Cloudflare Free",
-    "paid_transition_requires_human_gate": true,
-    "production_forbidden_without_separate_authorization": true
+    "model_policy": "Luna LOW orchestrator; Luna MEDIUM investigation/QA; Luna LOW/MEDIUM repair; Sol MEDIUM only after insufficient Luna MEDIUM"
   }
 }

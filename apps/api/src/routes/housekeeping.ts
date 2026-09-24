@@ -8,11 +8,17 @@ import { hotelLocalDate } from "../time/hotel-time";
 
 type HousekeepingApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 type Db = ApiVariables["operationalDatabase"];
+type RouteContext = Context<{ Bindings: Env; Variables: ApiVariables }>;
 type RoomRow = { id: string; room_number: string; room_type: string; status: string; price_cents: number };
-type CaseRow = { id: string; room_id: string; status: string; priority: string; reason: string; assigned_to: string; reported_by_user_id: string | null; reported_at: string; resolution_note?: string | null; resolved_by_user_id?: string | null; resolved_at?: string | null; return_status?: string | null };
+type CaseRow = {
+  id: string; room_id: string; status: string; impact: "NON_BLOCKING" | "BLOCKING";
+  priority: string; reason: string; assigned_to: string; reported_by_user_id: string | null;
+  reported_at: string; resolution_note?: string | null; resolved_by_user_id?: string | null;
+  resolved_at?: string | null; return_status?: string | null;
+};
 type DepartureRow = { booking_id: string; room_id: string; room_number: string; room_type: string; room_status: string; guest_name: string; booking_status: string; check_out: string };
 
-function requireCapability(context: Context<{ Bindings: Env; Variables: ApiVariables }>, capability: string): void {
+function requireCapability(context: RouteContext, capability: string): void {
   if (!hasCapability(context.get("membership").role, capability)) throw ApiError.forbidden();
 }
 
@@ -20,78 +26,192 @@ function roomStatus(status: string): string {
   return ({ AVAILABLE: "Available", OCCUPIED: "Occupied", DIRTY: "Dirty", CLEANING: "Cleaning", MAINTENANCE: "Maintenance", OUT_OF_ORDER: "OutOfOrder" } as Record<string, string>)[status] ?? status;
 }
 
+const caseColumns = "id, room_id, status, impact, priority, reason, assigned_to, reported_by_user_id, reported_at, resolution_note, resolved_by_user_id, resolved_at, return_status";
+
 function caseView(row: CaseRow, hotelId: string) {
-  return { id: row.id, hotel_id: hotelId, room_id: row.room_id, status: row.status === "OPEN" ? "Open" : "Resolved", priority: row.priority[0] + row.priority.slice(1).toLowerCase(), reason: row.reason, assigned_to: row.assigned_to, reported_by_user_id: row.reported_by_user_id, reported_at: row.reported_at, resolution_note: row.resolution_note ?? undefined, resolved_by_user_id: row.resolved_by_user_id ?? undefined, resolved_at: row.resolved_at ?? undefined, return_status: row.return_status ? roomStatus(row.return_status) : undefined };
+  return {
+    id: row.id, hotel_id: hotelId, room_id: row.room_id, status: row.status === "OPEN" ? "Open" : "Resolved",
+    impact: row.impact, priority: row.priority[0] + row.priority.slice(1).toLowerCase(), reason: row.reason,
+    assigned_to: row.assigned_to, reported_by_user_id: row.reported_by_user_id, reported_at: row.reported_at,
+    resolution_note: row.resolution_note ?? undefined, resolved_by_user_id: row.resolved_by_user_id ?? undefined,
+    resolved_at: row.resolved_at ?? undefined, return_status: row.return_status ? roomStatus(row.return_status) : undefined,
+  };
 }
 
 function roomView(row: RoomRow, hotelId: string, maintenanceCase?: CaseRow, departure?: DepartureRow) {
-  return { room_id: row.id, hotel_id: hotelId, room_number: row.room_number, room_type: row.room_type, room_status: roomStatus(row.status), turnover_today: Boolean(departure), departure_guest_name: departure?.guest_name, departure_booking_status: departure?.booking_status, departure: departure ? { booking_id: departure.booking_id, room_id: departure.room_id, room_number: row.room_number, room_type: row.room_type, room_status: roomStatus(row.status), guest_name: departure.guest_name, booking_status: departure.booking_status } : undefined, maintenance_case: maintenanceCase ? caseView(maintenanceCase, hotelId) : undefined };
+  return {
+    room_id: row.id, hotel_id: hotelId, room_number: row.room_number, room_type: row.room_type,
+    room_status: roomStatus(row.status), turnover_today: Boolean(departure), departure_guest_name: departure?.guest_name,
+    departure_booking_status: departure?.booking_status,
+    departure: departure ? { booking_id: departure.booking_id, room_id: departure.room_id, room_number: row.room_number, room_type: row.room_type, room_status: roomStatus(row.status), guest_name: departure.guest_name, booking_status: departure.booking_status } : undefined,
+    maintenance_case: maintenanceCase ? caseView(maintenanceCase, hotelId) : undefined,
+  };
 }
 
-async function findRoom(db: Db, id: string): Promise<RoomRow | null> { return db.prepare("SELECT id, room_number, room_type, status, price_cents FROM rooms WHERE id = ?1").bind(id).first<RoomRow>(); }
-async function findOpenCase(db: Db, roomId: string): Promise<CaseRow | null> { return db.prepare("SELECT id, room_id, status, priority, reason, assigned_to, reported_by_user_id, reported_at, resolution_note, resolved_by_user_id, resolved_at, return_status FROM maintenance_cases WHERE room_id = ?1 AND status = 'OPEN'").bind(roomId).first<CaseRow>(); }
-function audit(db: Db, eventId: string, roomId: string, caseId: string | null, eventType: string, fromStatus: string, toStatus: string, context: Context<{ Bindings: Env; Variables: ApiVariables }>, details: Record<string, unknown>) {
-  return db.prepare(`INSERT INTO housekeeping_events (id, room_id, maintenance_case_id, event_type, from_status, to_status, actor_subject, request_id, hotel_id, details_json, created_at) SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11 WHERE changes() = 1`).bind(eventId, roomId, caseId, eventType, fromStatus, toStatus, context.get("identity").subject, context.get("requestId"), context.get("membership").hotelId, JSON.stringify(details), new Date().toISOString());
+async function findRoom(db: Db, id: string): Promise<RoomRow | null> {
+  return db.prepare("SELECT id, room_number, room_type, status, price_cents FROM rooms WHERE id = ?1").bind(id).first<RoomRow>();
+}
+
+async function findOpenCase(db: Db, roomId: string): Promise<CaseRow | null> {
+  return db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE room_id = ?1 AND status = 'OPEN'`).bind(roomId).first<CaseRow>();
+}
+
+function audit(db: Db, eventId: string, roomId: string, caseId: string | null, eventType: string, fromStatus: string, toStatus: string, context: RouteContext, details: Record<string, unknown>) {
+  return db.prepare("INSERT INTO housekeeping_events (id, room_id, maintenance_case_id, event_type, from_status, to_status, actor_subject, request_id, hotel_id, details_json, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)").bind(eventId, roomId, caseId, eventType, fromStatus, toStatus, context.get("identity").subject, context.get("requestId"), context.get("membership").hotelId, JSON.stringify(details), new Date().toISOString());
 }
 
 async function eventWasRecorded(db: Db, eventId: string): Promise<boolean> {
   return Boolean(await db.prepare("SELECT id FROM housekeeping_events WHERE id = ?1").bind(eventId).first<{ id: string }>());
 }
 
+function maintenanceTarget(status: string, impact: "NON_BLOCKING" | "BLOCKING"): string {
+  return impact === "BLOCKING" && status !== "OCCUPIED" ? "MAINTENANCE" : status;
+}
+
+function validMaintenanceSource(status: string): boolean {
+  return ["AVAILABLE", "DIRTY", "CLEANING", "OCCUPIED"].includes(status);
+}
+
 export function createHousekeepingRoutes(): HousekeepingApp {
   const app = new Hono<{ Bindings: Env; Variables: ApiVariables }>();
-  app.get("/housekeeping/dirty", async (context) => {
+
+  app.get("/housekeeping/dirty", async context => {
     requireCapability(context, "housekeeping.read");
     const rows = await context.get("operationalDatabase").prepare("SELECT id, room_number, room_type, status, price_cents FROM rooms WHERE status IN ('DIRTY', 'CLEANING') ORDER BY room_number").all<RoomRow>();
     return context.json(rows.results.map(row => ({ id: row.id, hotel_id: context.get("membership").hotelId, room_number: row.room_number, room_type: row.room_type, status: roomStatus(row.status), price_cents: row.price_cents })));
   });
-  app.get("/housekeeping/board", async (context) => {
+
+  app.get("/housekeeping/board", async context => {
     requireCapability(context, "housekeeping.read");
-    const requestedDate = context.req.query("date"); const date = requestedDate ? isoDate(requestedDate, "date") : context.get("hotelTime")?.localDate ?? hotelLocalDate(context.get("membership").timeZone); const db = context.get("operationalDatabase");
+    const requestedDate = context.req.query("date");
+    const date = requestedDate ? isoDate(requestedDate, "date") : context.get("hotelTime")?.localDate ?? hotelLocalDate(context.get("membership").timeZone);
+    const db = context.get("operationalDatabase");
     const rooms = await db.prepare("SELECT id, room_number, room_type, status, price_cents FROM rooms WHERE status IN ('DIRTY', 'CLEANING', 'AVAILABLE', 'MAINTENANCE') ORDER BY room_number").all<RoomRow>();
     const departures = await db.prepare("SELECT b.id AS booking_id, b.room_id, r.room_number, r.room_type, r.status AS room_status, g.full_name AS guest_name, b.status AS booking_status, b.check_out FROM bookings b JOIN guests g ON g.id = b.guest_id JOIN rooms r ON r.id = b.room_id WHERE b.check_out = ?1 AND b.status NOT IN ('CANCELLED', 'NO_SHOW')").bind(date).all<DepartureRow>();
-    const cases = await db.prepare("SELECT id, room_id, status, priority, reason, assigned_to, reported_by_user_id, reported_at, resolution_note, resolved_by_user_id, resolved_at, return_status FROM maintenance_cases WHERE status = 'OPEN'").all<CaseRow>();
-    const departureByRoom = new Map(departures.results.map(item => [item.room_id, item])); const caseByRoom = new Map(cases.results.map(item => [item.room_id, item]));
+    const cases = await db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE status = 'OPEN'`).all<CaseRow>();
+    const departureByRoom = new Map(departures.results.map(item => [item.room_id, item]));
+    const caseByRoom = new Map(cases.results.map(item => [item.room_id, item]));
     return context.json({ date, rooms: rooms.results.map(row => roomView(row, context.get("membership").hotelId, caseByRoom.get(row.id), departureByRoom.get(row.id))), departures_today: departures.results.map(item => ({ ...item, room_status: roomStatus(item.room_status) })) });
   });
-  app.post("/housekeeping/:id/start", async (context) => transition(context, "DIRTY", "CLEANING", "CLEANING_START"));
-  app.post("/housekeeping/:id/finish", async (context) => transition(context, "CLEANING", "AVAILABLE", "CLEANING_FINISH"));
-  app.post("/housekeeping/:id/maintenance", async (context) => {
-    requireCapability(context, "housekeeping.write"); const db = context.get("operationalDatabase"); const roomId = context.req.param("id"); const body = await jsonBody<Record<string, unknown>>(context.req.raw);
-    const priority = requiredText(body.priority, "priority", 3, 10).toUpperCase(); if (!["LOW", "MEDIUM", "HIGH", "URGENT"].includes(priority)) throw ApiError.badRequest("priority is invalid");
-    const reason = requiredText(body.reason, "reason", 6, 250); const assignedTo = requiredText(body.assigned_to, "assigned_to", 2, 100); const caseId = crypto.randomUUID(); const now = new Date().toISOString();
-    const room = await findRoom(db, roomId); if (!room) throw ApiError.notFound("Room not found"); if (!["AVAILABLE", "DIRTY", "CLEANING"].includes(room.status)) throw ApiError.conflict("Room cannot enter maintenance from its current state");
-    const eventId = crypto.randomUUID();
-    try { await db.batch([
-      db.prepare("UPDATE rooms SET status = 'MAINTENANCE' WHERE id = ?1 AND status IN ('AVAILABLE', 'DIRTY', 'CLEANING')").bind(roomId),
-      db.prepare("INSERT INTO maintenance_cases (id, room_id, status, priority, reason, assigned_to, reported_by_user_id, reported_at) SELECT ?1, ?2, 'OPEN', ?3, ?4, ?5, ?6, ?7 WHERE changes() = 1 AND EXISTS (SELECT 1 FROM rooms WHERE id = ?2 AND status = 'MAINTENANCE') AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id = ?2 AND status = 'OPEN')").bind(caseId, roomId, priority, reason, assignedTo, context.get("identity").subject, now),
-      audit(db, eventId, roomId, caseId, "MAINTENANCE_OPEN", room.status, "MAINTENANCE", context, { priority, reason, assigned_to: assignedTo }),
-    ]); } catch { throw ApiError.conflict("Maintenance case could not be opened without changing the room"); }
-    if (!(await eventWasRecorded(db, eventId))) throw ApiError.conflict("Maintenance case was not opened because the room changed concurrently");
-    const opened = await db.prepare("SELECT id, room_id, status, priority, reason, assigned_to, reported_by_user_id, reported_at FROM maintenance_cases WHERE id = ?1").bind(caseId).first<CaseRow>(); if (!opened) throw ApiError.conflict("Maintenance case was not created"); return context.json(caseView(opened, context.get("membership").hotelId), 201);
+
+  app.get("/housekeeping/:id/maintenance", async context => {
+    requireCapability(context, "maintenance.read");
+    const row = await findOpenCase(context.get("operationalDatabase"), context.req.param("id"));
+    if (!row) throw ApiError.notFound("Open maintenance case not found");
+    return context.json(caseView(row, context.get("membership").hotelId));
   });
-  app.post("/housekeeping/:id/dirty", async (context) => {
-    requireCapability(context, "housekeeping.write"); const db = context.get("operationalDatabase"); const roomId = context.req.param("id"); const body = await jsonBody<Record<string, unknown>>(context.req.raw); const note = requiredText(body.resolution_note, "resolution_note", 6, 250); const room = await findRoom(db, roomId); if (!room) throw ApiError.notFound("Room not found"); if (room.status !== "MAINTENANCE") throw ApiError.conflict("Only maintenance rooms can return to dirty");
-    const requestedCaseId = typeof body.case_id === "string" && body.case_id.trim() ? body.case_id.trim() : undefined;
-    const open = requestedCaseId ? await db.prepare("SELECT id, room_id, status, priority, reason, assigned_to, reported_by_user_id, reported_at, resolution_note, resolved_by_user_id, resolved_at, return_status FROM maintenance_cases WHERE id = ?1 AND room_id = ?2 AND status = 'OPEN'").bind(requestedCaseId, roomId).first<CaseRow>() : await findOpenCase(db, roomId);
-    const caseId = open?.id ?? (requestedCaseId ?? crypto.randomUUID()); const now = new Date().toISOString();
+
+  app.post("/housekeeping/:id/start", async context => transition(context, "DIRTY", "CLEANING", "CLEANING_START"));
+  app.post("/housekeeping/:id/finish", async context => transition(context, "CLEANING", "AVAILABLE", "CLEANING_FINISH"));
+
+  app.post("/housekeeping/:id/maintenance", async context => {
+    requireCapability(context, "maintenance.report");
+    const db = context.get("operationalDatabase");
+    const roomId = context.req.param("id");
+    const body = await jsonBody<Record<string, unknown>>(context.req.raw);
+    const priority = requiredText(body.priority, "priority", 3, 10).toUpperCase();
+    if (!["LOW", "MEDIUM", "HIGH", "URGENT"].includes(priority)) throw ApiError.badRequest("priority is invalid");
+    const reason = requiredText(body.reason, "reason", 6, 250);
+    const assignedTo = requiredText(body.assigned_to, "assigned_to", 2, 100);
+    const impactInput = typeof body.impact === "string" && body.impact.trim() ? body.impact.trim().toUpperCase() : "BLOCKING";
+    if (impactInput !== "NON_BLOCKING" && impactInput !== "BLOCKING") throw ApiError.badRequest("impact is invalid");
+    const impact = impactInput as "NON_BLOCKING" | "BLOCKING";
+    const room = await findRoom(db, roomId);
+    if (!room) throw ApiError.notFound("Room not found");
+    if (!validMaintenanceSource(room.status)) throw ApiError.conflict("Room cannot receive maintenance from its current state");
+    const target = maintenanceTarget(room.status, impact);
+    const caseId = crypto.randomUUID();
     const eventId = crypto.randomUUID();
-    try { await db.batch([
-      ...(open ? [] : [db.prepare("INSERT INTO maintenance_cases (id, room_id, status, priority, reason, assigned_to, reported_by_user_id, reported_at) SELECT ?1, ?2, 'OPEN', 'MEDIUM', 'Legacy maintenance room without an opening case', 'ops', ?3, ?4 WHERE EXISTS (SELECT 1 FROM rooms WHERE id = ?2 AND status = 'MAINTENANCE') AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id = ?2 AND status = 'OPEN')").bind(caseId, roomId, context.get("identity").subject, now)]),
-      db.prepare("UPDATE maintenance_cases SET status = 'RESOLVED', resolution_note = ?2, resolved_by_user_id = ?3, resolved_at = ?4, return_status = 'DIRTY' WHERE id = ?1 AND room_id = ?5 AND status = 'OPEN'").bind(caseId, note, context.get("identity").subject, now, roomId),
-      db.prepare("UPDATE rooms SET status = 'DIRTY' WHERE id = ?1 AND status = 'MAINTENANCE' AND changes() = 1 AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id = ?1 AND status = 'OPEN')").bind(roomId),
-      audit(db, eventId, roomId, caseId, "MAINTENANCE_RESOLVE", "MAINTENANCE", "DIRTY", context, { resolution_note: note, legacy_recovery: !open }),
-    ]); } catch { throw ApiError.conflict("Maintenance case could not be resolved without changing the room"); }
-    if (!(await eventWasRecorded(db, eventId))) throw ApiError.conflict("Maintenance case was not resolved because the room changed concurrently");
-    const resolved = await db.prepare("SELECT id, room_id, status, priority, reason, assigned_to, reported_by_user_id, reported_at, resolution_note, resolved_by_user_id, resolved_at, return_status FROM maintenance_cases WHERE id = ?1").bind(caseId).first<CaseRow>(); if (!resolved) throw ApiError.conflict("Maintenance case was not resolved"); return context.json(caseView(resolved, context.get("membership").hotelId));
+    try {
+      await db.batch([
+        db.prepare("UPDATE rooms SET status = ?2 WHERE id = ?1 AND status = ?3").bind(roomId, target, room.status),
+        db.prepare("INSERT INTO maintenance_cases (id, room_id, status, impact, priority, reason, assigned_to, reported_by_user_id, reported_at) SELECT ?1, ?2, 'OPEN', ?3, ?4, ?5, ?6, ?7, ?8 WHERE EXISTS (SELECT 1 FROM rooms WHERE id = ?2 AND status = ?9) AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id = ?2 AND status = 'OPEN')").bind(caseId, roomId, impact, priority, reason, assignedTo, context.get("identity").subject, new Date().toISOString(), target),
+        audit(db, eventId, roomId, caseId, "MAINTENANCE_OPEN", room.status, target, context, { impact, priority, reason, assigned_to: assignedTo }),
+      ]);
+    } catch { throw ApiError.conflict("Maintenance case could not be opened without changing the room"); }
+    const opened = await db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE id = ?1`).bind(caseId).first<CaseRow>();
+    if (!opened || !(await eventWasRecorded(db, eventId))) throw ApiError.conflict("Maintenance case was not opened because the room changed concurrently");
+    return context.json(caseView(opened, context.get("membership").hotelId), 201);
   });
+
+  app.post("/housekeeping/:id/maintenance/:case_id/escalate", async context => {
+    requireCapability(context, "maintenance.report");
+    const db = context.get("operationalDatabase");
+    const roomId = context.req.param("id");
+    const caseId = context.req.param("case_id");
+    const body = await jsonBody<Record<string, unknown>>(context.req.raw);
+    const note = requiredText(body.note, "note", 6, 250);
+    const room = await findRoom(db, roomId);
+    const open = await db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE id = ?1 AND room_id = ?2 AND status = 'OPEN'`).bind(caseId, roomId).first<CaseRow>();
+    if (!room || !open) throw ApiError.notFound("Open maintenance case not found");
+    if (open.impact !== "NON_BLOCKING") throw ApiError.conflict("Only a non-blocking case can be escalated");
+    if (!validMaintenanceSource(room.status)) throw ApiError.conflict("Room cannot receive maintenance escalation from its current state");
+    const target = maintenanceTarget(room.status, "BLOCKING");
+    const eventId = crypto.randomUUID();
+    try {
+      await db.batch([
+        db.prepare("UPDATE rooms SET status = ?2 WHERE id = ?1 AND status = ?3").bind(roomId, target, room.status),
+        db.prepare("UPDATE maintenance_cases SET impact = 'BLOCKING' WHERE id = ?1 AND room_id = ?2 AND status = 'OPEN' AND impact = 'NON_BLOCKING' AND EXISTS (SELECT 1 FROM rooms WHERE id = ?2 AND status = ?3)").bind(caseId, roomId, target),
+        audit(db, eventId, roomId, caseId, "MAINTENANCE_ESCALATE", room.status, target, context, { note }),
+      ]);
+    } catch { throw ApiError.conflict("Maintenance case could not be escalated without changing the room"); }
+    const escalated = await db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE id = ?1`).bind(caseId).first<CaseRow>();
+    if (!escalated || escalated.impact !== "BLOCKING" || !(await eventWasRecorded(db, eventId))) throw ApiError.conflict("Maintenance case was not escalated because the room changed concurrently");
+    return context.json(caseView(escalated, context.get("membership").hotelId));
+  });
+
+  app.post("/housekeeping/:id/maintenance/:case_id/resolve", async context => resolveMaintenance(context));
+  app.post("/housekeeping/:id/dirty", async context => resolveMaintenance(context));
   return app;
 }
 
-async function transition(context: Context<{ Bindings: Env; Variables: ApiVariables }>, from: string, to: string, eventType: string) {
-  requireCapability(context, "housekeeping.write"); const db = context.get("operationalDatabase"); const roomId = context.req.param("id"); if (!roomId) throw ApiError.notFound("Room not found"); const room = await findRoom(db, roomId); if (!room) throw ApiError.notFound("Room not found"); if (room.status !== from) throw ApiError.conflict(`Room must be ${from.toLowerCase()} before this transition`);
+async function resolveMaintenance(context: RouteContext) {
+  requireCapability(context, "maintenance.resolve");
+  const db = context.get("operationalDatabase");
+  const roomId = context.req.param("id");
+  if (!roomId) throw ApiError.notFound("Room not found");
+  const body = await jsonBody<Record<string, unknown>>(context.req.raw);
+  const note = requiredText(body.resolution_note, "resolution_note", 6, 250);
+  const requestedCaseId = typeof body.case_id === "string" && body.case_id.trim() ? body.case_id.trim() : context.req.param("case_id");
+  const room = await findRoom(db, roomId);
+  if (!room) throw ApiError.notFound("Room not found");
+  const open = requestedCaseId
+    ? await db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE id = ?1 AND room_id = ?2 AND status = 'OPEN'`).bind(requestedCaseId, roomId).first<CaseRow>()
+    : await findOpenCase(db, roomId);
+  const legacy = !open && !requestedCaseId && room.status === "MAINTENANCE";
+  if (!open && !legacy) throw ApiError.conflict("Open maintenance case not found");
+  const caseId = open?.id ?? crypto.randomUUID();
+  const impact = open?.impact ?? "BLOCKING";
+  const target = room.status === "OCCUPIED" ? "OCCUPIED" : impact === "BLOCKING" && room.status === "MAINTENANCE" ? "DIRTY" : room.status;
   const eventId = crypto.randomUUID();
-  try { await db.batch([db.prepare("UPDATE rooms SET status = ?2 WHERE id = ?1 AND status = ?3").bind(roomId, to, from), audit(db, eventId, roomId, null, eventType, from, to, context, {})]); } catch { throw ApiError.conflict("Room transition failed without changing the room"); }
+  try {
+    await db.batch([
+      ...(legacy ? [db.prepare("INSERT INTO maintenance_cases (id, room_id, status, impact, priority, reason, assigned_to, reported_by_user_id, reported_at) SELECT ?1, ?2, 'OPEN', 'BLOCKING', 'MEDIUM', 'Legacy maintenance room without an opening case', 'ops', ?3, ?4 WHERE EXISTS (SELECT 1 FROM rooms WHERE id = ?2 AND status = 'MAINTENANCE') AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id = ?2 AND status = 'OPEN')").bind(caseId, roomId, context.get("identity").subject, new Date().toISOString())] : []),
+      db.prepare("UPDATE rooms SET status = ?2 WHERE id = ?1 AND status = ?3 AND EXISTS (SELECT 1 FROM maintenance_cases WHERE id = ?4 AND room_id = ?1 AND status = 'OPEN')").bind(roomId, target, room.status, caseId),
+      db.prepare("UPDATE maintenance_cases SET status = 'RESOLVED', resolution_note = ?2, resolved_by_user_id = ?3, resolved_at = ?4, return_status = ?5 WHERE id = ?1 AND room_id = ?6 AND status = 'OPEN' AND EXISTS (SELECT 1 FROM rooms WHERE id = ?6 AND status = ?7)").bind(caseId, note, context.get("identity").subject, new Date().toISOString(), target, roomId, target),
+      audit(db, eventId, roomId, caseId, "MAINTENANCE_RESOLVE", room.status, target, context, { resolution_note: note, legacy_recovery: legacy }),
+    ]);
+  } catch { throw ApiError.conflict("Maintenance case could not be resolved without changing the room"); }
+  const resolved = await db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE id = ?1`).bind(caseId).first<CaseRow>();
+  if (!resolved || resolved.status !== "RESOLVED" || !(await eventWasRecorded(db, eventId))) throw ApiError.conflict("Maintenance case was not resolved because the room changed concurrently");
+  return context.json(caseView(resolved, context.get("membership").hotelId));
+}
+
+async function transition(context: RouteContext, from: string, to: string, eventType: string) {
+  requireCapability(context, "housekeeping.write");
+  const db = context.get("operationalDatabase");
+  const roomId = context.req.param("id");
+  if (!roomId) throw ApiError.notFound("Room not found");
+  const room = await findRoom(db, roomId);
+  if (!room) throw ApiError.notFound("Room not found");
+  if (room.status !== from) throw ApiError.conflict(`Room must be ${from.toLowerCase()} before this transition`);
+  const eventId = crypto.randomUUID();
+  try {
+    await db.batch([
+      db.prepare("UPDATE rooms SET status = ?2 WHERE id = ?1 AND status = ?3").bind(roomId, to, from),
+      audit(db, eventId, roomId, null, eventType, from, to, context, {}),
+    ]);
+  } catch { throw ApiError.conflict("Room transition failed without changing the room"); }
   if (!(await eventWasRecorded(db, eventId))) throw ApiError.conflict("Room transition was rejected because the room changed concurrently");
   return context.json({ room_id: roomId, status: roomStatus(to) });
 }

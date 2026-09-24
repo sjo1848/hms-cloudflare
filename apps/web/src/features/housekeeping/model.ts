@@ -1,4 +1,4 @@
-export type MaintenanceCase = { id: string; status: string; priority: string; reason: string; assigned_to: string; reported_at: string; resolution_note?: string };
+export type MaintenanceCase = { id: string; status: string; impact?: "NON_BLOCKING" | "BLOCKING"; priority: string; reason: string; assigned_to: string; reported_at: string; resolution_note?: string };
 export type HousekeepingDeparture = { booking_id: string; room_id: string; room_number?: string; room_type?: string; room_status?: string; guest_name: string; booking_status: string };
 export type HousekeepingRoom = { room_id: string; room_number: string; room_type: string; room_status: string; turnover_today: boolean; departure_guest_name?: string; departure_booking_status?: string; maintenance_case?: MaintenanceCase; departure?: HousekeepingDeparture };
 export type HousekeepingBoard = { date: string; rooms: HousekeepingRoom[]; departures_today: HousekeepingDeparture[] };

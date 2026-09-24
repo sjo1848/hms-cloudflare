@@ -3,74 +3,69 @@
 ## CURRENT AUTHORITATIVE STATE
 
 Project: HMS Cloudflare  
-Updated: 2026-08-30  
-Global Project Mode: `DELIVERY`  
-Phase: `ACP INTEGRATION — PHASE 2.5`  
-Runtime: `EXTERNAL_REVIEW`  
-Active task: `ACP-2.5-HMS-CONTROLLED-RESERVATION`
+Working directory: `/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare`
+Active branch: `impl/wave-1.1a-maintenance-impact`
+Current implementation artifact head: `c3eeb8470dea17876c2d8e14f6d6ca554c741924`
+PR: `#46 (Draft)`
+Wave: `1.1a — Maintenance Impact Foundation`
+Status: `DEVELOPMENT GATE PASS WITH SHARED/PREEXISTING BROWSER FINDING; PROMOTION BLOCKED`
+Runtime: `EXTERNAL REVIEW REQUIRED`
 
-The previous Cloudflare Access credential gate is closed and obsolete. HMS staging is already operational behind the private API / Worker boundary. The Human-authorized increment remains strictly **staging only**.
+Wave 0.3 is recorded as `DEVELOPMENT GATE: PASS WITH SHARED/PREEXISTING BROWSER HARNESS FINDING`; its promotion gate remains blocked. Wave 1.1a is authorized from the validated Wave 0.3 artifact, using the remote V11 definition branch as read-only contract authority. Artifact commit `c3eeb84` contains the implementation, targeted regression evidence and invariant evidence and awaits Independent Critic review; this is not a self-approved substantive PASS.
 
-## HUMAN AUTHORIZATION
+## VALIDATED EVIDENCE
 
-Authorized:
-- `createReservation` against HMS staging;
-- persistent idempotency and replay safety;
-- policy / approval enforcement in Agent Core;
-- tenant + hotel capability enforcement;
-- durable mutation provenance in HMS;
-- token-bound `cancelReservation` for synthetic E2E cleanup;
-- staging verification.
+- D11 executing D1: `4/4 PASS`.
+- Foundation CI: PASS.
+- Unit/integration suite: `87/87 PASS`.
+- TypeScript/types: PASS.
+- Web build: PASS.
+- Cloudflare budgets: PASS.
+- D1 critical query plans: PASS.
+- Wrangler dry-runs: PASS.
+- Staging SPA configuration validation: PASS.
+- `scripts/cf-i06-regression.sh`: PASS.
+- Extra-charge D1 atomic rollback: confirmed.
+- `recordExtraCharge()` no longer uses SQLite `changes()` for causal chaining.
 
-Not authorized:
-- production deployment/cutover;
-- real-data migration;
-- paid-resource expansion;
-- unrelated UX/product scope;
-- payment or other financial side effects.
+Successful extra-charge batch observation: `[1, 2, 1, 1]`. The second result may be `2` because the booking update invokes the D11 invoice reconciliation trigger. Batch success must therefore prove the primary mutation and must not require every statement to report exactly `meta.changes === 1`.
 
-## ACTIVE CONTRACT
+## CURRENT BLOCKER
 
-Canonical Task Contract: `.orchestration/contracts/ACP-2.5-HMS-CONTROLLED-RESERVATION.md`.
+Required promotion gate: `ux-mobile-browser` — FAIL / FLAKY SHARED RUNNER FINDING.
 
-## FROZEN SUBSTANTIVE ARTIFACT
+Housekeeping initial board/date and mutation-refresh race is repaired and the browser trace reaches the end of housekeeping successfully. The full gate now fails afterward in Reports waiting for `Daily occupancy`; prior runs also recorded concurrent `/reports/revenue` and `/reports/occupancy` requests, local `workerd` `broken pipe`, and Vite `socket hang up`. This is recorded as an additional runner/runtime finding; CF-I08 Reports code is out of CF-I06 scope and has not been modified.
 
-`a9cf1fe45a510f82d4725236fa7693ba9a2b376e`
+The A/B attribution is recorded in `.orchestration/evidence/CF-I06-WAVE-0.3-BROWSER-ATTRIBUTION.md`. The current run passes Housekeeping and fails in Reports; the baseline full run fails earlier in Housekeeping because the Wave 0.3 repair is absent. The Wave 0.3 diff contains no Reports or analytics implementation changes.
 
-Executable evidence on that exact artifact:
-- Foundation `33289871047` — PASS.
-- Product Flow / Worker+D1 / migration rehearsal / historical CF-I03→CF-I08 `33289871006` — PASS.
-- UX/mobile browser `33289870953` — PASS.
-- Additional branch Foundation `33289869352` — PASS.
+The V11 contracts were fetched read-only from `origin/analysis/operational-flow-definition-v11` and are not merged into the implementation branch.
 
-Publication evidence:
-- `.orchestration/evidence/ACP-2.5-HMS-INVARIANTS.md`
-- `.orchestration/evidence/ACP-2.5-HMS-PRECRITIC.md`
+The original investigation categories were:
 
-## REVIEW FINDINGS CLOSED BEFORE FINAL FREEZE
+1. test race;
+2. application initialization race;
+3. stale/duplicate fetch;
+4. hotel-local date mismatch;
+5. housekeeping domain/runtime regression;
+6. local worker/runtime failure after housekeeping, at the Reports surface.
 
-1. **Persisted authorization boundary** — obsolete Access gate was reconciled and a Phase 2.5 Task Contract was added.
-2. **Durable mutation provenance** — create/cancel persist tenant/hotel/actor/session/trace/action/booking/timestamp in hotel D1, without raw operation token.
-3. **Migration id collision** — initial 0012 collision was caught by rehearsal and moved to migration 0018 after existing migrations.
-4. **Cancellation winner attribution** — CANCEL provenance is claimed only while booking is CONFIRMED, before the conditional transition, in the same D1 transaction. A race loser cannot falsely attribute another caller's cancellation to ACP.
-5. **Zero-row create race classification** — the prior post-create revalidation approach was insufficient because state could become valid again. Final artifact returns the authoritative booking INSERT result from `D1BookingRepository.create` and maps `meta.changes !== 1` immediately to `CONFLICT`; focused adversarial coverage proves this branch independently of later revalidation.
-6. **Stale evidence after substantive rework** — invariant and Pre-Critic evidence were refreshed to the final artifact and exact successful CI runs.
+## GOVERNANCE
 
-## CURRENT GATE
+- No merge.
+- No deploy.
+- No acceptance/staging mutation.
+- No main mutation.
+- No production changes.
+- PR remains isolated/draft.
+- Wave 1.1a may proceed for development under its active Task Contract; the browser gate remains a promotion blocker and must not be hidden or promoted around.
 
-Fresh Independent Critic review of PR #28 against:
-- substantive artifact `a9cf1fe45a510f82d4725236fa7693ba9a2b376e`;
-- Task Contract;
-- invariant evidence;
-- Pre-Critic evidence;
-- full PR patch.
+## NEXT AUTHORIZED ACTION
 
-No merge to `deploy/staging` before fresh external PASS/no blocking finding.
+Independent Critic review of artifact `c3eeb8470dea17876c2d8e14f6d6ca554c741924` via Draft PR #46. Do not modify Reports for this finding, do not merge/deploy/promote, and do not start reassignment until the external review boundary is resolved.
 
-## NEXT AUTHORIZED ACTION AFTER CRITIC PASS
+## MODEL ROUTING
 
-Merge HMS PR #28 to `deploy/staging` → post-merge CI → promote to `acceptance/staging` → deploy HMS staging with migration 0018 + write RPCs → integrate/promote Agent Core → execute the full synthetic E2E:
-
-`no approval -> blocked -> approved reservation -> replay -> changed-payload conflict -> inventory occupied -> token-bound cancellation -> cancellation replay -> availability restored`.
-
-No Human action is required unless a legitimate strategy/security/cost/irreversibility/product-acceptance gate appears.
+- Orchestrator: Luna LOW.
+- Browser investigation/QA: Luna MEDIUM.
+- Repair: Luna LOW or MEDIUM according to demonstrated complexity.
+- Sol MEDIUM only after a substantive Luna MEDIUM investigation is insufficient.

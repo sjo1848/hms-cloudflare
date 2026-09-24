@@ -18,4 +18,4 @@ export function isAdvanceReservableRoomStatus(status: string): boolean {
 
 /** SQL predicate for queries that consistently alias the rooms table as `r`. */
 export const ADVANCE_RESERVABLE_ROOM_SQL =
-  "r.status IN ('AVAILABLE', 'OCCUPIED', 'DIRTY', 'CLEANING')";
+  "r.status IN ('AVAILABLE', 'OCCUPIED', 'DIRTY', 'CLEANING') AND NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id = r.id AND mc.status = 'OPEN' AND mc.impact = 'BLOCKING')";
