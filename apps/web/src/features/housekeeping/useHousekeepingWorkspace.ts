@@ -85,6 +85,7 @@ export function useHousekeepingWorkspace() {
         const next = nextTasks[0] ?? fallback;
         if (next) {
           setSelectedId(next.room_id);
+          setMobileFocus(false);
         }
       }
     } catch (e) {

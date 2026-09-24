@@ -12,11 +12,11 @@
   "pr": "#45",
   "wave": "0.3 — D9/D11 Billing Reconciliation",
   "status_label": "OPEN / BLOCKED ON BROWSER GATE",
-  "next_action": "INVESTIGATE_AND_REPAIR_UX_MOBILE_BROWSER_HOUSEKEEPING_GATE",
-  "stop_reason": "BROWSER_GATE_FAIL_REQUIRES_ROOT_CAUSE_INVESTIGATION",
+  "next_action": "INVESTIGATE_UX_MOBILE_BROWSER_REPORTS_WORKER_RUNTIME_FAILURE_WITHOUT_CF_I08_SCOPE",
+  "stop_reason": "HOUSEKEEPING_REPAIRED_FULL_GATE_BLOCKED_BY_REPORTS_WORKER_RUNTIME_FAILURE",
   "event": {
-    "seq": 116,
-    "id": "WAVE-0.3-BROWSER-GATE-BLOCKED",
+    "seq": 117,
+    "id": "WAVE-0.3-BROWSER-GATE-REPORTS-RUNTIME-BLOCKED",
     "type": "BLOCKED"
   },
   "external_review": {
@@ -30,7 +30,7 @@
   "blocker": {
     "kind": "TECHNICAL",
     "surface": "ux-mobile-browser",
-    "area": "housekeeping browser flow / initial board loading / hotel-local-date interaction",
+    "area": "Reports browser surface / concurrent report requests / local workerd broken pipe after housekeeping passes",
     "wave_pass": false
   },
   "authorization": {
@@ -54,7 +54,9 @@
     "staging_spa_config": "PASS",
     "cf_i06_regression": "PASS",
     "extra_charge_atomic_rollback": "CONFIRMED",
-    "browser_gate": "FAIL"
+    "browser_gate": "FAIL",
+    "housekeeping_browser_flow": "PASS THROUGH HOUSEKEEPING",
+    "reports_browser_flow": "FAIL: LOCAL_WORKER_BROKEN_PIPE_SOCKET_HANG_UP"
   },
   "method": {
     "human_routine_relay_forbidden": true,

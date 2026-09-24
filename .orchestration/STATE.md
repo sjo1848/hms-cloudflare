@@ -9,6 +9,7 @@ Head: `077ebf18af935e00579f590d4a6bb8c0bffb9abd`
 PR: `#45`
 Wave: `0.3 — D9/D11 Billing Reconciliation`
 Status: `OPEN / BLOCKED ON BROWSER GATE`
+Runtime: `BLOCKED`
 
 Wave 0.3 is not PASS. Wave 1.1a has not started.
 
@@ -33,7 +34,7 @@ Successful extra-charge batch observation: `[1, 2, 1, 1]`. The second result may
 
 Required gate: `ux-mobile-browser` — FAIL.
 
-Known area: housekeeping browser flow, initial board loading and hotel-local-date interaction. The cause remains under investigation and is not to be hidden with arbitrary sleeps, blind timeout increases or green-only retries.
+Housekeeping initial board/date and mutation-refresh race is repaired and the browser trace reaches the end of housekeeping successfully. The full gate now fails afterward in Reports: concurrent `/reports/revenue` and `/reports/occupancy` requests cause local `workerd` to terminate with `broken pipe`, and Vite observes `socket hang up`. This is recorded as an additional runner/runtime finding; CF-I08 Reports code is out of CF-I06 scope and has not been modified.
 
 Investigation must distinguish:
 
@@ -41,7 +42,8 @@ Investigation must distinguish:
 2. application initialization race;
 3. stale/duplicate fetch;
 4. hotel-local date mismatch;
-5. housekeeping domain/runtime regression.
+5. housekeeping domain/runtime regression;
+6. local worker/runtime failure after housekeeping, at the Reports surface.
 
 ## GOVERNANCE
 
@@ -55,7 +57,7 @@ Investigation must distinguish:
 
 ## NEXT AUTHORIZED ACTION
 
-Investigate and repair the Wave 0.3 `ux-mobile-browser` regression, then rerun the required Foundation CI and browser regression. After a reproducibly green browser gate, execute the Pre-Critic Gate and invariant evidence for the exact artifact before external review.
+Investigate the remaining `ux-mobile-browser` Reports/workerd failure without absorbing CF-I08 product scope; establish a reproducible full-gate result or a valid equivalent runner diagnosis, then rerun Foundation CI and browser regression. After a reproducibly green browser gate, execute the Pre-Critic Gate and invariant evidence for the exact artifact before external review.
 
 ## MODEL ROUTING
 

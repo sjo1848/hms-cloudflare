@@ -24,6 +24,7 @@ cd "$repo_dir"
 mkdir -p output/playwright
 wrangler="$repo_dir/node_modules/.bin/wrangler"
 hotel_local_date=$(TZ=America/Argentina/Mendoza date +%F)
+rm -rf "$repo_dir/apps/api/.wrangler/state"
 
 CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc >"$tmp_dir/migrations.log" 2>&1
 CI=1 "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >>"$tmp_dir/migrations.log" 2>&1
