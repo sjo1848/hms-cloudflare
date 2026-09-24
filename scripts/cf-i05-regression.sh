@@ -27,7 +27,7 @@ CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --c
   INSERT OR REPLACE INTO guests (id,full_name,email,created_at) VALUES ('guest-a','Guest A','a@example.test','2026-01-01');
 " >/dev/null
 
-CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "INSERT OR REPLACE INTO maintenance_cases (id,room_id,status,priority,reason,assigned_to,reported_by_user_id,reported_at) VALUES ('case-f','room-f','OPEN','HIGH','Existing maintenance case','ops','subject-a','2026-01-01T00:00:00Z');" >/dev/null
+CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "INSERT OR REPLACE INTO maintenance_cases (id,room_id,status,impact,priority,reason,assigned_to,reported_by_user_id,reported_at) VALUES ('case-f','room-f','OPEN','BLOCKING','HIGH','Existing maintenance case','ops','subject-a','2026-01-01T00:00:00Z');" >/dev/null
 CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "INSERT OR REPLACE INTO maintenance_cases (id,room_id,status,priority,reason,assigned_to,reported_by_user_id,reported_at,resolution_note,resolved_by_user_id,resolved_at,return_status) VALUES ('case-h1','room-h','RESOLVED','HIGH','First maintenance case','ops','subject-a','2026-01-01T00:00:00Z','First case resolved','subject-a','2026-01-02T00:00:00Z','DIRTY'), ('case-h2','room-h','OPEN','URGENT','New maintenance case after re-entry','ops','subject-a','2026-01-03T00:00:00Z',NULL,NULL,NULL,NULL);" >/dev/null
 
 start_worker
@@ -106,6 +106,12 @@ node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/rollback.json')
 serialized_d1 CONTROL_DB --local -c apps/api/wrangler.jsonc --command "UPDATE hotel_memberships SET role='receptionist' WHERE access_subject='subject-a' AND hotel_id='hotel-a';" >/dev/null
 status=$(request "$base/housekeeping/dirty"); assert_status "$status" 403
 status=$(request -X POST "$base/housekeeping/room-a/start"); assert_status "$status" 403
+status=$(request -X POST -d '{"resolution_note":"Reception resolve denied"}' "$base/housekeeping/room-d/dirty"); assert_status "$status" 403
+status=$(curl -sS -o "$tmp_dir/cross-tenant.json" -w '%{http_code}' \
+  -H 'x-local-access-subject: subject-a' -H 'x-local-access-email: a@example.test' \
+  -H 'x-hotel-id: hotel-b' -H 'content-type: application/json' "$base/housekeeping/dirty"); assert_status "$status" 403
+serialized_d1 HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT status, COUNT(*) AS events FROM rooms r LEFT JOIN housekeeping_events e ON e.room_id=r.id WHERE r.id='room-a' GROUP BY r.status;" --json >"$tmp_dir/tenant-denial-db.json"
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/tenant-denial-db.json')).flatMap(x=>x.results)[0]; if(r.status!=='AVAILABLE'||r.events!==2) process.exit(1)"
 serialized_d1 CONTROL_DB --local -c apps/api/wrangler.jsonc --command "UPDATE hotel_memberships SET role='housekeeping' WHERE access_subject='subject-a' AND hotel_id='hotel-a';" >/dev/null
 status=$(request -X POST "$base/housekeeping/missing-room/start"); assert_status "$status" 404
 
