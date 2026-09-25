@@ -7,7 +7,7 @@
   "resume_authorized": false,
   "active_task": "WAVE-1.2-RECEPTION-REASSIGNMENT-UX-CONTROLLER-CHECKPOINT",
   "last_completed_task": "WAVE-1.2-RECEPTION-REASSIGNMENT-UX-ARTIFACT",
-  "last_completed_head": "4d7c8c69f9d6684094cc78fef70e5e0e5edb850b",
+  "last_completed_head": "47b9fed9300d1a77f5f20ddafadbd79a5514b6b8",
   "work_branch": "impl/wave-1.2-reception-reassignment-ux",
   "pr": "#48 (Draft)",
   "wave": "1.2 — Reception Reassignment UX/UI",
@@ -15,7 +15,7 @@
   "next_action": "EXTERNAL_REVIEW_OR_CONTROLLER_DISPOSITION_BEFORE_NEXT_FROZEN_ARTIFACT",
   "stop_reason": "WAVE_1_2_CONTROLLER_CHECKPOINT",
   "event": {
-    "seq": 123,
+    "seq": 124,
     "id": "WAVE-1.2-RECEPTION-REASSIGNMENT-UX-CONTROLLER-CHECKPOINT",
     "type": "CHECKPOINT"
   },
@@ -23,7 +23,7 @@
     "required": true,
     "last_audited_head": null,
     "last_verdict": null,
-    "artifact_head": "4d7c8c69f9d6684094cc78fef70e5e0e5edb850b",
+    "artifact_head": "47b9fed9300d1a77f5f20ddafadbd79a5514b6b8",
     "review_path": "Independent Critic for later frozen integration/promotion"
   },
   "human_gate": null,
@@ -66,8 +66,12 @@
     "wave_1_1a_browser": "FAIL: SHARED_REPORTS_RUNNER_FINDING_AFTER_HOUSEKEEPING",
     "wave_1_1a_artifact_head": "c3eeb8470dea17876c2d8e14f6d6ca554c741924",
     "wave_1_1_artifact_head": "b8ed06521d4221fcaac08b838887405339c9cd1e",
-    "wave_1_2_artifact_head": "4d7c8c69f9d6684094cc78fef70e5e0e5edb850b",
+    "wave_1_2_artifact_head": "47b9fed9300d1a77f5f20ddafadbd79a5514b6b8",
     "wave_1_2_targeted_browser": "PASS: MOCK API FLOW AT 375/390/430/768/1024 WITH REASON VALIDATION AND 409 RECOVERY",
+    "wave_1_2_integrated_success": "PASS: REAL LOCAL WRANGLER WORKER/D1 + VITE PREVIEW AT 375PX; PERSISTENCE AND D11 ASSERTIONS PASS",
+    "wave_1_2_integrated_conflict": "PASS: REAL LOCAL WRANGLER WORKER/D1 + VITE PREVIEW AT 375PX; 409 AND ZERO DRIFT ASSERTIONS PASS",
+    "wave_1_2_multi_agent_available": false,
+    "wave_1_2_backend_fix": "PASS: REMOVED DUPLICATE PRICE_RECONCILIATION INSERT FOUND BY INTEGRATED E2E",
     "browser_attribution": "CURRENT_REPORTS_AND_USERS_FAILURES; BASELINE_BLOCKED_EARLIER_IN_HOUSEKEEPING",
     "v11_contract_source": "origin/analysis/operational-flow-definition-v11"
   },
