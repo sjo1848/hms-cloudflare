@@ -1,4 +1,8 @@
 export type Room = { id: string; room_number: string; room_type: string; status: string; price_cents: number };
+export type MaintenanceCase = { id: string; room_id: string; status: string; impact: "NON_BLOCKING" | "BLOCKING"; priority: string; reason: string };
+export type HousekeepingBoardRoom = { room_id: string; room_number: string; room_type: string; room_status: string; maintenance_case?: MaintenanceCase };
+export type HousekeepingBoard = { date: string; rooms: HousekeepingBoardRoom[] };
+export type ActiveHotelContext = { hotel_id: string | null; hotel_name: string | null; hotel_local_date: string; hotel_timezone: string; };
 export type Guest = { id: string; full_name: string; email: string; phone: string | null };
 export type Hold = { id: string; start_date: string; end_date: string; hold_type: string; reason: string };
 export type Booking = { id: string; guest_id: string; guest_name: string; room_id: string; room_number: string; check_in: string; check_out: string; status: string; total_cents: number; notes: string | null };
