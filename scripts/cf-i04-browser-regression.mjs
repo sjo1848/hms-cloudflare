@@ -1,5 +1,6 @@
 async page => {
   const calls = [];
+  await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
   const guest = { id: "guest-a", full_name: "Guest A", email: "a@example.test", phone: null };
   const rooms = [
     { id: "room-a", room_number: "101", room_type: "STANDARD", status: "Occupied", price_cents: 10000 },
@@ -7,6 +8,7 @@ async page => {
   ];
   let lifecycleStatus = "Confirmed";
   let checkInAttempts = 0;
+  let reassignAttempts = 0;
   const booking = { id: "booking-a", guest_id: "guest-a", guest_name: "Guest A", room_id: "room-a", room_number: "101", check_in: "2026-09-01", check_out: "2026-09-03", status: lifecycleStatus, total_cents: 20000, notes: null };
   await page.unroute("**/api/v1/**");
   await page.route("**/api/v1/**", async route => {
@@ -14,9 +16,15 @@ async page => {
     if (request.method() === "POST") {
       const body = request.postDataJSON(); calls.push({ method: request.method(), url, body });
       if (url.includes("check-in") && ++checkInAttempts === 1 && checkInAttempts === 1 && calls.filter(call => call.url.includes("check-in")).length === 1) return route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: { code: "CONFLICT", message: "Booking became unavailable during check-in" } }) });
+      if (url.includes("/reassign") && ++reassignAttempts === 1) return route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: { code: "CONFLICT", message: "Synthetic destination conflict" } }) });
       lifecycleStatus = url.includes("check-out") ? "CheckedOut" : url.includes("reassign") ? "CheckedIn" : "CheckedIn";
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ id: booking.id, status: lifecycleStatus, room_id: "room-b", room_status: url.includes("check-out") ? "Dirty" : "Occupied" }) });
     }
+    if (url.endsWith("/auth/me")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ hotel_id: "hotel-a", hotel_name: "Hotel Norte", hotel_local_date: "2026-09-01", hotel_timezone: "America/Argentina/Mendoza" }) });
+    if (url.includes("/rooms/available?")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([rooms[1]]) });
+    if (url.includes("/housekeeping/board?")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ date: "2026-09-01", rooms: [{ room_id: "room-b", room_number: "102", room_type: "STANDARD", room_status: "Available" }] }) });
+    if (url.endsWith("/invoice")) return route.fulfill({ status: 200, contentType: "application/json", body: "null" });
+    if (url.endsWith("/extra-charges")) return route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
     if (url.endsWith("/bookings?limit=100")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([{ ...booking, status: lifecycleStatus }]) });
     if (url.endsWith("/rooms")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(rooms) });
     if (url.endsWith("/guests")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([guest]) });
@@ -29,15 +37,15 @@ async page => {
     const mobile = width < 768;
     if (mobile) {
       await page.getByRole("heading", { name: "Next action: check-in verification" }).waitFor();
-      await page.getByText("Verificación", { exact: true }).waitFor();
+      await page.getByText("Verification", { exact: true }).waitFor();
       await page.getByLabel("Final guest count").fill("2");
       await page.getByLabel("Document verified").check();
       await page.getByRole("button", { name: "Next step" }).click();
-      await page.getByText("Datos / estadía", { exact: true }).waitFor();
+      await page.getByText("Guest / stay data", { exact: true }).waitFor();
       await page.getByLabel("Contact confirmed").check(); await page.getByLabel("Stay confirmed").check();
       await page.getByRole("button", { name: "Next step" }).click();
-      await page.getByText("Habitación", { exact: true }).waitFor(); await page.getByRole("button", { name: "Next step" }).click();
-      await page.getByText("Confirmar ingreso", { exact: true }).waitFor();
+      await page.getByText("Room", { exact: true }).waitFor(); await page.getByRole("button", { name: "Next step" }).click();
+      await page.getByText("Confirm check-in", { exact: true }).waitFor();
     } else {
       await page.getByLabel("Final guest count").fill("2"); await page.getByLabel("Document verified").check(); await page.getByLabel("Contact confirmed").check(); await page.getByLabel("Stay confirmed").check();
     }
@@ -46,11 +54,15 @@ async page => {
   }
 
   for (const [width, height] of [[375, 800], [390, 800], [430, 800], [768, 900], [1024, 900]]) {
-    lifecycleStatus = "Confirmed"; checkInAttempts = width === 375 ? 0 : 1;
+    lifecycleStatus = "Confirmed"; checkInAttempts = width === 375 ? 0 : 1; reassignAttempts = width === 375 ? 0 : 1;
     await page.setViewportSize({ width, height }); await page.goto("http://127.0.0.1:4173/bookings");
     await completeCheckIn(width, width === 375);
     await openCase();
-    await page.locator('form[aria-label="Reassign room"] select').selectOption("room-b"); await page.locator('form[aria-label="Reassign room"] input[name="reason"]').fill("Guest requested room move"); await page.getByRole("button", { name: "Reassign room" }).click();
+    const reassignForm = page.locator('form[aria-label="Reassign room"]');
+    await reassignForm.getByRole("combobox").selectOption("room-b");
+    if (width === 375) { await reassignForm.locator('input[name="reason"]').fill("short"); await page.getByRole("button", { name: "Reassign room" }).click(); if (reassignAttempts !== 0) throw new Error("short reassignment reason was submitted"); }
+    if (width === 375) { await reassignForm.locator('input[name="reason"]').fill("Guest asks"); await page.getByRole("button", { name: "Reassign room" }).click(); if (!(await page.getByRole("alert").textContent())?.includes("The stay or destination changed")) throw new Error("reassignment conflict guidance missing"); }
+    await reassignForm.locator('input[name="reason"]').fill("Guest requested room move"); await page.getByRole("button", { name: "Reassign room" }).click();
     await openCase();
     const checkout = page.locator('form[aria-label="Checkout"]');
     await checkout.locator('select[name="policy"]').selectOption(width === 390 || width === 430 ? "pending-approved" : "settled");

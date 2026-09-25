@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BillingWorkspace } from "../billing/BillingWorkspace";
 import { StatusBadge } from "../../components/StatusBadge";
 import { useReceptionWorkspace } from "./useReceptionWorkspace";
@@ -36,21 +36,32 @@ const reasonLabelKeys: Record<QueueReason, MessageKey> = {
 };
 
 function Bookings() {
-  const { t, statusLabel, formatDate } = useI18n();
+  const { t, statusLabel, formatDate, formatCurrency } = useI18n();
   const {
-    bookings, rooms, guests, availableRooms, editAvailableRooms, loading, error, selected,
+    bookings, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignInvoice, reassignExtraCents, reassignHotelDate, loading, error, notice, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
     setCheckInStep, setCheckInData, setForm, setEditForm,
-    selectCase, closeCase, refreshAvailability, submit, checkIn, reassign, checkout,
+    selectCase, closeCase, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
     saveEdit, cancelBooking,
   } = useReceptionWorkspace();
   const [queueFilter, setQueueFilter] = useState<QueueFilter>("attention");
   const [queueSearch, setQueueSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [reassignTargetId, setReassignTargetId] = useState("");
   const mobileStep = checkInStep;
   const queue = buildQueue(bookings);
   const counts = queueCounts(queue);
   const visibleQueue = filterQueue(queue, queueFilter, queueSearch);
+  const currentRoom = selected ? rooms.find(room => room.id === selected.room_id) : undefined;
+  const stayNights = selected ? Math.max(0, (Date.parse(`${selected.check_out}T00:00:00Z`) - Date.parse(`${selected.check_in}T00:00:00Z`)) / 86400000) : 0;
+  const extraCents = selected ? reassignExtraCents || Math.max(0, selected.total_cents - (currentRoom?.price_cents ?? 0) * stayNights) : 0;
+  const reassignRooms = selected?.status === "CheckedIn" ? rooms.filter(room => room.id !== selected.room_id) : [];
+  const boardByRoom = new Map((reassignBoard?.rooms ?? []).map(room => [room.room_id, room]));
+  const effectiveDate = selected ? (reassignHotelDate && reassignHotelDate > selected.check_in ? reassignHotelDate : selected.check_in) : "";
+  const reassignTarget = rooms.find(room => room.id === reassignTargetId);
+  const reassignNewTotal = reassignTarget ? reassignTarget.price_cents * stayNights + extraCents : null;
+  const reassignDifference = reassignNewTotal == null || !selected ? null : reassignNewTotal - selected.total_cents;
+  useEffect(() => { setReassignTargetId(""); }, [selected?.id]);
 
   return <section className="reception-workspace">
     <div className="workspace-heading reception-workspace-heading">
@@ -77,6 +88,7 @@ function Bookings() {
     </form>}
 
     {error && <p className="error" role="alert">{error}</p>}
+    {notice && <p className="success" role="status">{notice}</p>}
     {loading && <p className="muted" role="status">{t("reception.loadingQueue")}</p>}
 
     <div className="case-layout reception-case-layout">
@@ -145,11 +157,28 @@ function Bookings() {
         </form>}
 
         {selected.status === "CheckedIn" && <>
-          <form onSubmit={reassign} aria-label={t("reception.reassignAria")}>
-            <h4>{t("reception.nextReassign")}</h4>
-            <select name="room_id" required><option value="">{t("reception.selectDestination")}</option>{rooms.filter(room => room.id !== selected.room_id && room.status === "Available").map(room => <option key={room.id} value={room.id}>{room.room_number}</option>)}</select>
-            <label>{t("common.reason")} <input name="reason" minLength={6} maxLength={250} required /></label>
-            <button>{t("reception.reassignRoom")}</button>
+          <form onSubmit={reassign} aria-label={t("reception.reassignAria")} className="reassign-surface">
+            <div className="reassign-surface-heading"><div><p className="eyebrow">{t("reception.reassignContext")}</p><h4>{t("reception.nextReassign")}</h4><p className="muted">{t("reception.reassignStayContext", { room: selected.room_number, checkout: formatDate(selected.check_out) })}</p></div><span className="reassign-date-chip">{effectiveDate ? formatDate(effectiveDate) : t("common.loading")}</span></div>
+            <div className="reassign-room-summary"><div><span className="muted">{t("reception.reassignCurrentRoom")}</span><strong>{selected.room_number}</strong></div><span aria-hidden="true">→</span><div><span className="muted">{t("reception.reassignDestinationRoom")}</span><strong>{t("reception.reassignChooseRoom")}</strong></div></div>
+            <label>{t("reception.selectDestination")} <select name="room_id" required disabled={!reassignBoard || actionBusy} value={reassignTargetId} onChange={event => { setReassignTargetId(event.target.value); void selectReassignDestination(event.target.value); }} aria-describedby="reassign-room-help"><option value="">{t("reception.selectDestination")}</option>{reassignRooms.map(room => {
+              const boardRoom = boardByRoom.get(room.id);
+              const selectedMaintenance = room.id === reassignTargetId ? reassignMaintenanceCase : boardRoom?.maintenance_case;
+              const blocking = selectedMaintenance?.impact === "BLOCKING" || room.status === "Maintenance";
+              const inventoryFree = reassignAvailableIds.has(room.id);
+              const selectable = room.status === "Available" && inventoryFree && !blocking;
+              const reason = blocking ? t("reception.reassignBlockedMaintenance") : room.status !== "Available" ? t("reception.reassignPhysicalUnavailable") : !inventoryFree ? t("reception.reassignInventoryUnavailable") : selectedMaintenance?.impact === "NON_BLOCKING" ? t("reception.reassignNonBlockingAdvisory") : "";
+              return <option key={room.id} value={room.id} disabled={!selectable}>{room.room_number} · {room.room_type} · {formatCurrency(room.price_cents)}{reason ? ` · ${reason}` : ""}</option>;
+            })}</select></label>
+            <p id="reassign-room-help" className="muted reassign-room-help">{t("reception.reassignRoomHelp")}</p>
+            <div className="reassign-price-summary" aria-label={t("reception.reassignPriceSummary")}>
+              <div><span className="muted">{t("billing.total")}</span><strong>{formatCurrency(selected.total_cents)}</strong></div>
+              <div><span className="muted">{t("reception.reassignNewTotal")}</span><strong data-testid="reassign-new-total">{reassignNewTotal == null ? t("reception.reassignChooseRoom") : formatCurrency(reassignNewTotal)}</strong></div>
+              <div><span className="muted">{t("billing.paid")}</span><strong>{formatCurrency(reassignInvoice?.paid_amount_cents ?? 0)}</strong></div>
+            </div>
+            <p className="muted reassign-price-note">{reassignDifference == null ? t("reception.reassignPriceNote", { nights: stayNights }) : reassignDifference > 0 ? t("reception.reassignIncrease", { amount: formatCurrency(reassignDifference) }) : reassignDifference < 0 ? t("reception.reassignCredit", { amount: formatCurrency(Math.abs(reassignDifference)) }) : t("reception.reassignNoPriceChange")}</p>
+            {reassignNewTotal != null && <p className="reassign-balance-note">{t("billing.remaining")}: {formatCurrency(Math.max(0, reassignNewTotal - (reassignInvoice?.paid_amount_cents ?? 0)))} · {t("reception.reassignCreditBalance")}: {formatCurrency(Math.max(0, (reassignInvoice?.paid_amount_cents ?? 0) - reassignNewTotal))}</p>}
+            <label>{t("common.reason")} <input name="reason" minLength={6} maxLength={250} required aria-describedby="reassign-reason-help" disabled={actionBusy} /><span id="reassign-reason-help" className="field-hint">{t("reception.reassignReasonHint")}</span></label>
+            <button disabled={actionBusy || !reassignBoard}>{actionBusy ? t("reception.reassignSubmitting") : t("reception.reassignRoom")}</button>
           </form>
           <form onSubmit={checkout} aria-label={t("reception.checkoutAria")}>
             <h4>{t("reception.nextCheckout")}</h4>

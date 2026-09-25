@@ -4,11 +4,11 @@
 
 Project: HMS Cloudflare  
 Working directory: `/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare`
-Active branch: `impl/wave-1.1-reassignment`
-Base implementation boundary: `b28595ddf90056d39d31e331a85b1a193936f9ec`
-PR: `#47 (Draft)`
-Wave: `1.1 — In-Stay Reassignment`
-Status: `OPEN / WAVE 1.1 DEVELOPMENT CHECKPOINT; PROMOTION BLOCKED`
+Active branch: `impl/wave-1.2-reception-reassignment-ux`
+Base implementation boundary: `9ed9ebc1a42cd13096d526c4d621140f9d3d6a3b`
+PR: `#48 (Draft)`
+Wave: `1.2 — Reception Reassignment UX/UI`
+Status: `OPEN / WAVE 1.2 DEVELOPMENT CHECKPOINT; PROMOTION BLOCKED`
 Runtime: `READY_TO_RESUME at Controller checkpoint`
 
 Wave 0.3 and Wave 1.1a are recorded as development passes with the shared/preexisting browser finding; promotion remains blocked. Wave 1.1 backend/domain work reached Controller checkpoint at artifact `b8ed06521d4221fcaac08b838887405339c9cd1e`, using the remote V11 definition branch as read-only contract authority. The external review remains required and is not marked completed.
@@ -40,7 +40,7 @@ Housekeeping initial board/date and mutation-refresh race is repaired and the br
 
 The A/B attribution is recorded in `.orchestration/evidence/CF-I06-WAVE-0.3-BROWSER-ATTRIBUTION.md`. The current run passes Housekeeping and fails in Reports; the baseline full run fails earlier in Housekeeping because the Wave 0.3 repair is absent. The Wave 0.3 diff contains no Reports or analytics implementation changes.
 
-The V11 contracts were fetched read-only from `origin/analysis/operational-flow-definition-v11` and are not merged into the implementation branch.
+The V11 contracts were fetched read-only from `origin/analysis/operational-flow-definition-v11` and are not merged into the implementation branch. Wave 1.2 adds the Reception contextual reassignment surface and the minimum backend repair required by the real integrated flow; D11, Reports and Users remain otherwise unchanged.
 
 The original investigation categories were:
 
@@ -59,11 +59,13 @@ The original investigation categories were:
 - No main mutation.
 - No production changes.
 - PR remains isolated/draft.
-- Wave 1.1 may proceed for development under its active Task Contract; the browser gate remains a promotion blocker and must not be hidden or promoted around.
+- Wave 1.2 artifact A is published at `47b9fed9300d1a77f5f20ddafadbd79a5514b6b8`; the browser gate remains a promotion blocker and must not be hidden or promoted around.
+- Real integrated E2E evidence is recorded for independent fresh success and conflict sessions against local Wrangler Worker/D1 plus Vite preview at mobile width 375px. The success path persisted the reassignment and D11 repricing; the conflict path preserved booking/billing truth and emitted no partial events.
+- The integrated run exposed a duplicate `PRICE_RECONCILIATION` insert in the reassignment repository; artifact A removes the duplicate. The receptionist UI uses the existing per-room `maintenance.read` route because the receptionist role does not have `housekeeping.read`; no capability expansion was made.
 
 ## NEXT AUTHORIZED ACTION
 
-Hold at the Wave 1.1 Controller checkpoint for external review/controller disposition. The next scoped product increment is Reception reassignment UX/UI. Do not modify Reports or Users, and do not merge/deploy/promote.
+Hold at the Wave 1.2 Controller checkpoint for External Independent Critic/controller disposition. Do not modify Reports or Users, and do not merge/deploy/promote.
 
 ## MODEL ROUTING
 

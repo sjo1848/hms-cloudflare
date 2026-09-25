@@ -1,5 +1,5 @@
 import { api } from "../../api/client";
-import type { Booking, Guest, Room } from "../../domain/types";
+import type { ActiveHotelContext, Booking, ExtraCharge, Guest, HousekeepingBoard, Invoice, MaintenanceCase, Room } from "../../domain/types";
 import type { BookingEditForm, BookingForm, CheckInData } from "./model";
 
 export async function loadReceptionQueue() {
@@ -15,6 +15,21 @@ export function loadAvailableRooms(start: string, end: string, excludeBookingId?
   const query = new URLSearchParams({ start, end });
   if (excludeBookingId) query.set("exclude_booking_id", excludeBookingId);
   return api<Room[]>(`/rooms/available?${query.toString()}`);
+}
+
+export function loadHotelContext() {
+  return api<ActiveHotelContext>("/auth/me");
+}
+
+export function loadRoomMaintenanceCase(roomId: string) {
+  return api<MaintenanceCase>(`/housekeeping/${roomId}/maintenance`);
+}
+
+export function loadBillingContext(bookingId: string) {
+  return Promise.all([
+    api<Invoice>(`/bookings/${bookingId}/invoice`),
+    api<ExtraCharge[]>(`/bookings/${bookingId}/extra-charges`),
+  ]);
 }
 
 export function createBooking(form: BookingForm) {
