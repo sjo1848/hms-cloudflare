@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import type { Booking, Guest, HousekeepingBoard, Invoice, Room } from "../../domain/types";
+import type { Booking, Guest, HousekeepingBoard, Invoice, MaintenanceCase, Room } from "../../domain/types";
 import {
   cancelBooking as cancelBookingRequest,
   checkInBooking,
@@ -8,9 +8,9 @@ import {
   createBooking,
   loadAvailableRooms,
   loadBillingContext,
-  loadHousekeepingBoard,
   loadHotelContext,
   loadReceptionQueue,
+  loadRoomMaintenanceCase,
   reassignBooking,
   updateBooking,
 } from "./reception-api";
@@ -34,6 +34,7 @@ export function useReceptionWorkspace() {
   const [editAvailableRooms, setEditAvailableRooms] = useState<Room[]>([]);
   const [reassignAvailableIds, setReassignAvailableIds] = useState<Set<string>>(new Set());
   const [reassignBoard, setReassignBoard] = useState<HousekeepingBoard | null>(null);
+  const [reassignMaintenanceCase, setReassignMaintenanceCase] = useState<MaintenanceCase | null>(null);
   const [reassignInvoice, setReassignInvoice] = useState<Invoice>(null);
   const [reassignExtraCents, setReassignExtraCents] = useState(0);
   const [reassignHotelDate, setReassignHotelDate] = useState("");
@@ -93,6 +94,7 @@ export function useReceptionWorkspace() {
     setEditAvailableRooms([]);
     setReassignAvailableIds(new Set());
     setReassignBoard(null);
+    setReassignMaintenanceCase(null);
     setReassignInvoice(null);
     setReassignExtraCents(0);
     setReassignHotelDate("");
@@ -120,11 +122,19 @@ export function useReceptionWorkspace() {
   async function loadReassignmentContext(booking: Booking) {
     try {
       const hotelContext = await loadHotelContext();
-      const [available, board, billing] = await Promise.all([
+      const [available, billing] = await Promise.all([
         loadAvailableRooms(booking.check_in, booking.check_out, booking.id),
-        loadHousekeepingBoard(hotelContext.hotel_local_date),
         loadBillingContext(booking.id),
       ]);
+      const board: HousekeepingBoard = {
+        date: hotelContext.hotel_local_date,
+        rooms: available.map((room, index) => ({
+          room_id: room.id,
+          room_number: room.room_number,
+          room_type: room.room_type,
+          room_status: room.status,
+        })),
+      };
       setReassignHotelDate(hotelContext.hotel_local_date);
       setReassignAvailableIds(new Set(available.map(room => room.id)));
       setReassignBoard(board);
@@ -133,6 +143,18 @@ export function useReceptionWorkspace() {
     } catch (e) {
       setReassignAvailableIds(new Set());
       setReassignBoard(null);
+      setError((e as Error).message);
+    }
+  }
+
+  async function selectReassignDestination(roomId: string) {
+    setReassignMaintenanceCase(null);
+    if (!roomId) return;
+    try {
+      setReassignMaintenanceCase(await loadRoomMaintenanceCase(roomId));
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) return;
+      if (typeof e === "object" && e !== null && "status" in e && (e as { status?: unknown }).status === 404) return;
       setError((e as Error).message);
     }
   }
@@ -243,10 +265,10 @@ export function useReceptionWorkspace() {
   }
 
   return {
-    bookings, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignInvoice, reassignExtraCents, reassignHotelDate, loading, error, notice, selected, actionBusy,
+    bookings, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignInvoice, reassignExtraCents, reassignHotelDate, loading, error, notice, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
     setCheckInStep, setCheckInData, setForm, setEditForm,
-    selectCase, closeCase, refreshAvailability, submit, checkIn, reassign, checkout,
+    selectCase, closeCase, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
     saveEdit, cancelBooking,
   };
 }

@@ -1,5 +1,5 @@
 import { api } from "../../api/client";
-import type { ActiveHotelContext, Booking, ExtraCharge, Guest, HousekeepingBoard, Invoice, Room } from "../../domain/types";
+import type { ActiveHotelContext, Booking, ExtraCharge, Guest, HousekeepingBoard, Invoice, MaintenanceCase, Room } from "../../domain/types";
 import type { BookingEditForm, BookingForm, CheckInData } from "./model";
 
 export async function loadReceptionQueue() {
@@ -21,8 +21,8 @@ export function loadHotelContext() {
   return api<ActiveHotelContext>("/auth/me");
 }
 
-export function loadHousekeepingBoard(date: string) {
-  return api<HousekeepingBoard>(`/housekeeping/board?date=${encodeURIComponent(date)}`);
+export function loadRoomMaintenanceCase(roomId: string) {
+  return api<MaintenanceCase>(`/housekeeping/${roomId}/maintenance`);
 }
 
 export function loadBillingContext(bookingId: string) {

@@ -38,10 +38,10 @@ const reasonLabelKeys: Record<QueueReason, MessageKey> = {
 function Bookings() {
   const { t, statusLabel, formatDate, formatCurrency } = useI18n();
   const {
-    bookings, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignInvoice, reassignExtraCents, reassignHotelDate, loading, error, notice, selected, actionBusy,
+    bookings, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignInvoice, reassignExtraCents, reassignHotelDate, loading, error, notice, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
     setCheckInStep, setCheckInData, setForm, setEditForm,
-    selectCase, closeCase, refreshAvailability, submit, checkIn, reassign, checkout,
+    selectCase, closeCase, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
     saveEdit, cancelBooking,
   } = useReceptionWorkspace();
   const [queueFilter, setQueueFilter] = useState<QueueFilter>("attention");
@@ -160,12 +160,13 @@ function Bookings() {
           <form onSubmit={reassign} aria-label={t("reception.reassignAria")} className="reassign-surface">
             <div className="reassign-surface-heading"><div><p className="eyebrow">{t("reception.reassignContext")}</p><h4>{t("reception.nextReassign")}</h4><p className="muted">{t("reception.reassignStayContext", { room: selected.room_number, checkout: formatDate(selected.check_out) })}</p></div><span className="reassign-date-chip">{effectiveDate ? formatDate(effectiveDate) : t("common.loading")}</span></div>
             <div className="reassign-room-summary"><div><span className="muted">{t("reception.reassignCurrentRoom")}</span><strong>{selected.room_number}</strong></div><span aria-hidden="true">→</span><div><span className="muted">{t("reception.reassignDestinationRoom")}</span><strong>{t("reception.reassignChooseRoom")}</strong></div></div>
-            <label>{t("reception.selectDestination")} <select name="room_id" required disabled={!reassignBoard || actionBusy} value={reassignTargetId} onChange={event => setReassignTargetId(event.target.value)} aria-describedby="reassign-room-help"><option value="">{t("reception.selectDestination")}</option>{reassignRooms.map(room => {
+            <label>{t("reception.selectDestination")} <select name="room_id" required disabled={!reassignBoard || actionBusy} value={reassignTargetId} onChange={event => { setReassignTargetId(event.target.value); void selectReassignDestination(event.target.value); }} aria-describedby="reassign-room-help"><option value="">{t("reception.selectDestination")}</option>{reassignRooms.map(room => {
               const boardRoom = boardByRoom.get(room.id);
-              const blocking = boardRoom?.maintenance_case?.impact === "BLOCKING" || room.status === "Maintenance";
+              const selectedMaintenance = room.id === reassignTargetId ? reassignMaintenanceCase : boardRoom?.maintenance_case;
+              const blocking = selectedMaintenance?.impact === "BLOCKING" || room.status === "Maintenance";
               const inventoryFree = reassignAvailableIds.has(room.id);
               const selectable = room.status === "Available" && inventoryFree && !blocking;
-              const reason = blocking ? t("reception.reassignBlockedMaintenance") : room.status !== "Available" ? t("reception.reassignPhysicalUnavailable") : !inventoryFree ? t("reception.reassignInventoryUnavailable") : boardRoom?.maintenance_case?.impact === "NON_BLOCKING" ? t("reception.reassignNonBlockingAdvisory") : "";
+              const reason = blocking ? t("reception.reassignBlockedMaintenance") : room.status !== "Available" ? t("reception.reassignPhysicalUnavailable") : !inventoryFree ? t("reception.reassignInventoryUnavailable") : selectedMaintenance?.impact === "NON_BLOCKING" ? t("reception.reassignNonBlockingAdvisory") : "";
               return <option key={room.id} value={room.id} disabled={!selectable}>{room.room_number} · {room.room_type} · {formatCurrency(room.price_cents)}{reason ? ` · ${reason}` : ""}</option>;
             })}</select></label>
             <p id="reassign-room-help" className="muted reassign-room-help">{t("reception.reassignRoomHelp")}</p>
