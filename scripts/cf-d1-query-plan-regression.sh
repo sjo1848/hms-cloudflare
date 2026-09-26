@@ -11,7 +11,9 @@ run_d1() {
   CI=1 timeout 12s "$wrangler" "$@"
 }
 
-run_d1 d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >/dev/null
+# Applying the full local migration chain starts workerd repeatedly and is not
+# comparable to one EXPLAIN query. Keep the 12s query bound below.
+CI=1 timeout 90s "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >/dev/null
 
 arrivals_plan=$(run_d1 d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "EXPLAIN QUERY PLAN SELECT id FROM bookings WHERE status='CONFIRMED' AND check_in='2026-09-01';" 2>&1)
 checkout_plan=$(run_d1 d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "EXPLAIN QUERY PLAN SELECT id FROM bookings WHERE status='CHECKED_IN' AND check_out='2026-09-01';" 2>&1)

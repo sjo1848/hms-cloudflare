@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import type { Booking, Guest, HousekeepingBoard, Invoice, MaintenanceCase, Room } from "../../domain/types";
+import type { Booking, FrontDeskBoard, Guest, HousekeepingBoard, Invoice, MaintenanceCase, Room } from "../../domain/types";
 import {
   cancelBooking as cancelBookingRequest,
   checkInBooking,
@@ -15,7 +15,6 @@ import {
   updateBooking,
 } from "./reception-api";
 import {
-  CHECK_IN_STEP_COUNT,
   emptyBookingForm,
   emptyCheckInData,
   type BookingEditForm,
@@ -28,6 +27,7 @@ import { ApiError } from "../../api/client";
 export function useReceptionWorkspace() {
   const { t } = useI18n();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [frontDeskBoard, setFrontDeskBoard] = useState<FrontDeskBoard | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [guests, setGuests] = useState<Guest[]>([]);
   const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
@@ -41,29 +41,51 @@ export function useReceptionWorkspace() {
   const [actionBusy, setActionBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [checkInConflict, setCheckInConflict] = useState("");
+  const [checkInNeedsRefresh, setCheckInNeedsRefresh] = useState(false);
+  const [checkInAccepted, setCheckInAccepted] = useState(false);
   const [selected, setSelected] = useState<Booking | null>(null);
   const [checkInStep, setCheckInStep] = useState(0);
   const [checkInData, setCheckInData] = useState<CheckInData>(emptyCheckInData);
   const [form, setForm] = useState<BookingForm>(emptyBookingForm);
   const [editForm, setEditForm] = useState<BookingEditForm>(emptyBookingForm);
+  const loadEpoch = useRef(0);
+  const checkInInFlight = useRef(false);
 
   async function load() {
-    setLoading(true);
+    const epoch = ++loadEpoch.current;
+    if (frontDeskBoard) setRefreshing(true);
+    else setLoading(true);
     setError("");
     try {
       const next = await loadReceptionQueue();
+      if (epoch !== loadEpoch.current) return null;
+      setFrontDeskBoard(next.board);
       setBookings(next.bookings);
       setRooms(next.rooms);
       setGuests(next.guests);
+      setSelected(current => current ? next.bookings.find(booking => booking.id === current.id) ?? current : null);
+      return next.board;
     } catch (e) {
-      setError((e as Error).message);
+      if (epoch === loadEpoch.current) setError((e as Error).message);
+      return null;
     } finally {
-      setLoading(false);
+      if (epoch === loadEpoch.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }
 
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    function revalidate() { if (document.visibilityState === "visible" && !actionBusy) void load(); }
+    window.addEventListener("focus", revalidate);
+    const interval = window.setInterval(revalidate, 30000);
+    return () => { window.removeEventListener("focus", revalidate); window.clearInterval(interval); };
+  }, [actionBusy, frontDeskBoard]);
 
   useEffect(() => {
     if (!selected || selected.status !== "Confirmed" || !editForm.check_in || !editForm.check_out) {
@@ -99,6 +121,9 @@ export function useReceptionWorkspace() {
     setReassignExtraCents(0);
     setReassignHotelDate("");
     resetLifecycleUi();
+    setCheckInConflict("");
+    setCheckInNeedsRefresh(false);
+    setCheckInAccepted(false);
   }
 
   function selectCase(booking: Booking) {
@@ -113,6 +138,9 @@ export function useReceptionWorkspace() {
     resetLifecycleUi();
     setError("");
     setNotice("");
+    setCheckInConflict("");
+    setCheckInNeedsRefresh(false);
+    setCheckInAccepted(false);
     if (booking.status === "CheckedIn") {
       setActionBusy(false);
       void loadReassignmentContext(booking);
@@ -202,15 +230,44 @@ export function useReceptionWorkspace() {
     }
   }
 
-  async function checkIn(event: FormEvent) {
-    event.preventDefault();
-    if (!selected) return;
-    const mobile = window.innerWidth < 768;
-    if (mobile && checkInStep < CHECK_IN_STEP_COUNT - 1) {
-      setCheckInStep(current => current + 1);
-      return;
+  async function checkIn() {
+    if (!selected || actionBusy || checkInNeedsRefresh || checkInInFlight.current) return null;
+    checkInInFlight.current = true;
+    const bookingId = selected.id;
+    setActionBusy(true);
+    setError("");
+    setCheckInConflict("");
+    setCheckInAccepted(false);
+    try {
+      await checkInBooking(bookingId, checkInData);
+      setCheckInAccepted(true);
+      const board = await load();
+      if (!board) {
+        setCheckInNeedsRefresh(true);
+        setCheckInConflict(t("reception.checkInRefreshFailed"));
+        return null;
+      }
+      setCheckInAccepted(false);
+      resetLifecycleUi();
+      return board;
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 409) {
+        const board = await load();
+        if (!board) setCheckInNeedsRefresh(true);
+        setCheckInStep(2);
+        setCheckInConflict(board ? t("reception.checkInConflict") : t("reception.checkInConflictRefreshFailed"));
+      } else setError((e as Error).message);
+      return null;
+    } finally {
+      checkInInFlight.current = false;
+      setActionBusy(false);
     }
-    await runLifecycle(() => checkInBooking(selected.id, checkInData));
+  }
+
+  async function refreshCheckInContext() {
+    const board = await load();
+    if (board && (!checkInAccepted || board.items.find(item => item.booking.id === selected?.id)?.booking.status === "CheckedIn")) setCheckInNeedsRefresh(false);
+    return board;
   }
 
   async function reassign(event: FormEvent) {
@@ -265,10 +322,10 @@ export function useReceptionWorkspace() {
   }
 
   return {
-    bookings, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignInvoice, reassignExtraCents, reassignHotelDate, loading, error, notice, selected, actionBusy,
+    bookings, frontDeskBoard, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignInvoice, reassignExtraCents, reassignHotelDate, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
     setCheckInStep, setCheckInData, setForm, setEditForm,
-    selectCase, closeCase, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
+    selectCase, closeCase, refreshQueue: load, refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
     saveEdit, cancelBooking,
   };
 }

@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "check": "npm run typecheck && npm run test",
-    "test": "vitest run",
+    "test": "vitest run --maxWorkers=2",
     "test:i18n": "vitest run apps/web/src/i18n/index.test.ts",
     "i18n:coverage": "node scripts/check-i18n-coverage.mjs",
     "test:cf-i03": "bash scripts/cf-i03-regression.sh",

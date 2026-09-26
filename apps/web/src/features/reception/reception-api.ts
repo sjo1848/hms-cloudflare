@@ -1,14 +1,14 @@
 import { api } from "../../api/client";
-import type { ActiveHotelContext, Booking, ExtraCharge, Guest, HousekeepingBoard, Invoice, MaintenanceCase, Room } from "../../domain/types";
+import type { ActiveHotelContext, Booking, ExtraCharge, FrontDeskBoard, Guest, HousekeepingBoard, Invoice, MaintenanceCase, Room } from "../../domain/types";
 import type { BookingEditForm, BookingForm, CheckInData } from "./model";
 
 export async function loadReceptionQueue() {
-  const [bookings, rooms, guests] = await Promise.all([
-    api<Booking[]>("/bookings?limit=100"),
+  const [board, rooms, guests] = await Promise.all([
+    api<FrontDeskBoard>("/front-desk/board"),
     api<Room[]>("/rooms"),
     api<Guest[]>("/guests"),
   ]);
-  return { bookings, rooms, guests };
+  return { board, bookings: board.items.map(item => item.booking), rooms, guests };
 }
 
 export function loadAvailableRooms(start: string, end: string, excludeBookingId?: string) {

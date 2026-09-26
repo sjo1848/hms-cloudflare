@@ -2,44 +2,45 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "HUMAN_GATE_UX_OPERATIONAL_WORKFLOW_ROADMAP",
-  "runtime_status": "WAITING_HUMAN_GATE",
+  "phase": "P0_1_CONTROLLER_CHECKPOINT",
+  "runtime_status": "READY_TO_RESUME",
   "resume_authorized": false,
-  "active_task": "UX-OPERATIONAL-WORKFLOW-ROADMAP-001",
-  "last_completed_task": "UX-OPERATIONAL-WORKFLOW-ROADMAP-001",
-  "last_completed_head": "23b7da3c9836edfaefa2bcf4943ee27f479b2f2a",
-  "work_branch": "definition/operational-ux-workflow-roadmap",
-  "pr": null,
-  "wave": "Discovery/Definition — Operational UX Workflow Roadmap",
-  "status_label": "WAITING FOR HUMAN GATE; NO IMPLEMENTATION AUTHORIZED",
-  "next_action": "HUMAN_GATE_ACCEPT_REORDER_OR_REVISE_ROADMAP_AND_CONFIRM_FIRST_WORKFLOW",
-  "stop_reason": "HUMAN_GATE_UX_OPERATIONAL_WORKFLOW_ROADMAP",
+  "active_task": "P0.1-RECEPTION-ARRIVAL-CHECKIN",
+  "last_completed_task": "P0.1-RECEPTION-ARRIVAL-CHECKIN-ARTIFACT",
+  "last_completed_head": "eb761acd9e90e3e0777423bf92426ffe43dec9b3",
+  "work_branch": "impl/p0.1-reception-arrival-checkin",
+  "pr": "#49 (Draft)",
+  "wave": "P0.1 — Reception Arrival / Guided Check-in",
+  "status_label": "P0.1 PRE-CRITIC TECHNICAL PASS WITH INHERITED REASSIGNMENT FINDING; EXTERNAL REVIEW PENDING; PROMOTION BLOCKED",
+  "next_action": "EXTERNAL_INDEPENDENT_CRITIC_P0_1_ARTIFACT_A_AND_BOUNDARY_B_THEN_CONTROLLER_DISPOSITION",
+  "stop_reason": "P0_1_IMMUTABLE_ARTIFACT_EXTERNAL_REVIEW_BOUNDARY",
   "event": {
-    "seq": 126,
-    "id": "UX-OPERATIONAL-WORKFLOW-ROADMAP-001-DEFINITION-COMPLETE",
-    "type": "HUMAN_GATE_PENDING"
+    "seq": 129,
+    "id": "P0-1-PUBLICATION-BOUNDARY",
+    "type": "CHECKPOINT"
   },
   "external_review": {
     "required": true,
     "last_audited_head": null,
     "last_verdict": null,
-    "artifact_head": "23b7da3c9836edfaefa2bcf4943ee27f479b2f2a",
-    "review_path": "Human Gate for roadmap decision; Wave 1.2 Independent Critic remains separately required and incomplete"
+    "artifact_head": "eb761acd9e90e3e0777423bf92426ffe43dec9b3",
+    "review_path": "Independent Critic must review P0.1 immutable artifact A and orchestration boundary B; Wave 1.2 Independent Critic remains separately required before promotion"
   },
   "human_gate": {
-    "required": true,
-    "decision": "Accept, reorder, or revise P0/P1/P2 priorities and confirm or change the recommended first workflow: Reception arrival/check-in/next-case continuity.",
+    "required": false,
+    "decision": "APPROVED WITH CONDITIONS: P0.1 Reception Arrival / Guided Check-in only",
     "implementation_authorized": false
   },
-  "blocker": {
+  "blocker": null,
+  "promotion_finding": {
     "kind": "EXTERNAL_FINDING",
     "surface": "ux-mobile-browser",
-    "area": "Shared Reports/Users/workerd browser finding remains a separate promotion blocker; local acceptance-runtime inspection also could not initialize for this definition task.",
+    "area": "Shared Reports/Users/workerd browser finding remains a promotion blocker. P01-EXT-01: inherited CF-I04 shell reassignment without invoice returns 409 after successful check-in; not a P0.1 check-in regression.",
     "wave_pass": true,
-    "attribution": "SHARED_PREEXISTING_BROWSER_FINDING; LOCAL_DEFINITION_INSPECTION_LIMITATION"
+    "attribution": "SHARED_PREEXISTING_BROWSER_FINDING; INHERITED_REASSIGNMENT_SHELL_FAILURE"
   },
   "authorization": {
-    "scope": "DOCUMENTATION_ONLY_HUMAN_GATE_PENDING",
+    "scope": "P0_1_RECEPTION_ARRIVAL_GUIDED_CHECKIN_ONLY",
     "production": false,
     "acceptance_staging": false,
     "main": false,
@@ -82,7 +83,16 @@
     "v11_contract_source": "origin/analysis/operational-flow-definition-v11",
     "ux_roadmap_artifact": "23b7da3c9836edfaefa2bcf4943ee27f479b2f2a",
     "ux_roadmap_invariant_evidence": "PASS: documentation scope; Pre-Critic findings PC-01..PC-07 resolved in artifact",
-    "ux_roadmap_gate": "HUMAN_GATE_PENDING",
+    "ux_roadmap_gate": "APPROVED_WITH_CONDITIONS_P0_1_ONLY",
+    "p0_1_multi_agent_available": true,
+    "p0_1_artifact_head": "eb761acd9e90e3e0777423bf92426ffe43dec9b3",
+    "p0_1_unit_integration": "23 files / 91 tests PASS",
+    "p0_1_types_build_fitness_budgets_plans_dry_runs": "PASS; JS raw 291301/300000 bytes",
+    "p0_1_mock_browser": "PASS: 375/1280 directed; CF-I04 mock browser 375/390/430/768/1024",
+    "p0_1_integrated_browser": "PASS: real local Wrangler Worker + migrated D1 + Vite; mobile 375 and desktop 1280; persisted success, BLOCKING 409, NON_BLOCKING advisory, refresh and next case",
+    "p0_1_precritic": "PASS; internal gate only, Independent Critic pending",
+    "p0_1_cf_i04_shell": "FAIL: inherited reassignment without invoice returns 409 after successful check-in; P01-EXT-01; not claimed green",
+    "p0_1_deferred_scope": "P01-DEFER-01: broader V11 Billing-selector coupling outside approved P0.1 slice",
     "local_acceptance_runtime_discovery": "UNPROVEN: fixture mismatch on --reuse; --reset migration rehearsal stopped at invalid maintenance resolve transition; no production inference"
   },
   "method": {

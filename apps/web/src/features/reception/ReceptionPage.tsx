@@ -4,11 +4,12 @@ import { StatusBadge } from "../../components/StatusBadge";
 import { useReceptionWorkspace } from "./useReceptionWorkspace";
 import { useI18n } from "../../i18n";
 import type { MessageKey } from "../../i18n";
-import { buildQueue, filterQueue, queueCounts, queueFilters } from "./queue";
+import { filterQueue, queueCounts, queueFilters } from "./queue";
 import type { QueueFilter, QueueLane, QueueReason } from "./queue";
+import { CheckInTask } from "./CheckInTask";
+import type { FrontDeskBoard } from "../../domain/types";
 import "./reception-queue.css";
 
-const checkInStepKeys: MessageKey[] = ["checkin.stepVerification", "checkin.stepStayData", "checkin.stepRoom", "checkin.stepConfirm"];
 const filterLabelKeys: Record<QueueFilter, MessageKey> = {
   attention: "reception.queueFilterAttention",
   arrivals: "reception.queueFilterArrivals",
@@ -38,20 +39,27 @@ const reasonLabelKeys: Record<QueueReason, MessageKey> = {
 function Bookings() {
   const { t, statusLabel, formatDate, formatCurrency } = useI18n();
   const {
-    bookings, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignInvoice, reassignExtraCents, reassignHotelDate, loading, error, notice, selected, actionBusy,
+    bookings, frontDeskBoard, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignInvoice, reassignExtraCents, reassignHotelDate, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
     setCheckInStep, setCheckInData, setForm, setEditForm,
-    selectCase, closeCase, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
+    selectCase, closeCase, refreshQueue, refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
     saveEdit, cancelBooking,
   } = useReceptionWorkspace();
-  const [queueFilter, setQueueFilter] = useState<QueueFilter>("attention");
-  const [queueSearch, setQueueSearch] = useState("");
+  const [queueFilter, setQueueFilter] = useState<QueueFilter>(() => {
+    const value = new URLSearchParams(window.location.search).get("lane");
+    return queueFilters.find(filter => filter === value) ?? "attention";
+  });
+  const [queueSearch, setQueueSearch] = useState(() => new URLSearchParams(window.location.search).get("q") ?? "");
   const [showCreate, setShowCreate] = useState(false);
+  const [showArrivalEdit, setShowArrivalEdit] = useState(false);
   const [reassignTargetId, setReassignTargetId] = useState("");
-  const mobileStep = checkInStep;
-  const queue = buildQueue(bookings);
+  const [checkInTaskId, setCheckInTaskId] = useState<string | null>(null);
+  const [discardRequest, setDiscardRequest] = useState(0);
+  const [checkInSuccess, setCheckInSuccess] = useState("");
+  const queue = frontDeskBoard?.items ?? [];
   const counts = queueCounts(queue);
   const visibleQueue = filterQueue(queue, queueFilter, queueSearch);
+  const selectedBoardItem = frontDeskBoard?.items.find(item => item.booking.id === selected?.id);
   const currentRoom = selected ? rooms.find(room => room.id === selected.room_id) : undefined;
   const stayNights = selected ? Math.max(0, (Date.parse(`${selected.check_out}T00:00:00Z`) - Date.parse(`${selected.check_in}T00:00:00Z`)) / 86400000) : 0;
   const extraCents = selected ? reassignExtraCents || Math.max(0, selected.total_cents - (currentRoom?.price_cents ?? 0) * stayNights) : 0;
@@ -62,6 +70,100 @@ function Bookings() {
   const reassignNewTotal = reassignTarget ? reassignTarget.price_cents * stayNights + extraCents : null;
   const reassignDifference = reassignNewTotal == null || !selected ? null : reassignNewTotal - selected.total_cents;
   useEffect(() => { setReassignTargetId(""); }, [selected?.id]);
+  useEffect(() => { setShowArrivalEdit(false); }, [selected?.id]);
+
+  function updateLocation(changes: Record<string, string | null>, mode: "push" | "replace" = "replace") {
+    const url = new URL(window.location.href);
+    for (const [key, value] of Object.entries(changes)) {
+      if (value) url.searchParams.set(key, value);
+      else url.searchParams.delete(key);
+    }
+    window.history[mode === "push" ? "pushState" : "replaceState"]({}, "", url);
+  }
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const taskId = params.get("task") === "check-in" ? params.get("booking_id") : null;
+    if (!taskId || checkInTaskId || !frontDeskBoard) return;
+    const match = frontDeskBoard.items.find(item => item.booking.id === taskId);
+    if (match) { selectCase(match.booking); setCheckInTaskId(taskId); }
+  }, [frontDeskBoard]);
+
+  useEffect(() => {
+    function onPopState() {
+      const params = new URLSearchParams(window.location.search);
+      const lane = params.get("lane");
+      setQueueFilter(queueFilters.find(filter => filter === lane) ?? "attention");
+      setQueueSearch(params.get("q") ?? "");
+      const taskId = params.get("task") === "check-in" ? params.get("booking_id") : null;
+      if (checkInTaskId && taskId !== checkInTaskId) {
+        const dirty = checkInData.count !== "1" || checkInData.document || checkInData.contact || checkInData.stay;
+        if (dirty) {
+          updateLocation({ task: "check-in", booking_id: checkInTaskId }, "push");
+          setDiscardRequest(current => current + 1);
+          return;
+        }
+      }
+      if (taskId !== checkInTaskId) {
+        const match = taskId ? frontDeskBoard?.items.find(item => item.booking.id === taskId) : null;
+        if (match) { selectCase(match.booking); setCheckInTaskId(taskId); }
+        else setCheckInTaskId(null);
+      }
+    }
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [checkInTaskId, checkInData, frontDeskBoard]);
+
+  function closeCheckIn() {
+    const currentId = checkInTaskId;
+    updateLocation({ task: null, booking_id: selected?.id ?? null });
+    setCheckInTaskId(null);
+    window.requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(`[data-booking-id="${currentId}"]`)?.focus());
+  }
+
+  function openNonArrivalCase(booking: typeof bookings[number]) {
+    selectCase(booking);
+    updateLocation({ task: null, booking_id: booking.id }, "push");
+  }
+
+  function clearSelectedCase() {
+    closeCase();
+    updateLocation({ task: null, booking_id: null });
+  }
+
+  function openCheckIn(booking: typeof bookings[number]) {
+    selectCase(booking);
+    setShowArrivalEdit(false);
+    setCheckInSuccess("");
+    updateLocation({ task: "check-in", booking_id: booking.id }, "push");
+    setCheckInTaskId(booking.id);
+  }
+
+  function finishCheckIn(updated: FrontDeskBoard, completedId: string) {
+    const next = filterQueue(updated.items, queueFilter, queueSearch).find(item => item.booking.id !== completedId);
+    updateLocation({ task: null, booking_id: next?.booking.id ?? null });
+    setCheckInTaskId(null);
+    if (next) selectCase(next.booking);
+    else closeCase();
+    setCheckInSuccess(next ? t("reception.checkInSuccessNext", { guest: next.booking.guest_name }) : t("reception.checkInSuccess"));
+    window.requestAnimationFrame(() => {
+      const target = next
+        ? document.querySelector<HTMLButtonElement>(`[data-booking-id="${next.booking.id}"]`)
+        : document.querySelector<HTMLButtonElement>(".reception-queue-tools button");
+      target?.focus();
+    });
+  }
+
+  async function completeCheckIn() {
+    const completedId = selected?.id;
+    const updated = await checkIn();
+    if (updated && completedId) finishCheckIn(updated, completedId);
+  }
+
+  async function refreshCheckIn() {
+    const updated = await refreshCheckInContext();
+    if (checkInAccepted && checkInTaskId && updated?.items.find(item => item.booking.id === checkInTaskId)?.booking.status === "CheckedIn") finishCheckIn(updated, checkInTaskId);
+  }
 
   return <section className="reception-workspace">
     <div className="workspace-heading reception-workspace-heading">
@@ -89,26 +191,28 @@ function Bookings() {
 
     {error && <p className="error" role="alert">{error}</p>}
     {notice && <p className="success" role="status">{notice}</p>}
+    {checkInSuccess && <p className="success" role="status">{checkInSuccess}</p>}
     {loading && <p className="muted" role="status">{t("reception.loadingQueue")}</p>}
+    {refreshing && <p className="muted reception-refreshing" role="status">{t("reception.refreshingQueue")}</p>}
 
     <div className="case-layout reception-case-layout">
       <aside className="reception-queue-panel" aria-label={t("reception.queueAria")}>
         <div className="reception-queue-heading">
-          <div><h3>{t("reception.caseQueue")}</h3><p className="muted">{t("reception.queueNow")}</p></div>
-          <span className="reception-attention-count">{counts.attention}</span>
+          <div><h3>{t("reception.caseQueue")}</h3><p className="muted">{t("reception.queueNow")}{frontDeskBoard && ` · ${formatDate(frontDeskBoard.date)}`}</p></div>
+          <div className="reception-queue-tools"><span className="reception-attention-count">{counts.attention}</span><button type="button" className="secondary-button" disabled={refreshing} onClick={() => void refreshQueue()}>{t("common.refresh")}</button></div>
         </div>
         <label className="reception-queue-search">
           <span>{t("reception.queueSearch")}</span>
-          <input value={queueSearch} onChange={event => setQueueSearch(event.target.value)} placeholder={t("reception.queueSearchPlaceholder")} />
+          <input value={queueSearch} onChange={event => { setQueueSearch(event.target.value); updateLocation({ q: event.target.value }); }} placeholder={t("reception.queueSearchPlaceholder")} />
         </label>
         <div className="reception-queue-filters" aria-label={t("reception.queueAria")}>
-          {queueFilters.map(filter => <button type="button" key={filter} className={queueFilter === filter ? "selected" : ""} onClick={() => setQueueFilter(filter)}>{t(filterLabelKeys[filter])} <span>{counts[filter]}</span></button>)}
+          {queueFilters.map(filter => <button type="button" key={filter} className={queueFilter === filter ? "selected" : ""} onClick={() => { setQueueFilter(filter); updateLocation({ lane: filter }, "push"); }}>{t(filterLabelKeys[filter])} <span>{counts[filter]}</span></button>)}
         </div>
         <div className="case-queue reception-case-queue">
           {visibleQueue.map(item => {
             const booking = item.booking;
             const actionKey: MessageKey = item.lane === "arrival" ? "reception.queueActionCheckIn" : item.lane === "departure" ? "reception.queueActionCheckout" : "reception.queueActionOpen";
-            return <button type="button" className={`reception-queue-row lane-${item.lane} ${selected?.id === booking.id ? "selected" : ""}`} key={booking.id} onClick={() => selectCase(booking)}>
+            return <button type="button" data-booking-id={booking.id} className={`reception-queue-row lane-${item.lane} ${selected?.id === booking.id ? "selected" : ""}`} key={booking.id} onClick={() => item.lane === "arrival" ? openCheckIn(booking) : openNonArrivalCase(booking)}>
               <span className="reception-row-primary">
                 <strong className="reception-guest-name">{booking.guest_name}</strong>
                 <strong className="reception-room-number">{t("common.room")} {booking.room_number}</strong>
@@ -121,6 +225,7 @@ function Bookings() {
                 <small>{formatDate(booking.check_in)} → {formatDate(booking.check_out)}</small>
                 <span className="reception-row-action">{t(actionKey)} →</span>
               </span>
+              {item.lane === "arrival" && <span className={item.room_status === "Available" && item.maintenance_case?.impact !== "BLOCKING" ? "reception-row-ready" : "reception-row-blocked"}>{item.room_status === "Available" && item.maintenance_case?.impact !== "BLOCKING" ? t("reception.roomReady") : t("reception.arrivalNeedsReadiness")}</span>}
             </button>;
           })}
           {!loading && visibleQueue.length === 0 && <div className="reception-queue-empty"><strong>{queueFilter === "attention" ? t("reception.queueEmptyAttention") : t("reception.queueEmpty")}</strong></div>}
@@ -133,7 +238,9 @@ function Bookings() {
           <StatusBadge>{statusLabel(selected.status)}</StatusBadge>
         </div>
 
-        {selected.status === "Confirmed" ? <form onSubmit={saveEdit} aria-label={t("reception.editAria")}>
+        {selected.status === "Confirmed" && selectedBoardItem?.lane === "arrival" && <div className="reception-arrival-actions"><button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button><button type="button" className="secondary-button" onClick={() => setShowArrivalEdit(current => !current)}>{showArrivalEdit ? t("common.close") : t("reception.editAria")}</button><button type="button" className="secondary-button" onClick={clearSelectedCase}>{t("reception.closeCase")}</button></div>}
+
+        {selected.status === "Confirmed" && (selectedBoardItem?.lane !== "arrival" || showArrivalEdit) ? <form onSubmit={saveEdit} aria-label={t("reception.editAria")}>
           <h4>{t("reception.stayDetails")}</h4>
           <label>{t("common.guest")} <select aria-label={t("reception.editGuest")} value={editForm.guest_id} onChange={e => setEditForm({ ...editForm, guest_id: e.target.value })} required>{guests.map(guest => <option key={guest.id} value={guest.id}>{guest.full_name}</option>)}</select></label>
           <label>{t("common.room")} <select aria-label={t("reception.editRoom")} value={editForm.room_id} onChange={e => setEditForm({ ...editForm, room_id: e.target.value })} required><option value="">{t("reception.selectRoomDates")}</option>{editAvailableRooms.map(room => <option key={room.id} value={room.id}>{room.room_number} · {room.room_type}</option>)}</select></label>
@@ -142,19 +249,10 @@ function Bookings() {
           <label>{t("common.notes")} <input aria-label={t("reception.editNotes")} value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} placeholder={t("reception.notesOptional")} /></label>
           <button>{t("reception.saveChanges")}</button>
           <button type="button" onClick={() => void cancelBooking()}>{t("reception.cancelBooking")}</button>
-          <button type="button" onClick={closeCase}>{t("reception.closeCase")}</button>
-        </form> : <div className="locked-stay-details"><h4>{t("reception.stayDetails")}</h4><p className="muted">{t("reception.assignmentLocked")}</p></div>}
+          <button type="button" onClick={clearSelectedCase}>{t("reception.closeCase")}</button>
+        </form> : selected.status !== "Confirmed" ? <div className="locked-stay-details"><h4>{t("reception.stayDetails")}</h4><p className="muted">{t("reception.assignmentLocked")}</p></div> : null}
 
-        {selected.status === "Confirmed" && <form onSubmit={checkIn} aria-label={t("reception.checkInAria")}>
-          <h4>{t("reception.nextCheckIn")}</h4>
-          <div className="step-progress" aria-label={t("reception.checkInProgress")}>{checkInStepKeys.map((step, index) => <span className={index === mobileStep ? "current" : index < mobileStep ? "complete" : ""} key={step}>{index + 1}. {t(step)}</span>)}</div>
-          {(window.innerWidth >= 768 || mobileStep === 0) && <><p className="step-title">{t(checkInStepKeys[0])}</p><label>{t("reception.finalGuestCount")} <input name="check_in_guests_count" type="number" min="1" max="100" value={checkInData.count} onChange={e => setCheckInData({ ...checkInData, count: e.target.value })} required /></label><label><input type="checkbox" name="document" checked={checkInData.document} onChange={e => setCheckInData({ ...checkInData, document: e.target.checked })} required />{t("reception.documentVerified")}</label></>}
-          {(window.innerWidth >= 768 || mobileStep === 1) && <><p className="step-title">{t(checkInStepKeys[1])}</p><label><input type="checkbox" name="contact" checked={checkInData.contact} onChange={e => setCheckInData({ ...checkInData, contact: e.target.checked })} required />{t("reception.contactConfirmed")}</label><label><input type="checkbox" name="stay" checked={checkInData.stay} onChange={e => setCheckInData({ ...checkInData, stay: e.target.checked })} required />{t("reception.stayConfirmed")}</label></>}
-          {(window.innerWidth >= 768 || mobileStep === 2) && <><p className="step-title">{t(checkInStepKeys[2])}</p><p className="muted">{t("reception.roomAssigned", { room: selected.room_number })}</p></>}
-          {(window.innerWidth >= 768 || mobileStep === 3) && <><p className="step-title">{t(checkInStepKeys[3])}</p><p className="muted">{t("reception.reviewCheckIn")}</p></>}
-          {window.innerWidth < 768 && <div className="step-actions">{mobileStep > 0 && <button type="button" onClick={() => setCheckInStep(mobileStep - 1)}>{t("reception.back")}</button>}<button>{mobileStep < checkInStepKeys.length - 1 ? t("reception.nextStep") : t("reception.completeCheckIn")}</button></div>}
-          {window.innerWidth >= 768 && <button>{t("reception.completeCheckIn")}</button>}
-        </form>}
+        {selected.status === "Confirmed" && selectedBoardItem?.lane !== "arrival" && <button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button>}
 
         {selected.status === "CheckedIn" && <>
           <form onSubmit={reassign} aria-label={t("reception.reassignAria")} className="reassign-surface">
@@ -190,6 +288,7 @@ function Bookings() {
         </>}
       </article> : <div className="empty-case"><h3>{t("reception.selectCase")}</h3><p className="muted">{t("reception.selectCaseHint")}</p></div>}
     </div>
+    {checkInTaskId && selected?.id === checkInTaskId && <CheckInTask booking={selected} item={selectedBoardItem} step={checkInStep} setStep={setCheckInStep} data={checkInData} setData={setCheckInData} busy={actionBusy} conflict={checkInConflict} needsRefresh={checkInNeedsRefresh} error={error} discardRequest={discardRequest} onRefresh={refreshCheckIn} onComplete={completeCheckIn} onClose={closeCheckIn} />}
   </section>;
 }
 

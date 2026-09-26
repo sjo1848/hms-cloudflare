@@ -4,18 +4,34 @@
 
 Project: HMS Cloudflare  
 Working directory: `/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare`
-Active branch: `definition/operational-ux-workflow-roadmap`
+Active branch: `impl/p0.1-reception-arrival-checkin`
 Definition artifact A: `23b7da3c9836edfaefa2bcf4943ee27f479b2f2a`
 Base implementation boundary: `a61d688534e0802a27cc7e5badb71dafacad19b9`
-Current task PR: `none (definition-only branch)`
-Active task: `UX-OPERATIONAL-WORKFLOW-ROADMAP-001 (definition complete)`
-Phase: `HUMAN GATE — UX ROADMAP`
-Status: `WAITING FOR HUMAN GATE`
-Runtime: `STOPPED AT AUTHORIZED PRODUCT/ROADMAP DECISION`
+P0.1 immutable artifact A: `eb761acd9e90e3e0777423bf92426ffe43dec9b3`
+Current task PR: `#49` Draft, targeting `definition/operational-ux-workflow-roadmap`
+Active task: `P0.1-RECEPTION-ARRIVAL-CHECKIN`
+Phase: `P0.1 — CONTROLLER CHECKPOINT / EXTERNAL REVIEW`
+Status: `PRE-CRITIC TECHNICAL GATE PASS WITH INHERITED REASSIGNMENT FINDING; PROMOTION BLOCKED`
+Runtime: `READY_TO_RESUME`, `resume_authorized=false`, `external_review.required=true`
+
+P0.1 artifact A and this orchestration-only publication boundary are on the isolated implementation branch. The next action is External Independent Critic on A plus this boundary, followed by Controller disposition. This is not a Codex Independent Critic PASS, Product Acceptance or promotion authorization. No P0.2 implementation is authorized.
+
+## P0.1 CURRENT EVIDENCE AND PRE-CRITIC
+
+- Task Contract: `.orchestration/contracts/P0.1-RECEPTION-ARRIVAL-CHECKIN.md`.
+- Evidence: `.orchestration/evidence/P0.1-RECEPTION-ARRIVAL-CHECKIN.md` and its `-INVARIANTS.md` companion.
+- `npm run check`: `23 files / 91 tests PASS`, including D11 executing D1 `4/4`, front-desk board `2/2`, and concurrent check-in exact-winner `1/1`.
+- `npm run types:check`, web build, architecture fitness, i18n, budgets, D1 critical query plans, Wrangler dry-runs and staging SPA config dry-run: PASS. Final JS raw `291301` bytes against `300000` ceiling.
+- Directed mock browser at 375/1280: PASS, including dirty Back/Forward, 409/failed refresh, double-submit, no-next focus and URL selection. CF-I04 mock browser at 375/390/430/768/1024: PASS.
+- Real local Wrangler Worker + migrated D1 + Vite browser at mobile 375 and desktop 1280: PASS. Actual BLOCKING race returns 409, repairs/refresh then succeeds; NON_BLOCKING advisory succeeds; blocked booking stays unchanged; persisted D1 has exactly one CHECK_IN event per winner and intact invoices/payments. Final isolated fixture `.hms-local/p0-1-aCKaJg`; screenshots under `output/playwright/p0-1-integrated-*`.
+- Multi-agent runtime capability: `true`. Separate UX/contract, backend engineering, UX adversarial, DB/Data and final read-only UX review were used; final reviewer findings on URL and no-next focus were repaired and retested. Luna Medium reviewers/engineering; no Sol escalation. Pre-Critic is internal only.
+- No schema migration or new lifecycle write path. Front-desk board is the sole runtime queue authority; the unused client/browser-date ranking helper was removed.
+
+Finding `P01-EXT-01`: inherited `npm run test:cf-i04` shell regression fails after successful check-in at reassignment without an invoice (expected 200, got 409). Existing reassignment code conditionally omits `PRICE_RECONCILIATION` when no invoice exists; existing migration 0021 demands that event on repricing. The relevant repository, migration and shell regression script have no P0.1 diff. This is not a P0.1-introduced defect, is **not** represented as a green inherited shell gate, and remains outside check-in scope. Broader V11 Billing-selector coupling is separately deferred as `P01-DEFER-01`; P0.1 does not claim V11-wide Reception parity.
 
 Wave 0.3 and Wave 1.1a are recorded as development passes with the shared/preexisting browser finding; promotion remains blocked. Wave 1.1 backend/domain work reached Controller checkpoint at artifact `b8ed06521d4221fcaac08b838887405339c9cd1e`, using the remote V11 definition branch as read-only contract authority. The external review for Wave 1.2 remains required and is not marked completed.
 
-## VALIDATED EVIDENCE
+## PRIOR VALIDATED EVIDENCE (HISTORICAL)
 
 - D11 executing D1: `4/4 PASS`.
 - Foundation CI: PASS.
@@ -34,7 +50,7 @@ Wave 0.3 and Wave 1.1a are recorded as development passes with the shared/preexi
 
 Successful extra-charge batch observation: `[1, 2, 1, 1]`. The second result may be `2` because the booking update invokes the D11 invoice reconciliation trigger. Batch success must therefore prove the primary mutation and must not require every statement to report exactly `meta.changes === 1`.
 
-## CURRENT BLOCKER
+## PROMOTION FINDING (NOT A P0.1 DEVELOPMENT BLOCKER)
 
 Required promotion gate: `ux-mobile-browser` — FAIL / FLAKY SHARED RUNNER FINDING.
 
@@ -65,7 +81,7 @@ The original investigation categories were:
 - Real integrated E2E evidence is recorded for independent fresh success and conflict sessions against local Wrangler Worker/D1 plus Vite preview at mobile width 375px. The success path persisted the reassignment and D11 repricing; the conflict path preserved booking/billing truth and emitted no partial events.
 - The integrated run exposed a duplicate `PRICE_RECONCILIATION` insert in the reassignment repository; artifact A removes the duplicate. The receptionist UI uses the existing per-room `maintenance.read` route because the receptionist role does not have `housekeeping.read`; no capability expansion was made.
 
-## COMPLETED DEFINITION — HUMAN GATE PENDING
+## APPROVED ROADMAP DEFINITION
 
 Task Contract: `.orchestration/contracts/UX-OPERATIONAL-WORKFLOW-ROADMAP-001.md`
 Scope: workflow discovery/definition only; no production code changes.
@@ -77,20 +93,16 @@ cancellation, payments, extra charges, Maintenance. Proposed P2:
 administrative/read-only work. First workflow recommendation: Reception
 arrival→check-in→next-case continuity.
 
-Human Gate: accept/reorder/revise the priorities and confirm or change the
-first workflow. No UI/backend implementation is authorized before that
-decision. Operator frequency is a qualitative proxy because telemetry and
-interviews were unavailable. The local acceptance-runtime attempt did not
-reach the browser (`invalid maintenance resolve transition` during migration
-rehearsal); this is recorded as an inspection limitation, not a production
-finding.
+Human Gate decision `UX-ROADMAP-HG-001` approved P0.1 Reception arrival / guided
+check-in with conditions. Other P0 workflows remain outside this increment.
+Operator frequency is a qualitative proxy because telemetry and interviews
+were unavailable. The local acceptance-runtime attempt did not reach the
+browser (`invalid maintenance resolve transition` during migration rehearsal);
+this is an inspection limitation, not a production finding.
 
 ## NEXT AUTHORIZED ACTION
 
-Wait for the Human Gate decision on the definition artifact. Do not begin UI
-or backend implementation. The prior Wave 1.2 Controller checkpoint remains
-unresolved for integration/promotion and its Independent Critic requirement is
-still open.
+External Independent Critic reviews immutable P0.1 artifact A plus this orchestration boundary and exact executable evidence. Controller disposition follows. No Codex auto-resume while review is required; Wave 1.2 Independent Critic remains separately open. No P0.2, merge or promotion.
 
 ## MODEL ROUTING
 
