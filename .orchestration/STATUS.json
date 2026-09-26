@@ -2,53 +2,54 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "P0_1_CONTROLLER_CHECKPOINT",
-  "runtime_status": "READY_TO_RESUME",
+  "phase": "RECEPTION_CHECKIN_UI_BUILD",
+  "runtime_status": "RUNNING",
   "resume_authorized": false,
-  "active_task": "P0.1-RECEPTION-ARRIVAL-CHECKIN",
+  "active_task": "UX-UI-RECEPTION-CHECKIN-001",
   "last_completed_task": "P0.1-RECEPTION-ARRIVAL-CHECKIN-ARTIFACT",
   "last_completed_head": "eb761acd9e90e3e0777423bf92426ffe43dec9b3",
-  "work_branch": "impl/p0.1-reception-arrival-checkin",
-  "pr": "#49 (Draft)",
-  "wave": "P0.1 — Reception Arrival / Guided Check-in",
-  "status_label": "P0.1 PRE-CRITIC TECHNICAL PASS WITH INHERITED REASSIGNMENT FINDING; EXTERNAL REVIEW PENDING; PROMOTION BLOCKED",
-  "next_action": "EXTERNAL_INDEPENDENT_CRITIC_P0_1_ARTIFACT_A_AND_BOUNDARY_B_THEN_CONTROLLER_DISPOSITION",
-  "stop_reason": "P0_1_IMMUTABLE_ARTIFACT_EXTERNAL_REVIEW_BOUNDARY",
+  "work_branch": "impl/ux-ui-reception-checkin",
+  "pr": null,
+  "wave": "UX-UI-RECEPTION-CHECKIN-001 — Reception + Guided Check-in Interaction Reference",
+  "status_label": "AUTHORIZED TASK RUNNING; PROMOTION BLOCKED",
+  "next_action": "IMPLEMENT_AND_VALIDATE_RECEPTION_CHECKIN_SHEET_DRAWER",
+  "stop_reason": null,
   "event": {
-    "seq": 129,
-    "id": "P0-1-PUBLICATION-BOUNDARY",
-    "type": "CHECKPOINT"
+    "seq": 130,
+    "id": "UX-UI-RECEPTION-CHECKIN-001-STARTED",
+    "type": "TASK_STARTED"
   },
   "external_review": {
-    "required": true,
+    "required": false,
     "last_audited_head": null,
     "last_verdict": null,
-    "artifact_head": "eb761acd9e90e3e0777423bf92426ffe43dec9b3",
-    "review_path": "Independent Critic must review P0.1 immutable artifact A and orchestration boundary B; Wave 1.2 Independent Critic remains separately required before promotion"
+    "artifact_head": null,
+    "review_path": "Current task is explicitly authorized. P0.1 and Wave 1.2 Independent Critic reviews remain required before promotion; this task requires its own review at artifact publication.",
+    "prior_reviews_pending": ["P0.1 artifact A + boundary B", "Wave 1.2 artifact A + boundary B"]
   },
   "human_gate": {
     "required": false,
-    "decision": "APPROVED WITH CONDITIONS: P0.1 Reception Arrival / Guided Check-in only",
-    "implementation_authorized": false
+    "decision": "AUTHORIZED: UX-UI-RECEPTION-CHECKIN-001 only; preserve P0.1 behavior",
+    "implementation_authorized": true
   },
   "blocker": null,
   "promotion_finding": {
     "kind": "EXTERNAL_FINDING",
     "surface": "ux-mobile-browser",
-    "area": "Shared Reports/Users/workerd browser finding remains a promotion blocker. P01-EXT-01: inherited CF-I04 shell reassignment without invoice returns 409 after successful check-in; not a P0.1 check-in regression.",
-    "wave_pass": true,
-    "attribution": "SHARED_PREEXISTING_BROWSER_FINDING; INHERITED_REASSIGNMENT_SHELL_FAILURE"
+    "area": "Prior external findings remain open for promotion: shared Reports/Users/workerd browser instability and P01-EXT-01 inherited CF-I04 reassignment shell failure.",
+    "wave_pass": false,
+    "attribution": "EXTERNAL_FINDINGS_NOT_REOPENED_BY_THIS_TASK"
   },
   "authorization": {
-    "scope": "P0_1_RECEPTION_ARRIVAL_GUIDED_CHECKIN_ONLY",
+    "scope": "UX-UI-RECEPTION-CHECKIN-001_ONLY",
     "production": false,
     "acceptance_staging": false,
     "main": false,
     "merge": false,
     "deploy": false,
     "wave_1_1a": false,
-    "development_continuation": false,
-    "ui_implementation": false,
+    "development_continuation": true,
+    "ui_implementation": true,
     "backend_implementation": false
   },
   "validated": {
@@ -93,12 +94,14 @@
     "p0_1_precritic": "PASS; internal gate only, Independent Critic pending",
     "p0_1_cf_i04_shell": "FAIL: inherited reassignment without invoice returns 409 after successful check-in; P01-EXT-01; not claimed green",
     "p0_1_deferred_scope": "P01-DEFER-01: broader V11 Billing-selector coupling outside approved P0.1 slice",
+    "ux_ui_checkin_reference_source": "Named v1 artifact not found in local/remotely listed Git trees or history; current Human request is binding UI contract",
+    "ux_ui_checkin_multi_agent_available": true,
     "local_acceptance_runtime_discovery": "UNPROVEN: fixture mismatch on --reuse; --reset migration rehearsal stopped at invalid maintenance resolve transition; no production inference"
   },
   "method": {
     "human_routine_relay_forbidden": true,
     "technical_rework_autonomous": true,
     "independent_critic_before_merge": true,
-    "model_policy": "Luna LOW orchestrator; Luna MEDIUM investigation/QA; Luna LOW/MEDIUM repair; Sol MEDIUM only after insufficient Luna MEDIUM"
+    "model_policy": "Luna LOW orchestrator; Luna MEDIUM engineering, UX review and QA; Sol MEDIUM only after demonstrated insufficient Luna MEDIUM"
   }
 }

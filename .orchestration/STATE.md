@@ -4,17 +4,16 @@
 
 Project: HMS Cloudflare  
 Working directory: `/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare`
-Active branch: `impl/p0.1-reception-arrival-checkin`
+Active branch: `impl/ux-ui-reception-checkin`
 Definition artifact A: `23b7da3c9836edfaefa2bcf4943ee27f479b2f2a`
-Base implementation boundary: `a61d688534e0802a27cc7e5badb71dafacad19b9`
-P0.1 immutable artifact A: `eb761acd9e90e3e0777423bf92426ffe43dec9b3`
-Current task PR: `#49` Draft, targeting `definition/operational-ux-workflow-roadmap`
-Active task: `P0.1-RECEPTION-ARRIVAL-CHECKIN`
-Phase: `P0.1 — CONTROLLER CHECKPOINT / EXTERNAL REVIEW`
-Status: `PRE-CRITIC TECHNICAL GATE PASS WITH INHERITED REASSIGNMENT FINDING; PROMOTION BLOCKED`
-Runtime: `READY_TO_RESUME`, `resume_authorized=false`, `external_review.required=true`
+Base snapshot: `6ffd6f9aa8e6836d60cbeba5383494605e5611cc` on `review/ux-operational-current`
+Active task: `UX-UI-RECEPTION-CHECKIN-001`
+Task Contract: `.orchestration/contracts/UX-UI-RECEPTION-CHECKIN-001.md`
+Phase: `Reception + Guided Check-in UI BUILD`
+Status: `RUNNING — explicitly authorized by the current Human task request`
+Runtime: `RUNNING`, `resume_authorized=false`; prior P0.1 and Wave 1.2 independent reviews remain required before promotion.
 
-P0.1 artifact A and this orchestration-only publication boundary are on the isolated implementation branch. The next action is External Independent Critic on A plus this boundary, followed by Controller disposition. This is not a Codex Independent Critic PASS, Product Acceptance or promotion authorization. No P0.2 implementation is authorized.
+This task is limited to the Reception + Guided Check-in interaction reference implementation. Its detailed design contract is the current user request. The named “HMS Cloudflare — Reception + Guided Check-in — UI Contract & Wireframes v1” was not found in the local snapshot, available remote branch trees or searchable Git history; this limitation is recorded in the task contract, and no additional visual behavior is inferred from it. The task-specific Independent Critic boundary will be published after implementation and evidence. No other workflow is authorized.
 
 ## P0.1 CURRENT EVIDENCE AND PRE-CRITIC
 
@@ -102,7 +101,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT AUTHORIZED ACTION
 
-External Independent Critic reviews immutable P0.1 artifact A plus this orchestration boundary and exact executable evidence. Controller disposition follows. No Codex auto-resume while review is required; Wave 1.2 Independent Critic remains separately open. No P0.2, merge or promotion.
+Complete UX-UI-RECEPTION-CHECKIN-001: implement shadcn Sheet/Drawer responsive check-in surfaces; run directed and integrated Worker/D1 desktop/mobile validation; obtain separate UX/adversarial and QA review; execute Pre-Critic/invariant evidence; then publish artifact A and orchestration boundary B. Stop at the Reception + Check-in UI Controller Checkpoint. Prior P0.1/Wave 1.2 reviews, global browser findings and promotion restrictions remain recorded and unresolved.
 
 ## MODEL ROUTING
 
