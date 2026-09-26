@@ -4,14 +4,14 @@
 
 Project: HMS Cloudflare  
 Working directory: `/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare`
-Active branch: `definition/operational-ux-workflow-roadmap`
+Active branch: `impl/p0.1-reception-arrival-checkin`
 Definition artifact A: `23b7da3c9836edfaefa2bcf4943ee27f479b2f2a`
 Base implementation boundary: `a61d688534e0802a27cc7e5badb71dafacad19b9`
 Current task PR: `none (definition-only branch)`
-Active task: `UX-OPERATIONAL-WORKFLOW-ROADMAP-001 (definition complete)`
-Phase: `HUMAN GATE — UX ROADMAP`
-Status: `WAITING FOR HUMAN GATE`
-Runtime: `STOPPED AT AUTHORIZED PRODUCT/ROADMAP DECISION`
+Active task: `P0.1-RECEPTION-ARRIVAL-CHECKIN` (Task Contract pending)
+Phase: `P0.1 — AUTHORIZED / READY TO RESUME`
+Status: `APPROVED WITH CONDITIONS`
+Runtime: `READY_TO_RESUME`
 
 Wave 0.3 and Wave 1.1a are recorded as development passes with the shared/preexisting browser finding; promotion remains blocked. Wave 1.1 backend/domain work reached Controller checkpoint at artifact `b8ed06521d4221fcaac08b838887405339c9cd1e`, using the remote V11 definition branch as read-only contract authority. The external review for Wave 1.2 remains required and is not marked completed.
 
@@ -34,7 +34,7 @@ Wave 0.3 and Wave 1.1a are recorded as development passes with the shared/preexi
 
 Successful extra-charge batch observation: `[1, 2, 1, 1]`. The second result may be `2` because the booking update invokes the D11 invoice reconciliation trigger. Batch success must therefore prove the primary mutation and must not require every statement to report exactly `meta.changes === 1`.
 
-## CURRENT BLOCKER
+## PROMOTION FINDING (NOT A P0.1 DEVELOPMENT BLOCKER)
 
 Required promotion gate: `ux-mobile-browser` — FAIL / FLAKY SHARED RUNNER FINDING.
 
@@ -77,20 +77,18 @@ cancellation, payments, extra charges, Maintenance. Proposed P2:
 administrative/read-only work. First workflow recommendation: Reception
 arrival→check-in→next-case continuity.
 
-Human Gate: accept/reorder/revise the priorities and confirm or change the
-first workflow. No UI/backend implementation is authorized before that
-decision. Operator frequency is a qualitative proxy because telemetry and
-interviews were unavailable. The local acceptance-runtime attempt did not
-reach the browser (`invalid maintenance resolve transition` during migration
-rehearsal); this is recorded as an inspection limitation, not a production
-finding.
+Human Gate decision `UX-ROADMAP-HG-001` approved P0.1 Reception arrival / guided
+check-in with conditions. Other P0 workflows remain outside this increment.
+Operator frequency is a qualitative proxy because telemetry and interviews
+were unavailable. The local acceptance-runtime attempt did not reach the
+browser (`invalid maintenance resolve transition` during migration rehearsal);
+this is an inspection limitation, not a production finding.
 
 ## NEXT AUTHORIZED ACTION
 
-Wait for the Human Gate decision on the definition artifact. Do not begin UI
-or backend implementation. The prior Wave 1.2 Controller checkpoint remains
-unresolved for integration/promotion and its Independent Critic requirement is
-still open.
+Create the P0.1 Task Contract with invariant mapping, then implement the
+bounded arrival/check-in workflow on this branch. The Wave 1.2 Independent
+Critic requirement remains separately open. No P0.2, merge or promotion.
 
 ## MODEL ROUTING
 
