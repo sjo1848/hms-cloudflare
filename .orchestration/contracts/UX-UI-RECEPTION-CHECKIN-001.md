@@ -16,7 +16,7 @@ The reference was located in connected Drive and read in full: `HMS Cloudflare â
 
 - Desktop: Reception remains visible as the main context; check-in opens in a right-side shadcn Sheet.
 - Mobile: check-in opens in a shadcn Drawer/full-screen task with comfortable scrolling, stable header, reachable primary action and predictable close/back behavior.
-- Reception queue entry remains an explicit dominant check-in action; secondary case actions may use Dropdown Menu and must not compete with or hide Check-in.
+- Reception queue entry remains an explicit dominant check-in action. Group only the existing selected-arrival secondary controls (reservation edit and close selection) in a Dropdown Menu; do not add commands or alter their domain behavior. Check-in remains independently visible.
 - Both surfaces retain guest, room, stay dates, readiness, BLOCKING/NON_BLOCKING meaning, stay summary, consequences, inline validation and loading/error/conflict/success states.
 - Keep filter, search, selected booking, lane, queue scroll and navigation context when task opens, refreshes, conflicts, succeeds or closes.
 - Keep the normal Check-in action visible. Dropdown Menu may contain only secondary booking actions; do not add it solely to satisfy a component list.
@@ -37,6 +37,7 @@ The reference was located in connected Drive and read in full: `HMS Cloudflare â
 | Success | Task + queue | API response is not treated as final display state: authoritative refresh precedes success/advance; new booking/room state appears, success is visible, Reception context remains and next canonical case is offered | Real Worker/D1 E2E + assertions for D1 event/state and queue selection |
 | Keyboard/focus | Both surfaces | Open focuses task heading; Tab/Escape and explicit close are predictable; focus restores to next case or original trigger; validation is associated inline | Browser keyboard/focus assertions |
 | Reference implementation consistency | Component layer | Use shadcn Sheet on desktop and Drawer on mobile; components expose accessible title/description and controlled open/close; no unneeded global navigation/component system | Source review + browser inspection |
+| Queue action hierarchy | Selected arrival case | Check-in stays independently visible; only existing edit/close-selection controls move under an accessible Dropdown Menu; no new command or mutation | Desktop/mobile browser and source review |
 
 ## Forbidden scope
 
