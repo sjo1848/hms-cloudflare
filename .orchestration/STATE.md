@@ -13,7 +13,7 @@ Phase: `Reception + Guided Check-in UI BUILD`
 Status: `RUNNING — explicitly authorized by the current Human task request`
 Runtime: `RUNNING`, `resume_authorized=false`; prior P0.1 and Wave 1.2 independent reviews remain required before promotion.
 
-This task is limited to the Reception + Guided Check-in interaction reference implementation. Its detailed design contract is the current user request. The named “HMS Cloudflare — Reception + Guided Check-in — UI Contract & Wireframes v1” was not found in the local snapshot, available remote branch trees or searchable Git history; this limitation is recorded in the task contract, and no additional visual behavior is inferred from it. The task-specific Independent Critic boundary will be published after implementation and evidence. No other workflow is authorized.
+This task is limited to the Reception + Guided Check-in interaction reference implementation. The named UI Contract & Wireframes v1 and parent UI Interaction System v1 were found in connected Drive and read in full; IDs and the current Human implementation authorization are recorded in the Task Contract. The task-specific Independent Critic boundary will be published after implementation and evidence. No other workflow is authorized.
 
 ## P0.1 CURRENT EVIDENCE AND PRE-CRITIC
 

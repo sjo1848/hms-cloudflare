@@ -94,7 +94,7 @@
     "p0_1_precritic": "PASS; internal gate only, Independent Critic pending",
     "p0_1_cf_i04_shell": "FAIL: inherited reassignment without invoice returns 409 after successful check-in; P01-EXT-01; not claimed green",
     "p0_1_deferred_scope": "P01-DEFER-01: broader V11 Billing-selector coupling outside approved P0.1 slice",
-    "ux_ui_checkin_reference_source": "Named v1 artifact not found in local/remotely listed Git trees or history; current Human request is binding UI contract",
+    "ux_ui_checkin_reference_source": "Read connected Drive docs UX-UI-RECEPTION-CHECKIN-001 and parent UX-UI-INTERACTION-SYSTEM-001; current Human task request explicitly authorizes implementation",
     "ux_ui_checkin_multi_agent_available": true,
     "local_acceptance_runtime_discovery": "UNPROVEN: fixture mismatch on --reuse; --reset migration rehearsal stopped at invalid maintenance resolve transition; no production inference"
   },

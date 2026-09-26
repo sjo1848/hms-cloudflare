@@ -4,22 +4,24 @@ Task ID: `UX-UI-RECEPTION-CHECKIN-001`
 Phase: `BUILD`  
 Branch: `impl/ux-ui-reception-checkin`  
 Base snapshot: `6ffd6f9aa8e6836d60cbeba5383494605e5611cc`  
-Authority: Human authorization in the current task request; P0.1 behavior and evidence in `.orchestration/contracts/P0.1-RECEPTION-ARRIVAL-CHECKIN.md`.
+Authority: Human authorization in the current task request; `UX-UI-RECEPTION-CHECKIN-001` Google Doc (UI Contract & Wireframes v1, read in full); parent `UX-UI-INTERACTION-SYSTEM-001` Google Doc; P0.1 behavior/evidence in `.orchestration/contracts/P0.1-RECEPTION-ARRIVAL-CHECKIN.md`.
 
 ## Design authority and outcome
 
 Implement Reception + Guided Check-in as the first HMS UI Interaction System reference implementation. Preserve P0.1 domain behavior and make the existing workflow feel continuous on desktop and mobile.
 
-The named reference `HMS Cloudflare — Reception + Guided Check-in — UI Contract & Wireframes v1` was not present in the working snapshot, available remote branch trees, or searchable Git history at task start. The explicit UI contract in the authorizing request is therefore the binding design authority for this increment. Do not infer additional product behavior from an unavailable artifact.
+The reference was located in connected Drive and read in full: `HMS Cloudflare — Reception + Guided Check-in — UI Contract & Wireframes v1` (Artifact ID `UX-UI-RECEPTION-CHECKIN-001`, Doc ID `1vvDchF0ll5qQXlA0DKhuSNw4EIyouAtragUi89RI_VE`); its parent is `HMS Cloudflare — UX/UI Interaction System v1 + Workflow Component Matrix` (Artifact ID `UX-UI-INTERACTION-SYSTEM-001`, Doc ID `112Lp-pYeDOfC9Ij8XXAMCbQe4Gs4Op-KblhI9Uh0t_c`). The current Human request explicitly authorizes implementation. The full source contract's key ordering is task header → authoritative context → blockers/advisories → task inputs → consequences/review → sticky primary action → authoritative refresh → return/next case. Progressive disclosure should preserve decision-critical facts and not crowd Reception.
 
 ## Scope
 
 - Desktop: Reception remains visible as the main context; check-in opens in a right-side shadcn Sheet.
 - Mobile: check-in opens in a shadcn Drawer/full-screen task with comfortable scrolling, stable header, reachable primary action and predictable close/back behavior.
+- Reception queue entry remains an explicit dominant check-in action; secondary case actions may use Dropdown Menu and must not compete with or hide Check-in.
 - Both surfaces retain guest, room, stay dates, readiness, BLOCKING/NON_BLOCKING meaning, stay summary, consequences, inline validation and loading/error/conflict/success states.
 - Keep filter, search, selected booking, lane, queue scroll and navigation context when task opens, refreshes, conflicts, succeeds or closes.
 - Keep the normal Check-in action visible. Dropdown Menu may contain only secondary booking actions; do not add it solely to satisfy a component list.
 - Use existing Reception and i18n patterns. Add only the shadcn Sheet/Drawer primitives needed by this flow. No alert dialog for ordinary check-in; no tabs for workflow steps; no hover-only required facts; toast is supplemental only.
+- Show final consequences before confirmation: booking becomes checked in, assigned room becomes occupied, and the operational handoff is clear. Explain a disabled primary action with the known blocker and safe next action; do not use color as the only distinction.
 - Backend/API changes are forbidden unless a reproducible UI requirement cannot be met through the current P0.1 contract. If demonstrated, document the gap and make the minimum contract-aligned correction.
 
 ## Acceptance — requirement → surface → proof
@@ -28,8 +30,8 @@ The named reference `HMS Cloudflare — Reception + Guided Check-in — UI Contr
 |---|---|---|---|
 | Desktop continuity | Reception + Sheet | Queue remains the parent context; right Sheet does not navigate; filter/search/selection/lane/scroll are retained on close and success | Real browser at desktop width; screenshots: queue, Sheet, blocker, advisory, success |
 | Mobile task | Reception + Drawer | Full-height task, internal scroll, fixed header/footer, touch-size actions, close/back without hover; no small modal | Real browser at 375/390px; screenshots: queue, Drawer, blocker/advisory, success/return |
-| Required context | Task header/body | Guest, assigned room, check-in/out dates, readiness, maintenance impact, stay summary/consequences and validation are visible in the task | Browser assertions and visual review |
-| Readiness semantics | Task body | BLOCKING names the cause and prevents submit; next safe action is stated when available. NON_BLOCKING is clearly advisory and permits continuation | Real API/D1 fixture for both statuses |
+| Required context | Task header/body | Guest, assigned room, check-in/out dates remain in a stable header; authoritative stay facts, readiness, maintenance impact, compact summary/consequences and validation are available in the task in the source-defined progression | Browser assertions and visual review |
+| Readiness semantics | Task body | BLOCKING names the cause and prevents submit; safe next action is stated when known. NON_BLOCKING is visibly advisory and permits continuation; neither distinction relies on color alone | Real API/D1 fixture for both statuses |
 | Loading and errors | Task body/actions | Reception stays stable while task loads; busy state is local to task; errors are inline; pending submit cannot double-submit | Real browser and request-count assertion |
 | Stale conflict | Task body | 409 stays in Sheet/Drawer, explains changed state, refreshes authoritative facts and allows retry only if now eligible | Real Worker/D1 concurrent readiness change, persisted zero-drift assertion |
 | Success | Task + queue | API response is not treated as final display state: authoritative refresh precedes success/advance; new booking/room state appears, success is visible, Reception context remains and next canonical case is offered | Real Worker/D1 E2E + assertions for D1 event/state and queue selection |
