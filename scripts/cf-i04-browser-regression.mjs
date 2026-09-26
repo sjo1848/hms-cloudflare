@@ -7,6 +7,9 @@ async page => {
     { id: "room-b", room_number: "102", room_type: "STANDARD", status: "Available", price_cents: 12000 },
   ];
   let lifecycleStatus = "Confirmed";
+  let activeRoomId = "room-a";
+  let roomAStatus = "Available";
+  let roomBStatus = "Available";
   let checkInAttempts = 0;
   let reassignAttempts = 0;
   const booking = { id: "booking-a", guest_id: "guest-a", guest_name: "Guest A", room_id: "room-a", room_number: "101", check_in: "2026-09-01", check_out: "2026-09-03", status: lifecycleStatus, total_cents: 20000, notes: null };
@@ -17,44 +20,52 @@ async page => {
       const body = request.postDataJSON(); calls.push({ method: request.method(), url, body });
       if (url.includes("check-in") && ++checkInAttempts === 1 && checkInAttempts === 1 && calls.filter(call => call.url.includes("check-in")).length === 1) return route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: { code: "CONFLICT", message: "Booking became unavailable during check-in" } }) });
       if (url.includes("/reassign") && ++reassignAttempts === 1) return route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: { code: "CONFLICT", message: "Synthetic destination conflict" } }) });
-      lifecycleStatus = url.includes("check-out") ? "CheckedOut" : url.includes("reassign") ? "CheckedIn" : "CheckedIn";
-      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ id: booking.id, status: lifecycleStatus, room_id: "room-b", room_status: url.includes("check-out") ? "Dirty" : "Occupied" }) });
+      lifecycleStatus = url.includes("check-out") ? "CheckedOut" : "CheckedIn";
+      if (url.includes("check-in")) roomAStatus = "Occupied";
+      if (url.includes("reassign")) { activeRoomId = "room-b"; roomAStatus = "Dirty"; roomBStatus = "Occupied"; }
+      if (url.includes("check-out")) roomBStatus = "Dirty";
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ id: booking.id, status: lifecycleStatus, room_id: activeRoomId, room_status: url.includes("check-out") ? "Dirty" : "Occupied" }) });
+    }
+    if (url.endsWith("/front-desk/board")) {
+      const current = { ...booking, status: lifecycleStatus, room_id: activeRoomId, room_number: activeRoomId === "room-a" ? "101" : "102" };
+      const checkedIn = lifecycleStatus === "CheckedIn";
+      const item = { booking: current, lane: lifecycleStatus === "Confirmed" ? "arrival" : checkedIn ? "in-house" : "finished", reason: lifecycleStatus === "Confirmed" ? "arrival-today" : checkedIn ? "in-house" : "finished", attention: lifecycleStatus === "Confirmed", priority: lifecycleStatus === "Confirmed" ? 20 : checkedIn ? 40 : 90, date: current.check_in, room_status: activeRoomId === "room-a" ? roomAStatus : roomBStatus, maintenance_case: null };
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ date: "2026-09-01", generated_at: "2026-09-01T12:00:00Z", items: [item] }) });
     }
     if (url.endsWith("/auth/me")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ hotel_id: "hotel-a", hotel_name: "Hotel Norte", hotel_local_date: "2026-09-01", hotel_timezone: "America/Argentina/Mendoza" }) });
     if (url.includes("/rooms/available?")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([rooms[1]]) });
     if (url.includes("/housekeeping/board?")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ date: "2026-09-01", rooms: [{ room_id: "room-b", room_number: "102", room_type: "STANDARD", room_status: "Available" }] }) });
     if (url.endsWith("/invoice")) return route.fulfill({ status: 200, contentType: "application/json", body: "null" });
     if (url.endsWith("/extra-charges")) return route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
-    if (url.endsWith("/bookings?limit=100")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([{ ...booking, status: lifecycleStatus }]) });
-    if (url.endsWith("/rooms")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(rooms) });
+    if (url.endsWith("/bookings?limit=100")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([{ ...booking, status: lifecycleStatus, room_id: activeRoomId }]) });
+    if (url.endsWith("/rooms")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(rooms.map(room => ({ ...room, status: room.id === "room-a" ? roomAStatus : roomBStatus }))) });
     if (url.endsWith("/guests")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([guest]) });
     return route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
   });
 
-  async function openCase() { await page.getByRole("button", { name: "Guest A" }).click(); await page.getByText("Selected case").waitFor(); }
+  async function openCase() { await page.getByRole("button", { name: /^All / }).click(); await page.getByRole("button", { name: /Guest A/ }).click(); }
   async function completeCheckIn(width, expectConflict) {
     await openCase();
-    const mobile = width < 768;
-    if (mobile) {
-      await page.getByRole("heading", { name: "Next action: check-in verification" }).waitFor();
-      await page.getByText("Verification", { exact: true }).waitFor();
-      await page.getByLabel("Final guest count").fill("2");
-      await page.getByLabel("Document verified").check();
-      await page.getByRole("button", { name: "Next step" }).click();
-      await page.getByText("Guest / stay data", { exact: true }).waitFor();
-      await page.getByLabel("Contact confirmed").check(); await page.getByLabel("Stay confirmed").check();
-      await page.getByRole("button", { name: "Next step" }).click();
-      await page.getByText("Room", { exact: true }).waitFor(); await page.getByRole("button", { name: "Next step" }).click();
-      await page.getByText("Confirm check-in", { exact: true }).waitFor();
-    } else {
-      await page.getByLabel("Final guest count").fill("2"); await page.getByLabel("Document verified").check(); await page.getByLabel("Contact confirmed").check(); await page.getByLabel("Stay confirmed").check();
+    const dialog = page.getByRole("dialog", { name: "Check in booking" });
+    await dialog.waitFor();
+    await dialog.getByLabel("Final guest count").fill("2");
+    await dialog.getByLabel("Document verified").check();
+    await dialog.getByRole("button", { name: "Next step" }).click();
+    await dialog.getByLabel("Contact confirmed").check(); await dialog.getByLabel("Stay confirmed").check();
+    await dialog.getByRole("button", { name: "Next step" }).click();
+    await dialog.getByText("Room ready for arrival", { exact: true }).waitFor();
+    await dialog.getByRole("button", { name: "Next step" }).click();
+    await dialog.getByRole("button", { name: "Complete check-in" }).click();
+    if (expectConflict) {
+      await dialog.getByRole("alert").getByText("The booking or room changed").waitFor();
+      await dialog.getByRole("button", { name: "Next step" }).click();
+      await dialog.getByRole("button", { name: "Complete check-in" }).click();
     }
-    await page.getByRole("button", { name: "Complete check-in" }).click();
-    if (expectConflict) { await page.getByRole("alert").getByText("Booking became unavailable during check-in").waitFor(); await page.getByRole("button", { name: "Complete check-in" }).click(); }
+    await dialog.waitFor({ state: "hidden" });
   }
 
   for (const [width, height] of [[375, 800], [390, 800], [430, 800], [768, 900], [1024, 900]]) {
-    lifecycleStatus = "Confirmed"; checkInAttempts = width === 375 ? 0 : 1; reassignAttempts = width === 375 ? 0 : 1;
+    lifecycleStatus = "Confirmed"; activeRoomId = "room-a"; roomAStatus = "Available"; roomBStatus = "Available"; checkInAttempts = width === 375 ? 0 : 1; reassignAttempts = width === 375 ? 0 : 1;
     await page.setViewportSize({ width, height }); await page.goto("http://127.0.0.1:4173/bookings");
     await completeCheckIn(width, width === 375);
     await openCase();

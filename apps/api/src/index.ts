@@ -17,6 +17,7 @@ import { createBillingRoutes } from "./routes/billing";
 import { createAdminRoutes } from "./routes/admin";
 import { OperationalRoutingError, resolveOperationalDatabase } from "./routing";
 import { createAnalyticsRoutes } from "./routes/analytics";
+import { createFrontDeskRoutes } from "./routes/front-desk";
 import { createHotelTimeContext } from "./time/hotel-time";
 
 const app = new Hono<{ Bindings: Env; Variables: ApiVariables }>();
@@ -147,6 +148,7 @@ app.get("/api/v1/auth/me", async (context) => {
 
 app.route("/api/v1", createInventoryRoutes());
 app.route("/api/v1", createBookingRoutes());
+app.route("/api/v1", createFrontDeskRoutes());
 app.route("/api/v1", createLifecycleRoutes());
 app.route("/api/v1", createHousekeepingRoutes());
 app.route("/api/v1", createBillingRoutes());

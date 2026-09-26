@@ -6,6 +6,17 @@ export type ActiveHotelContext = { hotel_id: string | null; hotel_name: string |
 export type Guest = { id: string; full_name: string; email: string; phone: string | null };
 export type Hold = { id: string; start_date: string; end_date: string; hold_type: string; reason: string };
 export type Booking = { id: string; guest_id: string; guest_name: string; room_id: string; room_number: string; check_in: string; check_out: string; status: string; total_cents: number; notes: string | null };
+export type FrontDeskItem = {
+  booking: Booking;
+  lane: "arrival" | "departure" | "in-house" | "reservation" | "finished" | "attention";
+  reason: "departure-overdue" | "departure-today" | "arrival-overdue" | "arrival-today" | "upcoming-arrival" | "in-house" | "finished" | "review";
+  attention: boolean;
+  priority: number;
+  date: string;
+  room_status: string;
+  maintenance_case: Pick<MaintenanceCase, "id" | "status" | "impact" | "reason"> | null;
+};
+export type FrontDeskBoard = { date: string; generated_at: string; items: FrontDeskItem[] };
 export type Invoice = { id: string; booking_id: string; amount_cents: number; paid_amount_cents: number; status: string; payment_method: string; payment_reference: string | null } | null;
 export type Payment = { id: string; amount_cents: number; payment_method: string; payment_reference: string | null; received_at: string };
 export type ExtraCharge = { id: string; description: string; amount_cents: number; category: string; created_at: string };
