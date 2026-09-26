@@ -4,14 +4,15 @@
 
 Project: HMS Cloudflare  
 Working directory: `/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare`
-Active branch: `impl/wave-1.2-reception-reassignment-ux`
+Active branch: `definition/operational-ux-workflow-roadmap`
 Base implementation boundary: `9ed9ebc1a42cd13096d526c4d621140f9d3d6a3b`
-PR: `#48 (Draft)`
-Wave: `1.2 — Reception Reassignment UX/UI`
-Status: `OPEN / WAVE 1.2 DEVELOPMENT CHECKPOINT; PROMOTION BLOCKED`
-Runtime: `READY_TO_RESUME at Controller checkpoint`
+Prior implementation PR: `#48 (Draft)`
+Active task: `UX-OPERATIONAL-WORKFLOW-ROADMAP-001`
+Phase: `DISCOVERY / DEFINITION`
+Status: `DISCOVERY / DEFINITION — UX OPERATIONAL WORKFLOW ROADMAP`
+Runtime: `RUNNING`
 
-Wave 0.3 and Wave 1.1a are recorded as development passes with the shared/preexisting browser finding; promotion remains blocked. Wave 1.1 backend/domain work reached Controller checkpoint at artifact `b8ed06521d4221fcaac08b838887405339c9cd1e`, using the remote V11 definition branch as read-only contract authority. The external review remains required and is not marked completed.
+Wave 0.3 and Wave 1.1a are recorded as development passes with the shared/preexisting browser finding; promotion remains blocked. Wave 1.1 backend/domain work reached Controller checkpoint at artifact `b8ed06521d4221fcaac08b838887405339c9cd1e`, using the remote V11 definition branch as read-only contract authority. The external review for Wave 1.2 remains required and is not marked completed.
 
 ## VALIDATED EVIDENCE
 
@@ -40,7 +41,7 @@ Housekeeping initial board/date and mutation-refresh race is repaired and the br
 
 The A/B attribution is recorded in `.orchestration/evidence/CF-I06-WAVE-0.3-BROWSER-ATTRIBUTION.md`. The current run passes Housekeeping and fails in Reports; the baseline full run fails earlier in Housekeeping because the Wave 0.3 repair is absent. The Wave 0.3 diff contains no Reports or analytics implementation changes.
 
-The V11 contracts were fetched read-only from `origin/analysis/operational-flow-definition-v11` and are not merged into the implementation branch. Wave 1.2 adds the Reception contextual reassignment surface and the minimum backend repair required by the real integrated flow; D11, Reports and Users remain otherwise unchanged.
+The V11 contracts were fetched read-only from `origin/analysis/operational-flow-definition-v11` and are not merged into the implementation branch. Wave 1.2 adds the Reception contextual reassignment surface and the minimum backend repair required by the real integrated flow; D11, Reports and Users remain otherwise unchanged. A separate documentation-only discovery task is active on `definition/operational-ux-workflow-roadmap`; this does not clear the Wave 1.2 independent-review requirement or promotion block.
 
 The original investigation categories were:
 
@@ -63,9 +64,19 @@ The original investigation categories were:
 - Real integrated E2E evidence is recorded for independent fresh success and conflict sessions against local Wrangler Worker/D1 plus Vite preview at mobile width 375px. The success path persisted the reassignment and D11 repricing; the conflict path preserved booking/billing truth and emitted no partial events.
 - The integrated run exposed a duplicate `PRICE_RECONCILIATION` insert in the reassignment repository; artifact A removes the duplicate. The receptionist UI uses the existing per-room `maintenance.read` route because the receptionist role does not have `housekeeping.read`; no capability expansion was made.
 
+## ACTIVE DISCOVERY TASK
+
+Task Contract: `.orchestration/contracts/UX-OPERATIONAL-WORKFLOW-ROADMAP-001.md`
+Scope: workflow discovery/definition only; no production code changes.
+Required inventory: Reception and the 13 listed reservation, lifecycle,
+billing, housekeeping and maintenance workflows.
+
 ## NEXT AUTHORIZED ACTION
 
-Hold at the Wave 1.2 Controller checkpoint for External Independent Critic/controller disposition. Do not modify Reports or Users, and do not merge/deploy/promote.
+Inspect the current application and V11 contracts, produce the UX workflow
+roadmap artifact, complete its Pre-Critic review and stop at Human Gate. Do not
+begin implementation. The prior Wave 1.2 Controller checkpoint remains
+unresolved for integration/promotion.
 
 ## MODEL ROUTING
 
