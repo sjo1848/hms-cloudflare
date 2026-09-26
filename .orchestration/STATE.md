@@ -8,10 +8,10 @@ Active branch: `impl/p0.1-reception-arrival-checkin`
 Definition artifact A: `23b7da3c9836edfaefa2bcf4943ee27f479b2f2a`
 Base implementation boundary: `a61d688534e0802a27cc7e5badb71dafacad19b9`
 Current task PR: `none (definition-only branch)`
-Active task: `P0.1-RECEPTION-ARRIVAL-CHECKIN` (Task Contract pending)
-Phase: `P0.1 — AUTHORIZED / READY TO RESUME`
-Status: `APPROVED WITH CONDITIONS`
-Runtime: `READY_TO_RESUME`
+Active task: `P0.1-RECEPTION-ARRIVAL-CHECKIN`
+Phase: `P0.1 — BUILD`
+Status: `IN PROGRESS`
+Runtime: `RUNNING`
 
 Wave 0.3 and Wave 1.1a are recorded as development passes with the shared/preexisting browser finding; promotion remains blocked. Wave 1.1 backend/domain work reached Controller checkpoint at artifact `b8ed06521d4221fcaac08b838887405339c9cd1e`, using the remote V11 definition branch as read-only contract authority. The external review for Wave 1.2 remains required and is not marked completed.
 
@@ -86,8 +86,9 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT AUTHORIZED ACTION
 
-Create the P0.1 Task Contract with invariant mapping, then implement the
-bounded arrival/check-in workflow on this branch. The Wave 1.2 Independent
+Implement the bounded arrival/check-in workflow under
+`.orchestration/contracts/P0.1-RECEPTION-ARRIVAL-CHECKIN.md` on this branch.
+The Wave 1.2 Independent
 Critic requirement remains separately open. No P0.2, merge or promotion.
 
 ## MODEL ROUTING
