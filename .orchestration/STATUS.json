@@ -2,47 +2,53 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "DISCOVERY_DEFINITION_UX_OPERATIONAL_WORKFLOW_ROADMAP",
-  "runtime_status": "RUNNING",
+  "phase": "HUMAN_GATE_UX_OPERATIONAL_WORKFLOW_ROADMAP",
+  "runtime_status": "WAITING_HUMAN_GATE",
   "resume_authorized": false,
   "active_task": "UX-OPERATIONAL-WORKFLOW-ROADMAP-001",
-  "last_completed_task": "WAVE-1.2-RECEPTION-REASSIGNMENT-UX-ARTIFACT",
-  "last_completed_head": "47b9fed9300d1a77f5f20ddafadbd79a5514b6b8",
+  "last_completed_task": "UX-OPERATIONAL-WORKFLOW-ROADMAP-001",
+  "last_completed_head": "23b7da3c9836edfaefa2bcf4943ee27f479b2f2a",
   "work_branch": "definition/operational-ux-workflow-roadmap",
-  "pr": "#48 (Draft)",
-  "wave": "1.2 — Reception Reassignment UX/UI",
-  "status_label": "OPEN / WAVE 1.2 DEVELOPMENT CHECKPOINT; PROMOTION BLOCKED",
-  "next_action": "INSPECT_OPERATIONAL_WORKFLOWS_AND_CREATE_DEFINITION_ARTIFACT",
-  "stop_reason": null,
+  "pr": null,
+  "wave": "Discovery/Definition — Operational UX Workflow Roadmap",
+  "status_label": "WAITING FOR HUMAN GATE; NO IMPLEMENTATION AUTHORIZED",
+  "next_action": "HUMAN_GATE_ACCEPT_REORDER_OR_REVISE_ROADMAP_AND_CONFIRM_FIRST_WORKFLOW",
+  "stop_reason": "HUMAN_GATE_UX_OPERATIONAL_WORKFLOW_ROADMAP",
   "event": {
-    "seq": 125,
-    "id": "UX-OPERATIONAL-WORKFLOW-ROADMAP-001-START",
-    "type": "TASK_STARTED"
+    "seq": 126,
+    "id": "UX-OPERATIONAL-WORKFLOW-ROADMAP-001-DEFINITION-COMPLETE",
+    "type": "HUMAN_GATE_PENDING"
   },
   "external_review": {
     "required": true,
     "last_audited_head": null,
     "last_verdict": null,
-    "artifact_head": "47b9fed9300d1a77f5f20ddafadbd79a5514b6b8",
-    "review_path": "Independent Critic for later frozen integration/promotion"
+    "artifact_head": "23b7da3c9836edfaefa2bcf4943ee27f479b2f2a",
+    "review_path": "Human Gate for roadmap decision; Wave 1.2 Independent Critic remains separately required and incomplete"
   },
-  "human_gate": null,
+  "human_gate": {
+    "required": true,
+    "decision": "Accept, reorder, or revise P0/P1/P2 priorities and confirm or change the recommended first workflow: Reception arrival/check-in/next-case continuity.",
+    "implementation_authorized": false
+  },
   "blocker": {
-    "kind": "TECHNICAL",
+    "kind": "EXTERNAL_FINDING",
     "surface": "ux-mobile-browser",
-    "area": "Shared browser promotion finding remains open; Wave 1.2 checkpoint reached",
+    "area": "Shared Reports/Users/workerd browser finding remains a separate promotion blocker; local acceptance-runtime inspection also could not initialize for this definition task.",
     "wave_pass": true,
-    "attribution": "BROWSER_HARNESS_INFRA_FLAKINESS_SHARED_FINDING"
+    "attribution": "SHARED_PREEXISTING_BROWSER_FINDING; LOCAL_DEFINITION_INSPECTION_LIMITATION"
   },
   "authorization": {
-    "scope": "IMPLEMENTATION_BRANCH_ONLY",
+    "scope": "DOCUMENTATION_ONLY_HUMAN_GATE_PENDING",
     "production": false,
     "acceptance_staging": false,
     "main": false,
     "merge": false,
     "deploy": false,
-    "wave_1_1a": true,
-    "development_continuation": false
+    "wave_1_1a": false,
+    "development_continuation": false,
+    "ui_implementation": false,
+    "backend_implementation": false
   },
   "validated": {
     "d11_executing_d1": "4/4 PASS",
@@ -73,7 +79,11 @@
     "wave_1_2_multi_agent_available": false,
     "wave_1_2_backend_fix": "PASS: REMOVED DUPLICATE PRICE_RECONCILIATION INSERT FOUND BY INTEGRATED E2E",
     "browser_attribution": "CURRENT_REPORTS_AND_USERS_FAILURES; BASELINE_BLOCKED_EARLIER_IN_HOUSEKEEPING",
-    "v11_contract_source": "origin/analysis/operational-flow-definition-v11"
+    "v11_contract_source": "origin/analysis/operational-flow-definition-v11",
+    "ux_roadmap_artifact": "23b7da3c9836edfaefa2bcf4943ee27f479b2f2a",
+    "ux_roadmap_invariant_evidence": "PASS: documentation scope; Pre-Critic findings PC-01..PC-07 resolved in artifact",
+    "ux_roadmap_gate": "HUMAN_GATE_PENDING",
+    "local_acceptance_runtime_discovery": "UNPROVEN: fixture mismatch on --reuse; --reset migration rehearsal stopped at invalid maintenance resolve transition; no production inference"
   },
   "method": {
     "human_routine_relay_forbidden": true,
