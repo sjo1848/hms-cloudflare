@@ -11,20 +11,20 @@
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.2 INTERNAL EVIDENCE COMPLETE; FRESH INDEPENDENT CRITIC BOUNDARY; LOCAL_SYNTHETIC_ONLY",
-  "next_action": "PUBLISH_F0_2_ARTIFACT_A_AND_ORCHESTRATION_BOUNDARY_B; REQUEST_FRESH_INDEPENDENT_CRITIC; DO_NOT_START_F0_3_UNTIL_VERDICT",
+  "status_label": "F0.2 ARTIFACT FROZEN; AWAITING FRESH INDEPENDENT CRITIC; LOCAL_SYNTHETIC_ONLY",
+  "next_action": "REQUEST_FRESH_INDEPENDENT_CRITIC_FOR_A_36B51287_AND_BOUNDARY_B; ADDRESS_FINDINGS; ONLY_THEN_START_F0_3",
   "stop_reason": null,
   "event": {
-    "seq": 146,
-    "id": "HMS-F0-02-INTERNAL-EVIDENCE-GATE-COMPLETE",
-    "type": "F0_INCREMENT_EVIDENCE_COMPLETE_AWAITING_INDEPENDENT_CRITIC"
+    "seq": 147,
+    "id": "HMS-F0-02-ARTIFACT-A-36B51287-PUBLISHED",
+    "type": "SUBSTANTIVE_ARTIFACT_AWAITING_INDEPENDENT_CRITIC"
   },
   "external_review": {
-    "required": false,
-    "last_audited_head": "b2581e4c370eeb6f74e9380af010e48386642b4f",
-    "last_verdict": "PASS",
-    "artifact_head": "b2581e4c370eeb6f74e9380af010e48386642b4f",
-    "review_path": "Fresh Independent Critic Hypatia (GPT-6 Luna Medium) reviewed exact A2 candidate and confirmed PASS; final Controller review required for CTRL-RM-01..04 closure.",
+    "required": true,
+    "last_audited_head": null,
+    "last_verdict": null,
+    "artifact_head": "36b51287e93d629ec5422202778b4b9f3a305895",
+    "review_path": "Fresh Independent Critic required for F0.2 Artifact A 36b51287e93d629ec5422202778b4b9f3a305895 plus the immediately following orchestration-only Boundary B; no F0.3 work until findings are addressed.",
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
@@ -78,6 +78,7 @@
     "f0_2_cf_i05": "PASS: isolated synthetic local Wrangler/D1/API regression exit 0; owned process group cleanup verified before terminal PASS",
     "f0_2_precritic": "COMPLETE: .orchestration/evidence/HMS-F0-02-SHARED-ROOM-INVARIANTS-001-PRECRITIC.md; invariant matrix complete; exact artifact A/B publication and Independent Critic pending",
     "f0_2_development_gate": "INTERNAL EVIDENCE COMPLETE; NOT ACCEPTED/PASS UNTIL FRESH INDEPENDENT CRITIC",
+    "f0_2_artifact_a": "36b51287e93d629ec5422202778b4b9f3a305895",
     "d11_executing_d1": "4/4 PASS",
     "foundation_ci": "PASS",
     "unit_integration": "23 files / 91 tests PASS",
