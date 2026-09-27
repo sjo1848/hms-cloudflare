@@ -1,6 +1,12 @@
 # HMS Cloudflare — Orchestration State
 
-## ACTIVE DISCOVERY — HMS-SYSTEM-UX-DISCOVERY-ASIS-001
+## ACTIVE TASK — HMS-IMPLEMENTATION-ROADMAP-001
+
+Human-authorized scope: IMPLEMENTATION ROADMAP PLANNING only, under handoff `HMS-CODEX-IMPLEMENTATION-ROADMAP-HANDOFF-009` and frozen Blueprint 001 / Reconciliation 007 / Final Disposition 008. Active branch `planning/hms-implementation-roadmap-f0-a-h`, based on clean repository boundary `00f1ef8af3ad1225669b93ffeed1c327b78771ec`; audited product baseline `b9197e278e227a8e3da5ecb867d6d430f69c1d2f`. Task Contract `.orchestration/contracts/HMS-IMPLEMENTATION-ROADMAP-001.md`.
+
+Status `ROADMAP_COMPLETE_AWAITING_CONTROLLER_REVIEW`; artifact A is `6a119f9ee7c90b6df5c1b5cfbf5d552db8313468`. Boundary B is orchestration-only and records this exact A. Independent roadmap Critic Gauss (fresh GPT-6 Luna Medium) returned `PASS` after bounded corrections; details are in `docs/implementation-roadmap/HMS-IMPLEMENTATION-ROADMAP-CRITIC-V1.md`. The exact next action is Controller review of the package and explicit Human/Controller authorization before any implementation. `resume_authorized=false`; implementation, issues/PRs, merge, staging, deploy, production and real-data migration/cutover remain unauthorized. Existing promotion findings remain open and are not cleared by this planning task.
+
+## HISTORICAL DISCOVERY — HMS-SYSTEM-UX-DISCOVERY-ASIS-001
 
 Human authorized full-system AS-IS discovery only. Branch `analysis/hms-system-ux-discovery-v1`, audited baseline `b9197e278e227a8e3da5ecb867d6d430f69c1d2f`; PR #50 remains Draft and unpromoted. Current task contract: `.orchestration/contracts/HMS-SYSTEM-UX-DISCOVERY-ASIS-001.md`.
 
@@ -8,7 +14,7 @@ Status `DISCOVERY_COMPLETE_AWAITING_CONTROLLER_REVIEW`; runtime `WAITING_HUMAN_G
 
 The prior implementation state below is retained as audited history, not the active dispatch.
 
-## CURRENT AUTHORITATIVE STATE
+## HISTORICAL IMPLEMENTATION STATE (SUPERSEDED BY ROADMAP TASK ABOVE)
 
 Project: HMS Cloudflare  
 Working directory: `/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare`

@@ -2,29 +2,29 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "HMS_SYSTEM_UX_DISCOVERY_ASIS",
+  "phase": "ROADMAP_COMPLETE_AWAITING_CONTROLLER_REVIEW",
   "runtime_status": "WAITING_HUMAN_GATE",
   "resume_authorized": false,
-  "active_task": "HMS-SYSTEM-UX-DISCOVERY-ASIS-001",
-  "last_completed_task": "HMS-SYSTEM-UX-DISCOVERY-ASIS-001",
-  "last_completed_head": "8b4ff2839e15ee123318af01f2d1e163f87db9c3",
-  "work_branch": "analysis/hms-system-ux-discovery-v1",
+  "active_task": "HMS-IMPLEMENTATION-ROADMAP-001",
+  "last_completed_task": "HMS-IMPLEMENTATION-ROADMAP-001",
+  "last_completed_head": "6a119f9ee7c90b6df5c1b5cfbf5d552db8313468",
+  "work_branch": "planning/hms-implementation-roadmap-f0-a-h",
   "pr": null,
-  "wave": "HMS SYSTEM UX DISCOVERY / AS-IS AUDIT v1",
-  "status_label": "DISCOVERY_COMPLETE_AWAITING_CONTROLLER_REVIEW; NO TO-BE AUTHORIZATION; PROMOTION BLOCKED",
-  "next_action": "CONTROLLER_REVIEW_HMS_SYSTEM_UX_DISCOVERY_ASIS_001_BEFORE_BLUEPRINT_OR_IMPLEMENTATION",
-  "stop_reason": "CONTROLLER_REVIEW_REQUIRED_BEFORE_TO_BE",
+  "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
+  "status_label": "ROADMAP_COMPLETE_AWAITING_CONTROLLER_REVIEW; IMPLEMENTATION_NOT_AUTHORIZED; PROMOTION_BLOCKED",
+  "next_action": "CONTROLLER_REVIEW_HMS_IMPLEMENTATION_ROADMAP_001_AND_EXPLICITLY_AUTHORIZE_ANY_IMPLEMENTATION",
+  "stop_reason": "CONTROLLER_REVIEW_REQUIRED; NO_IMPLEMENTATION_OR_DATA_CUTOVER_AUTHORIZATION",
   "event": {
-    "seq": 137,
-    "id": "HMS-SYSTEM-UX-DISCOVERY-ASIS-001-COMPLETE",
-    "type": "DISCOVERY_COMPLETE_AWAITING_CONTROLLER_REVIEW"
+    "seq": 139,
+    "id": "HMS-IMPLEMENTATION-ROADMAP-001-COMPLETE",
+    "type": "ROADMAP_COMPLETE_AWAITING_CONTROLLER_REVIEW"
   },
   "external_review": {
     "required": true,
     "last_audited_head": "8b4ff2839e15ee123318af01f2d1e163f87db9c3",
     "last_verdict": "PASS_WITH_CONDITIONS",
-    "artifact_head": "8b4ff2839e15ee123318af01f2d1e163f87db9c3",
-    "review_path": "AWAITING CONTROLLER REVIEW: discovery Artifact A 8b4ff2839e15ee123318af01f2d1e163f87db9c3 plus orchestration Boundary B recorded by this commit. Earlier UX-UI-RECEPTION-CHECKIN-001 PASS_WITH_CONDITIONS remains historical and unrelated.",
+    "artifact_head": "6a119f9ee7c90b6df5c1b5cfbf5d552db8313468",
+    "review_path": "Independent roadmap Critic PASS is recorded in docs/implementation-roadmap/HMS-IMPLEMENTATION-ROADMAP-CRITIC-V1.md. Awaiting external Controller review of roadmap Artifact A 6a119f9ee7c90b6df5c1b5cfbf5d552db8313468 and orchestration Boundary B; implementation remains unauthorized.",
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
@@ -32,7 +32,7 @@
   },
   "human_gate": {
     "required": true,
-    "decision": "DISCOVERY ONLY COMPLETE; Controller/Human must review findings and authorize any TO-BE or implementation scope",
+    "decision": "REVIEW ROADMAP PACKAGE; EXPLICITLY AUTHORIZE IMPLEMENTATION BEFORE FOUNDATION 0; approve any data-risk/cash-ownership decisions separately when applicable",
     "implementation_authorized": false
   },
   "blocker": null,
@@ -44,7 +44,7 @@
     "attribution": "EXTERNAL_FINDINGS_NOT_REOPENED_BY_THIS_TASK"
   },
   "authorization": {
-    "scope": "HMS-SYSTEM-UX-DISCOVERY-ASIS-001_DOCUMENTATION_ONLY",
+    "scope": "HMS-IMPLEMENTATION-ROADMAP-001_DOCUMENTATION_ONLY",
     "production": false,
     "acceptance_staging": false,
     "main": false,
@@ -112,6 +112,11 @@
     "discovery_browser": "7 routes × 1280/820/390 screenshots; read-only. Worker Broken pipe once, local restart restored API. Network returned 403; no global PASS claimed",
     "discovery_drive_artifact": "HMS-SYSTEM-UX-DISCOVERY-ASIS-001; https://docs.google.com/document/d/1EouqroCp_WR6FUB6MQno3FMBStUMoKs5edI4E1gHK-w/edit; parent 13hYWjlt3gFpcIsa0fMXdEAC-zAJ0MeLr",
     "discovery_development_gate": "DISCOVERY_COMPLETE_AWAITING_CONTROLLER_REVIEW; documentary completeness only; not product technical PASS or Blueprint completion",
+    "implementation_roadmap_package": "COMPLETE: Master, DAG, F0.1-F0.12, Blocks A-H, traceability, test/evidence matrix, room-state cutover, active-stay pricing bootstrap, risks, open decisions",
+    "implementation_roadmap_artifact_a": "6a119f9ee7c90b6df5c1b5cfbf5d552db8313468",
+    "implementation_roadmap_critic": "PASS: Gauss, fresh read-only GPT-6 Luna Medium; initial findings/rework cycles recorded in critic artifact; no ROADMAP_BLOCKER",
+    "implementation_roadmap_validation": "PASS: documentary-only diff, git diff --check, STATUS JSON parse, F0/Blocks heading and dependency consistency; no product tests/build/migrations run",
+    "implementation_roadmap_gate": "ROADMAP_COMPLETE_AWAITING_CONTROLLER_REVIEW; implementation/data cutover/promotion not authorized",
     "ux_ui_checkin_current_build_budget": "PASS: JS raw 296282/300000; gzip 86084/100000; CSS raw 39586/50000; gzip 7817/15000",
     "ux_ui_checkin_integrated_run_log": "output/playwright/ux-ui-checkin-integrated.log; exit 0; final fixture .hms-local/p0-1-QBRoTK; cleanup verified before D1 assertions",
     "ux_ui_checkin_keyboard_scroll": "PASS: mobile Drawer Tab/Escape/focus restore; desktop Dialog Tab/Shift+Tab/Escape/focus restore; compact viewport proves body scroll with stable header/footer/CTA",
