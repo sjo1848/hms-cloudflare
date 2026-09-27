@@ -1,0 +1,18 @@
+# HMS Cloudflare — Implementation Roadmap Risk Register v1
+
+| ID | Risk / evidence | Impact | Mitigation / evidence gate | Owner / decision point |
+|---|---|---|---|---|
+| R1 | Single `rooms.status`; migration 0020 backfills impact from current status and cannot recover overwritten HK state | False readiness/sellability; lost operational meaning | F0.3 row-level shadow mapping, quarantine, no false READY, rehearsals and human cutover gate | F0.3 + Human before real-data cutover |
+| R2 | `bookings.total_cents` aggregate, no segment model found; current reassignment uses current destination rate × full stay | Retroactive price changes or incorrect account | F0.5/F0.6 segmented design, no inference, exact before/after totals, D11 + independent finance review | F0.5/.6 |
+| R3 | Active stays may lack historical rate provenance | Impossible safe allocation of legacy aggregate into nights | classify traceable vs aggregate-only; preserve totals and block only operations requiring missing basis | Human decision before affected real-data bootstrap |
+| R4 | Extra charges lack persisted operation token/unique replay identity in observed schema; response-loss retries risk duplication | Duplicate charge or ambiguous outcome | F0.9 server-side idempotency identity, exact atomic batch and outcome lookup; concurrent/replay/rollback D1 tests | F0.9 / F-account |
+| R5 | D1 `meta.changes` may include trigger effects; prior successful batch observation `[1,2,1,1]` | false failure/success attribution if code assumes one row per statement | verify exact winner through explicit causal result/returned identity; account for trigger behavior; never chain with SQLite `changes()` | F0.2/.9 |
+| R6 | Cash close token generated per request; actual owner model not evidenced | duplicate close or invented operator-session semantics | Human validates shared box vs operator/session-owned before F-cash; stable operation recovery contract | F-cash only |
+| R7 | Hotel/control D1 stores are separate and migration rehearsal sequential/synthetic | overclaim of cross-tenant atomicity or real cutover readiness | per-hotel checkpoints, allow-listed routing, global manifest and explicit incomplete state | F0.3/.6/.12, H |
+| R8 | `/auth/me` lacks effective capabilities; shell doesn't consume server-owned capability payload | navigation mismatch or duplicated client role authority | F0.10 additive authoritative capability contract; API denial remains final | F0.10, A |
+| R9 | Multiple feature-specific refresh/race behaviors | stale UI after mutation, false success, lost filters/context | F0.11 resource-scoped invalidation, delayed/out-of-order response tests, browser context assertions | F0.11, A–H |
+| R10 | Historical browser/workerd instability in Reports/Users is shared/preexisting in prior project state | false attribution or blocked global promotion | isolate same-scenario baseline attribution; report scope separately; no blind timeout/retry repair | H / promotion gate |
+| R11 | Inventory claim FK rebuild can fail on orphan claims | migration abort/data inconsistency | detect and reconcile or quarantine orphans before transform; synthetic orphan fixture; exact count checks | F0.3 |
+| R12 | Specialist read-only analysis uses repo paths but cannot substitute for frozen design authority | mistaken plan semantics | controlling 001/007/008 read directly; mark repo-derived observations separately; independent critic uses exact package | Roadmap review |
+
+No numeric risk score is assigned: repo lacks verified occurrence/impact frequencies. This register prioritizes by potential irreversibility and business correctness, not a fabricated score.
