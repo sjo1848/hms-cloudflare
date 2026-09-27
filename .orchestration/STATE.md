@@ -9,33 +9,47 @@ Definition artifact A: `23b7da3c9836edfaefa2bcf4943ee27f479b2f2a`
 Base snapshot: `6ffd6f9aa8e6836d60cbeba5383494605e5611cc` on `review/ux-operational-current`
 Active task: `UX-UI-RECEPTION-CHECKIN-001`
 Task Contract: `.orchestration/contracts/UX-UI-RECEPTION-CHECKIN-001.md`
-Phase: `Reception + Guided Check-in UI Controller Checkpoint`
-Status: `ARTIFACT A PUBLISHED — AWAITING EXTERNAL INDEPENDENT REVIEW / CONTROLLER CHECKPOINT`
-Runtime: `HUMAN_ACTION_REQUIRED`, `resume_authorized=false`; this artifact and prior P0.1/Wave 1.2 reviews remain required before promotion.
+Phase: `Reception + Guided Check-in post-artifact independent review`
+Status: `ARTIFACT A AND ORCHESTRATION B PUBLISHED — AWAITING FRESH INDEPENDENT CRITIC`
+Runtime: `HUMAN_ACTION_REQUIRED`, `resume_authorized=false`; exact A+B are frozen for review. No other workflow is authorized.
 
 This task is limited to the Reception + Guided Check-in interaction reference implementation. The named UI Contract & Wireframes v1 and parent UI Interaction System v1 were found in connected Drive and read in full; IDs and the Human implementation authorization are recorded in the Task Contract. No other workflow is authorized.
 
-## UX-UI-RECEPTION-CHECKIN-001 — CONTROLLER CHECKPOINT
+Controller finding: Human rejected right-side Sheet for Check-in desktop and requested a centered task surface. Rework is limited to Desktop Dialog / Mobile full-screen Drawer while preserving P0.1 behavior and the existing UI logic. Task Contract records the correction; backend, other workflows, promotion and deployment remain out of scope.
 
-- Artifact A: `a090b283c2303871af25375c66050117efafbeb2` on `impl/ux-ui-reception-checkin`.
-- Publication boundary B: this orchestration-only commit records exact artifact A, sets external review required and does not alter product behavior.
-- Draft PR: `#50`, targeting `review/ux-operational-current`.
-- Evidence: `.orchestration/evidence/UX-UI-RECEPTION-CHECKIN-001.md` and `-INVARIANTS.md`; final screenshots are under `output/playwright/ux-ui-checkin-*.png`.
-- `npm run check`: PASS, 23 files / 91 tests. `types:check`, build, architecture/i18n/budgets, D1 query plans and API/Web Wrangler dry-runs: PASS.
-- Directed mock browser: PASS at 375px and 1280px. Integrated local Wrangler Worker + migrated D1 + Vite browser: PASS at mobile 375px and desktop 1280px, including real stale-maintenance 409, authoritative refresh/retry, BLOCKING/NON_BLOCKING, success/next case and persisted event/invoice assertions. Process cleanup verified before final D1 PASS.
-- Separate Luna Medium UX/adversarial and QA/evidence reviews completed. Findings were repaired and rerun; remaining P3 note is that the local acceptance identity control still occupies some mobile vertical space. It is development-only and absent from production.
-- The Sheet/Drawer/Dropdown wrappers are source-local accessible components over native `<dialog>`/menu semantics, not generated shadcn package components. This explicit zero-dependency adaptation avoids exceeding the 300 KB raw JS budget; details are documented for Independent Critic review.
-- Multi-agent capability: `true`; separate UX/adversarial and QA reviewers were used. The local writer/orchestrator performed implementation.
-- DEVELOPMENT: validation and mandatory Pre-Critic are complete; stop at this Controller checkpoint without self-declaring Independent Critic PASS.
-- PROMOTION: `BLOCKED` by the existing shared Reports/Users/workerd browser finding and inherited `P01-EXT-01`; neither was modified or represented as green.
+## UX-UI-RECEPTION-CHECKIN-001 — SUPERSEDED PRE-REWORK ARTIFACT
+
+- Prior artifact A: `a090b283c2303871af25375c66050117efafbeb2` on this branch; its right-side desktop Sheet was rejected by the Human and is superseded for acceptance by the current rework. Do not treat its review boundary as satisfying this rework.
+- Draft PR `#50` remains open against `review/ux-operational-current`.
+
+## UX-UI-RECEPTION-CHECKIN-001 — FROZEN REWORK ARTIFACT
+
+- Human feedback: `Human rejected right-side Sheet for Check-in desktop and requested a centered task surface.`
+- Artifact A: `f73c64102ab411fbd3883d006cd22aec5f8dfc1b` on `impl/ux-ui-reception-checkin`.
+- Boundary B: this orchestration-only commit records exact A and requires a fresh Independent Critic; it contains no product behavior changes.
+- Draft PR `#50` remains open against `review/ux-operational-current`.
+- Current interaction contract: centered desktop Dialog with dimmed Reception backdrop; mobile remains full-screen Drawer. No other workflow or backend change is authorized.
+- `npm run check`: PASS, 23 files / 91 tests. `types:check`: PASS. Current web build: 296,282 raw JS / 86,084 gzip and 39,586 raw CSS / 7,817 gzip. Cloudflare raw JS budget PASS at 296,282 / 300,000; CSS budget PASS.
+- Architecture fitness, i18n, D1 query plans and API/Web Wrangler dry-runs: PASS.
+- Latest integrated browser run: `output/playwright/ux-ui-checkin-integrated.log`, fixture `.hms-local/p0-1-8CFfxo`. Real local Wrangler Worker + migrated D1 + Vite: PASS on mobile 375px and desktop 1280px. Covers mobile Drawer Tab/Escape/focus restoration, stale `409`→authoritative refresh/retry→success, desktop Dialog center/backdrop/bounds, compact-height independent body scroll with stable header/footer, Dialog Tab/Shift+Tab and Escape/focus restore, desktop real `409` recovery, BLOCKING/NON_BLOCKING, next case and D1 assertions.
+- Persisted state: `z-priority` and `a-next` are `CHECKED_IN`; exactly one CHECK_IN event each; `m-blocked` remains confirmed in MAINTENANCE; invoices unchanged and zero payment rows.
+- QA/UX reviewer (separate read-only Luna Medium subagent) found missing keyboard evidence and stale Sheet/budget claims. Assertions and evidence were repaired; latest integrated log verifies assertions executed and the reviewer confirmed keyboard/invariant findings resolved. Exact build measurement is now recorded consistently for this artifact; prior `291301` measurement belongs to P0.1 historical evidence below.
+- Component policy: source-local native Dialog/Drawer/Sheet wrappers share one `<dialog>` lifecycle; not generated shadcn components. External runtime was removed to preserve the binding 300 KB raw JS budget. The adaptation is disclosed for the fresh Independent Critic.
+- Multi-agent capability: `true`; separate Luna Medium Engineering and QA/UX reviewer used. A fresh, non-participating Independent Critic is required after freezing exact A+B; no verdict is yet recorded.
+- Mandatory Pre-Critic and invariant evidence are complete; separate QA/UX follow-up confirmed its keyboard, stale-evidence, and budget findings resolved. Fresh Independent Critic verdict is pending; no PASS is self-declared.
+- Development gate is at the post-artifact review boundary. Promotion remains `BLOCKED` by the shared Reports/Users/workerd finding and inherited `P01-EXT-01`; neither is in this scope.
 - No merge, `main`, `acceptance/staging`, deploy or production action occurred.
+
+## REWORK REVIEW BOUNDARY
+
+Fresh Independent Critic must review exact artifact A `f73c64102ab411fbd3883d006cd22aec5f8dfc1b` together with this orchestration Boundary B, using the Task Contract, invariant evidence, integrated run log and screenshots. Reviewer must not have participated in implementation or Pre-Critic. Record one allowed verdict (`PASS`, `PASS_WITH_CONDITIONS`, or `REWORK`) in canonical orchestration and then stop at the post-critic Controller checkpoint. No subsequent workflow is authorized.
 
 ## P0.1 CURRENT EVIDENCE AND PRE-CRITIC
 
 - Task Contract: `.orchestration/contracts/P0.1-RECEPTION-ARRIVAL-CHECKIN.md`.
 - Evidence: `.orchestration/evidence/P0.1-RECEPTION-ARRIVAL-CHECKIN.md` and its `-INVARIANTS.md` companion.
 - `npm run check`: `23 files / 91 tests PASS`, including D11 executing D1 `4/4`, front-desk board `2/2`, and concurrent check-in exact-winner `1/1`.
-- `npm run types:check`, web build, architecture fitness, i18n, budgets, D1 critical query plans, Wrangler dry-runs and staging SPA config dry-run: PASS. Final JS raw `291301` bytes against `300000` ceiling.
+- Historical P0.1 evidence (not the current Dialog rework build): `npm run types:check`, web build, architecture fitness, i18n, budgets, D1 critical query plans, Wrangler dry-runs and staging SPA config dry-run: PASS. P0.1 JS raw was `291301` bytes against `300000` ceiling.
 - Directed mock browser at 375/1280: PASS, including dirty Back/Forward, 409/failed refresh, double-submit, no-next focus and URL selection. CF-I04 mock browser at 375/390/430/768/1024: PASS.
 - Real local Wrangler Worker + migrated D1 + Vite browser at mobile 375 and desktop 1280: PASS. Actual BLOCKING race returns 409, repairs/refresh then succeeds; NON_BLOCKING advisory succeeds; blocked booking stays unchanged; persisted D1 has exactly one CHECK_IN event per winner and intact invoices/payments. Final isolated fixture `.hms-local/p0-1-aCKaJg`; screenshots under `output/playwright/p0-1-integrated-*`.
 - Multi-agent runtime capability: `true`. Separate UX/contract, backend engineering, UX adversarial, DB/Data and final read-only UX review were used; final reviewer findings on URL and no-next focus were repaired and retested. Luna Medium reviewers/engineering; no Sol escalation. Pre-Critic is internal only.
