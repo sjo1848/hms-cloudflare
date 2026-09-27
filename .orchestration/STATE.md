@@ -1,10 +1,17 @@
 # HMS Cloudflare — Orchestration State
 
-## ACTIVE TASK — HMS-IMPLEMENTATION-ROADMAP-001
+## ACTIVE BOUNDARY — HMS-ROADMAP-CTRL-REWORK-001
 
-Human-authorized scope: IMPLEMENTATION ROADMAP PLANNING only, under handoff `HMS-CODEX-IMPLEMENTATION-ROADMAP-HANDOFF-009` and frozen Blueprint 001 / Reconciliation 007 / Final Disposition 008. Active branch `planning/hms-implementation-roadmap-f0-a-h`, based on clean repository boundary `00f1ef8af3ad1225669b93ffeed1c327b78771ec`; audited product baseline `b9197e278e227a8e3da5ecb867d6d430f69c1d2f`. Task Contract `.orchestration/contracts/HMS-IMPLEMENTATION-ROADMAP-001.md`.
+Bounded corrections CTRL-RM-01..04 completed under Controller Review Drive `1xbNP7RWTriKXGqWMTwFV3xoRIFYPvJwENn3tsozHHlM`. Branch `planning/hms-implementation-roadmap-f0-a-h`.
 
-Status `ROADMAP_COMPLETE_AWAITING_CONTROLLER_REVIEW`; artifact A is `6a119f9ee7c90b6df5c1b5cfbf5d552db8313468`. Boundary B is orchestration-only and records this exact A. Independent roadmap Critic Gauss (fresh GPT-6 Luna Medium) returned `PASS` after bounded corrections; details are in `docs/implementation-roadmap/HMS-IMPLEMENTATION-ROADMAP-CRITIC-V1.md`. The exact next action is Controller review of the package and explicit Human/Controller authorization before any implementation. `resume_authorized=false`; implementation, issues/PRs, merge, staging, deploy, production and real-data migration/cutover remain unauthorized. Existing promotion findings remain open and are not cleared by this planning task.
+- Corrected immutable roadmap Artifact A2: `b2581e4c370eeb6f74e9380af010e48386642b4f`.
+- Orchestration-only Boundary B2: recorded by the immediately following commit; contains only this file and `.orchestration/STATUS.json`.
+- Fresh independent critic: Hypatia, GPT-6 Luna Medium, `PASS`; exact A2 candidate and final path audit verified. Evidence: `.orchestration/evidence/HMS-ROADMAP-CTRL-REWORK-001-INDEPENDENT-CRITIC.md`.
+- Path audit: 111 unique explicit path references; 102 exist, 9 explicitly absent/negated, zero unexplained missing paths. Pre-Critic and invariant records are in `.orchestration/evidence/HMS-ROADMAP-CTRL-REWORK-001-{PRECRITIC,INVARIANTS}.md`.
+- CTRL-RM-02 reconciles E start after Foundation 0 + A + E's room/capability contracts; B remains a later integration checkpoint before dependent C/H flows.
+- CTRL-RM-03 excludes all Booking Account receivables from cash reconciliation arithmetic. CTRL-RM-04 confirms Booking Account/Folio grain is Booking/Stay; Guest has no global account.
+
+Status `ROADMAP_REWORK_COMPLETE_AWAITING_CONTROLLER_REVIEW`. `implementation_authorized=false`; `resume_authorized=false`; external Controller review is required. No product edits, migrations, data, issues, PRs, merge, staging, deploy or production actions occurred. Do not begin Foundation 0 until separate implementation authorization.
 
 ## HISTORICAL DISCOVERY — HMS-SYSTEM-UX-DISCOVERY-ASIS-001
 
