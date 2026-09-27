@@ -1,5 +1,13 @@
 # HMS Cloudflare — Orchestration State
 
+## ACTIVE DISCOVERY — HMS-SYSTEM-UX-DISCOVERY-ASIS-001
+
+Human authorized full-system AS-IS discovery only. Branch `analysis/hms-system-ux-discovery-v1`, audited baseline `b9197e278e227a8e3da5ecb867d6d430f69c1d2f`; PR #50 remains Draft and unpromoted. Current task contract: `.orchestration/contracts/HMS-SYSTEM-UX-DISCOVERY-ASIS-001.md`.
+
+Status `DISCOVERY_COMPLETE_AWAITING_CONTROLLER_REVIEW`; runtime `WAITING_HUMAN_GATE`; resume_authorized=false. Artifact A: `8b4ff2839e15ee123318af01f2d1e163f87db9c3`, containing the documentary audit/catalog/journey/evidence. Boundary B is orchestration-only and records A. External Controller review is the next action. No TO-BE or product implementation is authorized by this discovery. Previous check-in review and all promotion restrictions below remain historical/pending, not waived by discovery. Drive copy is stored in folder `13hYWjlt3gFpcIsa0fMXdEAC-zAJ0MeLr`, document `1EouqroCp_WR6FUB6MQno3FMBStUMoKs5edI4E1gHK-w`.
+
+The prior implementation state below is retained as audited history, not the active dispatch.
+
 ## CURRENT AUTHORITATIVE STATE
 
 Project: HMS Cloudflare  
