@@ -24,8 +24,8 @@ Authority: Blueprint 001 + Reconciliation 007 + Final Disposition 008. Categorie
 | Reassignment/check-out/extension supported lifecycle | C | B,D,E,F0.4–.7 | command boundaries and D1 all-or-none evidence; unsupported extensions remain gaps |
 | Room board, state dimensions, holds, occupant navigation | D | A,F0.1–.4,E | dimensional room scenarios, interval sellability and stale conflict |
 | Housekeeping priority/task progression and maintenance impact/history | E | A,B,D,F0.1–.3 | deterministic ranking, lifecycle/event, tenant/RBAC browser + D1 |
-| Guest account, charges, payments, balances/credit | F-account | B,C,F0.5–.9 | ledger/invoice invariant, idempotent replay, exact-cent UI/API/D1 |
-| Cash summary/close/handoff/history | F-cash | F0.9–.11; cash Human decision | ownership evidence, exact reconciliation, retry/concurrency |
+| Booking Account/Folio, charges, payments, balances/credit (grain: Booking/Stay) | F-account | B,C,F0.5–.9 | ledger/invoice invariant, idempotent replay, exact-cent UI/API/D1 |
+| Cash received summary/close/handoff/history (Receivables excluded) | F-cash | F0.9–.11; cash Human decision | ownership evidence; reconcile only received cash/non-cash payments; prove pending/credit receivables change none of Cash totals/count/difference; retry/concurrency |
 | Guests directory/detail and booking relationships | G | A,B,C,F0.10 | guest search/context/tenant tests |
 | Reports: date/range, revenue/occupancy/alerts semantics | G | A,F0.10/.11,F-account | independent D1 fixtures, empty range, integer-cent and date tests |
 | Users/hotel administration and RBAC | G | A,F0.10 | canonical capability parity, denied write/no-op audit/downgrade |
@@ -34,7 +34,7 @@ Authority: Blueprint 001 + Reconciliation 007 + Final Disposition 008. Categorie
 
 ## Ownership rule
 
-Each row has one primary contract owner. Dependencies/consumers are listed separately and may consume behavior but cannot redefine it. In particular: F0.1 owns sellability semantics; F0.4 implements the remaining-night lifecycle interval using those semantics. F0 owns foundational semantics; B owns case-context orchestration; C owns lifecycle commands; D/E are read/task workspaces over shared room truth; F owns account/payment/cash presentation but not a second ledger; H proves integration and does not absorb missing domain contracts.
+Each row has one primary contract owner. Dependencies/consumers are listed separately and may consume behavior but cannot redefine it. In particular: F0.1 owns sellability semantics; F0.4 implements the remaining-night lifecycle interval using those semantics. F0 owns foundational semantics; B owns case-context orchestration; C owns lifecycle commands; D/E are read/task workspaces over shared room truth; F-account owns per-Booking/Stay account and Receivables presentation, F-cash owns received-payment reconciliation only; neither creates a second ledger. H proves integration and does not absorb missing domain contracts.
 
 ## Scope holes intentionally not papered over
 

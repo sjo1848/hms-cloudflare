@@ -1,6 +1,6 @@
 # HMS Cloudflare — Room State Cutover Plan v1
 
-Status: **planning only; not approved for execution**. This plan preserves frozen room semantics in Blueprint 001 / Reconciliation 007 / Final Disposition 008. Current target evidence is hotel migration `0020_maintenance_impact.sql`; current `rooms.status` is still a single text field and prior HK state can be obscured by status transitions.
+Status: **planning only; not approved for execution**. This plan preserves frozen room semantics in Blueprint 001 / Reconciliation 007 / Final Disposition 008. Current target evidence is `apps/api/schema/hotel-migrations/0020_maintenance_impact.sql`; current `rooms.status` is still a single text field and prior HK state can be obscured by status transitions.
 
 ## 1. Cutover invariant
 
@@ -8,7 +8,7 @@ For every room, represent separately: Occupancy; Housekeeping; open Maintenance 
 
 ## 2. Authority and candidate evidence
 
-Read exact accepted mappings from 007/008 and source-state history before designing the executable transform. Candidate repository evidence: hotel migrations `0001_foundation.sql`, `0009_housekeeping_maintenance.sql`, `0020_maintenance_impact.sql`; HK/maintenance/lifecycle repositories and routes; `room_inventory_nights`; `booking_events`/maintenance events; migration runner and source-target map under `scripts/migration/`. The observed 0020 backfill classifies open case impact using present room status; it does not reconstruct overwritten Housekeeping state. Do not treat it as a complete room cutover.
+Read exact accepted mappings from 007/008 and source-state history before designing the executable transform. Candidate existing repository evidence: `apps/api/schema/hotel-migrations/0001_foundation.sql`, `apps/api/schema/hotel-migrations/0009_housekeeping_maintenance.sql`, `apps/api/schema/hotel-migrations/0020_maintenance_impact.sql`; `apps/api/src/modules/lifecycle/d1-lifecycle-repository.ts`; `apps/api/src/routes/housekeeping.ts`; `apps/api/src/routes/inventory.ts`; `apps/api/src/routes/lifecycle.ts`; `apps/api/src/modules/inventory/availability.ts`; `apps/api/src/room-availability.ts`; migration tooling `scripts/migration/source-target-map.mjs`, `scripts/migration/migration-core.mjs`, `scripts/migration/rehearse.mjs`, `scripts/migration/reconcile.mjs`, `scripts/migration/test-rehearsal.sh`. The database objects `room_inventory_nights`, `booking_events` and maintenance events are schema/data concepts, not source filenames. The observed 0020 backfill classifies open case impact using present room status; it does not reconstruct overwritten Housekeeping state. Do not treat it as a complete room cutover.
 
 ## 3. Non-destructive staged method
 

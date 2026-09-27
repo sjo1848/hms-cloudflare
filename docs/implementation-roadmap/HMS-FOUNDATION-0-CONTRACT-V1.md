@@ -12,7 +12,7 @@ All entries below are proposed future contracts derived from frozen Blueprint 00
 ## F0.1 — Authoritative room dimensions
 
 **Objective/contract:** replace single room-status semantics with distinct Occupancy, Housekeeping, Maintenance Impact, Service State, derived Readiness, and date-range Sellability. Values/predicates must follow 007/008; status is not a generic mutable label.
-**Dependencies:** frozen 001/007/008 only. **Surfaces:** `apps/api/schema/hotel-migrations/0001_foundation.sql`, `0009_housekeeping_maintenance.sql`, `0020_maintenance_impact.sql`; `apps/api/src/modules/lifecycle/*`, `routes/housekeeping.ts`, `room-availability.ts`, `modules/inventory/*`; web `features/rooms/*`, `features/housekeeping/*`, `features/reception/*`.
+**Dependencies:** frozen 001/007/008 only. **Current repository surfaces:** `apps/api/schema/hotel-migrations/0001_foundation.sql`, `apps/api/schema/hotel-migrations/0009_housekeeping_maintenance.sql`, `apps/api/schema/hotel-migrations/0020_maintenance_impact.sql`; `apps/api/src/modules/lifecycle/d1-lifecycle-repository.ts`, `apps/api/src/modules/inventory/availability.ts`, `apps/api/src/routes/inventory.ts`, `apps/api/src/routes/housekeeping.ts`, `apps/api/src/room-availability.ts`; `apps/web/src/features/rooms/RoomsPage.tsx`, `apps/web/src/features/housekeeping/HousekeepingPage.tsx`, `apps/web/src/features/reception/ReceptionPage.tsx`. **PROPOSED NEW SURFACE:** forward migration and any new dimension storage/API fields; exact names deferred.
 **Non-goals:** new room workflow/product decisions; replacing inventory-night truth; silently mapping unknown states.
 **API/data/UI:** define canonical dimension representation and derived response fields; consumers receive both physical/operational dimensions and explicit reasoned readiness/sellability; UI displays distinct facts, never conflates Occupied with not maintained.
 **Migration/cutover:** additive schema and compatibility mapping; follow Room State Cutover Plan; preserve source values/provenance, quarantine ambiguous records.
@@ -23,7 +23,7 @@ All entries below are proposed future contracts derived from frozen Blueprint 00
 ## F0.2 — Shared domain/event/invariant contract
 
 **Objective/contract:** establish shared command boundaries, state vocabulary, event/audit rules, actor/hotel/request traceability, UTC instant vs hotel-local date, and resource-context semantics consumed by all blocks.
-**Dependencies:** F0.1 semantics. **Surfaces:** `apps/api/src/modules/{lifecycle,bookings,inventory,billing}/*`, `apps/api/src/routes/*`, `apps/api/src/request-context.ts`, hotel schema migration history, `apps/web/src/app/*`.
+**Dependencies:** F0.1 semantics. **Current repository surfaces:** `apps/api/src/context.ts`, `apps/api/src/errors.ts`, `apps/api/src/auth/capabilities.ts`; `apps/api/src/modules/bookings/domain.ts`, `apps/api/src/modules/lifecycle/domain.ts`, `apps/api/src/modules/billing/domain.ts`; `apps/api/src/routes/inventory.ts`, `apps/api/src/routes/bookings.ts`, `apps/api/src/routes/front-desk.ts`, `apps/api/src/routes/lifecycle.ts`, `apps/api/src/routes/housekeeping.ts`, `apps/api/src/routes/billing.ts`, `apps/api/src/routes/admin.ts`, `apps/api/src/routes/analytics.ts`; `apps/api/src/time/hotel-time.ts`; `apps/web/src/app/AppShell.tsx`, `apps/web/src/app/navigation.ts`, `apps/web/src/app/router.tsx`.
 **Non-goals:** generic workflow engine, duplicate source of truth, product behavior beyond the approved architecture.
 **API/data/UI:** command identity, typed conflict/error shape and canonical state enums; events describe only actual transitions; client views distinguish FACT/derived/unknown.
 **Migration/cutover:** additive event/schema adaptations only where required; never rewrite historical events to fabricate detail.
@@ -34,7 +34,7 @@ All entries below are proposed future contracts derived from frozen Blueprint 00
 ## F0.3 — Room State Cutover
 
 **Objective/contract:** plan and prove safe mapping from current `rooms.status` plus HK/maintenance/history to F0.1 dimensions without false availability/readiness.
-**Dependencies:** F0.1, F0.2. **Surfaces:** migrations `0001`, `0009`, `0020`; repositories/routes for rooms, HK, maintenance, bookings; `scripts/migration/{rehearse.mjs,reconcile.mjs,migration-core.mjs,source-target-map.mjs}`.
+**Dependencies:** F0.1, F0.2. **Current repository surfaces:** `apps/api/schema/hotel-migrations/0001_foundation.sql`, `apps/api/schema/hotel-migrations/0009_housekeeping_maintenance.sql`, `apps/api/schema/hotel-migrations/0020_maintenance_impact.sql`; `apps/api/src/modules/lifecycle/d1-lifecycle-repository.ts`; `apps/api/src/routes/inventory.ts`, `apps/api/src/routes/bookings.ts`, `apps/api/src/routes/housekeeping.ts`; `scripts/migration/source-target-map.mjs`, `scripts/migration/migration-core.mjs`, `scripts/migration/rehearse.mjs`, `scripts/migration/reconcile.mjs`, `scripts/migration/test-rehearsal.sh`. **PROPOSED NEW SURFACE:** row-level shadow transform/report/runner only if current scripts cannot satisfy F0.3 evidence.
 **Non-goals:** executing against production/real customer data in this planning scope; inventing missing history.
 **API/data/UI:** establish shadow comparison/report schema and block activation for unresolved rows; compatibility responses remain explicit.
 **Migration/cutover:** see dedicated plan: inventory, snapshot/checksum, deterministic mappings, ambiguous quarantine, dry-run, per-hotel readiness, reversible activation pointer or forward recovery.
@@ -45,7 +45,7 @@ All entries below are proposed future contracts derived from frozen Blueprint 00
 ## F0.4 — Reassignment remaining-night interval
 
 **Objective/contract:** one authoritative `effective_date=max(check_in, hotel_local_date)` and `[effective_date, check_out)` across preview, eligibility, mutation, inventory claims, audit and billing.
-**Dependencies:** F0.1, F0.2, F0.3 mapping. **Surfaces:** `apps/api/schema/hotel-migrations/0021_reassignment_remaining_nights.sql`; `apps/api/src/modules/lifecycle/d1-lifecycle-repository.ts`, `apps/api/src/modules/lifecycle/domain.ts`, `apps/api/src/routes/lifecycle.ts`; `apps/api/src/modules/inventory/availability.ts`, `apps/api/src/room-availability.ts`; `apps/web/src/features/reception/*`.
+**Dependencies:** F0.1, F0.2, F0.3 mapping. **Current repository surfaces:** `apps/api/schema/hotel-migrations/0021_reassignment_remaining_nights.sql`; `apps/api/src/modules/lifecycle/d1-lifecycle-repository.ts`, `apps/api/src/modules/lifecycle/domain.ts`, `apps/api/src/routes/lifecycle.ts`, `apps/api/src/modules/inventory/availability.ts`, `apps/api/src/room-availability.ts`; `apps/web/src/features/reception/ReceptionPage.tsx`, `apps/web/src/features/reception/useReceptionWorkspace.ts`, `apps/web/src/features/reception/reception-api.ts`.
 **Non-goals:** moving elapsed nights, changing check-out, silently accepting overrun.
 **API/data/UI:** return effective date, old/new room, remaining interval and conflict reason; record truthful REASSIGN event/history.
 **Migration/cutover:** no historical room-night rewrites; forward-only guards. **Concurrency/idempotency:** conditional booking/current-room, target availability and exact claim set; stale interval conflicts atomically.
@@ -55,7 +55,8 @@ All entries below are proposed future contracts derived from frozen Blueprint 00
 ## F0.5 — Segmented stay pricing
 
 **Objective/contract:** persist/evaluate non-retroactive per-night pricing segments so reassignment reprices only remaining nights at destination current rate; preserve prior priced nights and existing extra charges.
-**Dependencies:** F0.2, F0.4. **Surfaces:** `apps/api/src/modules/bookings/d1-booking-repository.ts`, `apps/api/src/modules/lifecycle/d1-lifecycle-repository.ts`, `apps/api/src/modules/billing/d1-payment-repository.ts`, `apps/api/src/modules/billing/domain.ts`, hotel migrations `0010_billing.sql`, `0019_billing_reconciliation.sql`, `0021_reassignment_remaining_nights.sql`; `apps/api/src/routes/inventory.ts` and booking/lifecycle routes.
+**Dependencies:** F0.2, F0.4. **Current repository surfaces:** `apps/api/src/modules/bookings/d1-booking-repository.ts`, `apps/api/src/modules/lifecycle/d1-lifecycle-repository.ts`, `apps/api/src/modules/billing/d1-payment-repository.ts`, `apps/api/src/modules/billing/domain.ts`; `apps/api/schema/hotel-migrations/0010_billing.sql`, `apps/api/schema/hotel-migrations/0019_billing_reconciliation.sql`, `apps/api/schema/hotel-migrations/0021_reassignment_remaining_nights.sql`; `apps/api/src/routes/inventory.ts`, `apps/api/src/routes/bookings.ts`, `apps/api/src/routes/lifecycle.ts`, `apps/api/src/routes/billing.ts`.
+**PROPOSED NEW SURFACE:** pricing-segment schema/repository/read model and forward migration; no such segment store currently exists.
 **Non-goals:** modifying payment entries; recreating charges; repricing elapsed nights; a second financial truth.
 **API/data/UI:** booking total derives from segment totals + existing charges under accepted definition; preview and command use same authoritative quote/version; expose understandable delta.
 **Migration/cutover:** plan explicitly in Active-Stay Pricing Bootstrap; historical rates must not be inferred as current; unresolved stays require reconciliation before repricing.
@@ -66,7 +67,8 @@ All entries below are proposed future contracts derived from frozen Blueprint 00
 ## F0.6 — Active-stay pricing bootstrap
 
 **Objective/contract:** initialize segment representation for checked-in stays without changing customer totals, payment ledger or historical economics.
-**Dependencies:** F0.5; F0.3 inventory/booking identity reconciliation. **Surfaces:** `apps/api/schema/hotel-migrations/*`, `apps/api/src/modules/bookings/d1-booking-repository.ts`, `apps/api/src/modules/billing/d1-payment-repository.ts`; `scripts/migration/{source-target-map.mjs,migration-core.mjs,rehearse.mjs,reconcile.mjs}`; executing-D1 billing/lifecycle test harnesses.
+**Dependencies:** F0.5; F0.3 inventory/booking identity reconciliation. **Current repository surfaces:** migration directory `apps/api/schema/hotel-migrations/` (existing directory; no claim that a future migration file exists); `apps/api/src/modules/bookings/d1-booking-repository.ts`, `apps/api/src/modules/billing/d1-payment-repository.ts`; `scripts/migration/source-target-map.mjs`, `scripts/migration/migration-core.mjs`, `scripts/migration/rehearse.mjs`, `scripts/migration/reconcile.mjs`, `scripts/migration/test-rehearsal.sh`; `apps/api/src/modules/billing/d1-billing-reconciliation.executing-d1.test.ts`, `apps/api/src/modules/lifecycle/check-in-concurrency.executing-d1.test.ts`.
+**PROPOSED NEW SURFACE:** active-stay pricing classifier/bootstrap runner and row-level report if the existing rehearsal tools cannot satisfy the accepted evidence; exact filename deferred.
 **Non-goals:** applying current rates retroactively or authorizing live cutover.
 **API/data/UI:** bootstrap output carries status/provenance; unresolved rows block repricing and surface actionable reconciliation state.
 **Migration/cutover:** dedicated plan covers source-of-truth precedence, deterministic segments where evidence exists, quarantine where it does not, checksums and no-false-success.
@@ -77,7 +79,7 @@ All entries below are proposed future contracts derived from frozen Blueprint 00
 ## F0.7 — Settlement guard at mutation boundary
 
 **Objective/contract:** checkout/settlement checks current booking-account truth at authoritative transition boundary; stale pre-read cannot permit or reject incorrectly.
-**Dependencies:** F0.2, F0.5, F0.6. **Surfaces:** `apps/api/src/modules/lifecycle/d1-lifecycle-repository.ts`, `apps/api/src/routes/lifecycle.ts`, `apps/api/src/modules/billing/domain.ts`, `apps/api/src/modules/billing/d1-payment-repository.ts`, migration `apps/api/schema/hotel-migrations/0019_billing_reconciliation.sql`, `apps/web/src/features/reception/*`.
+**Dependencies:** F0.2, F0.5, F0.6. **Current repository surfaces:** `apps/api/src/modules/lifecycle/d1-lifecycle-repository.ts`, `apps/api/src/routes/lifecycle.ts`, `apps/api/src/modules/billing/domain.ts`, `apps/api/src/modules/billing/d1-payment-repository.ts`, `apps/api/src/routes/billing.ts`, `apps/api/schema/hotel-migrations/0019_billing_reconciliation.sql`, `apps/web/src/features/reception/ReceptionPage.tsx`, `apps/web/src/features/billing/BillingWorkspace.tsx`.
 **Non-goals:** inventing settlement policy or treating invoice presentation as authority.
 **API/data/UI:** typed conflict exposes current amount/status safely; user gets actionable account review without duplicate checkout.
 **Migration/cutover:** no data rewrite; compatibility with existing invoice/payment ledger.
@@ -88,7 +90,8 @@ All entries below are proposed future contracts derived from frozen Blueprint 00
 ## F0.8 — New guest + reservation recoverable workflow
 
 **Objective/contract:** guest creation and reservation create form a staged/recoverable operation with stable request identity; preserve reservation semantics without requiring cross-D1 atomicity.
-**Dependencies:** F0.2. **Surfaces:** `apps/api/src/routes/guests.ts`, `apps/api/src/routes/bookings.ts`, `apps/api/src/modules/bookings/*`, guest/booking hotel migrations; `apps/web/src/features/reception/*`, `apps/web/src/features/bookings/*`.
+**Dependencies:** F0.2. **Current repository surfaces:** `apps/api/src/routes/inventory.ts` (guest list/create endpoints), `apps/api/src/routes/bookings.ts`, `apps/api/src/modules/bookings/d1-booking-repository.ts`; hotel migrations `apps/api/schema/hotel-migrations/0002_rooms_guests_holds.sql`, `apps/api/schema/hotel-migrations/0003_bookings.sql`; `apps/web/src/features/guests/GuestsPage.tsx`, `apps/web/src/features/reception/ReceptionPage.tsx`, `apps/web/src/features/reception/useReceptionWorkspace.ts`.
+**PROPOSED NEW SURFACE:** staged guest+reservation operation identity/recovery persistence and endpoint logic if needed; there is currently no `apps/api/src/routes/guests.ts` or `apps/web/src/features/bookings/`.
 **Non-goals:** cross-hotel/global guest merge, hidden duplicate creation on response loss.
 **API/data/UI:** explicit staged state and recovery lookup; UI can resume/select created guest; no pretend all-or-nothing across stores.
 **Migration/cutover:** additive request identity/recovery metadata if contract requires; existing records unchanged.
@@ -99,7 +102,8 @@ All entries below are proposed future contracts derived from frozen Blueprint 00
 ## F0.9 — Extra-charge idempotency and outcome recovery
 
 **Objective/contract:** make extra charge safe across lost response/retry; one business charge/event pair and D11 reconciliation per operation.
-**Dependencies:** F0.2 only among F0 work; it relies on the existing D11 billing-reconciliation contract but does not require segmented pricing F0.5 or checkout-settlement guard F0.7. **Surfaces:** `apps/api/schema/hotel-migrations/0010_billing.sql`, forward migration, `apps/api/src/modules/billing/d1-payment-repository.ts`, `apps/api/src/routes/billing.ts`, `apps/web/src/features/billing/BillingWorkspace.tsx`.
+**Dependencies:** F0.2 only among F0 work; it relies on the existing D11 billing-reconciliation contract but does not require segmented pricing F0.5 or checkout-settlement guard F0.7. **Current repository surfaces:** `apps/api/schema/hotel-migrations/0010_billing.sql`, `apps/api/src/modules/billing/d1-payment-repository.ts`, `apps/api/src/routes/billing.ts`, `apps/web/src/features/billing/BillingWorkspace.tsx`, `apps/api/src/modules/billing/d1-billing-reconciliation.executing-d1.test.ts`.
+**PROPOSED NEW SURFACE:** forward migration for stable charge operation identity/uniqueness and added replay tests if required; current `extra_charges` does not persist such a token.
 **Non-goals:** payment-entry fabrication or a divergent invoice reconciler.
 **API/data/UI:** stable operation identity and lookup/replay response; duplicate token/payload conflict behavior explicit.
 **Migration/cutover:** forward-only token/unique scope; legacy charges remain; no fabricated token retroactively unless traceable mapping is deterministic.
@@ -110,7 +114,7 @@ All entries below are proposed future contracts derived from frozen Blueprint 00
 ## F0.10 — Server-owned capabilities
 
 **Objective/contract:** expose effective capability set from canonical server authority and use it for navigation/action visibility; backend remains final enforcement.
-**Dependencies:** F0.2. **Surfaces:** `apps/api/src/auth/capabilities.ts`, `apps/api/src/index.ts` `/api/v1/auth/me`; web `app/AppShell.tsx`, `app/navigation.ts`, router and feature guards.
+**Dependencies:** F0.2. **Current repository surfaces:** `apps/api/src/auth/capabilities.ts`, `apps/api/src/index.ts` `/api/v1/auth/me`; `apps/web/src/app/AppShell.tsx`, `apps/web/src/app/navigation.ts`, `apps/web/src/app/router.tsx`, `apps/web/src/api/client.ts`.
 **Non-goals:** client-side authorization, duplicate role maps, identity/topology change.
 **API/data/UI:** `/auth/me` (or approved equivalent) returns effective capability names, scoped to current hotel/identity; hide inaccessible entries while direct API still denies.
 **Migration/cutover:** no DB migration unless capability persistence is contractually required; otherwise additive response.
@@ -121,7 +125,8 @@ All entries below are proposed future contracts derived from frozen Blueprint 00
 ## F0.11 — Refresh/invalidation and authoritative UI continuity
 
 **Objective/contract:** after mutations/conflicts, invalidate/refetch affected booking, room, inventory, account, HK, maintenance and queue context without stale optimistic truth or unnecessary full-page reset.
-**Dependencies:** F0.2, F0.10. **Surfaces:** web `app/*`, `features/reception/*`, `features/rooms/*`, `features/housekeeping/*`, `features/billing/*`; API read endpoints and typed errors.
+**Dependencies:** F0.2, F0.10. **Current repository surfaces:** `apps/web/src/api/client.ts`; `apps/web/src/app/router.tsx`; `apps/web/src/features/reception/useReceptionWorkspace.ts`, `apps/web/src/features/reception/reception-api.ts`; `apps/web/src/features/rooms/RoomsPage.tsx`; `apps/web/src/features/housekeeping/useHousekeepingWorkspace.ts`, `apps/web/src/features/housekeeping/housekeeping-api.ts`; `apps/web/src/features/billing/BillingWorkspace.tsx`; API route files listed in the repository surface audit.
+**PROPOSED NEW SURFACE:** shared invalidation utility only if the existing hooks cannot meet the refresh/version contract.
 **Non-goals:** global realtime infrastructure or speculative cache rewrite.
 **API/data/UI:** command result includes enough identity/version to refresh; authoritative read controls final state; preserve meaningful filters/search/selection/URL/scroll.
 **Migration/cutover:** none. **Concurrency/idempotency:** overlapping reads are ordered/cancelled or version-checked; stale responses cannot overwrite newer state; retry uses operation identity.
@@ -131,7 +136,8 @@ All entries below are proposed future contracts derived from frozen Blueprint 00
 ## F0.12 — Foundation evidence/activation gate
 
 **Objective/contract:** aggregate acceptance evidence for F0.1–F0.11, cutover readiness and per-record unresolved handling before dependent product blocks.
-**Dependencies:** F0.1–F0.11. **Surfaces:** migration scripts/rehearsal, CI and browser runners, `.orchestration/evidence/*`, affected API/UI test trees.
+**Dependencies:** F0.1–F0.11. **Current repository surfaces:** `scripts/migration/test-rehearsal.sh`, `scripts/cf-product-flow-regression.sh`, `scripts/cf-ux-mobile-browser-ci.mjs`, `scripts/check-architecture-fitness-ii.mjs`, `scripts/check-cloudflare-budgets.mjs`, `.orchestration/evidence/`.
+**PROPOSED NEW SURFACE:** Foundation aggregate evidence manifest/gate runner if existing scripts cannot produce the required exact per-test/per-hotel report.
 **Non-goals:** real customer data execution, promotion, independent approval substitution.
 **API/data/UI:** gate report exposes per-hotel/per-record states and explicit blockers; no aggregate green if required sub-evidence is missing.
 **Migration/cutover:** dry-run/rehearsal only unless separate Human authorization; readiness digest/checksum/versioned plan.
