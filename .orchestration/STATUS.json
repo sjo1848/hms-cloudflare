@@ -11,20 +11,20 @@
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.2 REPLACEMENT ARTIFACT FROZEN; AWAITING FRESH INDEPENDENT CRITIC; LOCAL_SYNTHETIC_ONLY",
-  "next_action": "FREEZE_ORCHESTRATION_ONLY_BOUNDARY_B_FOR_A_25656BE; REQUEST_FRESH_INDEPENDENT_CRITIC; ADDRESS_ANY_FINDINGS; ONLY_THEN_START_F0_3",
+  "status_label": "F0.2 REPLACEMENT A FROZEN; BOUNDARY HANDOFF REWORKED; AWAITING FRESH INDEPENDENT CRITIC; LOCAL_SYNTHETIC_ONLY",
+  "next_action": "REQUEST_FRESH_INDEPENDENT_CRITIC_FOR_A_25656BE_AND_LATEST_BOUNDARY_B; ADDRESS_ANY_FINDINGS; ONLY_THEN_START_F0_3",
   "stop_reason": null,
   "event": {
-    "seq": 151,
-    "id": "HMS-F0-02-REPLACEMENT-A-25656BE-FROZEN",
-    "type": "SUBSTANTIVE_REWORK_ARTIFACT_AWAITING_FRESH_INDEPENDENT_CRITIC"
+    "seq": 152,
+    "id": "HMS-F0-02-BOUNDARY-HANDOFF-REWORKED",
+    "type": "ORCHESTRATION_BOUNDARY_REWORKED_AWAITING_FRESH_INDEPENDENT_CRITIC"
   },
   "external_review": {
     "required": true,
     "last_audited_head": "36b51287e93d629ec5422202778b4b9f3a305895",
     "last_verdict": "REWORK",
     "artifact_head": "25656bec8fcc125544934e63756df371d7b7ad79",
-    "review_path": "Fresh independent critic required for replacement Artifact A 25656bec8fcc125544934e63756df371d7b7ad79 plus immediately following orchestration-only Boundary B. Prior critic Singer's two F0.2 findings were repaired and all validation rerun; no F0.3 until fresh review resolves the replacement pair.",
+    "review_path": "Fresh independent critic required for exact replacement Artifact A 25656bec8fcc125544934e63756df371d7b7ad79 plus this latest orchestration-only Boundary B. Reviewer Helmholtz returned REWORK on the prior boundary only: the prior B named freezing B as the next action although it already existed. Corrected here; reviewer confirmed both prior substantive findings closed. No F0.3 until fresh review resolves the pair.",
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
@@ -76,11 +76,12 @@
     "f0_2_query_plans": "PASS: npm run test:d1-query-plan",
     "f0_2_wrangler_dry_runs": "PASS: API + Web; no deployment",
     "f0_2_cf_i05": "PASS: isolated synthetic local Wrangler/D1/API regression exit 0; owned process group cleanup verified before terminal PASS",
-    "f0_2_precritic": "COMPLETE: .orchestration/evidence/HMS-F0-02-SHARED-ROOM-INVARIANTS-001-PRECRITIC.md; invariant matrix complete; replacement A/B frozen; fresh Independent Critic pending",
-    "f0_2_development_gate": "INTERNAL EVIDENCE COMPLETE; NOT ACCEPTED/PASS UNTIL FRESH INDEPENDENT CRITIC",
+    "f0_2_precritic": "COMPLETE: invariant matrix and Pre-Critic evidence frozen in A 25656bec8fcc125544934e63756df371d7b7ad79; latest B records the prior boundary-only REWORK and requests fresh Independent Critic",
+    "f0_2_development_gate": "INTERNAL EVIDENCE COMPLETE; PRIOR CRITIC CONFIRMED TWO SUBSTANTIVE FINDINGS CLOSED; NOT ACCEPTED/PASS UNTIL FRESH REVIEW OF CURRENT A+B",
     "f0_2_artifact_a": "36b51287e93d629ec5422202778b4b9f3a305895 (superseded by critic REWORK)",
     "f0_2_rework_artifact_a": "25656bec8fcc125544934e63756df371d7b7ad79 (replaces evidence-incomplete candidate f1ab1798133fca72dfb4fe5faf18e5058b5aa3e1)",
-    "f0_2_critic_rework_01": "REPAIRED: attributed explicit legacy recovery proof; actual-app two D1 auth/routing test applies migration 0023 and verifies installed trigger; fresh full validation PASS",
+    "f0_2_critic_rework_01": "REPAIRED: attributed explicit legacy recovery proof; actual-app two D1 auth/routing test applies migrations 0022–0023 and verifies installed trigger; independent reviewer confirmed both prior substantive findings closed",
+    "f0_2_boundary_critic_rework": "REPAIRED: reviewer found prior B next_action/state stale because it said to freeze B after B existed; latest orchestration-only B requests fresh review for the exact A+B pair",
     "d11_executing_d1": "4/4 PASS",
     "foundation_ci": "PASS",
     "unit_integration": "23 files / 91 tests PASS",
