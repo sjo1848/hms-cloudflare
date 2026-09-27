@@ -3,7 +3,7 @@
 Task Contract: `.orchestration/contracts/UX-UI-RECEPTION-CHECKIN-001.md`
 Implementation branch: `impl/ux-ui-reception-checkin`
 Controller feedback: `Human rejected right-side Sheet for Check-in desktop and requested a centered task surface.`
-Latest local integrated fixture: `.hms-local/p0-1-fbaptV` (isolated local D1 persistence)
+Latest local integrated fixture: `.hms-local/p0-1-QBRoTK` (isolated local D1 persistence)
 
 ## Executed gates
 
@@ -103,6 +103,14 @@ The repository has no installed shadcn Dialog/Drawer primitives. A standard exte
 - **Are component semantics accurate and non-duplicative?** Dialog, Drawer and Sheet wrappers share one neutral native-modal lifecycle; Dialog has its own semantic data slot/class and no `data-side=right`. They are not claimed as generated shadcn components; the raw-JS budget reason is documented.
 - **Did focus or scrolling regress?** Integrated Worker/D1 browser asserts mobile Drawer Tab/Escape/focus restoration, desktop Dialog Tab/Shift+Tab/Escape/focus restoration, and compact-height body scroll with stable header/footer/CTA. The keyboard rework finding was rechecked by a separate QA agent.
 - **Are required states and screenshots complete?** Yes: desktop Reception, Dialog, BLOCKING, NON_BLOCKING, real 409 and success; mobile Reception, Drawer, blocker/conflict (paired scroll positions), advisory and success/return.
+
+### Independent Critic condition and evidence correction
+
+- Verdict on A `f73c64102ab411fbd3883d006cd22aec5f8dfc1b` + B `e29804774ad2f0f25f0c8c81eab58c56e6529613`: `PASS_WITH_CONDITIONS` from fresh reviewer Boyle (GPT-6 Luna, medium). The sole condition was that the queue-panel assertion established DOM presence/intersection, not perceptible queue visibility through the centered Dialog; the screenshot shows the central queue card is covered by the modal.
+- The accepted interaction contract requires Reception to remain visible behind the backdrop, not the full queue panel to remain unobscured. The screenshot does show the Reception page title and persistent app navigation around the Dialog, while the selected guest/room/stay context appears in the Dialog header. Queue filters/search/lane/selection remain in the underlying Reception state and are verified after close/success; they are not claimed to be visually readable through the modal.
+- Replaced the misleading queue-panel intersection assertion with a two-dimensional geometry/visibility assertion that the actual Reception heading remains visibly outside the Dialog bounds. The first rerun exposed an overly strict test expression that treated horizontal alignment as overlap despite the heading being vertically above the Dialog; the expression now detects actual two-dimensional intersection. No layout change was needed.
+- Resolution evidence: `bash scripts/p0-1-integrated-browser.sh` rerun with `pipefail` and retained at `output/playwright/ux-ui-checkin-integrated.log`; exit 0, real Worker + isolated D1 + Vite, integrated and mock flows PASS, fixture `.hms-local/p0-1-QBRoTK`. `npm run check` (23 files / 91 tests), types, web build, architecture fitness, budgets, D1 plans and Wrangler dry-run all rerun PASS. Reception heading visibility is asserted and the screenshot shows the page title/navigation outside the modal; queue context retention is checked after close/success.
+- Condition resolution status: repaired and evidence rerun; a fresh Independent Critic review of the new frozen artifact is required. The prior verdict applies only to the prior A+B and is not carried forward.
 
 ## Known external boundaries
 

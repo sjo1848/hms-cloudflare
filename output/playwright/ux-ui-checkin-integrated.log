@@ -1,9 +1,9 @@
-LOCAL_STATE_MATERIALIZED: /home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare/.hms-local/p0-1-8CFfxo
-P0.1 local D1 fixture ready: 2026-09-26 at /home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare/.hms-local/p0-1-8CFfxo
+LOCAL_STATE_MATERIALIZED: /home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare/.hms-local/p0-1-QBRoTK
+P0.1 local D1 fixture ready: 2026-09-26 at /home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare/.hms-local/p0-1-QBRoTK
 npm notice run npx
-npm notice run 'playwright-cli' -s ux-checkin-50446 open about:blank
+npm notice run 'playwright-cli' -s ux-checkin-55130 open about:blank
 npm notice run npx
-npm notice run 'playwright-cli' -s ux-checkin-50446 run-code --filename scripts/p0-1-arrival-integrated.playwright.js
+npm notice run 'playwright-cli' -s ux-checkin-55130 run-code --filename scripts/p0-1-arrival-integrated.playwright.js
 ### Ran Playwright code
 ```js
 await (page => (async () => {
@@ -144,8 +144,9 @@ await (page => (async () => {
     const desktopBounds = await desktopTask.evaluate(element => { const rect = element.getBoundingClientRect(); const header = element.querySelector(".checkin-task-header").getBoundingClientRect(); const footer = element.querySelector(".checkin-task-actions").getBoundingClientRect(); const body = element.querySelector(".checkin-task-body"); return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height, viewport: innerWidth, viewportHeight: innerHeight, centerX: rect.left + rect.width / 2, centerY: rect.top + rect.height / 2, headerTop: header.top, footerBottom: footer.bottom, bodyOverflow: getComputedStyle(body).overflowY, backdrop: getComputedStyle(element, "::backdrop").backgroundColor, dialogSlot: element.getAttribute("data-slot"), side: element.getAttribute("data-side"), classes: element.className }; });
     if (Math.abs(desktopBounds.centerX - desktopBounds.viewport / 2) > 1 || Math.abs(desktopBounds.centerY - desktopBounds.viewportHeight / 2) > 1 || desktopBounds.width < 560 || desktopBounds.width > 760 || desktopBounds.height >= desktopBounds.viewportHeight || desktopBounds.height < 600 || desktopBounds.bodyOverflow !== "auto" || desktopBounds.headerTop <= desktopBounds.top || desktopBounds.footerBottom >= desktopBounds.bottom || desktopBounds.backdrop === "rgba(0, 0, 0, 0)") throw new Error(`Desktop check-in Dialog is not centered, bounded, layered, and internally scrollable: ${JSON.stringify(desktopBounds)}`);
     if (desktopBounds.dialogSlot !== "dialog-content" || desktopBounds.side !== null || !desktopBounds.classes.includes("ui-dialog-content")) throw new Error(`Desktop Dialog retained Sheet semantics: ${JSON.stringify(desktopBounds)}`);
-    const queueBounds = await desktop.locator(".reception-queue-panel").evaluate(element => { const rect = element.getBoundingClientRect(); return { left: rect.left, right: rect.right, width: rect.width, display: getComputedStyle(element).display }; });
-    if (queueBounds.display === "none" || queueBounds.width < 200 || queueBounds.right <= desktopBounds.left || queueBounds.left >= desktopBounds.right) throw new Error(`Reception queue is not visible behind the centered Dialog: ${JSON.stringify({ queueBounds, desktopBounds })}`);
+    const receptionHeadingBounds = await desktop.getByRole("heading", { name: "Reception", exact: true }).evaluate(element => { const rect = element.getBoundingClientRect(); return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height, visible: getComputedStyle(element).visibility !== "hidden" && getComputedStyle(element).display !== "none" }; });
+    const receptionHeadingOverlapped = receptionHeadingBounds.right > desktopBounds.left && receptionHeadingBounds.left < desktopBounds.right && receptionHeadingBounds.bottom > desktopBounds.top && receptionHeadingBounds.top < desktopBounds.bottom;
+    if (!receptionHeadingBounds.visible || receptionHeadingBounds.width <= 0 || receptionHeadingBounds.height <= 0 || receptionHeadingOverlapped) throw new Error(`Reception page context is not visibly present outside the centered Dialog: ${JSON.stringify({ receptionHeadingBounds, desktopBounds })}`);
     await desktop.screenshot({ path: "output/playwright/ux-ui-checkin-desktop-dialog.png" });
     await desktop.setViewportSize({ width: 1280, height: 520 });
     const compactDialogScroll = await desktopTask.evaluate(element => { const header = element.querySelector(".checkin-task-header").getBoundingClientRect(); const footer = element.querySelector(".checkin-task-actions").getBoundingClientRect(); const body = element.querySelector(".checkin-task-body"); const dialog = element.getBoundingClientRect(); body.scrollTop = body.scrollHeight; return { scrollTop: body.scrollTop, scrollRange: body.scrollHeight - body.clientHeight, headerTop: header.top, dialogTop: dialog.top, footerBottom: footer.bottom, dialogBottom: dialog.bottom, viewportHeight: innerHeight }; });
@@ -210,9 +211,9 @@ await (page => (async () => {
 - Page Title: HMS Elite
 - Console: 2 errors, 0 warnings
 ### Events
-- New console entries: .playwright-cli/console-2026-09-27T01-55-29-972Z.log#L1-L3
+- New console entries: .playwright-cli/console-2026-09-27T02-14-45-443Z.log#L1-L3
 npm notice run npx
-npm notice run 'playwright-cli' -s ux-checkin-50446 run-code --filename scripts/p0-1-arrival-browser.playwright.js
+npm notice run 'playwright-cli' -s ux-checkin-55130 run-code --filename scripts/p0-1-arrival-browser.playwright.js
 ### Ran Playwright code
 ```js
 await (page => (async () => {
@@ -369,8 +370,8 @@ await (page => (async () => {
 - Page URL: http://127.0.0.1:4174/bookings?lane=arrivals&q=Guest+Priority
 - Page Title: HMS Elite
 ### Events
-- New console entries: .playwright-cli/console-2026-09-27T01-55-29-972Z.log#L4-L9
+- New console entries: .playwright-cli/console-2026-09-27T02-14-45-443Z.log#L4-L9
 npm notice run npx
-npm notice run 'playwright-cli' -s ux-checkin-50446 close
+npm notice run 'playwright-cli' -s ux-checkin-55130 close
 {"p0_1_integrated_d1":"PASS","bookings":[{"id":"a-next","room_id":"p01-room-b","check_in":"2026-09-26","check_out":"2026-09-29","status":"CHECKED_IN","total_cents":36000,"check_in_guests_count":2},{"id":"m-blocked","room_id":"p01-room-c","check_in":"2026-09-26","check_out":"2026-09-29","status":"CONFIRMED","total_cents":27000,"check_in_guests_count":null},{"id":"z-priority","room_id":"p01-room-a","check_in":"2026-09-25","check_out":"2026-09-29","status":"CHECKED_IN","total_cents":40000,"check_in_guests_count":2}],"rooms":[{"id":"p01-room-a","status":"OCCUPIED"},{"id":"p01-room-b","status":"OCCUPIED"},{"id":"p01-room-c","status":"MAINTENANCE"}],"events":[{"booking_id":"a-next","event_type":"CHECK_IN","count":1},{"booking_id":"z-priority","event_type":"CHECK_IN","count":1}],"invoices":[{"booking_id":"a-next","amount_cents":36000,"paid_amount_cents":0,"status":"PENDING"},{"booking_id":"m-blocked","amount_cents":27000,"paid_amount_cents":0,"status":"PENDING"},{"booking_id":"z-priority","amount_cents":40000,"paid_amount_cents":0,"status":"PENDING"}],"payments":{"count":0}}
-P0.1 integrated browser + D1 PASS; local fixture retained at .hms-local/p0-1-8CFfxo
+P0.1 integrated browser + D1 PASS; local fixture retained at .hms-local/p0-1-QBRoTK

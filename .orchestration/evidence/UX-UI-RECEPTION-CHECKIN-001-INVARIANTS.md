@@ -46,13 +46,13 @@ Pre-Critic gate: `.orchestration/PRECRITIC-GATE.md`
 | UI mock supports guided check-in, 409/refresh failure states, dirty Back/Forward, next case and no-next focus | `scripts/p0-1-arrival-browser.playwright.js` | Mock browser; explicitly not integration evidence |
 | Real stale maintenance change conflicts before mutation; refresh then permits one successful retry | `scripts/p0-1-arrival-integrated.playwright.js` against local Wrangler Worker/D1 | Integrated browser/API |
 | Booking and room persist authoritatively; event occurs exactly once; invoice remains unchanged; no payments fabricated | `scripts/p0-1-assert-local.mjs` on the retained local fixture | Executing local D1 |
-| Desktop Dialog is centered/bounded with a dim backdrop and stable header/footer; Reception remains visible behind it; mobile Drawer is full-screen, scrollable and has fixed task controls | Browser geometry/accessibility assertions in `scripts/p0-1-arrival-integrated.playwright.js` | Integrated browser |
+| Desktop Dialog is centered/bounded with a dim backdrop and stable header/footer; Reception page heading remains visible outside it and queue state is retained; mobile Drawer is full-screen, scrollable and has fixed task controls | Browser geometry/accessibility assertions in `scripts/p0-1-arrival-integrated.playwright.js`; screenshot shows Reception title/navigation around the backdrop | Integrated browser |
 | Requested visual states are inspectable | `output/playwright/ux-ui-checkin-*.png` | Diagnostic screenshots; not substitutes for assertions |
 | Unit/type/build/architecture/budget/query-plan/Wrangler checks | Final task commands recorded in `STATE.md`/`STATUS.json` | Automated gates |
 
 ## Pre-Critic review
 
-- Centered Dialog vs rejected right-side Sheet: desktop geometry proves horizontal/vertical centering and bounded width/height; native backdrop dims Reception and the page remains visible behind it.
+- Centered Dialog vs rejected right-side Sheet: desktop geometry proves horizontal/vertical centering and bounded width/height; native backdrop dims Reception, and the Reception heading is asserted to remain visible outside the Dialog. The queue is retained in the underlying state and verified after close/success, but is not claimed to be unobscured behind the modal.
 - Context continuity: search, selected lane, URL and next priority booking are asserted after real refresh; native dialog close returns focus to the next case or queue control.
 - Information density: one stay-summary/readiness block and progressive check-in steps; no D11/inventory implementation detail is exposed.
 - Primary action: sticky, visibly labeled Next step/Complete check-in; disabled for authoritative blockers.
