@@ -10,7 +10,7 @@ Base snapshot: `6ffd6f9aa8e6836d60cbeba5383494605e5611cc` on `review/ux-operatio
 Active task: `UX-UI-RECEPTION-CHECKIN-001`
 Task Contract: `.orchestration/contracts/UX-UI-RECEPTION-CHECKIN-001.md`
 Phase: `Reception + Guided Check-in post-artifact independent review`
-Status: `ARTIFACT A AND ORCHESTRATION B PUBLISHED — AWAITING FRESH INDEPENDENT CRITIC`
+Status: `CRITIC CONDITION REPAIRED; NEW ARTIFACT A PUBLISHED — AWAITING FRESH INDEPENDENT CRITIC`
 Runtime: `HUMAN_ACTION_REQUIRED`, `resume_authorized=false`; exact A+B are frozen for review. No other workflow is authorized.
 
 This task is limited to the Reception + Guided Check-in interaction reference implementation. The named UI Contract & Wireframes v1 and parent UI Interaction System v1 were found in connected Drive and read in full; IDs and the Human implementation authorization are recorded in the Task Contract. No other workflow is authorized.
@@ -22,27 +22,37 @@ Controller finding: Human rejected right-side Sheet for Check-in desktop and req
 - Prior artifact A: `a090b283c2303871af25375c66050117efafbeb2` on this branch; its right-side desktop Sheet was rejected by the Human and is superseded for acceptance by the current rework. Do not treat its review boundary as satisfying this rework.
 - Draft PR `#50` remains open against `review/ux-operational-current`.
 
-## UX-UI-RECEPTION-CHECKIN-001 — FROZEN REWORK ARTIFACT
+## UX-UI-RECEPTION-CHECKIN-001 — SUPERSEDED REWORK ARTIFACT
 
 - Human feedback: `Human rejected right-side Sheet for Check-in desktop and requested a centered task surface.`
 - Artifact A: `f73c64102ab411fbd3883d006cd22aec5f8dfc1b` on `impl/ux-ui-reception-checkin`.
-- Boundary B: this orchestration-only commit records exact A and requires a fresh Independent Critic; it contains no product behavior changes.
+- Boundary B: `e29804774ad2f0f25f0c8c81eab58c56e6529613` recorded this A; it contains no product behavior changes. The Independent Critic verdict on this pair was `PASS_WITH_CONDITIONS`, now superseded by the repaired artifact below.
 - Draft PR `#50` remains open against `review/ux-operational-current`.
 - Current interaction contract: centered desktop Dialog with dimmed Reception backdrop; mobile remains full-screen Drawer. No other workflow or backend change is authorized.
 - `npm run check`: PASS, 23 files / 91 tests. `types:check`: PASS. Current web build: 296,282 raw JS / 86,084 gzip and 39,586 raw CSS / 7,817 gzip. Cloudflare raw JS budget PASS at 296,282 / 300,000; CSS budget PASS.
 - Architecture fitness, i18n, D1 query plans and API/Web Wrangler dry-runs: PASS.
-- Latest integrated browser run: `output/playwright/ux-ui-checkin-integrated.log`, fixture `.hms-local/p0-1-8CFfxo`. Real local Wrangler Worker + migrated D1 + Vite: PASS on mobile 375px and desktop 1280px. Covers mobile Drawer Tab/Escape/focus restoration, stale `409`→authoritative refresh/retry→success, desktop Dialog center/backdrop/bounds, compact-height independent body scroll with stable header/footer, Dialog Tab/Shift+Tab and Escape/focus restore, desktop real `409` recovery, BLOCKING/NON_BLOCKING, next case and D1 assertions.
+- Original integrated browser validation: `output/playwright/ux-ui-checkin-integrated.log`, fixture `.hms-local/p0-1-8CFfxo`; retained as historical artifact evidence.
 - Persisted state: `z-priority` and `a-next` are `CHECKED_IN`; exactly one CHECK_IN event each; `m-blocked` remains confirmed in MAINTENANCE; invoices unchanged and zero payment rows.
 - QA/UX reviewer (separate read-only Luna Medium subagent) found missing keyboard evidence and stale Sheet/budget claims. Assertions and evidence were repaired; latest integrated log verifies assertions executed and the reviewer confirmed keyboard/invariant findings resolved. Exact build measurement is now recorded consistently for this artifact; prior `291301` measurement belongs to P0.1 historical evidence below.
-- Component policy: source-local native Dialog/Drawer/Sheet wrappers share one `<dialog>` lifecycle; not generated shadcn components. External runtime was removed to preserve the binding 300 KB raw JS budget. The adaptation is disclosed for the fresh Independent Critic.
-- Multi-agent capability: `true`; separate Luna Medium Engineering and QA/UX reviewer used. A fresh, non-participating Independent Critic is required after freezing exact A+B; no verdict is yet recorded.
-- Mandatory Pre-Critic and invariant evidence are complete; separate QA/UX follow-up confirmed its keyboard, stale-evidence, and budget findings resolved. Fresh Independent Critic verdict is pending; no PASS is self-declared.
+- Component policy: source-local native Dialog/Drawer/Sheet wrappers share one `<dialog>` lifecycle; not generated shadcn components. External runtime was removed to preserve the binding 300 KB raw JS budget. The adaptation was disclosed to the prior reviewer and remains part of the current review scope.
+- Multi-agent capability: `true`; separate Luna Medium Engineering and QA/UX reviewer used. The fresh, non-participating Independent Critic reviewed this superseded pair and returned `PASS_WITH_CONDITIONS`; the condition is documented and repaired in the current artifact.
+- Mandatory Pre-Critic and invariant evidence were complete for this artifact; separate QA/UX follow-up confirmed its keyboard, stale-evidence, and budget findings resolved. Fresh Independent Critic verdict was `PASS_WITH_CONDITIONS` as recorded below.
 - Development gate is at the post-artifact review boundary. Promotion remains `BLOCKED` by the shared Reports/Users/workerd finding and inherited `P01-EXT-01`; neither is in this scope.
 - No merge, `main`, `acceptance/staging`, deploy or production action occurred.
 
+## UX-UI-RECEPTION-CHECKIN-001 — REPAIRED ARTIFACT A
+
+- Rework artifact A: `1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9` on `impl/ux-ui-reception-checkin`.
+- Replaced the misleading queue intersection test with a two-dimensional visibility assertion on the Reception heading, and narrowed evidence claims: queue state is retained/restored, not claimed to remain unobscured through the modal. No product layout/backend behavior changed.
+- The first test expression treated horizontal alignment as overlap despite the heading sitting above the Dialog; this assertion defect was corrected and the full rerun then passed.
+- Latest integrated run: `output/playwright/ux-ui-checkin-integrated.log`, exit 0, fixture `.hms-local/p0-1-QBRoTK`; real local Wrangler Worker + migrated D1 + Vite, mobile 375px and desktop 1280px; integrated plus mock directed flows PASS. D1 assertions confirm two successful CHECK_IN events (one per booking), no event for BLOCKING case, unchanged invoices, and zero payment rows.
+- Re-run gates: `npm run check` 23 files / 91 tests PASS; `types:check`, web build, architecture fitness, Cloudflare budgets, D1 plans and API/Web Wrangler dry-runs PASS. Current measured JS raw/gzip 296,282/86,084 bytes; CSS raw/gzip 39,586/7,817 bytes.
+- Mandatory Pre-Critic and invariant evidence updated for the critic condition and rerun; this is internal readiness only, not an acceptance verdict.
+- New orchestration boundary B records this exact A and requires a fresh Independent Critic. Prior `PASS_WITH_CONDITIONS` does not transfer; no new verdict is claimed.
+
 ## REWORK REVIEW BOUNDARY
 
-Fresh Independent Critic must review exact artifact A `f73c64102ab411fbd3883d006cd22aec5f8dfc1b` together with this orchestration Boundary B, using the Task Contract, invariant evidence, integrated run log and screenshots. Reviewer must not have participated in implementation or Pre-Critic. Record one allowed verdict (`PASS`, `PASS_WITH_CONDITIONS`, or `REWORK`) in canonical orchestration and then stop at the post-critic Controller checkpoint. No subsequent workflow is authorized.
+Fresh Independent Critic must review exact artifact A `1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9` together with the new orchestration-only Boundary B, using the Task Contract, invariant evidence, integrated run log and screenshots. Reviewer must not have participated in implementation or Pre-Critic. Record one allowed verdict (`PASS`, `PASS_WITH_CONDITIONS`, or `REWORK`) in canonical orchestration and then stop at the post-critic Controller checkpoint. No subsequent workflow is authorized.
 
 ## P0.1 CURRENT EVIDENCE AND PRE-CRITIC
 
