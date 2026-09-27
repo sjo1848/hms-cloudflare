@@ -5,10 +5,11 @@ import { ApiError } from "../errors";
 import { dateRange, email, integerCents, jsonBody, requiredText } from "../validation";
 import { hasCapability } from "../auth/capabilities";
 import { ADVANCE_RESERVABLE_ROOM_SQL } from "../room-availability";
+import { ROOM_DIMENSION_SELECT, roomOperationalReadModel, unresolvedSellability, type RoomDimensionRow } from "../modules/room-state/read-model";
 
 type InventoryApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 
-type RoomRow = {
+type RoomRow = RoomDimensionRow & {
   id: string;
   room_number: string;
   room_type: string;
@@ -47,7 +48,7 @@ function requireCapability(
   }
 }
 
-function roomView(row: RoomRow, hotelId: string) {
+function roomView(row: RoomRow, hotelId: string, rangeEvaluated = false) {
   return {
     id: row.id,
     hotel_id: hotelId,
@@ -55,6 +56,8 @@ function roomView(row: RoomRow, hotelId: string) {
     room_type: row.room_type,
     status: ({ AVAILABLE: "Available", OCCUPIED: "Occupied", DIRTY: "Dirty", CLEANING: "Cleaning", MAINTENANCE: "Maintenance", OUT_OF_ORDER: "OutOfOrder" } as Record<string, string>)[row.status] ?? row.status,
     price_cents: row.price_cents,
+    operational_state: roomOperationalReadModel(row),
+    date_range_sellability: unresolvedSellability(rangeEvaluated ? "LEGACY_FILTER_NOT_CANONICAL" : undefined),
   };
 }
 
@@ -78,7 +81,8 @@ export function createInventoryRoutes(): InventoryApp {
   app.get("/rooms", async (context) => {
     requireCapability(context, "rooms.read");
     const rows = await context.get("operationalDatabase").prepare(
-      "SELECT id, room_number, room_type, status, price_cents FROM rooms ORDER BY room_number",
+      `SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents, ${ROOM_DIMENSION_SELECT}
+       FROM rooms AS r ORDER BY r.room_number`,
     ).all<RoomRow>();
     return context.json(rows.results.map((row) => roomView(row, context.get("membership").hotelId)));
   });
@@ -98,7 +102,8 @@ export function createInventoryRoutes(): InventoryApp {
       throw ApiError.conflict("Room number already exists");
     }
     const row = await context.get("operationalDatabase").prepare(
-      "SELECT id, room_number, room_type, status, price_cents FROM rooms WHERE id = ?1",
+      `SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents, ${ROOM_DIMENSION_SELECT}
+       FROM rooms AS r WHERE r.id = ?1`,
     ).bind(id).first<RoomRow>();
     if (!row) throw ApiError.notFound("Room was not created");
     return context.json(roomView(row, context.get("membership").hotelId), 201);
@@ -112,7 +117,7 @@ export function createInventoryRoutes(): InventoryApp {
       ? null
       : requiredText(excludeBookingIdInput, "exclude_booking_id", 1, 100);
     const rows = await context.get("operationalDatabase").prepare(
-      `SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents
+      `SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents, ${ROOM_DIMENSION_SELECT}
        FROM rooms AS r
        WHERE ${ADVANCE_RESERVABLE_ROOM_SQL}
        AND NOT EXISTS (
@@ -126,7 +131,7 @@ export function createInventoryRoutes(): InventoryApp {
        )
        ORDER BY r.room_number`,
     ).bind(range.start, range.end, excludeBookingId).all<RoomRow>();
-    return context.json(rows.results.map((row) => roomView(row, context.get("membership").hotelId)));
+    return context.json(rows.results.map((row) => roomView(row, context.get("membership").hotelId, true)));
   });
 
   app.get("/rooms/holds/board", async (context) => {
@@ -166,7 +171,8 @@ export function createInventoryRoutes(): InventoryApp {
   app.get("/rooms/:id", async (context) => {
     requireCapability(context, "rooms.read");
     const row = await context.get("operationalDatabase").prepare(
-      "SELECT id, room_number, room_type, status, price_cents FROM rooms WHERE id = ?1",
+      `SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents, ${ROOM_DIMENSION_SELECT}
+       FROM rooms AS r WHERE r.id = ?1`,
     ).bind(context.req.param("id")).first<RoomRow>();
     if (!row) throw ApiError.notFound("Room not found");
     return context.json(roomView(row, context.get("membership").hotelId));
@@ -188,7 +194,8 @@ export function createInventoryRoutes(): InventoryApp {
       throw ApiError.conflict("Room number already exists");
     }
     const row = await context.get("operationalDatabase").prepare(
-      "SELECT id, room_number, room_type, status, price_cents FROM rooms WHERE id = ?1",
+      `SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents, ${ROOM_DIMENSION_SELECT}
+       FROM rooms AS r WHERE r.id = ?1`,
     ).bind(context.req.param("id")).first<RoomRow>();
     if (!row) throw ApiError.notFound("Room not found");
     return context.json(roomView(row, context.get("membership").hotelId));

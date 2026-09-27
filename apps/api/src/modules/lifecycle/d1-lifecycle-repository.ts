@@ -1,6 +1,7 @@
 import type { OperationalDatabase } from "../../routing";
 import { claimDates, effectiveReassignmentDate, type CheckoutPolicy, type LifecycleActor, type LifecycleBooking } from "./domain";
 import type { LifecycleMutationResult, LifecycleRepository } from "./ports";
+import { ROOM_DIMENSION_SELECT, roomOperationalReadModel, type RoomDimensionRow } from "../room-state/read-model";
 
 export class D1LifecycleRepository implements LifecycleRepository {
   public constructor(private readonly db: OperationalDatabase) {}
@@ -11,10 +12,18 @@ export class D1LifecycleRepository implements LifecycleRepository {
 
   async checkIn(current: LifecycleBooking, guestCount: number, actor: LifecycleActor): Promise<LifecycleMutationResult> {
     const now = new Date().toISOString();
+    const room = await this.db.prepare(`SELECT ${ROOM_DIMENSION_SELECT} FROM rooms AS r WHERE r.id=?1`).bind(current.room_id).first<RoomDimensionRow>();
+    if (!room) return { ok: false };
+    const roomState = roomOperationalReadModel(room);
+    if (roomState.readiness.state !== "READY_FOR_ARRIVAL") return { ok: false };
+    const roomStateVersionBefore = await this.db.prepare("SELECT room_state_version FROM rooms WHERE id=?1").bind(current.room_id).first<{ room_state_version: number }>();
+    if (!roomStateVersionBefore) return { ok: false };
+    const versionBefore = roomStateVersionBefore.room_state_version;
+    const versionAfter = versionBefore + 1;
     const results = await this.db.batch([
-      this.db.prepare("UPDATE bookings SET status = 'CHECKED_IN', check_in_guests_count = ?4, checked_in_at = ?2, checked_in_by = ?3, updated_at = ?2 WHERE id = ?1 AND status = 'CONFIRMED' AND EXISTS (SELECT 1 FROM rooms WHERE id = ?5 AND status = 'AVAILABLE')").bind(current.id, now, actor.subject, guestCount, current.room_id),
-      this.db.prepare("UPDATE rooms SET status = 'OCCUPIED' WHERE id = ?1 AND status = 'AVAILABLE' AND EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?1)").bind(current.room_id, current.id),
-      this.db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) SELECT ?1, ?2, 'CHECK_IN', ?3, ?4, ?5, ?6, ?7, ?8 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?3)").bind(crypto.randomUUID(), current.id, current.room_id, actor.subject, actor.requestId, actor.hotelId, JSON.stringify({ checklist: ["document_verified", "contact_confirmed", "stay_confirmed"], check_in_guests_count: guestCount }), now),
+      this.db.prepare("UPDATE bookings SET status = 'CHECKED_IN', check_in_guests_count = ?4, checked_in_at = ?2, checked_in_by = ?3, updated_at = ?2 WHERE id = ?1 AND status = 'CONFIRMED' AND NOT EXISTS (SELECT 1 FROM bookings active WHERE active.room_id=?5 AND active.status='CHECKED_IN') AND EXISTS (SELECT 1 FROM rooms WHERE id = ?5 AND room_state_version = ?6 AND housekeeping_state = 'READY' AND service_state = 'IN_SERVICE' AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id=?5 AND status='OPEN' AND impact='BLOCKING'))").bind(current.id, now, actor.subject, guestCount, current.room_id, versionBefore),
+      this.db.prepare("UPDATE rooms SET status = 'OCCUPIED', room_state_version=?3 WHERE id = ?1 AND room_state_version=?4 AND room_state_version + 1=?3 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_IN' AND room_id = ?1)").bind(current.room_id, current.id, versionAfter, versionBefore),
+      this.db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) VALUES (?1, ?2, 'CHECK_IN', ?3, ?4, ?5, ?6, ?7, ?8)").bind(crypto.randomUUID(), current.id, current.room_id, actor.subject, actor.requestId, actor.hotelId, JSON.stringify({ checklist: ["document_verified", "contact_confirmed", "stay_confirmed"], check_in_guests_count: guestCount, occupancy_before: "VACANT", occupancy_after: "OCCUPIED", housekeeping_state_before: roomState.housekeeping, housekeeping_state_after: roomState.housekeeping, maintenance_impact_before: roomState.maintenanceImpact, maintenance_impact_after: roomState.maintenanceImpact, service_state_before: roomState.serviceState, service_state_after: roomState.serviceState, room_state_version_before: versionBefore, room_state_version_after: versionAfter }), now),
     ]);
     return { ok: results[0]?.meta.changes === 1 && results[1]?.meta.changes === 1 && results[2]?.meta.changes === 1 };
   }
@@ -120,12 +129,21 @@ export class D1LifecycleRepository implements LifecycleRepository {
 
   async checkout(current: LifecycleBooking, policy: CheckoutPolicy, reference: string | null, actor: LifecycleActor): Promise<LifecycleMutationResult> {
     const now = new Date().toISOString();
+    const snapshot = await this.db.prepare(`SELECT r.room_state_version, r.housekeeping_state, r.service_state,
+        EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN' AND mc.impact='BLOCKING') AS blocking,
+        (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN') AS maintenance_open_case_count,
+        (SELECT COUNT(*) FROM bookings active WHERE active.room_id=r.id AND active.status='CHECKED_IN') AS checked_in_count
+      FROM rooms r WHERE r.id=?1 AND r.status='OCCUPIED'`).bind(current.room_id).first<{ room_state_version: number; housekeeping_state: string | null; service_state: string | null; blocking: number; maintenance_open_case_count: number; checked_in_count: number }>();
+    if (!snapshot || snapshot.checked_in_count !== 1) return { ok: false };
+    const versionBefore = snapshot.room_state_version;
+    const versionAfter = versionBefore + 1;
+    const legacyStatus = snapshot.service_state === "OUT_OF_ORDER" ? "OUT_OF_ORDER" : snapshot.blocking ? "MAINTENANCE" : "DIRTY";
     const results = await this.db.batch([
-      this.db.prepare("UPDATE bookings SET status = 'CHECKED_OUT', check_out_payment_policy = ?4, check_out_reference = ?5, checked_out_at = ?2, checked_out_by = ?3, updated_at = ?2 WHERE id = ?1 AND status = 'CHECKED_IN' AND room_id = ?6 AND EXISTS (SELECT 1 FROM rooms WHERE id = ?6 AND status = 'OCCUPIED')").bind(current.id, now, actor.subject, policy, reference, current.room_id),
+      this.db.prepare("UPDATE bookings SET status = 'CHECKED_OUT', check_out_payment_policy = ?4, check_out_reference = ?5, checked_out_at = ?2, checked_out_by = ?3, updated_at = ?2 WHERE id = ?1 AND status = 'CHECKED_IN' AND room_id = ?6 AND EXISTS (SELECT 1 FROM rooms WHERE id = ?6 AND status = 'OCCUPIED' AND room_state_version=?7)").bind(current.id, now, actor.subject, policy, reference, current.room_id, versionBefore),
       this.db.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND status = 'CHECKED_OUT' AND room_id = ?2)").bind(current.id, current.room_id),
-      this.db.prepare("UPDATE rooms SET status = 'DIRTY' WHERE id = ?1 AND status = 'OCCUPIED' AND EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_OUT' AND room_id = ?1)").bind(current.room_id, current.id),
+      this.db.prepare("UPDATE rooms SET status=?2, housekeeping_state='DIRTY', room_state_version=?3 WHERE id=?1 AND status='OCCUPIED' AND room_state_version=?4 AND housekeeping_state IS ?6 AND service_state IS ?7 AND EXISTS (SELECT 1 FROM bookings WHERE id=?5 AND status='CHECKED_OUT' AND room_id=?1)").bind(current.room_id, legacyStatus, versionAfter, versionBefore, current.id, snapshot.housekeeping_state, snapshot.service_state),
       this.db.prepare("INSERT OR IGNORE INTO invoices (id, booking_id, amount_cents, created_at) SELECT ?1, id, total_cents, ?2 FROM bookings WHERE id = ?3 AND status = 'CHECKED_OUT'").bind(crypto.randomUUID(), now, current.id),
-      this.db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) SELECT ?1, ?2, 'CHECK_OUT', ?3, ?4, ?5, ?6, ?7, ?8 WHERE EXISTS (SELECT 1 FROM bookings WHERE id = ?2 AND status = 'CHECKED_OUT' AND room_id = ?3) AND EXISTS (SELECT 1 FROM rooms WHERE id = ?3 AND status = 'DIRTY')").bind(crypto.randomUUID(), current.id, current.room_id, actor.subject, actor.requestId, actor.hotelId, JSON.stringify({ handoff: "housekeeping", check_out_payment_policy: policy, check_out_reference: reference, charge_reviewed: true, release_confirmed: true }), now),
+      this.db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) VALUES (?1, ?2, 'CHECK_OUT', ?3, ?4, ?5, ?6, ?7, ?8)").bind(crypto.randomUUID(), current.id, current.room_id, actor.subject, actor.requestId, actor.hotelId, JSON.stringify({ handoff: "housekeeping", check_out_payment_policy: policy, check_out_reference: reference, charge_reviewed: true, release_confirmed: true, occupancy_before: "OCCUPIED", occupancy_after: "VACANT", housekeeping_state_before: snapshot.housekeeping_state, housekeeping_state_after: "DIRTY", room_state_version_before: versionBefore, room_state_version_after: versionAfter, service_state_before: snapshot.service_state, service_state_after: snapshot.service_state, maintenance_open_case_count_before: snapshot.maintenance_open_case_count, maintenance_open_case_count_after: snapshot.maintenance_open_case_count }), now),
     ]);
     return { ok: results[0]?.meta.changes === 1 && results[2]?.meta.changes === 1 && results[4]?.meta.changes === 1 };
   }

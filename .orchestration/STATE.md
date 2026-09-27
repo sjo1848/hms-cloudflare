@@ -1,6 +1,18 @@
 # HMS Cloudflare — Orchestration State
 
-## ACTIVE BOUNDARY — HMS-ROADMAP-CTRL-REWORK-001
+## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
+
+Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `18JGIQxyl8Bh6_w7H3eW1qdPL7jfUsdSLk43aE-G-90A`. Roadmap authority is Artifact A2 `b2581e4c370eeb6f74e9380af010e48386642b4f` and Boundary B2 `c6a4bcb9a2939505f7ddf8e72c02ec9b825f00f3`.
+
+- Dedicated branch: `impl/hms-foundation-0`, based exactly on B2; current implementation has not yet been published.
+- Active contracts: `.orchestration/contracts/HMS-FOUNDATION-0-START-001.md` and `.orchestration/contracts/HMS-F0-02-SHARED-ROOM-INVARIANTS-001.md`. F0.1 contract/evidence is closed internally.
+- Scope: F0.1–F0.12 in approved DAG order, local/synthetic only. Do not begin Blocks A–H.
+- Real customer data mutation, live room cutover and active-stay pricing bootstrap are not authorized. No PR, merge, main, staging, deploy or production action.
+- F0.1/F0.3 risk confirmed by read-only DB review: legacy scalar room state and migration 0020 do not preserve enough evidence to reconstruct overwritten Housekeeping state for every record. Treat such records as unresolved/quarantined; never infer READY. No ROADMAP_BLOCKER found.
+- F0.1 implementation/evidence: forward migration `0022_room_state_dimensions.sql`; independent dimensions and fail-closed projection exposed read-only from Rooms API; legacy rows left unresolved, including contradictory `MAINTENANCE + NON_BLOCKING` evidence. Synthetic executing-D1/API tests, suite, types and Wrangler dry-runs pass. A Luna Medium Contract Reviewer found one HIGH legacy readiness defect; it was repaired and verified; no further findings. This is not an Independent Critic verdict.
+- F0.2 implementation and internal evidence gate are complete on this candidate: directed executing-D1 transitions/concurrency/ABA/tenant/RBAC pass; `npm run check` 27 files/98 tests, `npm run types:check`, `npm run web:build`, `npm run architecture:fitness`, `npm run test:d1-query-plan`, API/Web `npm run wrangler:dry-run`, `git diff --check`, and isolated CF-I05 all pass after the latest guard changes. Invariant and Pre-Critic records are present. The read-only DB reviewer verified the repairs; that is not an Independent Critic verdict. F0.2 remains at its fresh Independent Critic boundary; do not start F0.3 until the reviewer returns PASS/accepted conditions. F0.12 boundary remains `FOUNDATION_0_COMPLETE_AWAITING_CONTROLLER_REVIEW`; do not self-approve or continue to Block A.
+
+## HISTORICAL BOUNDARY — HMS-ROADMAP-CTRL-REWORK-001
 
 Bounded corrections CTRL-RM-01..04 completed under Controller Review Drive `1xbNP7RWTriKXGqWMTwFV3xoRIFYPvJwENn3tsozHHlM`. Branch `planning/hms-implementation-roadmap-f0-a-h`.
 
@@ -11,7 +23,7 @@ Bounded corrections CTRL-RM-01..04 completed under Controller Review Drive `1xbN
 - CTRL-RM-02 reconciles E start after Foundation 0 + A + E's room/capability contracts; B remains a later integration checkpoint before dependent C/H flows.
 - CTRL-RM-03 excludes all Booking Account receivables from cash reconciliation arithmetic. CTRL-RM-04 confirms Booking Account/Folio grain is Booking/Stay; Guest has no global account.
 
-Status `ROADMAP_REWORK_COMPLETE_AWAITING_CONTROLLER_REVIEW`. `implementation_authorized=false`; `resume_authorized=false`; external Controller review is required. No product edits, migrations, data, issues, PRs, merge, staging, deploy or production actions occurred. Do not begin Foundation 0 until separate implementation authorization.
+At that historical boundary, implementation authorization was false and Controller review was required. This was superseded by the later Foundation 0 Implementation Authorization recorded above; the A2/B2 artifacts remain unchanged and authoritative.
 
 ## HISTORICAL DISCOVERY — HMS-SYSTEM-UX-DISCOVERY-ASIS-001
 

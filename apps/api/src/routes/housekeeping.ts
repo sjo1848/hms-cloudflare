@@ -5,11 +5,13 @@ import { ApiError } from "../errors";
 import { hasCapability } from "../auth/capabilities";
 import { isoDate, jsonBody, requiredText } from "../validation";
 import { hotelLocalDate } from "../time/hotel-time";
+import { ROOM_DIMENSION_SELECT, legacyStatusForRoomState, roomOperationalReadModel, type RoomDimensionRow } from "../modules/room-state/read-model";
+import type { RoomOperationalState } from "../modules/room-state/domain";
 
 type HousekeepingApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 type Db = ApiVariables["operationalDatabase"];
 type RouteContext = Context<{ Bindings: Env; Variables: ApiVariables }>;
-type RoomRow = { id: string; room_number: string; room_type: string; status: string; price_cents: number };
+type RoomRow = RoomDimensionRow & { id: string; room_number: string; room_type: string; status: string; price_cents: number; room_state_version: number };
 type CaseRow = {
   id: string; room_id: string; status: string; impact: "NON_BLOCKING" | "BLOCKING";
   priority: string; reason: string; assigned_to: string; reported_by_user_id: string | null;
@@ -39,9 +41,11 @@ function caseView(row: CaseRow, hotelId: string) {
 }
 
 function roomView(row: RoomRow, hotelId: string, maintenanceCase?: CaseRow, departure?: DepartureRow) {
+  const operationalState = roomOperationalReadModel(row);
   return {
     room_id: row.id, hotel_id: hotelId, room_number: row.room_number, room_type: row.room_type,
     room_status: roomStatus(row.status), turnover_today: Boolean(departure), departure_guest_name: departure?.guest_name,
+    operational_state: operationalState,
     departure_booking_status: departure?.booking_status,
     departure: departure ? { booking_id: departure.booking_id, room_id: departure.room_id, room_number: row.room_number, room_type: row.room_type, room_status: roomStatus(row.status), guest_name: departure.guest_name, booking_status: departure.booking_status } : undefined,
     maintenance_case: maintenanceCase ? caseView(maintenanceCase, hotelId) : undefined,
@@ -49,7 +53,8 @@ function roomView(row: RoomRow, hotelId: string, maintenanceCase?: CaseRow, depa
 }
 
 async function findRoom(db: Db, id: string): Promise<RoomRow | null> {
-  return db.prepare("SELECT id, room_number, room_type, status, price_cents FROM rooms WHERE id = ?1").bind(id).first<RoomRow>();
+  return db.prepare(`SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents, r.room_state_version, ${ROOM_DIMENSION_SELECT}
+    FROM rooms AS r WHERE r.id = ?1`).bind(id).first<RoomRow>();
 }
 
 async function findOpenCase(db: Db, roomId: string): Promise<CaseRow | null> {
@@ -77,8 +82,9 @@ export function createHousekeepingRoutes(): HousekeepingApp {
 
   app.get("/housekeeping/dirty", async context => {
     requireCapability(context, "housekeeping.read");
-    const rows = await context.get("operationalDatabase").prepare("SELECT id, room_number, room_type, status, price_cents FROM rooms WHERE status IN ('DIRTY', 'CLEANING') ORDER BY room_number").all<RoomRow>();
-    return context.json(rows.results.map(row => ({ id: row.id, hotel_id: context.get("membership").hotelId, room_number: row.room_number, room_type: row.room_type, status: roomStatus(row.status), price_cents: row.price_cents })));
+    const rows = await context.get("operationalDatabase").prepare(`SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents, r.room_state_version, ${ROOM_DIMENSION_SELECT}
+      FROM rooms r WHERE r.housekeeping_state IN ('DIRTY', 'CLEANING') ORDER BY r.room_number`).all<RoomRow>();
+    return context.json(rows.results.map(row => ({ id: row.id, hotel_id: context.get("membership").hotelId, room_number: row.room_number, room_type: row.room_type, status: roomStatus(row.status), price_cents: row.price_cents, operational_state: roomOperationalReadModel(row) })));
   });
 
   app.get("/housekeeping/board", async context => {
@@ -86,7 +92,8 @@ export function createHousekeepingRoutes(): HousekeepingApp {
     const requestedDate = context.req.query("date");
     const date = requestedDate ? isoDate(requestedDate, "date") : context.get("hotelTime")?.localDate ?? hotelLocalDate(context.get("membership").timeZone);
     const db = context.get("operationalDatabase");
-    const rooms = await db.prepare("SELECT id, room_number, room_type, status, price_cents FROM rooms WHERE status IN ('DIRTY', 'CLEANING', 'AVAILABLE', 'MAINTENANCE') ORDER BY room_number").all<RoomRow>();
+    const rooms = await db.prepare(`SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents, r.room_state_version, ${ROOM_DIMENSION_SELECT}
+      FROM rooms r WHERE r.status IN ('DIRTY', 'CLEANING', 'AVAILABLE', 'MAINTENANCE') OR r.housekeeping_state IN ('DIRTY', 'CLEANING') ORDER BY r.room_number`).all<RoomRow>();
     const departures = await db.prepare("SELECT b.id AS booking_id, b.room_id, r.room_number, r.room_type, r.status AS room_status, g.full_name AS guest_name, b.status AS booking_status, b.check_out FROM bookings b JOIN guests g ON g.id = b.guest_id JOIN rooms r ON r.id = b.room_id WHERE b.check_out = ?1 AND b.status NOT IN ('CANCELLED', 'NO_SHOW')").bind(date).all<DepartureRow>();
     const cases = await db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE status = 'OPEN'`).all<CaseRow>();
     const departureByRoom = new Map(departures.results.map(item => [item.room_id, item]));
@@ -102,7 +109,7 @@ export function createHousekeepingRoutes(): HousekeepingApp {
   });
 
   app.post("/housekeeping/:id/start", async context => transition(context, "DIRTY", "CLEANING", "CLEANING_START"));
-  app.post("/housekeeping/:id/finish", async context => transition(context, "CLEANING", "AVAILABLE", "CLEANING_FINISH"));
+  app.post("/housekeeping/:id/finish", async context => transition(context, "CLEANING", "READY", "CLEANING_FINISH"));
 
   app.post("/housekeeping/:id/maintenance", async context => {
     requireCapability(context, "maintenance.report");
@@ -120,14 +127,18 @@ export function createHousekeepingRoutes(): HousekeepingApp {
     if (!room) throw ApiError.notFound("Room not found");
     if (!validMaintenanceSource(room.status)) throw ApiError.conflict("Room cannot receive maintenance from its current state");
     const target = maintenanceTarget(room.status, impact);
+    const versionBefore = room.room_state_version;
+    const versionAfter = versionBefore + 1;
+    const openCountAfter = room.open_maintenance_count + 1;
     const caseId = crypto.randomUUID();
     const eventId = crypto.randomUUID();
     try {
-      await db.batch([
-        db.prepare("UPDATE rooms SET status = ?2 WHERE id = ?1 AND status = ?3").bind(roomId, target, room.status),
-        db.prepare("INSERT INTO maintenance_cases (id, room_id, status, impact, priority, reason, assigned_to, reported_by_user_id, reported_at) SELECT ?1, ?2, 'OPEN', ?3, ?4, ?5, ?6, ?7, ?8 WHERE EXISTS (SELECT 1 FROM rooms WHERE id = ?2 AND status = ?9) AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id = ?2 AND status = 'OPEN')").bind(caseId, roomId, impact, priority, reason, assignedTo, context.get("identity").subject, new Date().toISOString(), target),
-        audit(db, eventId, roomId, caseId, "MAINTENANCE_OPEN", room.status, target, context, { impact, priority, reason, assigned_to: assignedTo }),
+      const results = await db.batch([
+        db.prepare("UPDATE rooms SET status=?2, room_state_version=?3 WHERE id=?1 AND status=?4 AND room_state_version=?5 AND room_state_version+1=?3").bind(roomId, target, versionAfter, room.status, versionBefore),
+        db.prepare("INSERT INTO maintenance_cases (id, room_id, status, impact, priority, reason, assigned_to, reported_by_user_id, reported_at) SELECT ?1, ?2, 'OPEN', ?3, ?4, ?5, ?6, ?7, ?8 WHERE EXISTS (SELECT 1 FROM rooms WHERE id=?2 AND status=?9 AND room_state_version=?10) AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id=?2 AND status='OPEN')").bind(caseId, roomId, impact, priority, reason, assignedTo, context.get("identity").subject, new Date().toISOString(), target, versionAfter),
+        audit(db, eventId, roomId, caseId, "MAINTENANCE_OPEN", room.status, target, context, { impact, priority, reason, assigned_to: assignedTo, occupancy_before: roomOperationalReadModel(room).occupancy, occupancy_after: roomOperationalReadModel(room).occupancy, housekeeping_state_after: room.housekeeping_state, service_state_after: room.service_state, maintenance_impact_before: room.open_maintenance_count ? roomOperationalReadModel(room).maintenanceImpact : "NONE", maintenance_impact_after: impact, room_state_version_before: versionBefore, room_state_version_after: versionAfter, maintenance_open_case_count: openCountAfter }),
       ]);
+      if (results[0]?.meta.changes !== 1 || results[1]?.meta.changes !== 1 || results[2]?.meta.changes !== 1) throw ApiError.conflict("Room changed before the maintenance case could be opened");
     } catch { throw ApiError.conflict("Maintenance case could not be opened without changing the room"); }
     const opened = await db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE id = ?1`).bind(caseId).first<CaseRow>();
     if (!opened || !(await eventWasRecorded(db, eventId))) throw ApiError.conflict("Maintenance case was not opened because the room changed concurrently");
@@ -147,25 +158,28 @@ export function createHousekeepingRoutes(): HousekeepingApp {
     if (open.impact !== "NON_BLOCKING") throw ApiError.conflict("Only a non-blocking case can be escalated");
     if (!validMaintenanceSource(room.status)) throw ApiError.conflict("Room cannot receive maintenance escalation from its current state");
     const target = maintenanceTarget(room.status, "BLOCKING");
+    const versionBefore = room.room_state_version;
+    const versionAfter = versionBefore + 1;
     const eventId = crypto.randomUUID();
     try {
-      await db.batch([
-        db.prepare("UPDATE rooms SET status = ?2 WHERE id = ?1 AND status = ?3").bind(roomId, target, room.status),
-        db.prepare("UPDATE maintenance_cases SET impact = 'BLOCKING' WHERE id = ?1 AND room_id = ?2 AND status = 'OPEN' AND impact = 'NON_BLOCKING' AND EXISTS (SELECT 1 FROM rooms WHERE id = ?2 AND status = ?3)").bind(caseId, roomId, target),
-        audit(db, eventId, roomId, caseId, "MAINTENANCE_ESCALATE", room.status, target, context, { note }),
+      const results = await db.batch([
+        db.prepare("UPDATE rooms SET status=?2, room_state_version=?3 WHERE id=?1 AND status=?4 AND room_state_version=?5 AND room_state_version+1=?3").bind(roomId, target, versionAfter, room.status, versionBefore),
+        db.prepare("UPDATE maintenance_cases SET impact='BLOCKING' WHERE id=?1 AND room_id=?2 AND status='OPEN' AND impact='NON_BLOCKING' AND EXISTS (SELECT 1 FROM rooms WHERE id=?2 AND status=?3 AND room_state_version=?4)").bind(caseId, roomId, target, versionAfter),
+        audit(db, eventId, roomId, caseId, "MAINTENANCE_ESCALATE", room.status, target, context, { note, impact_before: "NON_BLOCKING", impact_after: "BLOCKING", occupancy_before: roomOperationalReadModel(room).occupancy, occupancy_after: roomOperationalReadModel(room).occupancy, maintenance_impact_before: "NON_BLOCKING", maintenance_impact_after: "BLOCKING", housekeeping_state_after: room.housekeeping_state, service_state_after: room.service_state, room_state_version_before: versionBefore, room_state_version_after: versionAfter, maintenance_open_case_count: room.open_maintenance_count }),
       ]);
+      if (results[0]?.meta.changes !== 1 || results[1]?.meta.changes !== 1 || results[2]?.meta.changes !== 1) throw ApiError.conflict("Maintenance case changed before escalation could commit");
     } catch { throw ApiError.conflict("Maintenance case could not be escalated without changing the room"); }
     const escalated = await db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE id = ?1`).bind(caseId).first<CaseRow>();
     if (!escalated || escalated.impact !== "BLOCKING" || !(await eventWasRecorded(db, eventId))) throw ApiError.conflict("Maintenance case was not escalated because the room changed concurrently");
     return context.json(caseView(escalated, context.get("membership").hotelId));
   });
 
-  app.post("/housekeeping/:id/maintenance/:case_id/resolve", async context => resolveMaintenance(context));
-  app.post("/housekeeping/:id/dirty", async context => resolveMaintenance(context));
+  app.post("/housekeeping/:id/maintenance/:case_id/resolve", async context => resolveMaintenance(context, false));
+  app.post("/housekeeping/:id/dirty", async context => resolveMaintenance(context, true));
   return app;
 }
 
-async function resolveMaintenance(context: RouteContext) {
+async function resolveMaintenance(context: RouteContext, markDirty: boolean) {
   requireCapability(context, "maintenance.resolve");
   const db = context.get("operationalDatabase");
   const roomId = context.req.param("id");
@@ -178,19 +192,75 @@ async function resolveMaintenance(context: RouteContext) {
   const open = requestedCaseId
     ? await db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE id = ?1 AND room_id = ?2 AND status = 'OPEN'`).bind(requestedCaseId, roomId).first<CaseRow>()
     : await findOpenCase(db, roomId);
+  if (!requestedCaseId && open) throw ApiError.conflict("Refresh the maintenance case before resolving it");
   const legacy = !open && !requestedCaseId && room.status === "MAINTENANCE";
   if (!open && !legacy) throw ApiError.conflict("Open maintenance case not found");
   const caseId = open?.id ?? crypto.randomUUID();
   const impact = open?.impact ?? "BLOCKING";
-  const target = room.status === "OCCUPIED" ? "OCCUPIED" : impact === "BLOCKING" && room.status === "MAINTENANCE" ? "DIRTY" : room.status;
+  const before = roomOperationalReadModel(room);
+  if (before.readiness.state === "UNRESOLVED" && !legacy) {
+    throw ApiError.conflict("Room state is unresolved; maintenance resolution cannot clear the protective status");
+  }
+  if (markDirty && before.occupancy === "OCCUPIED") throw ApiError.conflict("An occupied room cannot be marked dirty");
+  const housekeepingAfter = markDirty ? "DIRTY" : room.housekeeping_state;
+  const stateAfter: RoomOperationalState = housekeepingAfter && housekeepingAfter !== "UNRESOLVED"
+    ? { ...before, housekeeping: housekeepingAfter as RoomOperationalState["housekeeping"] }
+    : before;
+  const projectedAfter = { ...stateAfter, maintenanceImpact: "NONE" } as RoomOperationalState;
+  const projected = legacyStatusForRoomState(projectedAfter);
+  const target = room.status === "OCCUPIED"
+    ? "OCCUPIED"
+    : room.service_state === "OUT_OF_ORDER"
+      ? "OUT_OF_ORDER"
+      : room.status === "MAINTENANCE" && projected === "UNRESOLVED"
+        ? "MAINTENANCE"
+        : projected;
+  if (target === "UNRESOLVED") throw ApiError.conflict("Room dimensions must be reconciled before resolving maintenance");
+  const versionBefore = room.room_state_version;
+  const versionAfter = versionBefore + 1;
   const eventId = crypto.randomUUID();
+  const reportedAt = new Date().toISOString();
   try {
-    await db.batch([
-      ...(legacy ? [db.prepare("INSERT INTO maintenance_cases (id, room_id, status, impact, priority, reason, assigned_to, reported_by_user_id, reported_at) SELECT ?1, ?2, 'OPEN', 'BLOCKING', 'MEDIUM', 'Legacy maintenance room without an opening case', 'ops', ?3, ?4 WHERE EXISTS (SELECT 1 FROM rooms WHERE id = ?2 AND status = 'MAINTENANCE') AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id = ?2 AND status = 'OPEN')").bind(caseId, roomId, context.get("identity").subject, new Date().toISOString())] : []),
-      db.prepare("UPDATE rooms SET status = ?2 WHERE id = ?1 AND status = ?3 AND EXISTS (SELECT 1 FROM maintenance_cases WHERE id = ?4 AND room_id = ?1 AND status = 'OPEN')").bind(roomId, target, room.status, caseId),
-      db.prepare("UPDATE maintenance_cases SET status = 'RESOLVED', resolution_note = ?2, resolved_by_user_id = ?3, resolved_at = ?4, return_status = ?5 WHERE id = ?1 AND room_id = ?6 AND status = 'OPEN' AND EXISTS (SELECT 1 FROM rooms WHERE id = ?6 AND status = ?7)").bind(caseId, note, context.get("identity").subject, new Date().toISOString(), target, roomId, target),
-      audit(db, eventId, roomId, caseId, "MAINTENANCE_RESOLVE", room.status, target, context, { resolution_note: note, legacy_recovery: legacy }),
-    ]);
+    const statements = [
+      db.prepare(`UPDATE rooms SET status=?2, housekeeping_state=CASE WHEN ?3 THEN 'DIRTY' ELSE housekeeping_state END, room_state_version=?4
+        WHERE id=?1 AND status=?5 AND room_state_version=?6 AND room_state_version+1=?4`)
+        .bind(roomId, target, markDirty ? 1 : 0, versionAfter, room.status, versionBefore),
+    ];
+    if (legacy) {
+      statements.push(db.prepare(`INSERT INTO maintenance_cases (id, room_id, status, impact, priority, reason, assigned_to, reported_by_user_id, reported_at)
+        SELECT ?1, ?2, 'OPEN', 'BLOCKING', 'MEDIUM', 'Legacy maintenance room without an opening case', 'ops', ?3, ?4
+        WHERE EXISTS (SELECT 1 FROM rooms WHERE id=?2 AND room_state_version=?5)
+          AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id=?2 AND status='OPEN')`)
+        .bind(caseId, roomId, context.get("identity").subject, reportedAt, versionAfter));
+    }
+    statements.push(
+      db.prepare(`UPDATE maintenance_cases SET status='RESOLVED', resolution_note=?2, resolved_by_user_id=?3, resolved_at=?4, return_status=?5
+        WHERE id=?1 AND room_id=?6 AND status='OPEN' AND impact=?9
+          AND EXISTS (SELECT 1 FROM rooms WHERE id=?6 AND status=?7 AND room_state_version=?8)`)
+        .bind(caseId, note, context.get("identity").subject, reportedAt, target, roomId, target, versionAfter, impact),
+      audit(db, eventId, roomId, caseId, "MAINTENANCE_RESOLVE", room.status, target, context, {
+        resolution_note: note,
+        legacy_recovery: legacy,
+        housekeeping_state_before: room.housekeeping_state,
+        housekeeping_state_after: markDirty ? "DIRTY" : room.housekeeping_state,
+        occupancy_before: before.occupancy,
+        occupancy_after: before.occupancy,
+        maintenance_impact_before: impact,
+        maintenance_impact_after: "NONE",
+        service_state_after: room.service_state,
+        room_state_version_before: versionBefore,
+        room_state_version_after: versionAfter,
+        maintenance_open_case_count: Math.max(0, room.open_maintenance_count - 1),
+      }),
+    );
+    const results = await db.batch(statements);
+    const roomResult = results[0];
+    const caseInsertResult = legacy ? results[1] : undefined;
+    const caseUpdateResult = legacy ? results[2] : results[1];
+    const eventResult = legacy ? results[3] : results[2];
+    if (roomResult?.meta.changes !== 1 || (legacy && caseInsertResult?.meta.changes !== 1) || caseUpdateResult?.meta.changes !== 1 || eventResult?.meta.changes !== 1) {
+      throw ApiError.conflict("Room or maintenance case changed before resolution could commit");
+    }
   } catch { throw ApiError.conflict("Maintenance case could not be resolved without changing the room"); }
   const resolved = await db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE id = ?1`).bind(caseId).first<CaseRow>();
   if (!resolved || resolved.status !== "RESOLVED" || !(await eventWasRecorded(db, eventId))) throw ApiError.conflict("Maintenance case was not resolved because the room changed concurrently");
@@ -204,14 +274,43 @@ async function transition(context: RouteContext, from: string, to: string, event
   if (!roomId) throw ApiError.notFound("Room not found");
   const room = await findRoom(db, roomId);
   if (!room) throw ApiError.notFound("Room not found");
-  if (room.status !== from) throw ApiError.conflict(`Room must be ${from.toLowerCase()} before this transition`);
+  const before = roomOperationalReadModel(room);
+  if (before.housekeeping !== from || before.occupancy !== "VACANT") throw ApiError.conflict(`Room must be vacant and ${from.toLowerCase()} before this transition`);
+  if (to === "CLEANING" && (before.serviceState !== "IN_SERVICE" || before.maintenanceImpact === "BLOCKING")) {
+    throw ApiError.conflict("Room must be in service without blocking maintenance before cleaning starts");
+  }
+  if (before.serviceState === "UNRESOLVED" || before.maintenanceImpact === "UNRESOLVED") throw ApiError.conflict("Room state must be reconciled before this transition");
+  const nextState = { ...before, housekeeping: to as RoomOperationalState["housekeeping"] };
+  const targetStatus = legacyStatusForRoomState(nextState);
+  if (targetStatus === "UNRESOLVED") throw ApiError.conflict("Room state must be reconciled before this transition");
+  const versionBefore = room.room_state_version;
+  const versionAfter = versionBefore + 1;
+  const maintenanceCount = room.open_maintenance_count;
   const eventId = crypto.randomUUID();
   try {
-    await db.batch([
-      db.prepare("UPDATE rooms SET status = ?2 WHERE id = ?1 AND status = ?3").bind(roomId, to, from),
-      audit(db, eventId, roomId, null, eventType, from, to, context, {}),
+    const results = await db.batch([
+      db.prepare(`UPDATE rooms SET status=?3, housekeeping_state=?4, room_state_version=?5
+        WHERE id=?1 AND room_state_version=?6 AND housekeeping_state=?7
+          AND room_state_version + 1=?5
+          AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.room_id=?1 AND b.status='CHECKED_IN')
+          AND (?8 <> 'CLEANING' OR NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=?1 AND mc.status='OPEN' AND mc.impact='BLOCKING'))`)
+        .bind(roomId, to, targetStatus, to, versionAfter, versionBefore, from, to),
+      audit(db, eventId, roomId, null, eventType, from, targetStatus, context, {
+        housekeeping_state_before: from,
+        housekeeping_state_after: to,
+        occupancy_before: "VACANT",
+        occupancy_after: "VACANT",
+        maintenance_impact_before: before.maintenanceImpact,
+        maintenance_impact_after: before.maintenanceImpact,
+        maintenance_open_case_count: maintenanceCount,
+        service_state_before: room.service_state,
+        service_state_after: room.service_state,
+        room_state_version_before: versionBefore,
+        room_state_version_after: versionAfter,
+      }),
     ]);
+    if (results[0]?.meta.changes !== 1 || results[1]?.meta.changes !== 1) throw ApiError.conflict("Room changed before the housekeeping transition could commit");
   } catch { throw ApiError.conflict("Room transition failed without changing the room"); }
   if (!(await eventWasRecorded(db, eventId))) throw ApiError.conflict("Room transition was rejected because the room changed concurrently");
-  return context.json({ room_id: roomId, status: roomStatus(to) });
+  return context.json({ room_id: roomId, status: roomStatus(targetStatus), housekeeping_state: to, operational_state: roomOperationalReadModel({ ...room, housekeeping_state: to, legacy_room_status: targetStatus }) });
 }

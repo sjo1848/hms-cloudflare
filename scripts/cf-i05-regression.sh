@@ -3,21 +3,25 @@ set -euo pipefail
 
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 tmp_dir=$(mktemp -d)
+persist_dir="$tmp_dir/persist"
+mkdir -p "$persist_dir"
+persist_args=(--persist-to "$persist_dir")
+port=$(node -e 'const server=require("node:net").createServer(); server.listen(0,"127.0.0.1",()=>{console.log(server.address().port); server.close();});')
 worker_pid=""
-cleanup() { pkill -TERM -f "wrangler dev --local --ip 127.0.0.1 --port 8787" 2>/dev/null || true; if [[ -n "$worker_pid" ]]; then pkill -TERM -P "$worker_pid" 2>/dev/null || true; kill "$worker_pid" 2>/dev/null || true; fi; }
+cleanup() { if [[ -n "$worker_pid" ]]; then stop_worker; fi; }
 trap cleanup EXIT
 cd "$repo_dir"
 
 wrangler="$repo_dir/node_modules/.bin/wrangler"
 
-stop_worker() { if [[ -n "$worker_pid" ]]; then pkill -TERM -P "$worker_pid" 2>/dev/null || true; kill "$worker_pid" 2>/dev/null || true; worker_pid=""; fi; }
-start_worker() { ./node_modules/.bin/wrangler dev --local --ip 127.0.0.1 --port 8787 --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >>"$tmp_dir/worker.log" 2>&1 & worker_pid=$!; for _ in {1..30}; do curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1 && return 0; sleep 1; done; return 1; }
-serialized_d1() { local status; stop_worker; if CI=1 "$wrangler" d1 execute "$@"; then status=0; else status=$?; fi; start_worker; return "$status"; }
+stop_worker() { if [[ -n "$worker_pid" ]]; then local owned_pid="$worker_pid"; kill -TERM -- "-$owned_pid" 2>/dev/null || true; wait "$owned_pid" 2>/dev/null || true; for _ in {1..30}; do local live_count; live_count=$(ps -o stat= -g "$owned_pid" 2>/dev/null | awk '$1 !~ /^Z/ { live++ } END { print live+0 }' || true); if [[ "$live_count" == "0" ]]; then worker_pid=""; return 0; fi; sleep 0.1; done; echo "owned Wrangler process group $owned_pid still has live processes" >&2; ps -o pid,ppid,pgid,stat,args -g "$owned_pid" >&2 || true; return 1; fi; }
+start_worker() { setsid ./node_modules/.bin/wrangler dev --local --persist-to "$persist_dir" --ip 127.0.0.1 --port "$port" --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >>"$tmp_dir/worker.log" 2>&1 & worker_pid=$!; local pgid; pgid=$(ps -o pgid= -p "$worker_pid" | tr -d ' '); [[ "$pgid" == "$worker_pid" ]] || { echo "Wrangler was not isolated in its own process group" >&2; return 1; }; for _ in {1..30}; do kill -0 -- "-$worker_pid" 2>/dev/null || { cat "$tmp_dir/worker.log" >&2; return 1; }; curl -fsS "http://127.0.0.1:$port/health" >/dev/null 2>&1 && return 0; sleep 1; done; return 1; }
+serialized_d1() { local status; stop_worker; if CI=1 "$wrangler" d1 execute "$@" "${persist_args[@]}"; then status=0; else status=$?; fi; start_worker; return "$status"; }
 
-CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc >/dev/null
-CI=1 "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >/dev/null
-CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --command "INSERT OR REPLACE INTO control_hotels (id,slug,operational_binding,active) VALUES ('hotel-a','hotel-a','HOTEL_DEMO_DB',1); INSERT OR REPLACE INTO access_identity_mappings (access_subject,email,active) VALUES ('subject-a','a@example.test',1); INSERT OR REPLACE INTO hotel_memberships (access_subject,hotel_id,role,active) VALUES ('subject-a','hotel-a','housekeeping',1);" >/dev/null
-CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "
+CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc "${persist_args[@]}" >/dev/null
+CI=1 "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc "${persist_args[@]}" >/dev/null
+CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc "${persist_args[@]}" --command "INSERT OR REPLACE INTO control_hotels (id,slug,operational_binding,active) VALUES ('hotel-a','hotel-a','HOTEL_DEMO_DB',1); INSERT OR REPLACE INTO access_identity_mappings (access_subject,email,active) VALUES ('subject-a','a@example.test',1); INSERT OR REPLACE INTO hotel_memberships (access_subject,hotel_id,role,active) VALUES ('subject-a','hotel-a','housekeeping',1);" >/dev/null
+CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc "${persist_args[@]}" --command "
   DELETE FROM housekeeping_events; DELETE FROM maintenance_cases; DELETE FROM room_inventory_nights; DELETE FROM room_holds; DELETE FROM bookings; DELETE FROM rooms;
   INSERT OR REPLACE INTO rooms (id,room_number,room_type,status,price_cents) VALUES
     ('room-a','101','STANDARD','DIRTY',10000),('room-b','102','STANDARD','CLEANING',12000),
@@ -25,22 +29,26 @@ CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --c
     ('room-e','105','STANDARD','DIRTY',15000),('room-f','106','STANDARD','MAINTENANCE',16000),('room-g','107','STANDARD','DIRTY',17000),
     ('room-h','108','STANDARD','MAINTENANCE',18000),('room-i','109','STANDARD','OCCUPIED',19000);
   INSERT OR REPLACE INTO guests (id,full_name,email,created_at) VALUES ('guest-a','Guest A','a@example.test','2026-01-01');
+  UPDATE rooms SET housekeeping_state=CASE status WHEN 'DIRTY' THEN 'DIRTY' WHEN 'CLEANING' THEN 'CLEANING' WHEN 'AVAILABLE' THEN 'READY' WHEN 'OCCUPIED' THEN 'READY' ELSE NULL END, service_state='IN_SERVICE', room_state_version=0;
+  UPDATE rooms SET housekeeping_state='DIRTY' WHERE id='room-f';
+  UPDATE rooms SET housekeeping_state='READY' WHERE id='room-h';
+  INSERT OR REPLACE INTO bookings (id,guest_id,room_id,check_in,check_out,status,total_cents,created_at,updated_at) VALUES ('booking-i','guest-a','room-i','2026-01-01','2026-01-02','CHECKED_IN',19000,'2026-01-01T00:00:00Z','2026-01-01T00:00:00Z');
 " >/dev/null
 
-CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "INSERT OR REPLACE INTO maintenance_cases (id,room_id,status,impact,priority,reason,assigned_to,reported_by_user_id,reported_at) VALUES ('case-f','room-f','OPEN','BLOCKING','HIGH','Existing maintenance case','ops','subject-a','2026-01-01T00:00:00Z');" >/dev/null
-CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "INSERT OR REPLACE INTO maintenance_cases (id,room_id,status,priority,reason,assigned_to,reported_by_user_id,reported_at,resolution_note,resolved_by_user_id,resolved_at,return_status) VALUES ('case-h1','room-h','RESOLVED','HIGH','First maintenance case','ops','subject-a','2026-01-01T00:00:00Z','First case resolved','subject-a','2026-01-02T00:00:00Z','DIRTY'), ('case-h2','room-h','OPEN','URGENT','New maintenance case after re-entry','ops','subject-a','2026-01-03T00:00:00Z',NULL,NULL,NULL,NULL);" >/dev/null
+CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc "${persist_args[@]}" --command "INSERT OR REPLACE INTO maintenance_cases (id,room_id,status,impact,priority,reason,assigned_to,reported_by_user_id,reported_at) VALUES ('case-f','room-f','OPEN','BLOCKING','HIGH','Existing maintenance case','ops','subject-a','2026-01-01T00:00:00Z');" >/dev/null
+CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc "${persist_args[@]}" --command "INSERT OR REPLACE INTO maintenance_cases (id,room_id,status,priority,reason,assigned_to,reported_by_user_id,reported_at,resolution_note,resolved_by_user_id,resolved_at,return_status) VALUES ('case-h1','room-h','RESOLVED','HIGH','First maintenance case','ops','subject-a','2026-01-01T00:00:00Z','First case resolved','subject-a','2026-01-02T00:00:00Z','DIRTY'), ('case-h2','room-h','OPEN','URGENT','New maintenance case after re-entry','ops','subject-a','2026-01-03T00:00:00Z',NULL,NULL,NULL,NULL);" >/dev/null
 
 start_worker
 ready=false
-for _ in {1..30}; do if curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1; then ready=true; break; fi; sleep 1; done
+for _ in {1..30}; do if curl -fsS "http://127.0.0.1:$port/health" >/dev/null 2>&1; then ready=true; break; fi; sleep 1; done
 if [[ "$ready" != true ]]; then echo "local API worker did not become ready" >&2; cat "$tmp_dir/worker.log" >&2; exit 1; fi
-base=http://127.0.0.1:8787/api/v1
+base=http://127.0.0.1:$port/api/v1
 common=(-H 'x-local-access-subject: subject-a' -H 'x-local-access-email: a@example.test' -H 'x-hotel-id: hotel-a' -H 'content-type: application/json')
 request() { curl -sS -o "$tmp_dir/response.json" -w '%{http_code}' "${common[@]}" "$@"; }
 assert_status() { [[ "$1" == "$2" ]] || { echo "expected HTTP $2, got $1: $(cat "$tmp_dir/response.json")" >&2; exit 1; }; }
 
 status=$(request "$base/housekeeping/dirty"); assert_status "$status" 200
-node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.map(x=>x.id).sort().join(',')!=='room-a,room-b,room-e,room-g') process.exit(1)"
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.map(x=>x.id).sort().join(',')!=='room-a,room-b,room-e,room-f,room-g') process.exit(1); const f=r.find(x=>x.id==='room-f'); if(f.operational_state.maintenanceImpact!=='BLOCKING') process.exit(1)"
 status=$(request "$base/housekeeping/board"); assert_status "$status" 200
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.rooms.length!==8||!r.rooms.some(x=>x.room_id==='room-d'&&x.room_status==='Maintenance')) process.exit(1)"
 
@@ -74,7 +82,7 @@ status=$(request -X POST -d '{"note":"Risk now requires blocking"}' "$base/house
 serialized_d1 HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT status FROM rooms WHERE id='room-c';" --json >"$tmp_dir/escalated.json"
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/escalated.json')); if(r[0].results[0].status!=='MAINTENANCE') process.exit(1)"
 status=$(request -X POST -d '{"resolution_note":"short"}' "$base/housekeeping/room-c/dirty"); assert_status "$status" 400
-status=$(request -X POST -d '{"resolution_note":"Leak repaired and verified"}' "$base/housekeeping/room-c/dirty"); assert_status "$status" 200
+status=$(request -X POST -d "{\"case_id\":\"$case_c\",\"resolution_note\":\"Leak repaired and verified\"}" "$base/housekeeping/room-c/dirty"); assert_status "$status" 200
 status=$(request -X POST -d '{"reason":"Occupied safety concern","impact":"BLOCKING","priority":"HIGH","assigned_to":"Technical shift"}' "$base/housekeeping/room-i/maintenance"); assert_status "$status" 201
 case_i=$(node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.impact!=='BLOCKING') process.exit(1); process.stdout.write(r.id)")
 serialized_d1 HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT status FROM rooms WHERE id='room-i'; SELECT impact FROM maintenance_cases WHERE id='$case_i';" --json >"$tmp_dir/occupied-blocking.json"
@@ -89,8 +97,8 @@ status=$(request -X POST -d '{"resolution_note":"Legacy maintenance reviewed and
 status=$(request -X POST -d '{"case_id":"case-h1","resolution_note":"Stale first case attempt"}' "$base/housekeeping/room-h/dirty"); assert_status "$status" 409
 serialized_d1 HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT status FROM rooms WHERE id='room-h'; SELECT id,status FROM maintenance_cases WHERE room_id='room-h' ORDER BY id; SELECT COUNT(*) AS events FROM housekeeping_events WHERE room_id='room-h' AND event_type='MAINTENANCE_RESOLVE';" --json >"$tmp_dir/aba.json"
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/aba.json')).flatMap(x=>x.results); if(r[0].status!=='MAINTENANCE'||r[1].id!=='case-h1'||r[1].status!=='RESOLVED'||r[2].id!=='case-h2'||r[2].status!=='OPEN'||r[3].events!==0) process.exit(1)"
-curl -sS -o "$tmp_dir/race-resolve-a.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"resolution_note":"Race resolver completed"}' "$base/housekeeping/room-f/dirty" >"$tmp_dir/race-resolve-a.status" & race_a=$!
-curl -sS -o "$tmp_dir/race-resolve-b.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"resolution_note":"Race resolver completed"}' "$base/housekeeping/room-f/dirty" >"$tmp_dir/race-resolve-b.status" & race_b=$!
+curl -sS -o "$tmp_dir/race-resolve-a.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"case_id":"case-f","resolution_note":"Race resolver completed"}' "$base/housekeeping/room-f/dirty" >"$tmp_dir/race-resolve-a.status" & race_a=$!
+curl -sS -o "$tmp_dir/race-resolve-b.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"case_id":"case-f","resolution_note":"Race resolver completed"}' "$base/housekeeping/room-f/dirty" >"$tmp_dir/race-resolve-b.status" & race_b=$!
 wait "$race_a" "$race_b"
 node -e "const s=[require('fs').readFileSync('$tmp_dir/race-resolve-a.status','utf8'),require('fs').readFileSync('$tmp_dir/race-resolve-b.status','utf8')].sort(); if(s.join(',')!=='200,409') process.exit(1)"
 serialized_d1 HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT status,return_status,reported_by_user_id,resolved_by_user_id FROM maintenance_cases WHERE room_id='room-d'; SELECT COUNT(*) AS events FROM housekeeping_events WHERE room_id IN ('room-a','room-c','room-d') AND actor_subject='subject-a' AND hotel_id='hotel-a' AND request_id IS NOT NULL;" --json >"$tmp_dir/assertions.json"
@@ -115,4 +123,5 @@ node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/tenant-denial-d
 serialized_d1 CONTROL_DB --local -c apps/api/wrangler.jsonc --command "UPDATE hotel_memberships SET role='housekeeping' WHERE access_subject='subject-a' AND hotel_id='hotel-a';" >/dev/null
 status=$(request -X POST "$base/housekeeping/missing-room/start"); assert_status "$status" 404
 
+stop_worker
 echo "CF-I05 Housekeeping + Maintenance D1/API regression PASS"
