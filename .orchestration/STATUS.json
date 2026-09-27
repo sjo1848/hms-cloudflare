@@ -2,30 +2,30 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "RECEPTION_CHECKIN_UI_BUILD",
-  "runtime_status": "RUNNING",
+  "phase": "RECEPTION_CHECKIN_UI_CONTROLLER_CHECKPOINT",
+  "runtime_status": "HUMAN_ACTION_REQUIRED",
   "resume_authorized": false,
   "active_task": "UX-UI-RECEPTION-CHECKIN-001",
-  "last_completed_task": "P0.1-RECEPTION-ARRIVAL-CHECKIN-ARTIFACT",
-  "last_completed_head": "eb761acd9e90e3e0777423bf92426ffe43dec9b3",
+  "last_completed_task": "UX-UI-RECEPTION-CHECKIN-001-ARTIFACT-A",
+  "last_completed_head": "a090b283c2303871af25375c66050117efafbeb2",
   "work_branch": "impl/ux-ui-reception-checkin",
-  "pr": null,
+  "pr": 50,
   "wave": "UX-UI-RECEPTION-CHECKIN-001 — Reception + Guided Check-in Interaction Reference",
-  "status_label": "AUTHORIZED TASK RUNNING; PROMOTION BLOCKED",
-  "next_action": "IMPLEMENT_AND_VALIDATE_RECEPTION_CHECKIN_SHEET_DRAWER",
-  "stop_reason": null,
+  "status_label": "IMPLEMENTATION_AND_VALIDATION_COMPLETE; AWAITING INDEPENDENT CRITIC AND CONTROLLER CHECKPOINT; PROMOTION BLOCKED",
+  "next_action": "INDEPENDENT_CRITIC_REVIEW_EXACT_ARTIFACT_A_AND_BOUNDARY_B_THEN_CONTROLLER_CHECKPOINT",
+  "stop_reason": "AWAITING_EXTERNAL_INDEPENDENT_CRITIC_AND_CONTROLLER_CHECKPOINT",
   "event": {
-    "seq": 130,
-    "id": "UX-UI-RECEPTION-CHECKIN-001-STARTED",
-    "type": "TASK_STARTED"
+    "seq": 131,
+    "id": "UX-UI-RECEPTION-CHECKIN-001-BOUNDARY-PUBLISHED",
+    "type": "ARTIFACT_REVIEW_BOUNDARY_PUBLISHED"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": null,
     "last_verdict": null,
-    "artifact_head": null,
-    "review_path": "Current task is explicitly authorized. P0.1 and Wave 1.2 Independent Critic reviews remain required before promotion; this task requires its own review at artifact publication.",
-    "prior_reviews_pending": ["P0.1 artifact A + boundary B", "Wave 1.2 artifact A + boundary B"]
+    "artifact_head": "a090b283c2303871af25375c66050117efafbeb2",
+    "review_path": "Independent Critic must review exact artifact A a090b283c2303871af25375c66050117efafbeb2 plus this orchestration-only boundary B. Then return to the Reception + Check-in UI Controller checkpoint. No next workflow is authorized by this task.",
+    "prior_reviews_pending": ["P0.1 artifact A + boundary B", "Wave 1.2 artifact A + boundary B", "UX-UI-RECEPTION-CHECKIN-001 artifact A + boundary B"]
   },
   "human_gate": {
     "required": false,
@@ -55,7 +55,7 @@
   "validated": {
     "d11_executing_d1": "4/4 PASS",
     "foundation_ci": "PASS",
-    "unit_integration": "88/88 PASS",
+    "unit_integration": "23 files / 91 tests PASS",
     "types": "PASS",
     "web_build": "PASS",
     "cloudflare_budgets": "PASS",
@@ -96,6 +96,12 @@
     "p0_1_deferred_scope": "P01-DEFER-01: broader V11 Billing-selector coupling outside approved P0.1 slice",
     "ux_ui_checkin_reference_source": "Read connected Drive docs UX-UI-RECEPTION-CHECKIN-001 and parent UX-UI-INTERACTION-SYSTEM-001; current Human task request explicitly authorizes implementation",
     "ux_ui_checkin_multi_agent_available": true,
+    "ux_ui_checkin_artifact_a": "a090b283c2303871af25375c66050117efafbeb2",
+    "ux_ui_checkin_pr": "#50 OPEN DRAFT targeting review/ux-operational-current",
+    "ux_ui_checkin_integrated_browser": "PASS: real local Wrangler Worker + migrated D1 + Vite at mobile 375px and desktop 1280px; real 409 then authoritative refresh/retry 200; BLOCKING/NON_BLOCKING, persisted assertions, context/next-case and accessibility checks",
+    "ux_ui_checkin_precritic": "PASS: mandatory internal gate and invariant evidence complete; Independent Critic pending; no self-approved substantive PASS",
+    "ux_ui_checkin_component_adaptation": "native dialog/menu source-local Sheet/Drawer wrappers; external dialog runtime removed after raw JS budget exceeded; documented for Independent Critic review",
+    "ux_ui_checkin_external_review": "REQUIRED: exact artifact A plus orchestration boundary B",
     "local_acceptance_runtime_discovery": "UNPROVEN: fixture mismatch on --reuse; --reset migration rehearsal stopped at invalid maintenance resolve transition; no production inference"
   },
   "method": {

@@ -9,11 +9,26 @@ Definition artifact A: `23b7da3c9836edfaefa2bcf4943ee27f479b2f2a`
 Base snapshot: `6ffd6f9aa8e6836d60cbeba5383494605e5611cc` on `review/ux-operational-current`
 Active task: `UX-UI-RECEPTION-CHECKIN-001`
 Task Contract: `.orchestration/contracts/UX-UI-RECEPTION-CHECKIN-001.md`
-Phase: `Reception + Guided Check-in UI BUILD`
-Status: `RUNNING — explicitly authorized by the current Human task request`
-Runtime: `RUNNING`, `resume_authorized=false`; prior P0.1 and Wave 1.2 independent reviews remain required before promotion.
+Phase: `Reception + Guided Check-in UI Controller Checkpoint`
+Status: `ARTIFACT A PUBLISHED — AWAITING EXTERNAL INDEPENDENT REVIEW / CONTROLLER CHECKPOINT`
+Runtime: `HUMAN_ACTION_REQUIRED`, `resume_authorized=false`; this artifact and prior P0.1/Wave 1.2 reviews remain required before promotion.
 
-This task is limited to the Reception + Guided Check-in interaction reference implementation. The named UI Contract & Wireframes v1 and parent UI Interaction System v1 were found in connected Drive and read in full; IDs and the current Human implementation authorization are recorded in the Task Contract. The task-specific Independent Critic boundary will be published after implementation and evidence. No other workflow is authorized.
+This task is limited to the Reception + Guided Check-in interaction reference implementation. The named UI Contract & Wireframes v1 and parent UI Interaction System v1 were found in connected Drive and read in full; IDs and the Human implementation authorization are recorded in the Task Contract. No other workflow is authorized.
+
+## UX-UI-RECEPTION-CHECKIN-001 — CONTROLLER CHECKPOINT
+
+- Artifact A: `a090b283c2303871af25375c66050117efafbeb2` on `impl/ux-ui-reception-checkin`.
+- Publication boundary B: this orchestration-only commit records exact artifact A, sets external review required and does not alter product behavior.
+- Draft PR: `#50`, targeting `review/ux-operational-current`.
+- Evidence: `.orchestration/evidence/UX-UI-RECEPTION-CHECKIN-001.md` and `-INVARIANTS.md`; final screenshots are under `output/playwright/ux-ui-checkin-*.png`.
+- `npm run check`: PASS, 23 files / 91 tests. `types:check`, build, architecture/i18n/budgets, D1 query plans and API/Web Wrangler dry-runs: PASS.
+- Directed mock browser: PASS at 375px and 1280px. Integrated local Wrangler Worker + migrated D1 + Vite browser: PASS at mobile 375px and desktop 1280px, including real stale-maintenance 409, authoritative refresh/retry, BLOCKING/NON_BLOCKING, success/next case and persisted event/invoice assertions. Process cleanup verified before final D1 PASS.
+- Separate Luna Medium UX/adversarial and QA/evidence reviews completed. Findings were repaired and rerun; remaining P3 note is that the local acceptance identity control still occupies some mobile vertical space. It is development-only and absent from production.
+- The Sheet/Drawer/Dropdown wrappers are source-local accessible components over native `<dialog>`/menu semantics, not generated shadcn package components. This explicit zero-dependency adaptation avoids exceeding the 300 KB raw JS budget; details are documented for Independent Critic review.
+- Multi-agent capability: `true`; separate UX/adversarial and QA reviewers were used. The local writer/orchestrator performed implementation.
+- DEVELOPMENT: validation and mandatory Pre-Critic are complete; stop at this Controller checkpoint without self-declaring Independent Critic PASS.
+- PROMOTION: `BLOCKED` by the existing shared Reports/Users/workerd browser finding and inherited `P01-EXT-01`; neither was modified or represented as green.
+- No merge, `main`, `acceptance/staging`, deploy or production action occurred.
 
 ## P0.1 CURRENT EVIDENCE AND PRE-CRITIC
 
@@ -99,9 +114,9 @@ were unavailable. The local acceptance-runtime attempt did not reach the
 browser (`invalid maintenance resolve transition` during migration rehearsal);
 this is an inspection limitation, not a production finding.
 
-## NEXT AUTHORIZED ACTION
+## NEXT ACTION
 
-Complete UX-UI-RECEPTION-CHECKIN-001: implement shadcn Sheet/Drawer responsive check-in surfaces; run directed and integrated Worker/D1 desktop/mobile validation; obtain separate UX/adversarial and QA review; execute Pre-Critic/invariant evidence; then publish artifact A and orchestration boundary B. Stop at the Reception + Check-in UI Controller Checkpoint. Prior P0.1/Wave 1.2 reviews, global browser findings and promotion restrictions remain recorded and unresolved.
+External Independent Critic reviews artifact A `a090b283c2303871af25375c66050117efafbeb2` plus this orchestration boundary, including the documented native-dialog component adaptation. Then return to the Reception + Check-in UI Controller checkpoint. No next workflow is authorized by this task. Prior P0.1/Wave 1.2 reviews, global browser findings and promotion restrictions remain recorded and unresolved.
 
 ## MODEL ROUTING
 
