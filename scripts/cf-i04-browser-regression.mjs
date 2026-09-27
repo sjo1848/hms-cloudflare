@@ -46,7 +46,7 @@ async page => {
   async function openCase() { await page.getByRole("button", { name: /^All / }).click(); await page.getByRole("button", { name: /Guest A/ }).click(); }
   async function completeCheckIn(width, expectConflict) {
     await openCase();
-    const dialog = page.getByRole("dialog", { name: "Check in booking" });
+    const dialog = page.getByRole("dialog", { name: "Next action: check-in verification" });
     await dialog.waitFor();
     await dialog.getByLabel("Final guest count").fill("2");
     await dialog.getByLabel("Document verified").check();

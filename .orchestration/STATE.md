@@ -4,24 +4,70 @@
 
 Project: HMS Cloudflare  
 Working directory: `/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare`
-Active branch: `impl/p0.1-reception-arrival-checkin`
+Active branch: `impl/ux-ui-reception-checkin`
 Definition artifact A: `23b7da3c9836edfaefa2bcf4943ee27f479b2f2a`
-Base implementation boundary: `a61d688534e0802a27cc7e5badb71dafacad19b9`
-P0.1 immutable artifact A: `eb761acd9e90e3e0777423bf92426ffe43dec9b3`
-Current task PR: `#49` Draft, targeting `definition/operational-ux-workflow-roadmap`
-Active task: `P0.1-RECEPTION-ARRIVAL-CHECKIN`
-Phase: `P0.1 — CONTROLLER CHECKPOINT / EXTERNAL REVIEW`
-Status: `PRE-CRITIC TECHNICAL GATE PASS WITH INHERITED REASSIGNMENT FINDING; PROMOTION BLOCKED`
-Runtime: `READY_TO_RESUME`, `resume_authorized=false`, `external_review.required=true`
+Base snapshot: `6ffd6f9aa8e6836d60cbeba5383494605e5611cc` on `review/ux-operational-current`
+Active task: `UX-UI-RECEPTION-CHECKIN-001`
+Task Contract: `.orchestration/contracts/UX-UI-RECEPTION-CHECKIN-001.md`
+Phase: `Reception + Guided Check-in post-artifact independent review`
+Status: `INDEPENDENT CRITIC PASS_WITH_CONDITIONS; DOCUMENTATION CONDITION ADDRESSED; AWAITING CONTROLLER CHECKPOINT`
+Runtime: `HUMAN_ACTION_REQUIRED`, `resume_authorized=false`; exact A+B have been independently reviewed. No other workflow is authorized.
 
-P0.1 artifact A and this orchestration-only publication boundary are on the isolated implementation branch. The next action is External Independent Critic on A plus this boundary, followed by Controller disposition. This is not a Codex Independent Critic PASS, Product Acceptance or promotion authorization. No P0.2 implementation is authorized.
+This task is limited to the Reception + Guided Check-in interaction reference implementation. The named UI Contract & Wireframes v1 and parent UI Interaction System v1 were found in connected Drive and read in full; IDs and the Human implementation authorization are recorded in the Task Contract. No other workflow is authorized.
+
+Controller finding: Human rejected right-side Sheet for Check-in desktop and requested a centered task surface. Rework is limited to Desktop Dialog / Mobile full-screen Drawer while preserving P0.1 behavior and the existing UI logic. Task Contract records the correction; backend, other workflows, promotion and deployment remain out of scope.
+
+## UX-UI-RECEPTION-CHECKIN-001 — SUPERSEDED PRE-REWORK ARTIFACT
+
+- Prior artifact A: `a090b283c2303871af25375c66050117efafbeb2` on this branch; its right-side desktop Sheet was rejected by the Human and is superseded for acceptance by the current rework. Do not treat its review boundary as satisfying this rework.
+- Draft PR `#50` remains open against `review/ux-operational-current`.
+
+## UX-UI-RECEPTION-CHECKIN-001 — SUPERSEDED REWORK ARTIFACT
+
+- Human feedback: `Human rejected right-side Sheet for Check-in desktop and requested a centered task surface.`
+- Artifact A: `f73c64102ab411fbd3883d006cd22aec5f8dfc1b` on `impl/ux-ui-reception-checkin`.
+- Boundary B: `e29804774ad2f0f25f0c8c81eab58c56e6529613` recorded this A; it contains no product behavior changes. The Independent Critic verdict on this pair was `PASS_WITH_CONDITIONS`, now superseded by the repaired artifact below.
+- Draft PR `#50` remains open against `review/ux-operational-current`.
+- Current interaction contract: centered desktop Dialog with dimmed Reception backdrop; mobile remains full-screen Drawer. No other workflow or backend change is authorized.
+- `npm run check`: PASS, 23 files / 91 tests. `types:check`: PASS. Current web build: 296,282 raw JS / 86,084 gzip and 39,586 raw CSS / 7,817 gzip. Cloudflare raw JS budget PASS at 296,282 / 300,000; CSS budget PASS.
+- Architecture fitness, i18n, D1 query plans and API/Web Wrangler dry-runs: PASS.
+- Original integrated browser validation: `output/playwright/ux-ui-checkin-integrated.log`, fixture `.hms-local/p0-1-8CFfxo`; retained as historical artifact evidence.
+- Persisted state: `z-priority` and `a-next` are `CHECKED_IN`; exactly one CHECK_IN event each; `m-blocked` remains confirmed in MAINTENANCE; invoices unchanged and zero payment rows.
+- QA/UX reviewer (separate read-only Luna Medium subagent) found missing keyboard evidence and stale Sheet/budget claims. Assertions and evidence were repaired; latest integrated log verifies assertions executed and the reviewer confirmed keyboard/invariant findings resolved. Exact build measurement is now recorded consistently for this artifact; prior `291301` measurement belongs to P0.1 historical evidence below.
+- Component policy: source-local native Dialog/Drawer/Sheet wrappers share one `<dialog>` lifecycle; not generated shadcn components. External runtime was removed to preserve the binding 300 KB raw JS budget. The adaptation was disclosed to the prior reviewer and remains part of the current review scope.
+- Multi-agent capability: `true`; separate Luna Medium Engineering and QA/UX reviewer used. The fresh, non-participating Independent Critic reviewed this superseded pair and returned `PASS_WITH_CONDITIONS`; the condition is documented and repaired in the current artifact.
+- Mandatory Pre-Critic and invariant evidence were complete for this artifact; separate QA/UX follow-up confirmed its keyboard, stale-evidence, and budget findings resolved. Fresh Independent Critic verdict was `PASS_WITH_CONDITIONS` as recorded below.
+- Development gate is at the post-artifact review boundary. Promotion remains `BLOCKED` by the shared Reports/Users/workerd finding and inherited `P01-EXT-01`; neither is in this scope.
+- No merge, `main`, `acceptance/staging`, deploy or production action occurred.
+
+## UX-UI-RECEPTION-CHECKIN-001 — REPAIRED ARTIFACT A
+
+- Rework artifact A: `1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9` on `impl/ux-ui-reception-checkin`.
+- Replaced the misleading queue intersection test with a two-dimensional visibility assertion on the Reception heading, and narrowed evidence claims: queue state is retained/restored, not claimed to remain unobscured through the modal. No product layout/backend behavior changed.
+- The first test expression treated horizontal alignment as overlap despite the heading sitting above the Dialog; this assertion defect was corrected and the full rerun then passed.
+- Latest integrated run: `output/playwright/ux-ui-checkin-integrated.log`, exit 0, fixture `.hms-local/p0-1-QBRoTK`; real local Wrangler Worker + migrated D1 + Vite, mobile 375px and desktop 1280px; integrated plus mock directed flows PASS. D1 assertions confirm two successful CHECK_IN events (one per booking), no event for BLOCKING case, unchanged invoices, and zero payment rows.
+- Re-run gates: `npm run check` 23 files / 91 tests PASS; `types:check`, web build, architecture fitness, Cloudflare budgets, D1 plans and API/Web Wrangler dry-runs PASS. Current measured JS raw/gzip 296,282/86,084 bytes; CSS raw/gzip 39,586/7,817 bytes.
+- Mandatory Pre-Critic and invariant evidence updated for the critic condition and rerun; this is internal readiness only, not an acceptance verdict.
+- New orchestration boundary B records this exact A and requires a fresh Independent Critic. Prior `PASS_WITH_CONDITIONS` does not transfer; no new verdict is claimed.
+
+### Independent Critic result on the repaired A+B
+
+- Reviewer: Confucius, fresh read-only subagent; GPT-6 Luna, medium reasoning. The reviewer did not implement or participate in Pre-Critic or the prior review.
+- Exact reviewed pair: A `1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9`; B `50e23a75133fe2b99bd94bcf5ac38b49039dcdf4`. Reviewer verified remote branch and PR #50 head resolve to B and B's parent is A.
+- Verdict: `PASS_WITH_CONDITIONS`. The prior queue-visibility condition is resolved. The sole current condition was stale wording in PR #50 claiming desktop uses a right-side Sheet. The Draft PR description was corrected through the GitHub API to centered, bounded Dialog / full-screen mobile Drawer and re-verified; no artifact A/B blobs changed.
+- Critic found the remaining contract, responsive surfaces, keyboard/focus, BLOCKING/NON_BLOCKING, real Worker/D1 409 recovery, success/next case, scope, native-wrapper disclosure, budget and evidence claims supported.
+- This remains the Independent Critic's `PASS_WITH_CONDITIONS` verdict; correcting its documentation condition does not convert it to `PASS`. Controller checkpoint is the next and only boundary. Development gate is `PASS_WITH_CONDITIONS (conditions addressed; Controller checkpoint pending)`; promotion remains blocked.
+
+## REWORK REVIEW BOUNDARY
+
+The Independent Critic reviewed exact artifact A `1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9` with boundary B `50e23a75133fe2b99bd94bcf5ac38b49039dcdf4`. Its `PASS_WITH_CONDITIONS` verdict and the corrected Draft PR description are recorded above. Stop at the post-critic Controller checkpoint; no subsequent workflow is authorized.
 
 ## P0.1 CURRENT EVIDENCE AND PRE-CRITIC
 
 - Task Contract: `.orchestration/contracts/P0.1-RECEPTION-ARRIVAL-CHECKIN.md`.
 - Evidence: `.orchestration/evidence/P0.1-RECEPTION-ARRIVAL-CHECKIN.md` and its `-INVARIANTS.md` companion.
 - `npm run check`: `23 files / 91 tests PASS`, including D11 executing D1 `4/4`, front-desk board `2/2`, and concurrent check-in exact-winner `1/1`.
-- `npm run types:check`, web build, architecture fitness, i18n, budgets, D1 critical query plans, Wrangler dry-runs and staging SPA config dry-run: PASS. Final JS raw `291301` bytes against `300000` ceiling.
+- Historical P0.1 evidence (not the current Dialog rework build): `npm run types:check`, web build, architecture fitness, i18n, budgets, D1 critical query plans, Wrangler dry-runs and staging SPA config dry-run: PASS. P0.1 JS raw was `291301` bytes against `300000` ceiling.
 - Directed mock browser at 375/1280: PASS, including dirty Back/Forward, 409/failed refresh, double-submit, no-next focus and URL selection. CF-I04 mock browser at 375/390/430/768/1024: PASS.
 - Real local Wrangler Worker + migrated D1 + Vite browser at mobile 375 and desktop 1280: PASS. Actual BLOCKING race returns 409, repairs/refresh then succeeds; NON_BLOCKING advisory succeeds; blocked booking stays unchanged; persisted D1 has exactly one CHECK_IN event per winner and intact invoices/payments. Final isolated fixture `.hms-local/p0-1-aCKaJg`; screenshots under `output/playwright/p0-1-integrated-*`.
 - Multi-agent runtime capability: `true`. Separate UX/contract, backend engineering, UX adversarial, DB/Data and final read-only UX review were used; final reviewer findings on URL and no-next focus were repaired and retested. Luna Medium reviewers/engineering; no Sol escalation. Pre-Critic is internal only.
@@ -100,9 +146,9 @@ were unavailable. The local acceptance-runtime attempt did not reach the
 browser (`invalid maintenance resolve transition` during migration rehearsal);
 this is an inspection limitation, not a production finding.
 
-## NEXT AUTHORIZED ACTION
+## NEXT ACTION
 
-External Independent Critic reviews immutable P0.1 artifact A plus this orchestration boundary and exact executable evidence. Controller disposition follows. No Codex auto-resume while review is required; Wave 1.2 Independent Critic remains separately open. No P0.2, merge or promotion.
+External Independent Critic reviews artifact A `a090b283c2303871af25375c66050117efafbeb2` plus this orchestration boundary, including the documented native-dialog component adaptation. Then return to the Reception + Check-in UI Controller checkpoint. No next workflow is authorized by this task. Prior P0.1/Wave 1.2 reviews, global browser findings and promotion restrictions remain recorded and unresolved.
 
 ## MODEL ROUTING
 

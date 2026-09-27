@@ -1,4 +1,4 @@
-async page => {
+page => (async () => {
   await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
   let roomA = "Available";
   let statusA = "Confirmed";
@@ -49,13 +49,13 @@ async page => {
   for (const width of [375, 1280]) {
     statusA = "Confirmed"; roomA = "Available"; checkInAttempts = 0; posts.length = 0; simulateRefreshFailure = width === 375;
     await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
-    await page.goto("http://127.0.0.1:4173/bookings");
+    await page.goto("http://127.0.0.1:4174/bookings");
     await page.getByRole("button", { name: /^Arrivals / }).click();
     await page.getByLabel("Search this shift").fill("Guest");
     const rows = page.locator(".reception-queue-row");
     if ((await rows.first().getAttribute("data-booking-id")) !== "z-priority") throw new Error("Queue did not follow canonical priority");
     await rows.first().click();
-    const dialog = page.getByRole("dialog", { name: "Check in booking" });
+    const dialog = page.getByRole("dialog", { name: "Next action: check-in verification" });
     await dialog.waitFor();
     await page.waitForFunction(() => document.activeElement?.classList.contains("checkin-step-heading"));
     await dialog.getByLabel("Final guest count").fill("2");
@@ -95,6 +95,7 @@ async page => {
     await dialog.getByLabel("Final guest count").fill("2");
     await page.goBack();
     await dialog.getByText("Discard verification?").waitFor();
+    if (!(await dialog.getByRole("button", { name: "Continue check-in" }).evaluate(button => button === document.activeElement))) throw new Error("Discard confirmation did not receive focus");
     await dialog.getByRole("button", { name: "Continue check-in" }).click();
     await dialog.getByText("Guest Later").waitFor();
     await dialog.getByRole("button", { name: "Close check-in task" }).click();
@@ -112,6 +113,7 @@ async page => {
     if (await dialog.getByRole("button", { name: "Next step" }).isEnabled()) throw new Error("BLOCKING arrival could proceed");
     await page.keyboard.press("Escape");
     await dialog.getByText("Discard verification?").waitFor();
+    if (!(await dialog.getByRole("button", { name: "Continue check-in" }).evaluate(button => button === document.activeElement))) throw new Error("Escape discard confirmation did not receive focus");
     await dialog.getByRole("button", { name: "Discard and close" }).click();
     await dialog.waitFor({ state: "hidden" });
     if (width === 375) await page.screenshot({ path: "output/playwright/p0-1-arrival-mobile.png", fullPage: true });
@@ -119,15 +121,16 @@ async page => {
   }
   await page.getByRole("button", { name: /^All / }).click();
   await page.locator('[data-booking-id="z-priority"]').click();
-  if (new URL(page.url()).searchParams.get("booking_id") !== "z-priority" || new URL(page.url()).searchParams.has("task")) throw new Error("Non-arrival selection left a stale task URL");
+  const selectedUrl = await page.evaluate(() => { const url = new URL(location.href); return { booking: url.searchParams.get("booking_id"), task: url.searchParams.has("task") }; });
+  if (selectedUrl.booking !== "z-priority" || selectedUrl.task) throw new Error("Non-arrival selection left a stale task URL");
 
   statusA = "Confirmed"; roomA = "Available"; checkInAttempts = 1;
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.goto("http://127.0.0.1:4173/bookings");
+  await page.goto("http://127.0.0.1:4174/bookings");
   await page.getByRole("button", { name: /^Arrivals / }).click();
   await page.getByLabel("Search this shift").fill("Guest Priority");
   await page.locator('[data-booking-id="z-priority"]').click();
-  const lastTask = page.getByRole("dialog", { name: "Check in booking" });
+  const lastTask = page.getByRole("dialog", { name: "Next action: check-in verification" });
   await lastTask.getByLabel("Final guest count").fill("2");
   await lastTask.getByLabel("Document verified").check();
   await lastTask.getByRole("button", { name: "Next step" }).click();
@@ -139,6 +142,7 @@ async page => {
   await lastTask.waitFor({ state: "hidden" });
   await page.getByRole("status").getByText("Check-in confirmed. The queue is up to date.").waitFor();
   await page.waitForFunction(() => document.activeElement?.closest(".reception-queue-tools") !== null);
-  if (new URL(page.url()).searchParams.has("booking_id") || new URL(page.url()).searchParams.has("task")) throw new Error("No-next success left stale booking/task URL");
+  const noNextUrl = await page.evaluate(() => { const url = new URL(location.href); return { booking: url.searchParams.has("booking_id"), task: url.searchParams.has("task") }; });
+  if (noNextUrl.booking || noNextUrl.task) throw new Error("No-next success left stale booking/task URL");
   console.log("P0.1 MOCK browser PASS: mobile/desktop, priority, readiness/BLOCKING, 409 recovery, authoritative refresh and next case");
-}
+})()

@@ -7,6 +7,22 @@ mkdir -p .hms-local output/playwright
 p01_persist=$(mktemp -d .hms-local/p0-1-XXXXXX)
 api_pid=""
 web_pid=""
+browser_session="ux-checkin-$$"
+browser_owned_pids=""
+
+wait_for_owned_browser_exit() {
+  for _ in {1..50}; do
+    local alive=false
+    for owned_pid in $browser_owned_pids; do
+      local process_state
+      process_state=$(ps -p "$owned_pid" -o stat= 2>/dev/null || true)
+      if [[ -n "$process_state" && "$process_state" != Z* ]]; then alive=true; break; fi
+    done
+    if [[ "$alive" == false ]]; then return 0; fi
+    sleep 0.1
+  done
+  return 1
+}
 
 stop_servers() {
   if [[ -n "$web_pid" ]]; then
@@ -17,21 +33,26 @@ stop_servers() {
     kill -TERM -- "-$api_pid" 2>/dev/null || true
     wait "$api_pid" 2>/dev/null || true
   fi
+  bash "$pwcli" -s "$browser_session" close >/dev/null 2>&1 || true
   # Child workers may exit just after their process-group leader is reaped.
   # This is a bounded process-exit observation, not a browser/test retry.
   for _ in {1..50}; do
     if { [[ -z "$api_pid" ]] || ! kill -0 -- "-$api_pid" 2>/dev/null; } \
       && { [[ -z "$web_pid" ]] || ! kill -0 -- "-$web_pid" 2>/dev/null; }; then
-      return
+      break
     fi
     sleep 0.1
   done
+  wait_for_owned_browser_exit
 }
 
 on_exit() {
   local status=$?
   trap - EXIT
-  stop_servers
+  if ! stop_servers; then
+    printf 'P0.1 owned browser/helper process remains after cleanup\n' >&2
+    status=1
+  fi
   if [[ -n "$api_pid" ]] && kill -0 -- "-$api_pid" 2>/dev/null; then
     printf 'P0.1 owned API process group remains after cleanup\n' >&2
     status=1
@@ -47,6 +68,8 @@ on_exit() {
 }
 trap on_exit EXIT
 
+pwcli="${CODEX_HOME:-$HOME/.codex}/skills/playwright/scripts/playwright_cli.sh"
+
 node scripts/p0-1-seed-local.mjs "$p01_persist"
 setsid ./node_modules/.bin/wrangler dev --local --ip 127.0.0.1 --port 8787 --persist-to "$p01_persist/combined" --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >"$p01_persist/api.log" 2>&1 &
 api_pid=$!
@@ -58,7 +81,11 @@ for _ in {1..40}; do
 done
 curl -fsS http://127.0.0.1:8787/health >/dev/null
 curl -fsS http://127.0.0.1:4174/bookings >/dev/null
-node --input-type=module -e 'import {readFileSync} from "node:fs"; import {chromium} from "playwright"; const runner=eval(readFileSync("scripts/p0-1-arrival-integrated.playwright.js","utf8")); const browser=await chromium.launch({headless:true}); try { const page=await browser.newPage(); await runner(page); await page.close(); } finally { await browser.close(); }'
+bash "$pwcli" -s "$browser_session" open about:blank >/dev/null
+browser_owned_pids=$(ps -eo pid,args | awk -v session="$browser_session" '(/\/opt\/google\/chrome\/chrome/ && /--user-data-dir=\/tmp\/playwright_chromiumdev_profile-/ || (/cliDaemon\.js/ && index($0,session))) && $0 !~ /awk/ {print $1}' | sort -u | tr '\n' ' ')
+bash "$pwcli" -s "$browser_session" run-code --filename scripts/p0-1-arrival-integrated.playwright.js
+bash "$pwcli" -s "$browser_session" run-code --filename scripts/p0-1-arrival-browser.playwright.js
+bash "$pwcli" -s "$browser_session" close >/dev/null
 stop_servers
 if kill -0 -- "-$api_pid" 2>/dev/null || kill -0 -- "-$web_pid" 2>/dev/null; then
   printf 'P0.1 owned browser servers remained after cleanup\n' >&2
