@@ -6,25 +6,25 @@
   "runtime_status": "HUMAN_ACTION_REQUIRED",
   "resume_authorized": false,
   "active_task": "UX-UI-RECEPTION-CHECKIN-001",
-  "last_completed_task": "UX-UI-RECEPTION-CHECKIN-001-CRITIC-CONDITION-REPAIR-ARTIFACT-A",
-  "last_completed_head": "1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9",
+  "last_completed_task": "UX-UI-RECEPTION-CHECKIN-001-INDEPENDENT-CRITIC-REVIEW",
+  "last_completed_head": "50e23a75133fe2b99bd94bcf5ac38b49039dcdf4",
   "work_branch": "impl/ux-ui-reception-checkin",
   "pr": 50,
   "wave": "UX-UI-RECEPTION-CHECKIN-001 — Reception + Guided Check-in Interaction Reference",
-  "status_label": "CRITIC CONDITION REPAIRED; NEW ARTIFACT A PUBLISHED; FRESH INDEPENDENT CRITIC REQUIRED; PROMOTION BLOCKED",
-  "next_action": "FRESH_INDEPENDENT_CRITIC_REVIEW_EXACT_ARTIFACT_A_AND_BOUNDARY_B_THEN_CONTROLLER_CHECKPOINT",
-  "stop_reason": "AWAITING_FRESH_INDEPENDENT_CRITIC_AND_CONTROLLER_CHECKPOINT",
+  "status_label": "INDEPENDENT CRITIC PASS_WITH_CONDITIONS; DOCUMENTATION CONDITION ADDRESSED; AWAITING CONTROLLER CHECKPOINT; PROMOTION BLOCKED",
+  "next_action": "CONTROLLER_REVIEW_POST_INDEPENDENT_CRITIC_CHECKPOINT; NO_FURTHER_WORKFLOW_AUTHORIZED",
+  "stop_reason": "POST_INDEPENDENT_CRITIC_CONTROLLER_CHECKPOINT",
   "event": {
-    "seq": 134,
-    "id": "UX-UI-RECEPTION-CHECKIN-001-CRITIC-CONDITION-REPAIR-BOUNDARY-PUBLISHED",
-    "type": "ARTIFACT_REVIEW_BOUNDARY_PUBLISHED"
+    "seq": 135,
+    "id": "UX-UI-RECEPTION-CHECKIN-001-INDEPENDENT-CRITIC-CONDITION-RECORDED",
+    "type": "INDEPENDENT_CRITIC_REVIEW_COMPLETED_WITH_CONDITIONS"
   },
   "external_review": {
     "required": true,
-    "last_audited_head": "e29804774ad2f0f25f0c8c81eab58c56e6529613",
+    "last_audited_head": "50e23a75133fe2b99bd94bcf5ac38b49039dcdf4",
     "last_verdict": "PASS_WITH_CONDITIONS",
     "artifact_head": "1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9",
-    "review_path": "Fresh Independent Critic must review exact artifact A 1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9 plus this orchestration-only boundary B, then return the post-critic Controller checkpoint. Prior PASS_WITH_CONDITIONS was repaired; verdict does not transfer. Reviewer must not have participated in implementation or Pre-Critic.",
+    "review_path": "Confucius, fresh read-only reviewer (GPT-6 Luna, medium), reviewed exact artifact A 1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9 plus boundary B 50e23a75133fe2b99bd94bcf5ac38b49039dcdf4. PASS_WITH_CONDITIONS: PR description stale right-Sheet wording was the sole condition; corrected and verified. Stop at Controller checkpoint.",
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
@@ -110,7 +110,8 @@
     "ux_ui_checkin_artifact_a": "1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9",
     "ux_ui_checkin_previous_critic": "PASS_WITH_CONDITIONS on artifact A f73c64102ab411fbd3883d006cd22aec5f8dfc1b + boundary B e29804774ad2f0f25f0c8c81eab58c56e6529613; queue visibility assertion overstated evidence, condition repaired and fully rerun",
     "ux_ui_checkin_previous_critic_reviewer": "Boyle; fresh read-only reviewer; GPT-6 Luna, medium; did not implement or participate in Pre-Critic",
-    "ux_ui_checkin_independent_critic": "PENDING: fresh separate reviewer of current exact A+B; allowed verdicts PASS, PASS_WITH_CONDITIONS, REWORK",
+    "ux_ui_checkin_independent_critic": "PASS_WITH_CONDITIONS: Confucius, fresh independent/read-only, GPT-6 Luna medium; reviewed exact current A 1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9 + B 50e23a75133fe2b99bd94bcf5ac38b49039dcdf4. Sole condition: stale right-Sheet PR text; corrected by GitHub API and verified, no A/B content changed",
+    "ux_ui_checkin_controller_checkpoint": "READY: post Independent Critic checkpoint; no next workflow authorized",
     "ux_ui_checkin_dialog_background_visibility": "PASS: integrated browser asserts Reception heading is visible outside Dialog bounds; queue state retention/restore is separately asserted, without claiming the covered queue panel is visually unobscured",
     "ux_ui_checkin_latest_integrated_fixture": ".hms-local/p0-1-QBRoTK",
     "local_acceptance_runtime_discovery": "UNPROVEN: fixture mismatch on --reuse; --reset migration rehearsal stopped at invalid maintenance resolve transition; no production inference"

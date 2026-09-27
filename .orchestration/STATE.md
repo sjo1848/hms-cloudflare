@@ -10,8 +10,8 @@ Base snapshot: `6ffd6f9aa8e6836d60cbeba5383494605e5611cc` on `review/ux-operatio
 Active task: `UX-UI-RECEPTION-CHECKIN-001`
 Task Contract: `.orchestration/contracts/UX-UI-RECEPTION-CHECKIN-001.md`
 Phase: `Reception + Guided Check-in post-artifact independent review`
-Status: `CRITIC CONDITION REPAIRED; NEW ARTIFACT A PUBLISHED — AWAITING FRESH INDEPENDENT CRITIC`
-Runtime: `HUMAN_ACTION_REQUIRED`, `resume_authorized=false`; exact A+B are frozen for review. No other workflow is authorized.
+Status: `INDEPENDENT CRITIC PASS_WITH_CONDITIONS; DOCUMENTATION CONDITION ADDRESSED; AWAITING CONTROLLER CHECKPOINT`
+Runtime: `HUMAN_ACTION_REQUIRED`, `resume_authorized=false`; exact A+B have been independently reviewed. No other workflow is authorized.
 
 This task is limited to the Reception + Guided Check-in interaction reference implementation. The named UI Contract & Wireframes v1 and parent UI Interaction System v1 were found in connected Drive and read in full; IDs and the Human implementation authorization are recorded in the Task Contract. No other workflow is authorized.
 
@@ -50,9 +50,17 @@ Controller finding: Human rejected right-side Sheet for Check-in desktop and req
 - Mandatory Pre-Critic and invariant evidence updated for the critic condition and rerun; this is internal readiness only, not an acceptance verdict.
 - New orchestration boundary B records this exact A and requires a fresh Independent Critic. Prior `PASS_WITH_CONDITIONS` does not transfer; no new verdict is claimed.
 
+### Independent Critic result on the repaired A+B
+
+- Reviewer: Confucius, fresh read-only subagent; GPT-6 Luna, medium reasoning. The reviewer did not implement or participate in Pre-Critic or the prior review.
+- Exact reviewed pair: A `1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9`; B `50e23a75133fe2b99bd94bcf5ac38b49039dcdf4`. Reviewer verified remote branch and PR #50 head resolve to B and B's parent is A.
+- Verdict: `PASS_WITH_CONDITIONS`. The prior queue-visibility condition is resolved. The sole current condition was stale wording in PR #50 claiming desktop uses a right-side Sheet. The Draft PR description was corrected through the GitHub API to centered, bounded Dialog / full-screen mobile Drawer and re-verified; no artifact A/B blobs changed.
+- Critic found the remaining contract, responsive surfaces, keyboard/focus, BLOCKING/NON_BLOCKING, real Worker/D1 409 recovery, success/next case, scope, native-wrapper disclosure, budget and evidence claims supported.
+- This remains the Independent Critic's `PASS_WITH_CONDITIONS` verdict; correcting its documentation condition does not convert it to `PASS`. Controller checkpoint is the next and only boundary. Development gate is `PASS_WITH_CONDITIONS (conditions addressed; Controller checkpoint pending)`; promotion remains blocked.
+
 ## REWORK REVIEW BOUNDARY
 
-Fresh Independent Critic must review exact artifact A `1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9` together with the new orchestration-only Boundary B, using the Task Contract, invariant evidence, integrated run log and screenshots. Reviewer must not have participated in implementation or Pre-Critic. Record one allowed verdict (`PASS`, `PASS_WITH_CONDITIONS`, or `REWORK`) in canonical orchestration and then stop at the post-critic Controller checkpoint. No subsequent workflow is authorized.
+The Independent Critic reviewed exact artifact A `1dee1ce1cdb50f0c4f2dd72693e63b604b69bcb9` with boundary B `50e23a75133fe2b99bd94bcf5ac38b49039dcdf4`. Its `PASS_WITH_CONDITIONS` verdict and the corrected Draft PR description are recorded above. Stop at the post-critic Controller checkpoint; no subsequent workflow is authorized.
 
 ## P0.1 CURRENT EVIDENCE AND PRE-CRITIC
 
