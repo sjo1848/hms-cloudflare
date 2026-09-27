@@ -47,4 +47,4 @@ Authority: frozen Blueprint 001, Reconciliation 007 Amendment A, Final Dispositi
 - Scope excludes reassignment. Its lack of room-version/dimension updates remains a known dependency for F0.4, not an F0.2 global guarantee and not hidden.
 - Legacy `MAINTENANCE` with only an open NON_BLOCKING case remains fail-closed; explicit no-open-case `/dirty` recovery preserves current actor-attributed command evidence rather than synthesizing anonymous history.
 - All registry invariants have a row in the companion invariant file; INV-CF-I07-004 applies because the regression runner changed and is backed by cleanup-aware execution.
-- The prior A/B pair received `REWORK`; both findings are addressed as described above, and all validations listed here ran against the repaired candidate. A replacement immutable A/B and fresh critic review remain required; no substantive PASS is self-declared.
+- The prior A/B pair received `REWORK`; both findings are addressed as described above, and all validations listed here ran against the repaired candidate. A replacement immutable A/B is frozen; the fresh critic review remains required. No substantive PASS is self-declared.

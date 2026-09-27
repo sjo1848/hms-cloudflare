@@ -76,7 +76,7 @@
     "f0_2_query_plans": "PASS: npm run test:d1-query-plan",
     "f0_2_wrangler_dry_runs": "PASS: API + Web; no deployment",
     "f0_2_cf_i05": "PASS: isolated synthetic local Wrangler/D1/API regression exit 0; owned process group cleanup verified before terminal PASS",
-    "f0_2_precritic": "COMPLETE: .orchestration/evidence/HMS-F0-02-SHARED-ROOM-INVARIANTS-001-PRECRITIC.md; invariant matrix complete; exact artifact A/B publication and Independent Critic pending",
+    "f0_2_precritic": "COMPLETE: .orchestration/evidence/HMS-F0-02-SHARED-ROOM-INVARIANTS-001-PRECRITIC.md; invariant matrix complete; replacement A/B frozen; fresh Independent Critic pending",
     "f0_2_development_gate": "INTERNAL EVIDENCE COMPLETE; NOT ACCEPTED/PASS UNTIL FRESH INDEPENDENT CRITIC",
     "f0_2_artifact_a": "36b51287e93d629ec5422202778b4b9f3a305895 (superseded by critic REWORK)",
     "f0_2_rework_artifact_a": "f1ab1798133fca72dfb4fe5faf18e5058b5aa3e1",

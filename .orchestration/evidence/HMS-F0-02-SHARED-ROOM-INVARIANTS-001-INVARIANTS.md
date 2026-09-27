@@ -1,6 +1,6 @@
 # HMS-F0-02-SHARED-ROOM-INVARIANTS-001 — Invariant Evidence
 
-Artifact candidate: local implementation branch `impl/hms-foundation-0`; exact immutable A/B publication is pending this evidence freeze.  
+Artifact: included in the frozen F0.2 replacement implementation Artifact A; the immediately following orchestration-only Boundary B records its exact commit identity. This file intentionally does not embed Artifact A's own commit hash.
 Task Contract: `.orchestration/contracts/HMS-F0-02-SHARED-ROOM-INVARIANTS-001.md`  
 Pre-Critic gate: `.orchestration/PRECRITIC-GATE.md`  
 Authority: Blueprint 001, Reconciliation 007 Amendment A, Final Disposition 008; Foundation 0 authorization RG1–RG7.
@@ -22,7 +22,7 @@ F0.2 updates the existing Check-in, Checkout, Housekeeping, and Maintenance comm
 | INV-EVID-001 | APPLIES | PASS | Fresh `npm run check` (27 files/98 tests), `npm run types:check`, `npm run web:build`, `npm run architecture:fitness`, `npm run test:d1-query-plan`, `npm run wrangler:dry-run`, `bash -n scripts/cf-i05-regression.sh`, and CF-I05 exit 0 are listed in the Pre-Critic record; claims are linked to executable assertions. | No browser claim; F0.2 has no UI change. |
 | INV-LEGACY-001 | APPLIES | PASS | Shared-room executing-D1 fixture preserves `MAINTENANCE` + only open NON_BLOCKING as unresolved; attempted resolve is 409 with exact zero drift/event. Explicit no-open-case `/dirty` legacy recovery creates and resolves a current, attributed case atomically; CF-I05 asserts same actor, hotel, request, reason, timestamp, case/event identity and `legacy_recovery=true`. | No anonymous backfill case/event or fabricated historical record is created; current attributed command evidence is explicitly recorded. |
 | INV-MONEY-001 | N/A | N/A | No financial value, invoice, payment, or pricing mutation changed. | |
-| INV-STATE-001 | APPLIES | PASS | Publication is planned as non-circular implementation Artifact A followed by orchestration/evidence-only Boundary B that records exact A; no self-SHA or self-approval is claimed. | Exact hashes are entered after commits; external review remains required. |
+| INV-STATE-001 | APPLIES | PASS | Frozen implementation Artifact A is followed by orchestration/evidence-only Boundary B, which records exact A; no self-SHA or self-approval is claimed. | Boundary B carries the exact A/B identities; external review remains required. |
 | INV-CF-I07-001 | N/A | N/A | No protected admin/network/audit authorization surface changed. | |
 | INV-CF-I07-002 | N/A | N/A | No admin mutation changed. | |
 | INV-CF-I07-003 | N/A | N/A | No role downgrade operation changed. | |
@@ -59,5 +59,5 @@ F0.2 updates the existing Check-in, Checkout, Housekeeping, and Maintenance comm
 - [x] Every registry invariant is explicitly classified; no applicable invariant is FAIL/UNPROVEN.
 - [x] F0.2 executable contract and fresh validation pass.
 - [x] Scope audit passes; the reassignment/version limitation is disclosed.
-- [ ] Exact Artifact A / Boundary B hashes are entered after local publication commits.
-- [ ] Independent Critic verdict is pending; this file is evidence, not a self-approval.
+- [x] Artifact A is frozen before its orchestration-only Boundary B; B records the exact A hash without a self-referential hash in this file.
+- [ ] Fresh Independent Critic verdict is pending; this file is evidence, not a self-approval.
