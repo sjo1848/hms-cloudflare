@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "../../components/ui/drawer";
-import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../../components/ui/sheet";
 import type { Booking, FrontDeskItem } from "../../domain/types";
 import { useI18n } from "../../i18n";
 import type { MessageKey } from "../../i18n";
@@ -75,9 +75,9 @@ export function CheckInTask({ booking, item, step, setStep, data, setData, busy,
     if (eligible && !needsRefresh) void onComplete();
   }
 
-  const SurfaceHeader = mobile ? DrawerHeader : SheetHeader;
-  const SurfaceTitle = mobile ? DrawerTitle : SheetTitle;
-  const SurfaceDescription = mobile ? DrawerDescription : SheetDescription;
+  const SurfaceHeader = mobile ? DrawerHeader : DialogHeader;
+  const SurfaceTitle = mobile ? DrawerTitle : DialogTitle;
+  const SurfaceDescription = mobile ? DrawerDescription : DialogDescription;
   const task = <>
     <form onSubmit={advance} aria-label={t("reception.checkInAria")} className="checkin-task-form">
       <SurfaceHeader className="checkin-task-header">
@@ -116,7 +116,7 @@ export function CheckInTask({ booking, item, step, setStep, data, setData, busy,
     ? <DrawerContent open onOpenChange={handleOpenChange} className="checkin-task checkin-task-drawer" aria-labelledby="checkin-task-title" aria-describedby="checkin-task-description">
         {task}
       </DrawerContent>
-    : <SheetContent open onOpenChange={handleOpenChange} side="right" className="checkin-task checkin-task-sheet" aria-labelledby="checkin-task-title" aria-describedby="checkin-task-description">
+    : <DialogContent open onOpenChange={handleOpenChange} className="checkin-task checkin-task-dialog" aria-labelledby="checkin-task-title" aria-describedby="checkin-task-description">
         {task}
-      </SheetContent>;
+      </DialogContent>;
 }

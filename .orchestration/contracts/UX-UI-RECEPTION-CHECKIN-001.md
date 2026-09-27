@@ -10,11 +10,22 @@ Authority: Human authorization in the current task request; `UX-UI-RECEPTION-CHE
 
 Implement Reception + Guided Check-in as the first HMS UI Interaction System reference implementation. Preserve P0.1 domain behavior and make the existing workflow feel continuous on desktop and mobile.
 
+### Controller-directed rework — centered desktop task
+
+The Controller rejected the right-side Sheet for desktop Check-in and explicitly requested a centered task surface. This is a material correction to the interaction contract, not a cosmetic adjustment. The current approved behavior for this bounded rework is:
+
+- Desktop: `Reception → centered Dialog → guided check-in → success → Reception`; Reception remains visible behind a dimmed backdrop.
+- Mobile: retain the full-screen/Drawer task; do not render a compressed desktop Dialog.
+- The Dialog has a comfortable bounded width/height, stable header/footer, independently scrollable body, and clear primary CTA. It must read as a focused operational task, not a small generic popup or a nested page.
+- Preserve all existing check-in behavior and backend boundaries. No backend change is authorized without a reproducible gap.
+
+Human feedback to preserve verbatim: `Human rejected right-side Sheet for Check-in desktop and requested a centered task surface.`
+
 The reference was located in connected Drive and read in full: `HMS Cloudflare — Reception + Guided Check-in — UI Contract & Wireframes v1` (Artifact ID `UX-UI-RECEPTION-CHECKIN-001`, Doc ID `1vvDchF0ll5qQXlA0DKhuSNw4EIyouAtragUi89RI_VE`); its parent is `HMS Cloudflare — UX/UI Interaction System v1 + Workflow Component Matrix` (Artifact ID `UX-UI-INTERACTION-SYSTEM-001`, Doc ID `112Lp-pYeDOfC9Ij8XXAMCbQe4Gs4Op-KblhI9Uh0t_c`). The current Human request explicitly authorizes implementation. The full source contract's key ordering is task header → authoritative context → blockers/advisories → task inputs → consequences/review → sticky primary action → authoritative refresh → return/next case. Progressive disclosure should preserve decision-critical facts and not crowd Reception.
 
 ## Scope
 
-- Desktop: Reception remains visible as the main context; check-in opens in a right-side shadcn Sheet.
+- Desktop: Reception remains visible as the main context behind a dimmed backdrop; check-in opens in a centered Dialog.
 - Mobile: check-in opens in a shadcn Drawer/full-screen task with comfortable scrolling, stable header, reachable primary action and predictable close/back behavior.
 - Reception queue entry remains an explicit dominant check-in action. Group only the existing selected-arrival secondary controls (reservation edit and close selection) in a Dropdown Menu; do not add commands or alter their domain behavior. Check-in remains independently visible.
 - Both surfaces retain guest, room, stay dates, readiness, BLOCKING/NON_BLOCKING meaning, stay summary, consequences, inline validation and loading/error/conflict/success states.
@@ -28,15 +39,15 @@ The reference was located in connected Drive and read in full: `HMS Cloudflare �
 
 | Requirement | Expected surface | Acceptance | Evidence |
 |---|---|---|---|
-| Desktop continuity | Reception + Sheet | Queue remains the parent context; right Sheet does not navigate; filter/search/selection/lane/scroll are retained on close and success | Real browser at desktop width; screenshots: queue, Sheet, blocker, advisory, success |
+| Desktop continuity | Reception + centered Dialog | Dialog is centered, comfortably bounded, and visually distinct from a nested page; Reception remains visible behind the backdrop; header/footer stay stable, body scrolls independently, and filter/search/selection/lane/scroll are retained on close and success | Real browser at desktop width; screenshots: queue, centered Dialog, blocker, advisory, 409, success |
 | Mobile task | Reception + Drawer | Full-height task, internal scroll, fixed header/footer, touch-size actions, close/back without hover; no small modal | Real browser at 375/390px; screenshots: queue, Drawer, blocker/advisory, success/return |
 | Required context | Task header/body | Guest, assigned room, check-in/out dates remain in a stable header; authoritative stay facts, readiness, maintenance impact, compact summary/consequences and validation are available in the task in the source-defined progression | Browser assertions and visual review |
 | Readiness semantics | Task body | BLOCKING names the cause and prevents submit; safe next action is stated when known. NON_BLOCKING is visibly advisory and permits continuation; neither distinction relies on color alone | Real API/D1 fixture for both statuses |
 | Loading and errors | Task body/actions | Reception stays stable while task loads; busy state is local to task; errors are inline; pending submit cannot double-submit | Real browser and request-count assertion |
-| Stale conflict | Task body | 409 stays in Sheet/Drawer, explains changed state, refreshes authoritative facts and allows retry only if now eligible | Real Worker/D1 concurrent readiness change, persisted zero-drift assertion |
+| Stale conflict | Task body | 409 stays in Dialog/Drawer, explains changed state, refreshes authoritative facts and allows retry only if now eligible | Real Worker/D1 concurrent readiness change, persisted zero-drift assertion |
 | Success | Task + queue | API response is not treated as final display state: authoritative refresh precedes success/advance; new booking/room state appears, success is visible, Reception context remains and next canonical case is offered | Real Worker/D1 E2E + assertions for D1 event/state and queue selection |
 | Keyboard/focus | Both surfaces | Open focuses task heading; Tab/Escape and explicit close are predictable; focus restores to next case or original trigger; validation is associated inline | Browser keyboard/focus assertions |
-| Reference implementation consistency | Component layer | Use shadcn Sheet on desktop and Drawer on mobile; components expose accessible title/description and controlled open/close; no unneeded global navigation/component system | Source review + browser inspection |
+| Reference implementation consistency | Component layer | Use Dialog on desktop and Drawer on mobile; components expose accessible title/description and controlled open/close; no unneeded global navigation/component system. Local wrappers must not be misrepresented as generated shadcn components | Source review + browser inspection |
 | Queue action hierarchy | Selected arrival case | Check-in stays independently visible; only existing edit/close-selection controls move under an accessible Dropdown Menu; no new command or mutation | Desktop/mobile browser and source review |
 
 ## Forbidden scope
@@ -77,3 +88,11 @@ No backend redesign, Reports, Users, Housekeeping redesign, P0.2 or later workfl
 Run relevant unit/component checks, `npm run check`, types, web build, architecture/i18n/budget checks, and required inherited P0.1 checks. Run directed browser validation and the integrated real local Wrangler Worker + migrated D1 + Vite browser on desktop and mobile. Capture the requested visual states. Perform separate UX/adversarial review and QA when runtime capabilities are available. Complete the mandatory Pre-Critic Gate and invariant evidence before publishing artifact A.
 
 Publish artifact A then orchestration-only boundary B; stop at `Reception + Check-in UI Controller Checkpoint`. Promotion remains blocked. No next workflow starts automatically.
+
+### Rework acceptance and evidence
+
+- Desktop screenshots: Reception, centered Dialog, BLOCKING, NON_BLOCKING, 409/recovery, success/return. Assert centering, bounded geometry, Reception visible behind backdrop, stable header/footer, independent body scroll, CTA visibility, close/focus restoration and preserved queue context.
+- Mobile screenshots and assertions: Reception, full-screen Drawer, BLOCKING, NON_BLOCKING, 409/recovery, success/return; preserve full-height task and prior touch/scroll/focus behavior.
+- Re-run happy path, blocking/advisory, stale 409, authoritative refresh/retry, persistence, next priority case, filters/context, keyboard/focus, and double-submit protection. Integrated Worker + D1 remains required; mock evidence is supplementary.
+- Preserve the exact Controller feedback above in the final evidence. Explain local component adaptation and verify JS budget.
+- After implementation and Pre-Critic, freeze a new artifact. A separate reviewer with no implementation or Pre-Critic participation must review exact A+B against this contract and evidence. The implementer cannot issue that verdict. Record `PASS`, `PASS_WITH_CONDITIONS`, or `REWORK` and stop at the post-review Controller checkpoint.

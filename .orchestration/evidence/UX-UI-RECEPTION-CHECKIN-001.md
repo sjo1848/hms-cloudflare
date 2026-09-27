@@ -2,7 +2,8 @@
 
 Task Contract: `.orchestration/contracts/UX-UI-RECEPTION-CHECKIN-001.md`
 Implementation branch: `impl/ux-ui-reception-checkin`
-Local integrated fixture: `.hms-local/p0-1-8btCgf` (isolated local D1 persistence)
+Controller feedback: `Human rejected right-side Sheet for Check-in desktop and requested a centered task surface.`
+Latest local integrated fixture: `.hms-local/p0-1-fbaptV` (isolated local D1 persistence)
 
 ## Executed gates
 
@@ -10,21 +11,21 @@ Local integrated fixture: `.hms-local/p0-1-8btCgf` (isolated local D1 persistenc
 |---|---|---|
 | `npm run check` | PASS — typecheck plus 23 files / 91 tests | Terminal run on task worktree |
 | `npm run types:check` | PASS — API and Web Worker binding types current | Wrangler generated-type checks |
-| `npm run web:build` | PASS | Vite production build; 296,335 raw JS / 86,139 gzip; 38,983 raw CSS / 7,715 gzip |
-| `npm run architecture:fitness` | PASS | Architecture fitness I/II, i18n coverage, Cloudflare budgets |
+| `npm run web:build` | PASS | Vite production build; 296,282 raw JS / 86,084 gzip; 39,586 raw CSS / 7,817 gzip |
+| `npm run architecture:fitness` | PASS | Architecture fitness I/II, i18n coverage, Cloudflare budgets; JS raw 296,282 / 300,000 bytes |
 | D1 critical query plans | PASS | `npm run test:d1-query-plan`: booking arrival and checkout indexes verified |
 | Wrangler dry-run | PASS | API and Web deploy dry-runs only; no deployment |
 | Directed mock browser | PASS | `scripts/p0-1-arrival-browser.playwright.js` at 375px and 1280px |
-| Integrated browser + Worker/D1 | PASS | `bash scripts/p0-1-integrated-browser.sh`; final retained D1 fixture above |
+| Integrated browser + Worker/D1 | PASS | `bash scripts/p0-1-integrated-browser.sh`; retained D1 fixture above; rerun output persisted at `output/playwright/ux-ui-checkin-integrated.log` |
 | Scope / whitespace | PASS | `git diff --check`; no API/schema/Reports/Users/Housekeeping product files changed |
 
-The final integrated runner completed the browser flows, shut down its owned Playwright/Worker/Vite process groups, verified cleanup, then ran the read-only D1 assertions before printing its PASS marker. Worker console entries were expected injected 409/500 responses plus the local Vite `favicon.ico` 404; no application JavaScript exception was present. Mock responses are separately labeled and are not used as integration proof.
+The latest integrated runner completed the browser flows, shut down its owned Playwright/Worker/Vite process groups, verified cleanup, then ran the read-only D1 assertions before printing its PASS marker. The D1 fixture and run log are retained. Worker console entries include the deliberately injected 409 conflict and local development responses; mock responses are separately labeled and are not used as integration proof.
 
 ## Real Worker/D1 scenario and persisted result
 
 At 375px, the browser acts as the seeded receptionist. It loads the actual front-desk board and opens the focused Drawer. After the preview, a separate local admin request opens BLOCKING maintenance on the assigned room. The receptionist submits once; the real Worker returns 409. The UI stays open, shows the refreshed blocker, and keeps the action unavailable. An authenticated read of the actual Worker API verifies the booking is still `CONFIRMED` in `p01-room-a`, its total and invoice remain 40,000 cents, and no payment entry exists. The test resolves maintenance, completes the existing room handoff, refreshes authoritative board state, then retries once.
 
-Assertions require exactly two check-in requests across that deliberate stale 409 and one successful retry (`409,200`), not duplicate success. The refreshed Reception queue selects canonical next booking `a-next`, updates the URL, preserves `lane=arrivals` and search, and restores focus to the selected next case. A real NON_BLOCKING maintenance case displays its advisory and remains eligible. At 1280px, the right-side Sheet retains the queue; NON_BLOCKING success advances to the next server-priority case and a BLOCKING room cannot proceed.
+Assertions require exactly two check-in requests across that deliberate stale 409 and one successful retry (`409,200`), not duplicate success. The refreshed Reception queue selects canonical next booking `a-next`, updates the URL, preserves `lane=arrivals` and search, and restores focus to the selected next case. A real NON_BLOCKING maintenance case displays its advisory and remains eligible. At 1280px, the centered Dialog is bounded, centered on both axes, uses a dim backdrop, has an independently scrollable body with stable header/footer, and leaves Reception visible behind it. Desktop also exercises a second real stale `409` on `a-next`, refresh/recovery, success and next server-priority case.
 
 Final local D1 snapshot from `scripts/p0-1-assert-local.mjs`:
 
@@ -34,7 +35,7 @@ Final local D1 snapshot from `scripts/p0-1-assert-local.mjs`:
 - exactly one `CHECK_IN` event for each successful booking; none for `m-blocked`;
 - all invoice amounts remain equal to booking totals; zero payment entries exist.
 
-This flow performs no billing/payment mutation. The 409 API snapshot and final D1 audit establish no partial check-in/event/payment mutation on stale rejection; maintenance changes are the deliberate external cause of the conflict.
+This flow performs no billing/payment mutation. The 409 API snapshot and final D1 audit establish no partial check-in/event/payment mutation on stale rejection; maintenance changes are the deliberate external cause of the conflict. The first revised run exposed a test-fixture setup issue: an existing NON_BLOCKING case occupied the unique open-case slot, so the attempted concurrent BLOCKING case correctly returned 409. The runner now resolves that advisory after capturing it and before opening the concurrent BLOCKING case; final integrated reruns pass.
 
 ## Mock-only regression scenarios
 
@@ -45,8 +46,10 @@ The separate mock browser verifies 409 plus a failed board refresh does not enab
 All captures were generated by the final integrated run after the hotel shell finished loading:
 
 - Desktop Reception without task: `output/playwright/ux-ui-checkin-desktop-reception.png`
-- Desktop right Sheet/advisory: `output/playwright/ux-ui-checkin-desktop-nonblocking-advisory.png`
+- Desktop centered Dialog with Reception backdrop: `output/playwright/ux-ui-checkin-desktop-dialog.png`
+- Desktop NON_BLOCKING advisory: `output/playwright/ux-ui-checkin-desktop-nonblocking-advisory.png`
 - Desktop BLOCKING: `output/playwright/ux-ui-checkin-desktop-blocking.png`
+- Desktop stale 409/recovery: `output/playwright/ux-ui-checkin-desktop-conflict.png`
 - Desktop success/next case: `output/playwright/ux-ui-checkin-desktop-success-return.png`
 - Mobile Reception: `output/playwright/ux-ui-checkin-mobile-reception.png`
 - Mobile full-screen Drawer: `output/playwright/ux-ui-checkin-mobile-drawer.png`
@@ -57,20 +60,22 @@ The screenshot pair for the mobile 409 intentionally covers two scroll positions
 
 ## Adversarial review and repairs
 
-Actual subagent runtime capability was available; separate read-only Luna Medium UX/adversarial and QA/evidence reviewers were used. Their findings were:
+Actual subagent runtime capability was available; Engineering and separate read-only Luna Medium UX/adversarial and QA/evidence reviewers were used. Their findings and the current Controller rework QA were:
 
-1. Sheet styling class was not applied, so the desktop surface appeared centered — fixed and checked for right-edge geometry with visible queue.
+1. Original artifact used a right-side Sheet, which the Human rejected — replaced with the explicitly requested centered Dialog; current geometry, backdrop, bounded dimensions and Reception-underlay assertions pass.
 2. The accessible Sheet title was removed during discard confirmation — header is now stable; discard confirmation receives keyboard focus.
 3. Dropdown Tab restored focus to its trigger rather than advancing — changed to move focus beyond the menu; Escape still restores trigger focus.
 4. No-next success focus was lost during native dialog close — queue refresh control is focused after the close event.
 5. Reception screenshot could catch shell loading, and mobile conflict screenshot needed internal scroll evidence — stable hotel-context wait and explicit scroll/body/CTA geometry assertions added.
 6. Local acceptance identity selector was visually cramped in screenshots — minimal Reception-scoped styling added. It remains a development-only fixture control and still occupies some mobile vertical space; the UX reviewer classified this as P3/non-blocking, not a product workflow defect.
+7. Rework QA identified missing keyboard evidence for Drawer focus restoration and Dialog Tab containment — added mobile Tab/Escape/restore-focus and desktop Tab/Shift+Tab containment assertions; latest integrated runner passes.
+8. Invariant evidence still described right anchoring and budget numbers were from a prior build — updated the invariant map and evidence with current centered-Dialog contract and exact `296,282` raw JS measurement.
 
 Latest read-only UX review found no blocking hierarchy, clarity, continuity, CTA, or BLOCKING/NON_BLOCKING issue. Latest QA review confirmed the shell and identity-control presentation were corrected and accepted the paired mobile conflict evidence as readable across scroll. These reviews are internal Pre-Critic inputs, not Independent Critic acceptance.
 
 ### Component implementation note
 
-The repository had no existing shadcn Sheet/Drawer primitives. A standard external dialog runtime was evaluated but exceeded the hard Cloudflare JS budget; it was removed. The reference interaction is implemented with small source-local wrappers named Sheet/Drawer/Dropdown Menu over the platform-native accessible `<dialog>` element and focused menu keyboard handling. The wrappers follow the requested placement/keyboard/focus semantics and do not add a runtime dependency. This is an explicit implementation adaptation, not a claim that the wrappers are generated shadcn components; Independent Critic should confirm that the zero-dependency adaptation is acceptable against the component policy.
+The repository has no installed shadcn Dialog/Drawer primitives. A standard external dialog runtime was evaluated during the prior artifact and exceeded the hard Cloudflare JS budget, so it was removed. The corrected implementation uses small source-local Dialog/Drawer/Sheet wrappers over one shared platform-native `<dialog>` lifecycle; desktop Dialog and mobile Drawer provide the requested semantics without duplicating task logic or adding a runtime dependency. They are explicitly native-element adaptations, not generated shadcn components; the Independent Critic should assess this documented budget/semantics tradeoff.
 
 ## Pre-Critic Gate checklist
 
@@ -78,12 +83,26 @@ The repository had no existing shadcn Sheet/Drawer primitives. A standard extern
 - Source parity: PASS — existing P0.1 step validation, backend command, board authority and next-case semantics remain intact.
 - Mutation/concurrency: PASS — no UI optimistic success; real stale change surfaces 409, keeps the task open, refreshes, and permits retry only after authoritative state changes.
 - Security: PASS — backend role/capability authority unchanged; local auth uses a seeded receptionist identity; no protected route or tenant boundary changed.
-- UX parity: PASS — task header includes guest/room/dates; desktop queue remains visible; mobile is a full-height task; blocker/advisory and success are explicit.
-- Browser evidence: PASS — material controls and validation execute at desktop and mobile; mock vs integrated proof separated; priority fixture is deliberately scrambled.
+- UX parity: PASS — task header includes guest/room/dates; centered desktop Dialog leaves Reception visible behind its dim backdrop; mobile is a full-height Drawer; blocker/advisory, 409, success and next case are explicit.
+- Browser evidence: PASS — material controls, blocker/advisory, stale recovery, mobile Drawer keyboard focus/restore, desktop Dialog Tab/Shift+Tab, authoritative D1 state and screenshots execute against real local Worker/D1; mock proof remains separately labeled; priority fixture is deliberately scrambled.
 - Evidence claim audit: PASS — every integrated claim above maps to the named Worker/D1 browser script, read-only D1 assertion or screenshot.
-- Regression/scope: PASS — `npm run check`, type/bindings/build/fitness/budgets/query-plan/Wrangler dry-runs passed; no forbidden product surface changed.
+- Regression/scope: PASS — `npm run check`, type/bindings/build/fitness/budgets/query-plan/Wrangler dry-runs passed; no backend/API/schema, Reports, Users, Housekeeping or other workflow product code changed.
 - Process cleanup: PASS — owned browser and server processes are checked after termination before final D1/PASS output.
 - External review boundary: REQUIRED — artifact publication remains pending a separate Independent Critic; no self-approval is claimed.
+
+### Controller-directed Dialog rework adversarial questions
+
+- **Does the centered Dialog improve task focus?** It implements the Human’s explicit correction; current integrated capture shows a bounded center surface with a dimmed Reception context. Product acceptance remains the Human/Controller’s authority.
+- **Is Reception context preserved?** Yes: the same route, hotel header and selected booking remain behind the modal; E2E verifies the queue/search/lane and focus after close/success. The backdrop intentionally reduces, rather than removes, background emphasis.
+- **Is the size comfortable and not a nested page?** At 1280×900 the Dialog is 680px wide and 760px high, centered on both axes. It remains smaller than the viewport. A 1280×520 browser check proves the body scrolls independently while header/footer stay fixed.
+- **Is content excessive for a Dialog?** No new content was added. The existing guided steps remain progressive; the body owns overflow on compact desktop height. Evidence includes verification, readiness, conflict and review steps.
+- **Does the content require returning to a Sheet?** No demonstrated need: this task’s sequence is bounded and step-based; the Dialog preserves its local header/body/CTA hierarchy. Revisit only if future evidence shows a distinct concurrent workspace need.
+- **Does mobile remain a task rather than compressed desktop?** Yes: mobile selects the full-viewport Drawer at 375px, with independent body scrolling, stable header/footer and minimum 44px CTA.
+- **Is the primary CTA evident?** Yes: labeled Next step/Complete check-in remains in the persistent footer; blocker disables progression and explains why.
+- **Are BLOCKING/NON_BLOCKING/409 states hierarchical and understandable?** Yes: text labels and explicit causes/actions supplement color; BLOCKING is non-progressable, NON_BLOCKING remains advisory, and 409 stays visible until authoritative refresh/retry.
+- **Are component semantics accurate and non-duplicative?** Dialog, Drawer and Sheet wrappers share one neutral native-modal lifecycle; Dialog has its own semantic data slot/class and no `data-side=right`. They are not claimed as generated shadcn components; the raw-JS budget reason is documented.
+- **Did focus or scrolling regress?** Integrated Worker/D1 browser asserts mobile Drawer Tab/Escape/focus restoration, desktop Dialog Tab/Shift+Tab/Escape/focus restoration, and compact-height body scroll with stable header/footer/CTA. The keyboard rework finding was rechecked by a separate QA agent.
+- **Are required states and screenshots complete?** Yes: desktop Reception, Dialog, BLOCKING, NON_BLOCKING, real 409 and success; mobile Reception, Drawer, blocker/conflict (paired scroll positions), advisory and success/return.
 
 ## Known external boundaries
 

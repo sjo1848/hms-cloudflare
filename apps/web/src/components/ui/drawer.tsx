@@ -1,10 +1,11 @@
 import type { ComponentProps, ReactNode } from "react";
-import { SheetContent } from "./sheet";
+import { NativeModalSurface } from "./native-modal";
+import type { NativeModalProps } from "./native-modal";
 
-type DrawerContentProps = ComponentProps<typeof SheetContent> & { children: ReactNode };
+type DrawerContentProps = NativeModalProps & { children: ReactNode };
 
 export function DrawerContent({ className, children, ...props }: DrawerContentProps) {
-  return <SheetContent data-slot="drawer-content" surfaceClassName="ui-drawer-popup" className={className} {...props}><div className="ui-drawer-content">{children}</div></SheetContent>;
+  return <NativeModalSurface data-slot="drawer-content" className={`ui-drawer-popup${className ? ` ${className}` : ""}`} {...props}><div className="ui-drawer-content">{children}</div></NativeModalSurface>;
 }
 
 export function DrawerHeader(props: ComponentProps<"div">) { return <div data-slot="drawer-header" {...props} />; }
