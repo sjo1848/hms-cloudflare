@@ -16,9 +16,24 @@ async function database(name: string) {
   return mf.getD1Database("DB");
 }
 
-async function applyRoomDimensionMigration(db: D1Database) {
-  const sql = readFileSync(new URL("../../../schema/hotel-migrations/0022_room_state_dimensions.sql", import.meta.url), "utf8");
-  for (const statement of sql.split(";").map((part) => part.trim()).filter(Boolean)) await db.prepare(statement).run();
+async function applyMigration(db: D1Database, migrationPath: string) {
+  const sql = readFileSync(new URL(migrationPath, import.meta.url), "utf8");
+  const statements: string[] = [];
+  let buffer = "";
+  let inTrigger = false;
+  for (const rawLine of sql.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("--")) continue;
+    if (!inTrigger && /^CREATE TRIGGER\b/i.test(line)) inTrigger = true;
+    buffer += `${rawLine}\n`;
+    if ((inTrigger && /^END;$/i.test(line)) || (!inTrigger && line.endsWith(";"))) {
+      statements.push(buffer.trim());
+      buffer = "";
+      inTrigger = false;
+    }
+  }
+  if (buffer.trim()) throw new Error(`Unterminated migration: ${migrationPath}`);
+  if (statements.length) await db.batch(statements.map((statement) => db.prepare(statement)));
 }
 
 describe("room dimension read API tenant and capability boundaries on executing D1", () => {
@@ -45,16 +60,15 @@ describe("room dimension read API tenant and capability boundaries on executing 
       await db.batch([
         db.prepare("CREATE TABLE rooms (id TEXT PRIMARY KEY, room_number TEXT NOT NULL, room_type TEXT NOT NULL, status TEXT NOT NULL, price_cents INTEGER NOT NULL)"),
         db.prepare("CREATE TABLE bookings (id TEXT PRIMARY KEY, room_id TEXT NOT NULL, status TEXT NOT NULL)"),
-        db.prepare("CREATE TABLE maintenance_cases (id TEXT PRIMARY KEY, room_id TEXT NOT NULL, status TEXT NOT NULL, impact TEXT NOT NULL)"),
-      db.prepare("CREATE TABLE room_holds (id TEXT PRIMARY KEY, room_id TEXT NOT NULL, start_date TEXT NOT NULL, end_date TEXT NOT NULL, hold_type TEXT NOT NULL, reason TEXT NOT NULL, created_by_user_id TEXT, created_at TEXT NOT NULL)"),
-      db.prepare("CREATE TABLE room_inventory_nights (id TEXT PRIMARY KEY, room_id TEXT NOT NULL, booking_id TEXT NOT NULL, stay_date TEXT NOT NULL)"),
-      db.prepare("INSERT INTO rooms VALUES (?1, ?2, 'Standard', 'AVAILABLE', 10000)").bind(id, number),
-    ]);
-      await applyRoomDimensionMigration(db);
-      await db.batch([
-        db.prepare("ALTER TABLE rooms ADD COLUMN room_state_version INTEGER NOT NULL DEFAULT 0"),
+        db.prepare("CREATE TABLE maintenance_cases (id TEXT PRIMARY KEY, room_id TEXT NOT NULL, status TEXT NOT NULL, impact TEXT NOT NULL, return_status TEXT)"),
+        db.prepare("CREATE TABLE lifecycle_events (id TEXT PRIMARY KEY, booking_id TEXT, event_type TEXT NOT NULL, from_room_id TEXT, details_json TEXT NOT NULL)"),
         db.prepare("CREATE TABLE housekeeping_events (id TEXT PRIMARY KEY, room_id TEXT NOT NULL, maintenance_case_id TEXT, event_type TEXT NOT NULL, from_status TEXT NOT NULL, to_status TEXT NOT NULL, actor_subject TEXT NOT NULL, request_id TEXT NOT NULL, hotel_id TEXT NOT NULL, details_json TEXT NOT NULL, created_at TEXT NOT NULL)"),
+        db.prepare("CREATE TABLE room_holds (id TEXT PRIMARY KEY, room_id TEXT NOT NULL, start_date TEXT NOT NULL, end_date TEXT NOT NULL, hold_type TEXT NOT NULL, reason TEXT NOT NULL, created_by_user_id TEXT, created_at TEXT NOT NULL)"),
+        db.prepare("CREATE TABLE room_inventory_nights (id TEXT PRIMARY KEY, room_id TEXT NOT NULL, booking_id TEXT NOT NULL, stay_date TEXT NOT NULL)"),
+        db.prepare("INSERT INTO rooms VALUES (?1, ?2, 'Standard', 'AVAILABLE', 10000)").bind(id, number),
       ]);
+      await applyMigration(db, "../../../schema/hotel-migrations/0022_room_state_dimensions.sql");
+      await applyMigration(db, "../../../schema/hotel-migrations/0023_room_state_command_guards.sql");
     };
     await setupHotel(hotelA, "room-a", "A-1");
     await setupHotel(hotelB, "room-b", "B-1");
@@ -105,6 +119,25 @@ describe("room dimension read API tenant and capability boundaries on executing 
     const ownTenantWrite = await request("hotel-a", "housekeeper", "hk@example.test", "/housekeeping/room-a/start", "POST");
     expect(ownTenantWrite.status).toBe(200);
     expect(await hotelA.prepare("SELECT status,housekeeping_state,room_state_version FROM rooms WHERE id='room-a'").first()).toEqual({ status: "CLEANING", housekeeping_state: "CLEANING", room_state_version: 1 });
-    expect(await hotelA.prepare("SELECT event_type,actor_subject,hotel_id FROM housekeeping_events").first()).toEqual({ event_type: "CLEANING_START", actor_subject: "housekeeper", hotel_id: "hotel-a" });
+    const event = await hotelA.prepare("SELECT event_type,actor_subject,hotel_id,request_id,details_json FROM housekeeping_events").first<any>();
+    expect(event).toMatchObject({ event_type: "CLEANING_START", actor_subject: "housekeeper", hotel_id: "hotel-a" });
+    expect(event.request_id).toBeTruthy();
+    expect(JSON.parse(String(event.details_json))).toMatchObject({
+      occupancy_before: "VACANT", occupancy_after: "VACANT",
+      housekeeping_state_before: "DIRTY", housekeeping_state_after: "CLEANING",
+      maintenance_impact_before: "NONE", maintenance_impact_after: "NONE",
+      service_state_before: "IN_SERVICE", service_state_after: "IN_SERVICE",
+      room_state_version_before: 0, room_state_version_after: 1,
+    });
+
+    await expect(hotelA.prepare(`INSERT INTO housekeeping_events
+      (id,room_id,maintenance_case_id,event_type,from_status,to_status,actor_subject,request_id,hotel_id,details_json,created_at)
+      VALUES ('bad-event','room-a',NULL,'CLEANING_START','READY','CLEANING','housekeeper','invalid-request','hotel-a','{}','2026-09-27T12:00:00.000Z')`).run()).rejects.toThrow();
+    expect(await hotelA.prepare("SELECT COUNT(*) AS count FROM housekeeping_events").first()).toEqual({ count: 1 });
+
+    const deniedResolve = await request("hotel-a", "desk", "desk@example.test", "/housekeeping/room-a/maintenance/legacy-case/resolve", "POST");
+    expect(deniedResolve.status).toBe(403);
+    expect(await hotelA.prepare("SELECT status,housekeeping_state,room_state_version FROM rooms WHERE id='room-a'").first()).toEqual({ status: "CLEANING", housekeeping_state: "CLEANING", room_state_version: 1 });
+    expect(await hotelA.prepare("SELECT COUNT(*) AS count FROM housekeeping_events").first()).toEqual({ count: 1 });
   });
 });
