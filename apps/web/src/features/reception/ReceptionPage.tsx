@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BillingWorkspace } from "../billing/BillingWorkspace";
 import { StatusBadge } from "../../components/StatusBadge";
+import { DropdownMenu, DropdownMenuItem } from "../../components/ui/dropdown-menu";
 import { useReceptionWorkspace } from "./useReceptionWorkspace";
 import { useI18n } from "../../i18n";
 import type { MessageKey } from "../../i18n";
@@ -146,12 +147,12 @@ function Bookings() {
     if (next) selectCase(next.booking);
     else closeCase();
     setCheckInSuccess(next ? t("reception.checkInSuccessNext", { guest: next.booking.guest_name }) : t("reception.checkInSuccess"));
-    window.requestAnimationFrame(() => {
+    window.setTimeout(() => {
       const target = next
         ? document.querySelector<HTMLButtonElement>(`[data-booking-id="${next.booking.id}"]`)
         : document.querySelector<HTMLButtonElement>(".reception-queue-tools button");
       target?.focus();
-    });
+    }, 0);
   }
 
   async function completeCheckIn() {
@@ -238,7 +239,7 @@ function Bookings() {
           <StatusBadge>{statusLabel(selected.status)}</StatusBadge>
         </div>
 
-        {selected.status === "Confirmed" && selectedBoardItem?.lane === "arrival" && <div className="reception-arrival-actions"><button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button><button type="button" className="secondary-button" onClick={() => setShowArrivalEdit(current => !current)}>{showArrivalEdit ? t("common.close") : t("reception.editAria")}</button><button type="button" className="secondary-button" onClick={clearSelectedCase}>{t("reception.closeCase")}</button></div>}
+        {selected.status === "Confirmed" && selectedBoardItem?.lane === "arrival" && <div className="reception-arrival-actions"><button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button><DropdownMenu label={t("reception.moreActions")}><DropdownMenuItem onClick={() => setShowArrivalEdit(current => !current)}>{showArrivalEdit ? t("common.close") : t("reception.editAria")}</DropdownMenuItem><DropdownMenuItem onClick={clearSelectedCase}>{t("reception.closeCase")}</DropdownMenuItem></DropdownMenu></div>}
 
         {selected.status === "Confirmed" && (selectedBoardItem?.lane !== "arrival" || showArrivalEdit) ? <form onSubmit={saveEdit} aria-label={t("reception.editAria")}>
           <h4>{t("reception.stayDetails")}</h4>

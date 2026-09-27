@@ -40,19 +40,36 @@
 .reception-row-ready{color:#17623b!important}
 .reception-row-blocked{color:#9c3028!important}
 .reception-refreshing{margin:6px 0;font-size:12px}
+.local-dev-identity{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;padding:8px 12px;border:1px solid #d9e1e8;border-radius:10px;background:#fff;color:#435369;font-size:12px}
+.local-dev-identity label{display:inline-flex;align-items:center;gap:8px;font-weight:700}
+.local-dev-identity select{min-width:220px;min-height:40px}
+.local-dev-identity small{color:#68778a}
 .reception-checkin-trigger{margin-top:14px}
 .reception-arrival-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .reception-arrival-actions .reception-checkin-trigger{margin-top:0}
-.checkin-task{position:fixed;inset:0 0 0 auto;width:min(520px,100vw);height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-left:1px solid #d8e0e8;border-radius:0;background:#fff;box-shadow:-18px 0 55px #14203335;color:#213247}
-.checkin-task::backdrop{background:#101b2b66}
+.ui-native-surface:not([open]){display:none}
+.ui-native-surface::backdrop{background:#101b2b66}
+.ui-sheet-content{position:fixed;inset:0 0 0 auto;width:min(540px,calc(100vw - 40px));height:100dvh;max-height:none;overflow:hidden;margin:0;padding:0;border:0;border-left:1px solid #d8e0e8;border-radius:0;background:#fff;color:#213247;box-shadow:-18px 0 55px #14203335}
+.ui-drawer-popup{position:fixed;inset:0;display:flex;width:100vw;min-width:0;max-width:none;height:100dvh;max-height:100dvh;overflow:hidden;margin:0;padding:0;border:0;border-radius:0;background:#fff;color:#213247}
+.ui-drawer-content{display:flex;width:100%;min-width:0;height:100%;min-height:0}
+.ui-drawer-content>.checkin-task-form{flex:1}
+.checkin-task{color:#213247}
 .checkin-task-form{display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:0;width:100%;height:100%;margin:0}
-.checkin-task-header{display:flex;justify-content:space-between;align-items:start;gap:16px;padding:20px 24px;border-bottom:1px solid #e0e7ee}
+.checkin-task-header{display:flex;justify-content:space-between;align-items:start;gap:16px;padding:20px 24px;border-bottom:1px solid #e0e7ee;background:#fff}
 .checkin-task-header h2{margin:4px 0 7px;font-size:21px}
 .checkin-task-header p:not(.eyebrow){margin:0 0 5px;font-weight:700}
 .checkin-task-header small{color:#68778a}
-.checkin-task-header button{flex:0 0 auto;min-width:42px;padding:6px;font-size:22px}
+.checkin-task-header button{flex:0 0 auto;min-width:44px;min-height:44px;padding:6px;font-size:22px}
 .checkin-task-body{min-height:0;overflow-y:auto;padding:18px 24px 28px}
 .checkin-task-body .step-progress{margin:0 0 20px}
+.checkin-status-summary{display:grid;gap:7px;margin-bottom:17px;padding:13px 14px;border:1px solid #dce4eb;border-left:4px solid #3b6f5a;border-radius:12px;background:#f8fafc}
+.checkin-status-summary.is-blocking{border-left-color:#a83d34}
+.checkin-status-summary.is-advisory{border-left-color:#a46c24}
+.checkin-status-heading{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.checkin-status-heading span{font-size:12px;font-weight:800}
+.checkin-status-summary p,.checkin-status-summary small{margin:0}
+.checkin-status-summary small{color:#68778a}
+.checkin-next-action,.checkin-consequences{padding:10px 12px;border-radius:9px;background:#eef4f9;color:#31445a;font-size:13px}
 .checkin-step-heading{margin:0 0 18px;font-size:20px;outline:none}
 .checkin-fields{display:grid;gap:16px}
 .checkin-fields label:not(.checkin-check){display:grid;gap:7px;font-weight:700}
@@ -72,6 +89,7 @@
 .checkin-review dt{color:#68778a}
 .checkin-review dd{margin:0;font-weight:800;text-align:right}
 .checkin-task-actions{display:flex;justify-content:flex-end;gap:10px;padding:15px 24px;border-top:1px solid #e0e7ee;background:#fff}
+.checkin-task-actions button{min-height:46px}
 .checkin-discard{display:grid;align-content:center;gap:14px;min-height:100%;padding:24px}
 .checkin-discard h3,.checkin-discard p{margin:0}
 .checkin-discard .checkin-task-actions{padding:0;border:0}
@@ -88,8 +106,14 @@
 .reassign-room-help,.reassign-price-note,.reassign-balance-note{margin:-7px 0 0;font-size:12px}
 .reassign-balance-note{padding:9px 11px;border-radius:10px;background:#fff7e7;color:#744a13;font-weight:700}
 .field-hint{display:block;margin-top:4px;color:#68778a;font-size:11px}
+.ui-dropdown-root{position:relative}
+.reception-more-actions{display:inline-flex;align-items:center;gap:7px;min-height:46px}
+.ui-dropdown-menu{position:absolute;top:calc(100% + 5px);right:0;z-index:70;display:grid;min-width:190px;padding:5px;border:1px solid #d8e0e8;border-radius:12px;background:#fff;color:#213247;box-shadow:0 14px 36px #14203326}
+.ui-dropdown-menu-item{display:flex;align-items:center;min-height:42px;padding:9px 11px;border:0;border-radius:8px;background:transparent;color:#213247;text-align:left;outline:none;cursor:pointer}
+.ui-dropdown-menu-item:hover,.ui-dropdown-menu-item:focus-visible{background:#eef4f9;color:#213247}
 @media(max-width:900px){
-  .checkin-task{inset:0;width:100vw;border:0}
+  .ui-sheet-content{width:100vw;border:0}
+  .ui-drawer-popup{inset:0;width:100vw;height:100dvh;max-height:100dvh}
   .reception-case-layout{grid-template-columns:minmax(0,1fr)}
   .case-layout .reception-queue-panel{position:static;max-height:none;overflow:visible}
   .reception-case-queue{max-height:52vh}
@@ -97,6 +121,8 @@
   .reception-queue-filters button{flex:0 0 auto;width:auto}
 }
 @media(max-width:560px){
+  .local-dev-identity label{flex:1 1 100%;justify-content:space-between}
+  .local-dev-identity select{flex:1;min-width:0;max-width:100%}
   .reception-workspace-heading{align-items:stretch}
   .reception-heading-actions{width:100%;justify-content:space-between}
   .reception-create-trigger{flex:0 0 auto}
@@ -106,11 +132,10 @@
   .reassign-surface-heading{display:grid;gap:8px}
   .reassign-date-chip{justify-self:start}
   .reassign-room-summary,.reassign-price-summary{grid-template-columns:1fr}
-  .checkin-task-header{padding:16px}
+  .checkin-task-header{padding:14px 16px}
   .checkin-task-body{padding:16px}
   .checkin-task-actions{padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
   .checkin-task-actions button{flex:1 1 0}
+  .checkin-status-heading{align-items:flex-start;flex-direction:column;gap:4px}
   .reassign-room-summary>span{display:none}
 }
-@media(prefers-reduced-motion:no-preference){.checkin-task[open]{animation:checkin-enter .18s ease-out}}
-@keyframes checkin-enter{from{transform:translateX(18px);opacity:.82}to{transform:translateX(0);opacity:1}}
