@@ -14,7 +14,7 @@ Active task: implement F0.8 under frozen Task Contract `.orchestration/contracts
 - Bounded Rework Contract `.orchestration/contracts/HMS-F0-08-REPAIR-RECOVERY-LIST-375-001.md` was frozen before code changes. Repairs preserve the original GUEST_CREATED operation in recovery list after a distinct booking and prove the same browser operation at 375×844. Fresh F0.8 D1 7/7, full suite 33/151, types/build/architecture/budgets/query plans/Wrangler dry-runs and integrated Worker/D1/Vite/browser all pass; CF-I03/04, CF-I05, CF-I06 passed immediately before the narrow correction and did not cover the changed list predicate.
 - Replacement immutable substantive Artifact A2: `abd9afdd7537ecef29ad4ae099d769c38b137f6d`. It contains the bounded repair and fresh evidence. Its exact A2+B2 Independent Critic review is recorded below; the A1 verdict remains historical and is not carried forward. Foundation 0 remains open.
 - Locke (fresh separate read-only GPT-6 Luna Medium) reviewed exact A2 `abd9afdd7537ecef29ad4ae099d769c38b137f6d` + B2 `9492f6ba4b866e2e4fefa0fd5a1ae921c1f1ef60`, verdict `PASS_WITH_CONDITIONS`: confirms both A1 findings closed; only MEDIUM condition is B2 `runtime_status=RUNNING` while awaiting Critic. No product edits/tests by reviewer, no architecture contradiction/ROADMAP_BLOCKER. Evidence: `.orchestration/evidence/HMS-F0-08-INDEPENDENT-CRITIC-A2-B2.md`.
-- Metadata-only condition repair contract `.orchestration/contracts/HMS-F0-08-REPAIR-REVIEW-HANDOFF-STATUS-001.md` is frozen. Preserve A2 unchanged; update terminal handoff status with external review still required and resume disabled, then ask for bounded exact A2+B3 confirmation.
+- Metadata-only condition repair contract `.orchestration/contracts/HMS-F0-08-REPAIR-REVIEW-HANDOFF-STATUS-001.md` is frozen. A2 remains byte-for-byte unchanged. The B3 dispatch uses `READY_TO_RESUME` only as a stopped-runtime marker, with `resume_authorized=false`, `external_review.required=true`, and a stop reason naming the blocking Critic confirmation; existing dispatcher source independently checks all gates and will not auto-resume. Bounded exact A2+B3 handoff confirmation is pending.
 
 Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `18JGIQxyl8Bh6_w7H3eW1qdPL7jfUsdSLk43aE-G-90A`. Roadmap authority is Artifact A2 `b2581e4c370eeb6f74e9380af010e48386642b4f` and Boundary B2 `c6a4bcb9a2939505f7ddf8e72c02ec9b825f00f3`.
 
@@ -256,7 +256,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-Repair the sole B2 handoff condition under `.orchestration/contracts/HMS-F0-08-REPAIR-REVIEW-HANDOFF-STATUS-001.md`, keep A2 immutable, create orchestration-only B3, and obtain a bounded fresh confirmation of exact A2+B3 dispatch state. Once the condition is discharged, continue the approved Foundation 0 DAG at F0.9. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
+Obtain a bounded fresh confirmation of exact F0.8 A2 `abd9afdd7537ecef29ad4ae099d769c38b137f6d` + orchestration-only B3 handoff. After the condition is discharged, continue the approved Foundation 0 DAG at F0.9. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
 
 ## MODEL ROUTING
 
