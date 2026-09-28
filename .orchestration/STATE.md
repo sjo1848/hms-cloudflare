@@ -2,6 +2,8 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
+Active F0.5 is frozen as Artifact A `0bafe4875de759869760cc4abdb08319c70e6b7a`. The task contract and all 24 invariant classifications are in A. Pre-Critic and required local/synthetic validation are complete; a fresh exact-pair Independent Critic is the next blocking boundary. Do not continue to F0.6 until that review is resolved. F0.6 alone owns legacy active-stay pricing bootstrap. No real data, PR/push/merge, main, staging, deploy, production, or Blocks A–H.
+
 Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `18JGIQxyl8Bh6_w7H3eW1qdPL7jfUsdSLk43aE-G-90A`. Roadmap authority is Artifact A2 `b2581e4c370eeb6f74e9380af010e48386642b4f` and Boundary B2 `c6a4bcb9a2939505f7ddf8e72c02ec9b825f00f3`.
 
 - Dedicated branch: `impl/hms-foundation-0`, based exactly on roadmap Boundary B2. Replacement F0.2 Artifact A with finalized evidence is `25656bec8fcc125544934e63756df371d7b7ad79`; its orchestration-only Boundary B is `a84d9ab74aabc116878fd320e5e38588b372b666` and received Independent Critic PASS for F0.2 only.
@@ -34,6 +36,16 @@ Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `
 - Replacement Artifact A `69bd08b8fd194a9565b426b66f03ff638993304f` + Boundary B `a5326be2695b7a4cff0ad24cff784d5fc4c516cc` received fresh Independent Critic `PASS`: Curie's only condition (independent integrated browser/migration reproduction) was satisfied by Maxwell's separate detached-worktree Worker/D1/browser run, exit 0. Dalton's initial `REWORK` findings were repaired. Review evidence: `.orchestration/evidence/HMS-F0-04-REVIEW-DISPOSITION.md`. F0.4 fresh results: executing-D1 9/9; full `npm run check` 30 files/125 tests; types/build/architecture/budgets/query plans/Wrangler dry-runs PASS; CF-I03/04 PASS; integrated Worker/D1 desktop+mobile exit 0 including RBAC and true two-tenant isolation.
 - Repaired findings: Wrangler scalar-CASE trigger parser `incomplete input`; 409 message erased by authoritative refresh; stale date/queue selectors and browser harness assumptions; fixed-date CF-I03 fixture; two regression runners now isolate local Wrangler state rather than deleting `.wrangler/state`.
 - F0.4 Development Gate: `PASS` after exact A+B Independent Critic PASS and independent QA fulfillment of the sole condition. This does not close Foundation 0. Continue automatically to F0.5 under the approved DAG; no Block A–H. Preserve booking totals and billing rows in F0.4; F0.5 owns segmented active-stay pricing. Real data remains prohibited; no PR, push, merge, main, staging, deploy or production.
+
+### F0.5 — Segmented Reassignment Pricing (awaiting exact-pair Independent Critic)
+
+- Frozen Task Contract: `.orchestration/contracts/HMS-F0-05-SEGMENTED-REASSIGNMENT-PRICING-001.md`; 24 registry invariants mapped. Bounded shared-room race repair contract: `.orchestration/contracts/HMS-F0-05-REPAIR-HOUSEKEEPING-AUDIT-RACE-001.md`.
+- Artifact A: `0bafe4875de759869760cc4abdb08319c70e6b7a`. It adds migration `0025_segmented_stay_pricing.sql`, append-only per-night rate segments and pricing versions, server-authoritative reassignment quote/commit, current destination rate for remaining hotel-local nights, D11 reconciliation while preserving extra charges and payment ledger, Reception price impact, directed/executing-D1 tests and evidence. No historical active stays were bootstrapped; F0.6 remains separate.
+- Fresh validation: `npm run check` 31 files / 133 tests PASS (D11 4/4; reassignment interval 14/14); `npm run types:check` PASS; `npm run web:build` PASS (JS raw 296651/300000 B, gzip 86095 B); `npm run architecture:fitness` PASS; `npm run test:d1-query-plan` PASS; API/Web Wrangler dry-run PASS; staging SPA config dry-run PASS (no staging mutation); CF-I03/04 PASS; CF-I05 PASS after bounded race repair; CF-I06 PASS on unique temporary D1. Integrated Worker+D1+Vite reassignment browser PASS, exit 0, desktop+375px mobile: quote/remaining-interval parity, BLOCKING, NON_BLOCKING, reason, repricing, persistence, authoritative UI refresh and stale 409 recovery. `git diff --check` PASS.
+- Browser finding disposition: an initial assertion observed old room text while Reception's three-request queue load (board/rooms/guests) was still in flight. This was a test synchronization race; condition-based DOM evidence now waits for authoritative room rendering without sleep/retry/timeout inflation. The integrated run passes.
+- Shared correctness finding discovered by CF-I05: two stale housekeeping callers could both record CLEANING_START although only one transition won. A narrow version-bound event `INSERT … SELECT` guard fixes the false loser event without `changes()` chaining. Directed executing-D1 and CF-I05 pass. This repair is explicitly scoped as inherited INV-ATOMIC/AUDIT correctness, not a new Housekeeping feature.
+- Earlier local-only caveat: the first CF-I06 attempt before its isolation repair used Wrangler's default local synthetic fixture store and changed named fixture rows. The runner now confines every operation to a unique temp persistence directory; subsequent CF-I06 passes. No remote/customer/staging/production data, real cutover or active-stay bootstrap was accessed or mutated; no attempt was made to reconstruct disposable local fixtures.
+- Pre-Critic and invariant evidence are in `.orchestration/evidence/HMS-F0-05-SEGMENTED-REASSIGNMENT-PRICING-001-{PRECRITIC,INVARIANTS}.md`. The Pre-Critic gate is eligible/pass internally only; no substantive PASS is self-issued. Await a fresh exact A+B Independent Critic before F0.6. No Block A–H, PR, push, merge, main, staging mutation, deploy or production.
 
 ## HISTORICAL BOUNDARY — HMS-ROADMAP-CTRL-REWORK-001
 
@@ -204,7 +216,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-External Independent Critic reviews artifact A `a090b283c2303871af25375c66050117efafbeb2` plus this orchestration boundary, including the documented native-dialog component adaptation. Then return to the Reception + Check-in UI Controller checkpoint. No next workflow is authorized by this task. Prior P0.1/Wave 1.2 reviews, global browser findings and promotion restrictions remain recorded and unresolved.
+External Independent Critic reviews F0.5 Artifact A `0bafe4875de759869760cc4abdb08319c70e6b7a` plus the immediately following orchestration-only Boundary B. This is an internal Foundation 0 review boundary, not a Human Gate. After the exact-pair verdict, continue the approved F0 DAG autonomously; do not begin Block A–H. No real data/cutover/bootstrap, PR, push, merge, main, acceptance/staging, deploy, or production.
 
 ## MODEL ROUTING
 
