@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active task: bounded F0.6 rework for Independent Critic finding `F0.6-IC-01 HIGH` under `.orchestration/contracts/HMS-F0-06-REPAIR-CANONICAL-PRICING-SNAPSHOT-001.md`. A1 `ac0b42cb6bdc787726b3160957464af1298eb52a` received `REWORK`; its review boundary is superseded for further development. Repair is authorized and active; a new exact A2+B2 will receive a fresh critic. F0.6 remains synthetic/local; real active-stay reads/bootstrap are forbidden. No PR/push/merge, main, staging, deploy, production, or Blocks A–H.
+Active task: F0.7 settlement guard contract frozen under `.orchestration/contracts/HMS-F0-07-SETTLEMENT-GUARD-001.md`; implementation not yet started. F0.6 A2 `1b83cc1a6832e8fb4f95dfdfa7b134021075775d` received Independent Critic `PASS_WITH_CONDITIONS`; F0.6-IC-01 HIGH is closed, evidence conditions were confirmed in B4 and state wording reconciled through B5. Follow-up confirms the handoff is consistent. A2 remains immutable. F0.6 is accepted as an upstream dependency for continuation only; this is not aggregate Foundation 0 PASS. Real active-stay data/bootstrap remains forbidden. No PR/push/merge, main, staging, deploy, production, or Blocks A–H.
 
 Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `18JGIQxyl8Bh6_w7H3eW1qdPL7jfUsdSLk43aE-G-90A`. Roadmap authority is Artifact A2 `b2581e4c370eeb6f74e9380af010e48386642b4f` and Boundary B2 `c6a4bcb9a2939505f7ddf8e72c02ec9b825f00f3`.
 
@@ -231,7 +231,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-Obtain bounded Independent Critic follow-up on exact Artifact A2 `1b83cc1a6832e8fb4f95dfdfa7b134021075775d` + orchestration-only Boundary B5, confirming the stale runtime sentence is corrected and the evidence handoff is consistent. Do not advance to F0.7 until recorded. No real-data access, Blocks A–H, PR, push, merge, main, staging mutation, deploy or production.
+Implement only F0.7 under `.orchestration/contracts/HMS-F0-07-SETTLEMENT-GUARD-001.md`; run adversarial checkout/payment/charge races and integrated conflict recovery. Continue Foundation 0 DAG only; no Blocks A–H or real data, PR, push, merge, main, staging mutation, deploy or production.
 
 ## MODEL ROUTING
 
