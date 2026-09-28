@@ -12,3 +12,14 @@ Task Contract: `.orchestration/contracts/HMS-F0-10-REPAIR-NETWORK-WRITES-KEYBOAR
 8. **Regression/publication — REQUIRED.** After the code edit, rerun tests, types, build/budget/architecture, query plans, dry-runs, F0.10 integrated browser and relevant CF-I03–I07 serial gates. Update invariant record, freeze A2, create orchestration-only B2 and request a new Independent Critic. A1/B1 retain their REWORK verdict; do not mutate them or report their review as cleared.
 
 `PRE-CRITIC: PASS FOR BOUNDED REWORK / IMPLEMENTATION MAY BEGIN`
+
+## Final Pre-Critic after implementation
+
+1. **IC-01 — PASS.** `NetworkPage` reads only `CapabilitiesContext.network` and conditionally renders both registration `<details>` and plan editor `<select>` when `saas.hotels.write` is present. Without it, neither write affordance is mounted; current plan stays visible as text. Backend route/grants unchanged.
+2. **IC-02 — PASS.** Real browser keyboard traversal reaches register summary, registration input and plan editor for network `saas_admin`. A current Hotel Sur `ops` member directly navigating to `/network` has no registration/plan editor nodes and 40 Tab steps never focus the forbidden selectors. Desktop and mobile viewports exercised. One synthetic hotels-list GET is explicitly scoped to selected-property UI proof because current canonical network capability sets do not include a read-without-write role; `/auth/me` and denied POST remain real Worker/D1.
+3. **IC-03 — publication follow-up.** All ordinary applied invariants are PASS and the invariant record keeps `INV-STATE-001` explicitly conditional on exact A2+B2 plus independent review. After the exact critic verdict is persisted, an orchestration-only follow-up will finalize that one row. No invariant is represented as already self-approved.
+4. **All 24 invariants — PASS/N/A.** Updated evidence is `.orchestration/evidence/HMS-F0-10-SERVER-OWNED-CAPABILITIES-001-INVARIANTS.md`; each APPLIES result has exact evidence or the non-circular review condition; each N/A has rationale.
+5. **Fresh validation — PASS.** `npm run check`: 33 files / 168 tests; `npm run types:check`; `npm run web:build`; architecture fitness/i18n/budgets; D1 query plans; Wrangler API/Web dry-runs; serial CF-I03+I04, CF-I05, CF-I06, CF-I07; final local Worker/two D1/Vite browser runner. JS raw 299,947/300,000 bytes. Runner process cleanup is verified before PASS.
+6. **Scope/budget — PASS.** Only NetworkPage conditionally renders these controls; AppShell removes a now-unused `data-network-capabilities` attribute and its CSS-only rule/file; no other attribute used by other surfaces, capability grant, API guard, migration, or product operation changed. This keeps bundle at 53 bytes below the binding raw ceiling.
+
+`FINAL PRE-CRITIC: PASS — eligible for replacement Artifact A2 + orchestration-only Boundary B2 and fresh Independent Critic`

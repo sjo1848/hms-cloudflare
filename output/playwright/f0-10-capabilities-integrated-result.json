@@ -12,7 +12,9 @@
     "opsRoomWrite": false,
     "housekeepingRoleAction": "visible",
     "networkOnlyNavigation": "PASS",
-    "networkWriteAction": "visible",
+    "networkWriteAction": "visible-and-keyboard-reachable",
+    "networkDeniedWritesHidden": "PASS",
+    "networkKeyboard": "PASS",
     "directDenied": "PASS",
     "unmemberedHotel": 403,
     "outOfOrderAuthMe": "PASS"

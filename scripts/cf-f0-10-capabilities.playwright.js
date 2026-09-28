@@ -165,13 +165,62 @@
     || !networkOnly.capabilities.network.includes("saas.hotels.read")
     || !networkOnly.capabilities.network.includes("saas.hotels.write")) throw new Error(`network-only identity has incorrect scopes: ${JSON.stringify(networkOnly)}`);
   await page.getByRole("link", { name: /Network/ }).waitFor({ state: "visible" });
-  if (!(await page.locator(".network-operational details").isVisible())) throw new Error("network registration control was hidden despite saas.hotels.write");
+  if (!(await page.locator(".admin-surface > details").isVisible())) throw new Error("network registration control was hidden despite saas.hotels.write");
+  const tabTo = async selector => {
+    for (let i = 0; i < 40; i += 1) {
+      await page.keyboard.press("Tab");
+      if (await page.evaluate(value => document.activeElement?.matches(value) ?? false, selector)) return;
+    }
+    throw new Error(`keyboard traversal did not reach ${selector}`);
+  };
+  await tabTo(".admin-surface > details > summary");
+  await page.keyboard.press("Enter");
+  await page.locator(".admin-surface > details[open]").waitFor();
+  await tabTo("#hotel-id");
+  const hotelNorth = page.getByRole("button", { name: /Hotel Norte/ });
+  await hotelNorth.click();
+  await tabTo(".network-detail select");
+  if (!(await page.locator(".network-detail select").isVisible())) throw new Error("authorized plan editor is not visible and keyboard reachable");
   for (const inaccessible of ["Reception", "Rooms", "Guests", "Housekeeping", "Reports", "Users"]) {
     if (await page.getByRole("link", { name: new RegExp(inaccessible) }).count()) throw new Error(`network-only identity saw hotel navigation: ${inaccessible}`);
   }
   const deniedHotelRead = await page.evaluate(async () => (await fetch("/api/v1/rooms")).status);
   if (deniedHotelRead !== 403) throw new Error(`network-only identity accessed hotel API: ${deniedHotelRead}`);
   await page.screenshot({ path: "output/playwright/f0-10-network-only-navigation.png", fullPage: true });
+
+  await profile.selectOption("2");
+  await page.setExtraHTTPHeaders({
+    "x-local-access-subject": "source-user:24000000-0000-0000-0000-000000000001",
+    "x-local-access-email": "sol-ops@migration.invalid",
+    "x-hotel-id": hotelB,
+  });
+  await page.route("**/api/v1/hotels", async route => {
+    if (route.request().method() !== "GET") return route.continue();
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([
+      { id: hotelB, slug: "hotel-sur", name: "Hotel Sur", address: "B Street", plan_tier: "BASIC", operational_binding: "HOTEL_SECOND_DB", active: 1 },
+    ]) });
+  });
+  await page.goto("http://127.0.0.1:4178/network");
+  await page.getByRole("button", { name: /Hotel Sur/ }).waitFor({ state: "visible" });
+  await page.getByRole("button", { name: /Hotel Sur/ }).click();
+  await page.locator(".network-detail").waitFor({ state: "visible" });
+  if (await page.locator(".admin-surface > details").count() !== 0
+    || await page.locator(".network-detail select").count() !== 0) throw new Error("network write affordances remained in DOM without saas.hotels.write");
+  if (!(await page.getByRole("button", { name: /Hotel Sur/ }).innerText()).includes("Basic")
+    || !(await page.locator(".network-detail").innerText()).includes("Basic")) throw new Error("read-only hotel plan is not legible without network write capability");
+  await page.locator("body").click({ position: { x: 2, y: 2 } });
+  for (let i = 0; i < 40; i += 1) {
+    await page.keyboard.press("Tab");
+    const focusedWriteControl = await page.evaluate(() => document.activeElement?.matches("#hotel-id, #hotel-slug, #hotel-name, #hotel-binding, .network-detail select") ?? false);
+    if (focusedWriteControl) throw new Error("keyboard traversal reached a network write control without saas.hotels.write");
+  }
+  await page.screenshot({ path: "output/playwright/f0-10-network-no-write-keyboard.png", fullPage: true });
+  const deniedNetworkWrite = await page.evaluate(async () => {
+    const response = await fetch("/api/v1/hotels", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: "denied-hotel", slug: "denied", name: "Denied", operational_binding: "HOTEL_SECOND_DB", plan_tier: "BASIC" }) });
+    return response.status;
+  });
+  if (deniedNetworkWrite !== 403) throw new Error(`hotel member without network write capability received network write: ${deniedNetworkWrite}`);
+  await page.unroute("**/api/v1/hotels");
 
   await profile.selectOption("1");
   await page.setExtraHTTPHeaders({
@@ -240,5 +289,5 @@
   if (!afterStaleResponse?.includes("bookings.read") || afterStaleResponse.includes("rooms.write")
     || await roomWrite.isVisible()) throw new Error(`out-of-order /auth/me response restored stale capabilities: ${afterStaleResponse}`);
   await page.unroute("**/api/v1/auth/me");
-  return { desktop: "1280x900", mobile: "375x844", dualScope: "PASS", adminRoomGuestUserControls: "visible", beforeDowngrade: allowedWrite.status, afterDowngrade: deniedWrite.status, roomActionHidden: true, userControlsHidden: true, cashCloseHidden: true, opsRoomWrite: false, housekeepingRoleAction: "visible", networkOnlyNavigation: "PASS", networkWriteAction: "visible", directDenied: "PASS", unmemberedHotel: unmemberedContext.status, outOfOrderAuthMe: "PASS" };
+  return { desktop: "1280x900", mobile: "375x844", dualScope: "PASS", adminRoomGuestUserControls: "visible", beforeDowngrade: allowedWrite.status, afterDowngrade: deniedWrite.status, roomActionHidden: true, userControlsHidden: true, cashCloseHidden: true, opsRoomWrite: false, housekeepingRoleAction: "visible", networkOnlyNavigation: "PASS", networkWriteAction: "visible-and-keyboard-reachable", networkDeniedWritesHidden: "PASS", networkKeyboard: "PASS", directDenied: "PASS", unmemberedHotel: unmemberedContext.status, outOfOrderAuthMe: "PASS" };
 })()

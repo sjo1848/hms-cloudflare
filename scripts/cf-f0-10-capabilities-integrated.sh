@@ -127,7 +127,7 @@ if (rows[0]?.role !== "receptionist" || rows[1]?.role_audits !== 2) throw new Er
 const roomRows = JSON.parse(fs.readFileSync(process.argv[2].replace("downgrade.json", "rooms.json"), "utf8")).flatMap(item => item.results);
 if (roomRows[0]?.allowed_room !== 1 || roomRows[1]?.denied_room !== 0) throw new Error(`allowed/denied room write state mismatch: ${JSON.stringify(roomRows)}`);
 const browser = JSON.parse(fs.readFileSync("output/playwright/f0-10-capabilities-integrated.log", "utf8"));
-for (const key of ["desktop", "mobile", "dualScope", "outOfOrderAuthMe"]) if (!browser[key]) throw new Error(`integrated browser evidence missing ${key}: ${JSON.stringify(browser)}`);
+for (const key of ["desktop", "mobile", "dualScope", "outOfOrderAuthMe", "networkDeniedWritesHidden", "networkKeyboard"]) if (!browser[key]) throw new Error(`integrated browser evidence missing ${key}: ${JSON.stringify(browser)}`);
 if (browser.beforeDowngrade !== 201 || browser.afterDowngrade !== 403 || browser.unmemberedHotel !== 403 || browser.directDenied !== "PASS") throw new Error(`integrated browser authorization mismatch: ${JSON.stringify(browser)}`);
 const result = { browser, d1: { allowedRoomCount: roomRows[0].allowed_room, deniedRoomCount: roomRows[1].denied_room, finalRole: rows[0].role, roleAuditCount: rows[1].role_audits }, cleanup: "owned Worker/Vite/Playwright processes verified stopped" };
 fs.writeFileSync("output/playwright/f0-10-capabilities-integrated-result.json", JSON.stringify(result, null, 2) + "\n");

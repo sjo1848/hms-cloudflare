@@ -24,6 +24,8 @@ Close only the two Independent Critic findings. Hotel registration and plan upda
 
 Do not change API routes, guards, role grants, Access, membership, tenant routing, network read behavior, hotel operations, migrations/schema, product policy, other F0.10 surfaces, F0.11, or Blocks A–H. No real data, remote bindings, PR/push/merge, main, staging, deploy or production. Existing exact Artifact A and B remain immutable; repair yields replacement A2 and orchestration-only B2.
 
+Implementation surface clarification: `AppShell.tsx` may remove the now-unused `data-network-capabilities` attribute and the obsolete CSS-only Network visibility rule/file once NetworkPage performs capability-based conditional rendering. This removes a dead presentation path and preserves the same server-provided capability semantics; it is included only if needed to remain within the frozen JS budget. No hotel capability data attribute used by other surfaces may be removed.
+
 ## Concurrency, idempotency, recovery
 
 No business mutation is added or changed. Capability context continues clearing on identity change and rejecting stale `/auth/me` responses. Register/plan API operations are unchanged and remain server guarded. A stale or absent capability fails closed by omitting the controls. No optimistic update or retry is added.

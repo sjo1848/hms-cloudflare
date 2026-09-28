@@ -31,3 +31,14 @@ This is a pre-implementation admission check, not implementation validation, Ind
 - No production, remote environment, real data, migration or deployment was touched.
 
 `POST-IMPLEMENTATION PRE-CRITIC: PASS — exact Artifact A + orchestration-only Boundary B may be submitted to a separate Independent Critic. No self-acceptance is claimed.`
+
+## Bounded Independent-Critic rework closeout
+
+The first exact A+B review returned `REWORK`; its findings and scope are preserved in `.orchestration/evidence/HMS-F0-10-INDEPENDENT-CRITIC-A-B.md`. The bounded repair contract/precritic and final evidence are `.orchestration/contracts/HMS-F0-10-REPAIR-NETWORK-WRITES-KEYBOARD-001.md` and `.orchestration/evidence/HMS-F0-10-REPAIR-NETWORK-WRITES-KEYBOARD-001-PRECRITIC.md`.
+
+- `F0.10-IC-01` now has conditional DOM rendering using only server-owned `saas.hotels.write`; the read-only plan remains visible. Integrated browser checks authorized and unauthorized contexts and API denial.
+- `F0.10-IC-02` now has real Playwright tab-order assertions at 1280×900 and 375×844 for permitted controls and inaccessible controls.
+- `F0.10-IC-03` remains explicitly non-circular until the replacement exact A2+B2 independent verdict is recorded. After that verdict, an orchestration-only evidence update will set INV-STATE PASS and record the exact decision; no substantive artifact changes are planned after review.
+- Fresh complete suite 33/168; types; build; architecture/i18n/budgets (JS 299,947/300,000); query plans; API/Web Wrangler dry-runs; serial CF-I03/04 through CF-I07; integrated Worker/D1/Vite evidence all PASS.
+
+`BOUNDED REWORK PRE-CRITIC: PASS — replacement A2+B2 eligible for a fresh separate reviewer; Development Gate still awaits that review.`
