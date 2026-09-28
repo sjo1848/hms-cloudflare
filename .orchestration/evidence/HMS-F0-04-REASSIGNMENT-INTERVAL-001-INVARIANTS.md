@@ -8,7 +8,7 @@ Pre-Critic gate: `.orchestration/PRECRITIC-GATE.md`
 
 | Invariant | Applies? | Status | Concrete evidence | Notes |
 |---|---|---|---|---|
-| INV-ATOMIC-001 | APPLIES | PASS | `reassignment-interval.executing-d1.test.ts`: event-failure rollback, source-claim stale snapshot, same-booking race, shared-destination race; exact booking/room/claim/event snapshots | D1 batch and trigger abort tested on executing D1. |
+| INV-ATOMIC-001 | APPLIES | PASS | `reassignment-interval.executing-d1.test.ts`: event-failure rollback, equal-count wrong-date source-claim substitution between snapshot and batch, destination visible-state ABA with version advance, same-booking race, shared-destination race; exact booking/room/claim/event snapshots | Both application write predicate and final D1 event guard validate exact date sets, not only counts. |
 | INV-AUDIT-001 | APPLIES | PASS | Same executing-D1 tests assert exactly one REASSIGN event for the winner and zero for rejected/stale/loser operations; event details include actor/request/hotel, effective interval and room versions | |
 | INV-DOMAIN-001 | APPLIES | PASS | `domain.test.ts`, executing-D1 tests and `scripts/cf-i03-regression.sh`: CHECKED_IN/date/reason/destination/maintenance/ledger transition behavior | Command remains the lifecycle domain operation. |
 | INV-TENANT-001 | APPLIES | PASS | `cf-wave12-reassignment-integrated.sh`: a booking persisted only in HOTEL_SECOND_DB returns 404 when addressed under hotel A; second-tenant booking, three night claims and event table are checked unchanged | Two synthetic hotel D1s; no real data. |
@@ -51,11 +51,12 @@ Pre-Critic gate: `.orchestration/PRECRITIC-GATE.md`
 | Desktop/mobile conflict and success paths work | `cf-wave12-reassignment-integrated.playwright.js` | Integrated browser |
 | RBAC and tenant isolation fail closed | Integrated runner 403/404 plus zero-drift queries against two synthetic hotel D1s | Integrated Worker + D1 |
 | CF-I03 regression passes with deterministic local-date fixture | `bash scripts/cf-i03-regression.sh` | Integrated Worker + D1 |
+| Equal-count substitution and visible-state ABA fail closed | `reassignment-interval.executing-d1.test.ts` (cases “equal-count wrong-date source claim” and “destination room visible-state ABA”) | Executing D1 with deterministic interleaving |
 
 ## Publication decision
 
 - [x] No applicable invariant is FAIL or UNPROVEN; INV-STATE-001 is fulfilled by the next orchestration-only B commit after A.
 - [x] F0.4 Task Contract validation and scope audit passed for the evidence recorded here.
 - [x] No real/customer data was accessed or mutated; all D1 fixtures were local and synthetic.
-- [ ] Artifact A and exact orchestration Boundary B published locally.
-- [ ] Independent Critic review of exact A+B; Codex does not self-approve F0.4.
+- [ ] Replacement Artifact A and exact orchestration Boundary B published locally.
+- [ ] Fresh Independent Critic review of replacement A+B; Codex does not self-approve F0.4.

@@ -58,6 +58,13 @@ export class D1LifecycleRepository implements LifecycleRepository {
             WHERE e.booking_id=b.id AND e.event_type='REASSIGN' AND json_extract(e.details_json,'$.to_room_id')=b.room_id
             ORDER BY e.created_at DESC,e.rowid DESC LIMIT 1),b.check_in)
           AND n.stay_date < b.check_out) AS current_claim_count,
+        (SELECT json_group_array(expected.stay_date) FROM (
+          SELECT n.stay_date FROM room_inventory_nights n WHERE n.booking_id=b.id AND n.room_id=old_room.id
+            AND n.stay_date >= COALESCE((SELECT json_extract(e.details_json,'$.effective_date') FROM lifecycle_events e
+              WHERE e.booking_id=b.id AND e.event_type='REASSIGN' AND json_extract(e.details_json,'$.to_room_id')=b.room_id
+              ORDER BY e.created_at DESC,e.rowid DESC LIMIT 1),b.check_in)
+            AND n.stay_date < b.check_out ORDER BY n.stay_date
+        ) expected) AS current_claim_dates,
         (SELECT COUNT(*) FROM room_inventory_nights n WHERE n.booking_id=b.id AND n.room_id<>old_room.id
           AND n.stay_date >= COALESCE((SELECT json_extract(e.details_json,'$.effective_date') FROM lifecycle_events e
             WHERE e.booking_id=b.id AND e.event_type='REASSIGN' AND json_extract(e.details_json,'$.to_room_id')=b.room_id
@@ -76,7 +83,7 @@ export class D1LifecycleRepository implements LifecycleRepository {
         destination_room_version: number; destination_checked_in_count: number;
         destination_open_maintenance_count: number; destination_blocking_count: number; destination_non_blocking_count: number;
         invoice_id: string | null; invoice_status: string | null; paid_amount_cents: number | null; ledger_paid_cents: number;
-        current_claim_count: number; stray_current_claim_count: number;
+        current_claim_count: number; current_claim_dates: string; stray_current_claim_count: number;
       }>();
     if (!snapshot || snapshot.room_id !== current.room_id || snapshot.check_in !== current.check_in
       || snapshot.check_out !== current.check_out || snapshot.status !== current.status
@@ -88,6 +95,11 @@ export class D1LifecycleRepository implements LifecycleRepository {
       || snapshot.assignment_start_date < snapshot.check_in || snapshot.assignment_start_date >= snapshot.check_out) return { ok: false };
     const expectedCurrentClaimCount = claimDates(snapshot.assignment_start_date, snapshot.check_out).length;
     if (snapshot.current_claim_count !== expectedCurrentClaimCount || snapshot.stray_current_claim_count !== 0) return { ok: false };
+    const expectedCurrentClaimDates = claimDates(snapshot.assignment_start_date, snapshot.check_out);
+    let observedCurrentClaimDates: unknown;
+    try { observedCurrentClaimDates = JSON.parse(snapshot.current_claim_dates); } catch { return { ok: false }; }
+    if (!Array.isArray(observedCurrentClaimDates)
+      || JSON.stringify(observedCurrentClaimDates) !== JSON.stringify(expectedCurrentClaimDates)) return { ok: false };
     const oldState = roomOperationalReadModel({
       legacy_room_status: snapshot.old_status,
       housekeeping_state: snapshot.old_housekeeping_state,
@@ -118,6 +130,8 @@ export class D1LifecycleRepository implements LifecycleRepository {
       hotel_local_date: hotelLocalDate,
       effective_date: effectiveDate,
       assignment_start_date: snapshot.assignment_start_date,
+      expected_elapsed_claim_dates: claimDates(snapshot.assignment_start_date, effectiveDate),
+      expected_remaining_claim_dates: dates,
       reason,
       old_total_cents: snapshot.total_cents,
       new_total_cents: snapshot.total_cents,
@@ -158,6 +172,11 @@ export class D1LifecycleRepository implements LifecycleRepository {
               ORDER BY e.created_at DESC,e.rowid DESC LIMIT 1),?5)=?11
             AND (SELECT COUNT(*) FROM room_inventory_nights n WHERE n.booking_id=?1 AND n.room_id=?4
               AND n.stay_date>=?11 AND n.stay_date<?6)=CAST(julianday(?6)-julianday(?11) AS INTEGER)
+            AND NOT EXISTS (SELECT 1 FROM room_inventory_nights n WHERE n.booking_id=?1 AND n.room_id=?4
+              AND n.stay_date>=?11 AND n.stay_date<?6
+              AND NOT EXISTS (SELECT 1 FROM json_each(?14) expected WHERE expected.value=n.stay_date))
+            AND NOT EXISTS (SELECT 1 FROM json_each(?14) expected WHERE NOT EXISTS (
+              SELECT 1 FROM room_inventory_nights n WHERE n.booking_id=?1 AND n.room_id=?4 AND n.stay_date=expected.value))
             AND NOT EXISTS (SELECT 1 FROM room_inventory_nights n WHERE n.booking_id=?1 AND n.room_id<>?4
               AND n.stay_date>=?11 AND n.stay_date<?6)
             AND NOT EXISTS (SELECT 1 FROM room_holds h WHERE h.room_id=?2 AND h.start_date<?6 AND h.end_date>?12)
@@ -165,7 +184,8 @@ export class D1LifecycleRepository implements LifecycleRepository {
             AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id=?1 AND
               (i.status='VOIDED' OR i.paid_amount_cents<>(SELECT COALESCE(SUM(p.amount_cents),0) FROM payment_entries p WHERE p.invoice_id=i.id)))`)
           .bind(current.id, destinationRoomId, now, snapshot.room_id, snapshot.check_in, snapshot.check_out, snapshot.total_cents, hotelLocalDate,
-            snapshot.old_room_version, snapshot.destination_room_version, snapshot.assignment_start_date, effectiveDate, lifecycleEventId),
+            snapshot.old_room_version, snapshot.destination_room_version, snapshot.assignment_start_date, effectiveDate, lifecycleEventId,
+            JSON.stringify(expectedCurrentClaimDates)),
         this.db.prepare(`DELETE FROM room_inventory_nights WHERE booking_id=?1 AND room_id=?2 AND stay_date>=?3 AND stay_date<?4
           AND EXISTS (SELECT 1 FROM bookings WHERE id=?1 AND status='CHECKED_IN' AND room_id=?5)
           AND EXISTS (SELECT 1 FROM rooms WHERE id=?2 AND room_state_version=?6)`)

@@ -31,11 +31,12 @@ When an Independent Critic finds a defect whose root cause can recur outside the
 **Required evidence:**
 - deterministic zero-row stale-state regression;
 - when identity/version/case correlation exists, deterministic stale-identity or ABA regression (for example K1 -> resolved -> K2 opened -> stale K1 attempt);
+- when a write depends on a mutable collection, compare the exact expected identity/key set, not only an aggregate count; include equal-count substitution or omission/addition evidence where applicable;
 - exact final-state assertions for every affected entity/table, including newer/current related records;
 - zero unauthorized event/audit side effects;
 - endpoint/business operation must not return success for the stale operation.
 
-**Origin:** CF-I04 lifecycle races; CF-I05 cleaning/maintenance concurrency review; CF-I05 REWORK-1 stale maintenance-case ABA review.
+**Origin:** CF-I04 lifecycle races; CF-I05 cleaning/maintenance concurrency review; CF-I05 REWORK-1 stale maintenance-case ABA review; F0.4 Independent Critic finding that equal-count wrong-date room-night substitution escaped count-only validation.
 
 ## INV-AUDIT-001 — Audit/event exists iff the business mutation succeeded
 

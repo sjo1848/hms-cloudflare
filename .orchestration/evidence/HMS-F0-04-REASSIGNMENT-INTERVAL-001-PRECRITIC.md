@@ -1,7 +1,7 @@
 # HMS-F0-04-REASSIGNMENT-INTERVAL-001 — Pre-Critic Gate
 
-Status: `IMPLEMENTER GATE PASS; INDEPENDENT CRITIC REQUIRED`
-Artifact candidate: F0.4 local implementation plus its test/evidence files
+Status: `IMPLEMENTER GATE PASS AFTER CRITIC REWORK; FRESH INDEPENDENT CRITIC REQUIRED`
+Artifact candidate: replacement F0.4 implementation plus its test/evidence files
 Task Contract: `.orchestration/contracts/HMS-F0-04-REASSIGNMENT-INTERVAL-001.md`
 
 This is the mandatory implementer Pre-Critic, not an Independent Critic verdict or aggregate Foundation 0 acceptance.
@@ -23,9 +23,9 @@ This is the mandatory implementer Pre-Critic, not an Independent Critic verdict 
 
 ## 3. Mutation/concurrency sweep
 
-- Repository snapshots are tied to conditional booking identity and exact room-state versions; source claim set is revalidated at commit, and trigger guards bind the exact event to the server-only operation token.
+- Repository snapshots are tied to conditional booking identity and exact room-state versions; the complete source date set is compared to the expected interval before mutation and revalidated by the first conditional write, while the final D1 event guard checks exact elapsed and destination date sets. Trigger guards bind the exact event to the server-only operation token.
 - Competing same-booking/same-target requests and two bookings competing for one destination each prove at most one winner with loser state unchanged.
-- ABA/version reuse is prevented by monotonic room state versions plus unique consumed-version indexes. Stale source-claim alteration after snapshot rejects without partial state.
+- ABA/version reuse is prevented by monotonic room state versions plus unique consumed-version indexes. A deterministic destination state ABA (`AVAILABLE → OUT_OF_ORDER → AVAILABLE`) advances the version and rejects the stale snapshot. Equal-count wrong-date source-claim substitution after snapshot rejects without partial state.
 - Final event guard failure rolls back booking assignment, inventory, both room projections/versions and event.
 - D1 result interpretation does not claim that an after-batch JavaScript check can roll back committed statements.
 
@@ -66,20 +66,20 @@ Finding `F0.4-MIG-01`: clean local Wrangler migration application stopped at `00
 
 Root cause was isolated by executing each trigger separately in disposable D1. Wrangler's local D1 SQLite parser returned `incomplete input` for trigger predicates containing scalar `CASE` expressions (the effective-date equality and old-room/maintenance projection predicates). Smaller guards without those predicates applied. Replacing those `CASE` expressions with equivalent explicit boolean branches and keeping each fail-closed check in its own `BEFORE INSERT` trigger made the complete clean chain 0001–0024 apply successfully. The business interval/projection semantics are unchanged.
 
-The migration repair was then followed by the full executing-D1 reassignment suite (8/8), synthetic room-state rehearsal (2/2 with deterministic schema/migration/source/report hashes refreshed), and integrated Worker/D1 browser flow. No history migration was edited; 0024 remains additive/forward-only.
+After the Independent Critic repair, the full executing-D1 reassignment suite passed (9/9), synthetic room-state rehearsal passed (2/2 with deterministic schema/migration/source/report hashes refreshed), and the integrated Worker/D1 browser flow exited 0. No history migration was edited; 0024 remains additive/forward-only.
 
 ## 8. Full regression and scope audit
 
-Fresh recorded results:
+Fresh recorded results after the first Independent Critic REWORK and repair:
 
-- `npm run check`: 30 files / 124 tests PASS.
+- `npm run check`: 30 files / 125 tests PASS.
 - `npm run types:check`: PASS.
-- isolated production web build directed to `/tmp/hms-f0.4-web-dist`: PASS; the existing `apps/web/dist` was preserved.
+- isolated production web build directed to `/tmp/hms-f0.4-rework-web`: PASS; the existing `apps/web/dist` was preserved.
 - `npm run architecture:fitness`: architecture boundaries, i18n, and Cloudflare budgets PASS (JS 296,633 raw / 86,178 gzip; CSS 39,735 / 7,838).
 - `npm run test:d1-query-plan`: PASS on an isolated temporary DB; arrivals use `idx_bookings_status`; checkout uses `idx_bookings_status_checkout`; room nights use their composite key.
 - `npm run wrangler:dry-run`: API and Web PASS; no deploy.
 - `bash scripts/cf-i03-regression.sh`: `CF-I03 + CF-I04 lifecycle D1/API regression PASS` using a disposable D1 directory and a hotel-local-date-relative fixture.
-- clean Wrangler migration chain: 0001–0024 PASS; executing-D1 migration chain also passes in the two directed test files.
+- clean Wrangler migration chain: 0001–0024 PASS via the isolated integrated runner (exit 0); executing-D1 migration chain also passes in the directed tests.
 - `git diff --check`, `bash -n` for changed regression runners: PASS.
 
 The legacy regression's first re-run exposed a fixed 2026-09-27 assumption while hotel-local date was 2026-09-28. The fixture now derives check-in/check-out and expected elapsed/remaining claim ranges from `America/Argentina/Mendoza`; the same meaningful interval is asserted without sleeps or inflated timeouts.
@@ -94,10 +94,12 @@ The legacy regression's first re-run exposed a fixed 2026-09-27 assumption while
 | `F0.4-QA-02`: browser context's extra headers overrode a simulated role change | Move RBAC proof to direct Worker request with explicit identity; assert 403 and zero drift | Integrated Worker/D1 script |
 | `F0.4-CF-01`: CF-I03 expected fixed hotel date and used default Wrangler persistence | Date-relative fixture; all regression Wrangler operations use disposable `tmp_dir/wrangler-state` | CF-I03/CF-I04 PASS |
 | `F0.4-QP-01`: query-plan runner recursively deleted repository `.wrangler/state` | Runner now uses an owned temporary persistence directory and only removes that exact temp fixture | `npm run test:d1-query-plan` PASS; repository `.wrangler/state` is not targeted |
+| `F0.4-IC-01`: source room-night claims were validated by count, allowing an equal-count wrong-date substitution; ABA evidence was indirect | Compare the complete ordered source date set before the write, revalidate exact expected elapsed and destination date sets in the D1 event guard, add equal-count substitution and destination visible-state ABA interleaving tests; promote exact-set validation into `INV-ATOMIC-001` | Fresh executing-D1 9/9; `npm run check` 30/125; integrated Worker/D1/browser exit 0; `cf-i03` exit 0; query plans/build/budgets/types/Wrangler dry-runs PASS |
 
 ## 10. Scope audit and publication boundary
 
 - Diff affects F0.4 lifecycle, local Reception interval/conflict behavior, forward migration 0024, deterministic synthetic runners, F0.3 pinned source/schema digests affected by the new migration, and orchestration evidence.
 - No pricing logic, payment entries, unrelated modules, production data, migration history, promotion surface or Blocks A–H were added.
-- Artifact A will be frozen only after fresh complete rerun below. Boundary B will change orchestration/evidence only, record exact A, set `external_review.required=true`, and keep `resume_authorized=false` until the exact-pair Independent Critic verdict is persisted.
+- First Independent Critic (Dalton, fresh read-only GPT-6 Luna Medium) reviewed A `726bcecf9dfad0e8000bd2eab10249055d0d32c8` + B `4b1cf693590dacc0e17fac82d6557f13610f8ed1` and returned `REWORK`: HIGH count-only room-night validation; MEDIUM direct visible-state ABA evidence missing; standalone rerun was not completed. Rework added exact-set checks and both adversarial cases; this replacement is a new artifact and requires a different fresh critic after publication.
+- Replacement Artifact A will be frozen only after fresh complete rerun below. Boundary B will change orchestration/evidence only, record exact A, set `external_review.required=true`, and keep `resume_authorized=false` until the exact-pair Independent Critic verdict is persisted.
 - No Codex substantive PASS is declared here. F0.4 remains pending Independent Critic; Foundation 0 remains open.

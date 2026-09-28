@@ -198,6 +198,18 @@ BEGIN
   SELECT CASE WHEN EXISTS (
     SELECT 1 FROM room_inventory_nights n
     WHERE n.booking_id=NEW.booking_id AND n.room_id=NEW.from_room_id
+      AND n.stay_date>=json_extract(NEW.details_json,'$.assignment_start_date')
+      AND n.stay_date<json_extract(NEW.details_json,'$.effective_date')
+      AND NOT EXISTS (SELECT 1 FROM json_each(json_extract(NEW.details_json,'$.expected_elapsed_claim_dates')) expected WHERE expected.value=n.stay_date)
+  ) OR EXISTS (
+    SELECT 1 FROM json_each(json_extract(NEW.details_json,'$.expected_elapsed_claim_dates')) expected
+    WHERE NOT EXISTS (SELECT 1 FROM room_inventory_nights n
+      WHERE n.booking_id=NEW.booking_id AND n.room_id=NEW.from_room_id AND n.stay_date=expected.value)
+  ) THEN RAISE(ABORT,'reassignment elapsed claim dates mismatch') END;
+
+  SELECT CASE WHEN EXISTS (
+    SELECT 1 FROM room_inventory_nights n
+    WHERE n.booking_id=NEW.booking_id AND n.room_id=NEW.from_room_id
       AND n.stay_date>=json_extract(NEW.details_json,'$.effective_date')
       AND n.stay_date<(SELECT check_out FROM bookings WHERE id=NEW.booking_id)
   ) THEN RAISE(ABORT,'reassignment old remaining claims remain') END;
@@ -217,6 +229,18 @@ BEGIN
       AND n.stay_date<(SELECT check_out FROM bookings WHERE id=NEW.booking_id)
   ) <> CAST(julianday((SELECT check_out FROM bookings WHERE id=NEW.booking_id))-julianday(json_extract(NEW.details_json,'$.effective_date')) AS INTEGER)
     THEN RAISE(ABORT,'reassignment destination claim set mismatch') END;
+
+  SELECT CASE WHEN EXISTS (
+    SELECT 1 FROM room_inventory_nights n
+    WHERE n.booking_id=NEW.booking_id AND n.room_id=json_extract(NEW.details_json,'$.to_room_id')
+      AND n.stay_date>=json_extract(NEW.details_json,'$.effective_date')
+      AND n.stay_date<(SELECT check_out FROM bookings WHERE id=NEW.booking_id)
+      AND NOT EXISTS (SELECT 1 FROM json_each(json_extract(NEW.details_json,'$.expected_remaining_claim_dates')) expected WHERE expected.value=n.stay_date)
+  ) OR EXISTS (
+    SELECT 1 FROM json_each(json_extract(NEW.details_json,'$.expected_remaining_claim_dates')) expected
+    WHERE NOT EXISTS (SELECT 1 FROM room_inventory_nights n
+      WHERE n.booking_id=NEW.booking_id AND n.room_id=json_extract(NEW.details_json,'$.to_room_id') AND n.stay_date=expected.value)
+  ) THEN RAISE(ABORT,'reassignment destination claim dates mismatch') END;
 
   SELECT CASE WHEN EXISTS (
     SELECT 1 FROM room_holds h

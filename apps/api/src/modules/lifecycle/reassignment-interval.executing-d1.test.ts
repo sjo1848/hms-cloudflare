@@ -231,7 +231,7 @@ describe("F0.4 reassignment interval on executing D1", () => {
     expect(winner).not.toBe(loser);
   }, 20_000);
 
-  it("rejects a source-claim change between snapshot and batch without laundering it into success", async () => {
+  it("rejects an equal-count wrong-date source claim between snapshot and batch", async () => {
     const db = await database(`reassign-source-claim-race-${crypto.randomUUID()}`);
     await seedBooking(db, "claim-race", "room-a", "2027-03-01", "2027-03-05", ["room-a", "room-b"]);
     const before = await snapshot(db, "claim-race", ["room-a", "room-b"]);
@@ -239,7 +239,7 @@ describe("F0.4 reassignment interval on executing D1", () => {
     const interleavedDb = {
       prepare: db.prepare.bind(db),
       batch: async (statements: D1PreparedStatement[]) => {
-        await db.prepare("DELETE FROM room_inventory_nights WHERE booking_id='claim-race' AND room_id='room-a' AND stay_date='2027-03-03'").run();
+        await db.prepare("UPDATE room_inventory_nights SET stay_date='2027-03-09' WHERE booking_id='claim-race' AND room_id='room-a' AND stay_date='2027-03-03'").run();
         stateAfterConcurrentChange = await snapshot(db, "claim-race", ["room-a", "room-b"]);
         return db.batch(statements);
       },
@@ -249,5 +249,29 @@ describe("F0.4 reassignment interval on executing D1", () => {
     expect(stateAfterConcurrentChange).toBeDefined();
     expect(await snapshot(db, "claim-race", ["room-a", "room-b"])).toEqual(stateAfterConcurrentChange);
     expect(before[0]).toEqual(stateAfterConcurrentChange![0]);
+    expect(stateAfterConcurrentChange![3]).toContainEqual({ room_id: "room-a", stay_date: "2027-03-09" });
+  }, 20_000);
+
+  it("rejects a destination room visible-state ABA using its advanced version", async () => {
+    const db = await database(`reassign-room-aba-${crypto.randomUUID()}`);
+    await seedBooking(db, "room-aba", "room-a", "2027-03-10", "2027-03-14", ["room-a", "room-b"]);
+    const before = await snapshot(db, "room-aba", ["room-a", "room-b"]);
+    let stateAfterAba: unknown[] | undefined;
+    const interleavedDb = {
+      prepare: db.prepare.bind(db),
+      batch: async (statements: D1PreparedStatement[]) => {
+        await db.prepare("UPDATE rooms SET status='OUT_OF_ORDER',room_state_version=room_state_version+1 WHERE id='room-b' AND status='AVAILABLE'").run();
+        await db.prepare("UPDATE rooms SET status='AVAILABLE',room_state_version=room_state_version+1 WHERE id='room-b' AND status='OUT_OF_ORDER'").run();
+        stateAfterAba = await snapshot(db, "room-aba", ["room-a", "room-b"]);
+        return db.batch(statements);
+      },
+    } as unknown as D1Database;
+    const result = await new D1LifecycleRepository(interleavedDb).reassign(await booking(db, "room-aba"), "room-b", "Room state ABA", "2027-03-11", actor);
+    expect(result.ok).toBe(false);
+    expect(stateAfterAba).toBeDefined();
+    expect(stateAfterAba![2]).toMatchObject({ status: "AVAILABLE", room_state_version: 2 });
+    expect(stateAfterAba![0]).toEqual(before[0]);
+    expect(stateAfterAba![3]).toEqual(before[3]);
+    expect(await snapshot(db, "room-aba", ["room-a", "room-b"])).toEqual(stateAfterAba);
   }, 20_000);
 });
