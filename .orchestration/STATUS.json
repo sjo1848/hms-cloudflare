@@ -11,20 +11,20 @@
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.3 A3+B3 REVIEW RETURNED REWORK; ORCHESTRATION-ONLY HANDOFF CORRECTION; LOCAL_SYNTHETIC_ONLY",
-  "next_action": "RECONCILE_STATE_STATUS_A3_B4_HANDOFF_REFERENCES; THEN_REQUEST_FRESH_CRITIC_ON_EXACT_A3_B4; DO_NOT_BEGIN_F0_4",
-  "stop_reason": null,
+  "status_label": "F0.3 ARTIFACT A3 + BOUNDARY B5 FROZEN; EXACT PAIR AWAITS FRESH INDEPENDENT CRITIC; LOCAL_SYNTHETIC_ONLY",
+  "next_action": "INDEPENDENT_CRITIC_REVIEW_F0_3_EXACT_ARTIFACT_A3_AND_BOUNDARY_B5; DO_NOT_BEGIN_F0_4_UNTIL_REVIEW_RESOLVED",
+  "stop_reason": "Exact A3+B4 review returned REWORK for active dispatch wording; B5 corrects the handoff and the new exact pair requires fresh review before F0.4.",
   "event": {
-    "seq": 159,
-    "id": "HMS-F0-03-A3-B3-CRITIC-REWORK",
-    "type": "F0_3_A3_B3_CRITIC_REWORK_HANDOFF_RECONCILIATION"
+    "seq": 160,
+    "id": "HMS-F0-03-A3-B4-CRITIC-REWORK",
+    "type": "F0_3_A3_B4_CRITIC_REWORK_ACTIVE_HANDOFF_RECONCILIATION"
   },
   "external_review": {
     "required": true,
-    "last_audited_head": "aba0b41ce841026f043b0c0ffeb38ff6b6ad4abf",
+    "last_audited_head": "37caf021d3449d06635c91e025e4da58fd9728f9",
     "artifact_head": "176345d44bdc75f5e2beef9e765ebbca99e715df",
-    "last_verdict": "REWORK — A3+B3 review found HIGH stale STATE summary and STATUS Pre-Critic artifact reference; handoff reconciliation underway",
-    "review_path": "Pauli returned REWORK on initial F0.3 A c4af224c0454b34ea2201db7f5726de446668aad + B 23de5ab46f68ce2a5c060bc9ff11c7c22ed6475d (stale guard and checkpoint resumption). Lorentz (fresh read-only GPT-6 Luna Medium) reviewed exact A2 3980ef3db3a4e0cb96f7102705d2719777d84f26 + B2 80177b1a64aa993e983748366de74c4f49557084: stale request proof closed; HIGH finding that INCOMPLETE recovery branch was bypassed; MEDIUM finding that HUMAN_ACTION_REQUIRED misclassified external critic review. Archimedes (fresh read-only GPT-6 Luna Medium) reviewed exact A3 176345d44bdc75f5e2beef9e765ebbca99e715df + B3 aba0b41ce841026f043b0c0ffeb38ff6b6ad4abf: prior technical findings PASS; HIGH handoff consistency finding because top-level STATE and f0_3_precritic STATUS still referenced A2+B2/A2. B4 corrects these orchestration-only references; fresh A3+B4 review pending. F0.2 PASS by Raman remains unrelated and scoped to F0.2 only.",
+    "last_verdict": "REWORK — A3+B4 review found that active STATE/STATUS dispatch still described B4 as in progress and A3+B3 as rework; correcting in B5",
+    "review_path": "Pauli returned REWORK on initial F0.3 A c4af224c0454b34ea2201db7f5726de446668aad + B 23de5ab46f68ce2a5c060bc9ff11c7c22ed6475d (stale guard and checkpoint resumption). Lorentz (fresh read-only GPT-6 Luna Medium) reviewed exact A2 3980ef3db3a4e0cb96f7102705d2719777d84f26 + B2 80177b1a64aa993e983748366de74c4f49557084: stale request proof closed; HIGH finding that INCOMPLETE recovery branch was bypassed; MEDIUM finding that HUMAN_ACTION_REQUIRED misclassified external critic review. Archimedes (fresh read-only GPT-6 Luna Medium) reviewed exact A3 176345d44bdc75f5e2beef9e765ebbca99e715df + B3 aba0b41ce841026f043b0c0ffeb38ff6b6ad4abf: technical findings PASS; HIGH handoff finding for stale STATE summary and Pre-Critic STATUS artifact reference. McClintock (fresh read-only GPT-6 Luna Medium) reviewed exact A3+B4: those history references were fixed, but active STATE/STATUS still directed reconciliation and named A3+B3 rather than awaiting review on A3+B4. B5 corrects the active handoff; request a fresh exact A3+B5 review. F0.2 PASS by Raman remains unrelated and scoped to F0.2 only.",
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
@@ -95,7 +95,8 @@
     "f0_3_critic_rework_02": "Lorentz returned REWORK on A2+B2: HIGH INCOMPLETE checkpoint recovery branch bypassed; MEDIUM external review misclassified as HUMAN_ACTION_REQUIRED. Both repaired for A3+B3.",
     "f0_3_artifact_a3": "176345d44bdc75f5e2beef9e765ebbca99e715df",
     "f0_3_critic_rework_03": "Archimedes returned REWORK on A3+B3: top-level STATE summary still named A2+B2 as pending; STATUS f0_3_precritic still claimed evidence was in A2. Corrected in B4; no product changes.",
-    "f0_3_independent_critic": "A3+B3 returned REWORK; fresh review pending on exact A3 176345d44bdc75f5e2beef9e765ebbca99e715df + orchestration-only B4",
+    "f0_3_critic_rework_04": "McClintock returned REWORK on A3+B4: active STATE/STATUS label and next_action still described B4 as in progress and named A3+B3 as rework rather than A3+B4 awaiting review. Corrected in B5; no product changes.",
+    "f0_3_independent_critic": "A3+B4 returned REWORK; fresh review pending on exact A3 176345d44bdc75f5e2beef9e765ebbca99e715df + orchestration-only B5",
     "f0_3_real_data": "NOT ACCESSED OR MUTATED; no real cutover or active-stay pricing bootstrap",
     "d11_executing_d1": "4/4 PASS",
     "foundation_ci": "PASS",
