@@ -11,18 +11,18 @@
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.4 IMPLEMENTATION + FRESH VALIDATION COMPLETE; PRE-CRITIC PASSED; IMMUTABLE A/B PUBLICATION NEXT",
-  "next_action": "PUBLISH_F0_4_ARTIFACT_A_THEN_BOUNDARY_B_EXACT_HEAD_AND_REQUEST_INDEPENDENT_CRITIC",
+  "status_label": "F0.4 ARTIFACT A AND ORCHESTRATION B FROZEN; FRESH INDEPENDENT CRITIC DISPATCHED",
+  "next_action": "COLLECT_F0_4_INDEPENDENT_CRITIC_VERDICT_FOR_EXACT_A_726BCECF_AND_CURRENT_BOUNDARY_B",
   "stop_reason": null,
   "event": {
-    "seq": 165,
-    "id": "HMS-F0-04-IMPLEMENTATION-VALIDATION-PRECRITIC-COMPLETE",
-    "type": "F0_4_SYNTHETIC_IMPLEMENTATION_VALIDATED_PRECRITIC_PASS"
+    "seq": 166,
+    "id": "HMS-F0-04-ARTIFACT-A-BOUNDARY-B-FROZEN",
+    "type": "F0_4_EXACT_ARTIFACT_FROZEN_INDEPENDENT_CRITIC_DISPATCHED"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": "023cc2be00b02f4d2064fa3a3518d5f7735c90f0",
-    "artifact_head": "176345d44bdc75f5e2beef9e765ebbca99e715df",
+    "artifact_head": "726bcecf9dfad0e8000bd2eab10249055d0d32c8",
     "last_verdict": "PASS_WITH_CONDITIONS — exact A3+B6; A3's B3 reference is historical and accurate for the original boundary; distinction and continuation recorded in B7",
     "review_path": "Pauli returned REWORK on initial F0.3 A c4af224c0454b34ea2201db7f5726de446668aad + B 23de5ab46f68ce2a5c060bc9ff11c7c22ed6475d (stale guard and checkpoint resumption). Lorentz (fresh read-only GPT-6 Luna Medium) reviewed exact A2 3980ef3db3a4e0cb96f7102705d2719777d84f26 + B2 80177b1a64aa993e983748366de74c4f49557084: stale request proof closed; HIGH finding that INCOMPLETE recovery branch was bypassed; MEDIUM finding that HUMAN_ACTION_REQUIRED misclassified external critic review. Archimedes (fresh read-only GPT-6 Luna Medium) reviewed exact A3 176345d44bdc75f5e2beef9e765ebbca99e715df + B3 aba0b41ce841026f043b0c0ffeb38ff6b6ad4abf: technical findings PASS; HIGH handoff finding for stale STATE summary and Pre-Critic STATUS artifact reference. McClintock (fresh read-only GPT-6 Luna Medium) reviewed exact A3+B4: those history references were fixed, but active STATE/STATUS still directed reconciliation and named A3+B3 rather than awaiting review on A3+B4. Arendt (fresh read-only GPT-6 Luna Medium) reviewed exact A3+B5: active dispatch mismatch. Cicero (fresh read-only GPT-6 Luna Medium) reviewed exact A3 176345d44bdc75f5e2beef9e765ebbca99e715df + B6 023cc2be00b02f4d2064fa3a3518d5f7735c90f0 and returned PASS_WITH_CONDITIONS; the B3 reference is historical, and B7 records this distinction and authorizes F0.4 task-contract setup. F0.2 PASS by Raman remains unrelated and scoped to F0.2 only.",
     "prior_reviews_pending": [
@@ -107,7 +107,7 @@
     "f0_4_integrated_browser": "PASS: scripts/cf-wave12-reassignment-integrated.sh; Worker+D1+Vite; desktop 1280x900 and mobile 375x812; candidate/search/preview/mutation share remaining interval; authoritative refresh; expected 409 retained visibly",
     "f0_4_security": "PASS: housekeeping membership reassign denied 403 with zero D1 drift; foreign booking stored only in HOTEL_SECOND_DB returns 404 under hotel A with second-D1 booking/claims/events unchanged",
     "f0_4_regression_runner_safety": "PASS: CF-I03 and D1 query-plan scripts use disposable Wrangler persistence; repository .wrangler/state is not targeted",
-    "f0_4_artifact_state": "PRECRITIC_COMPLETE; ARTIFACT_A_AND_BOUNDARY_B_NOT_YET_COMMITTED; NO INDEPENDENT CRITIC VERDICT CLAIMED",
+    "f0_4_artifact_state": "ARTIFACT_A=726bcecf9dfad0e8000bd2eab10249055d0d32c8; ORCHESTRATION_BOUNDARY_B=THIS_COMMIT; FRESH_INDEPENDENT_CRITIC_DISPATCHED; NO VERDICT CLAIMED",
     "d11_executing_d1": "4/4 PASS",
     "foundation_ci": "PASS",
     "unit_integration": "CURRENT F0.4: 30 files / 124 tests PASS",
