@@ -11,19 +11,19 @@
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.6 ARTIFACT A2 FROZEN; B3 RECORDS EXACT CRITIC DISPATCH",
-  "next_action": "FRESH_INDEPENDENT_CRITIC_REVIEW_EXACT_ARTIFACT_A2_1b83cc1a6832e8fb4f95dfdfa7b134021075775d_AND_BOUNDARY_B3",
+  "status_label": "F0.6 CRITIC PASS WITH CONDITIONS; B4 RECORDS HISTORICAL EVIDENCE DISPOSITION",
+  "next_action": "BOUNDED_INDEPENDENT_CRITIC_FOLLOW_UP_ON_EXACT_ARTIFACT_A2_AND_BOUNDARY_B4",
   "stop_reason": "Substantive immutable Artifact A2 is frozen; routine Foundation 0 work remains paused at exact-pair Independent Critic boundary.",
   "event": {
-    "seq": 178,
-    "id": "HMS-F0-06-ARTIFACT-A2-B3-REVIEW-DISPATCH",
-    "type": "F0_6_EXACT_ARTIFACT_BOUNDARY_FROZEN_FRESH_CRITIC_DISPATCHED"
+    "seq": 179,
+    "id": "HMS-F0-06-CRITIC-PASS-WITH-CONDITIONS",
+    "type": "F0_6_CRITIC_CONDITIONS_RECORDED_FOR_BOUNDED_FOLLOW_UP"
   },
   "external_review": {
     "required": true,
-    "last_audited_head": "ac0b42cb6bdc787726b3160957464af1298eb52a",
+    "last_audited_head": "e4c2cf2f91ec6c3da159e1adcbb50c026459d3ce",
     "artifact_head": "1b83cc1a6832e8fb4f95dfdfa7b134021075775d",
-    "last_verdict": "PENDING: fresh separate Independent Critic must review exact replacement Artifact A2 1b83cc1a6832e8fb4f95dfdfa7b134021075775d plus orchestration-only Boundary B3; A1+B1 REWORK remains preserved and is not transferable.",
+    "last_verdict": "PASS_WITH_CONDITIONS: Hooke, fresh read-only GPT-6 Luna Medium, exact A2 1b83cc1a6832e8fb4f95dfdfa7b134021075775d + B3 e4c2cf2f91ec6c3da159e1adcbb50c026459d3ce. F0.6-IC-01 HIGH closed. MEDIUM: explicitly disposition stale embedded B2 boundary references; LOW: clarify F0.3 digest refresh history 0026 then 0027. B4 records the no-content-change clarification; bounded follow-up requested. A1+B1 REWORK remains preserved.",
     "review_path": ".orchestration/evidence/HMS-F0-06-SYNTHETIC-ACTIVE-STAY-PRICING-BOOTSTRAP-001-INDEPENDENT-CRITIC.md; repaired implementation evidence HMS-F0-06-REPAIR-CANONICAL-PRICING-SNAPSHOT-001.md",
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
@@ -151,7 +151,8 @@
     "f0_6_real_data": "NONE: no real active-stay reads/writes, no production/customer D1, no cutover/bootstrap",
     "f0_6_repair_validation": "PASS: npm run check 32/144; F0.6 11/11; F0.3 2/2; clean Wrangler 0001-0027 on 3 local D1 bindings; types/build/budgets/architecture/query plans/Wrangler and staging SPA dry-runs; CF-I03-I06 sequential; integrated Worker/D1/Vite/browser exit 0; exact evidence in repair record",
     "f0_6_artifact_a2": "1b83cc1a6832e8fb4f95dfdfa7b134021075775d",
-    "f0_6_artifact_boundary": "B2 recorded exact A2 but had stale next_action text; orchestration-only B3 corrects dispatch while preserving exact Artifact A2; fresh Independent Critic must review exact A2+B3 before F0.7",
+    "f0_6_artifact_boundary": "A2+B3 received fresh Independent Critic PASS_WITH_CONDITIONS; B4 records that A2's B2 references are historical/superseded by B3 dispatch and that digest fixtures were refreshed for 0026 then 0027; bounded follow-up on exact A2+B4 required before F0.7",
+    "f0_6_critic_a2_b3": "PASS_WITH_CONDITIONS: Hooke, fresh read-only GPT-6 Luna Medium; F0.6-IC-01 HIGH closed; one MEDIUM evidence-boundary wording condition and one LOW migration-digest chronology clarification; both resolved as orchestration-only dispositions in B4, follow-up pending",
     "validation_parallel_attempt": "DISCARDED: fixed port 8787 CF-I03/CF-I04/CF-I06 collision and load-only 10-second rehearsal timeout; all regressions rerun serially and full Foundation CI passed",
     "extra_charge_atomic_rollback": "CONFIRMED",
     "browser_gate": "FAIL: SHARED_PREEXISTING_USERS_REPORTS_RUNNER_FINDING",
