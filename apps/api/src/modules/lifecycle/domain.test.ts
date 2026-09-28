@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkoutPolicy, effectiveReassignmentDate, normalizedCheckoutReference, pendingReferenceValid, positiveGuestCount, reassignmentReason, requiredConfirmations } from "./domain";
+import { checkoutPolicy, effectiveReassignmentDate, normalizedCheckoutReference, pendingReferenceValid, positiveGuestCount, reassignmentReason, requiredConfirmations, validHotelLocalDate } from "./domain";
 
 describe("lifecycle domain rules", () => {
   it("validates check-in confirmations and guest count", () => {
@@ -28,5 +28,8 @@ describe("lifecycle domain rules", () => {
     expect(reassignmentReason("  Guest requested move  ")).toBe("Guest requested move");
     expect(reassignmentReason("short")).toBeNull();
     expect(reassignmentReason("      ")).toBeNull();
+    expect(validHotelLocalDate("2026-09-27")).toBe(true);
+    expect(validHotelLocalDate("2026-02-30")).toBe(false);
+    expect(validHotelLocalDate(undefined)).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
 import type { OperationalDatabase } from "../../routing";
-import { claimDates, effectiveReassignmentDate, type CheckoutPolicy, type LifecycleActor, type LifecycleBooking } from "./domain";
+import { claimDates, effectiveReassignmentDate, validHotelLocalDate, type CheckoutPolicy, type LifecycleActor, type LifecycleBooking } from "./domain";
 import type { LifecycleMutationResult, LifecycleRepository } from "./ports";
 import { ROOM_DIMENSION_SELECT, roomOperationalReadModel, type RoomDimensionRow } from "../room-state/read-model";
 
@@ -29,101 +29,190 @@ export class D1LifecycleRepository implements LifecycleRepository {
   }
 
   async reassign(current: LifecycleBooking, destinationRoomId: string, reason: string, hotelLocalDate: string, actor: LifecycleActor): Promise<LifecycleMutationResult> {
+    if (!validHotelLocalDate(hotelLocalDate)) return { ok: false };
     const snapshot = await this.db.prepare(`SELECT
         b.room_id, b.check_in, b.check_out, b.status, b.total_cents,
-        destination.price_cents AS destination_price_cents,
-        COALESCE((SELECT SUM(x.amount_cents) FROM extra_charges x WHERE x.booking_id=b.id), 0) AS extra_cents,
-        i.id AS invoice_id, i.status AS invoice_status, i.paid_amount_cents,
-        (SELECT COALESCE(SUM(p.amount_cents), 0) FROM payment_entries p WHERE p.invoice_id=i.id) AS ledger_paid_cents
+        COALESCE((SELECT json_extract(e.details_json,'$.effective_date') FROM lifecycle_events e
+          WHERE e.booking_id=b.id AND e.event_type='REASSIGN'
+            AND json_extract(e.details_json,'$.to_room_id')=b.room_id
+          ORDER BY e.created_at DESC,e.rowid DESC LIMIT 1), b.check_in) AS assignment_start_date,
+        old_room.status AS old_status, old_room.housekeeping_state AS old_housekeeping_state,
+        old_room.service_state AS old_service_state, old_room.room_state_version AS old_room_version,
+        (SELECT COUNT(*) FROM bookings active WHERE active.room_id=old_room.id AND active.status='CHECKED_IN') AS old_checked_in_count,
+        (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id=old_room.id AND mc.status='OPEN') AS old_open_maintenance_count,
+        (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id=old_room.id AND mc.status='OPEN' AND mc.impact='BLOCKING') AS old_blocking_count,
+        (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id=old_room.id AND mc.status='OPEN' AND mc.impact='NON_BLOCKING') AS old_non_blocking_count,
+        destination.status AS destination_status, destination.housekeeping_state AS destination_housekeeping_state,
+        destination.service_state AS destination_service_state, destination.room_state_version AS destination_room_version,
+        (SELECT COUNT(*) FROM bookings active WHERE active.room_id=destination.id AND active.status='CHECKED_IN') AS destination_checked_in_count,
+        (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id=destination.id AND mc.status='OPEN') AS destination_open_maintenance_count,
+        (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id=destination.id AND mc.status='OPEN' AND mc.impact='BLOCKING') AS destination_blocking_count,
+        (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id=destination.id AND mc.status='OPEN' AND mc.impact='NON_BLOCKING') AS destination_non_blocking_count,
+        (SELECT i.id FROM invoices i WHERE i.booking_id=b.id LIMIT 1) AS invoice_id,
+        (SELECT i.status FROM invoices i WHERE i.booking_id=b.id LIMIT 1) AS invoice_status,
+        (SELECT i.paid_amount_cents FROM invoices i WHERE i.booking_id=b.id LIMIT 1) AS paid_amount_cents,
+        (SELECT COALESCE(SUM(p.amount_cents),0) FROM payment_entries p
+          WHERE p.invoice_id=(SELECT i.id FROM invoices i WHERE i.booking_id=b.id LIMIT 1)) AS ledger_paid_cents,
+        (SELECT COUNT(*) FROM room_inventory_nights n WHERE n.booking_id=b.id AND n.room_id=old_room.id
+          AND n.stay_date >= COALESCE((SELECT json_extract(e.details_json,'$.effective_date') FROM lifecycle_events e
+            WHERE e.booking_id=b.id AND e.event_type='REASSIGN' AND json_extract(e.details_json,'$.to_room_id')=b.room_id
+            ORDER BY e.created_at DESC,e.rowid DESC LIMIT 1),b.check_in)
+          AND n.stay_date < b.check_out) AS current_claim_count,
+        (SELECT COUNT(*) FROM room_inventory_nights n WHERE n.booking_id=b.id AND n.room_id<>old_room.id
+          AND n.stay_date >= COALESCE((SELECT json_extract(e.details_json,'$.effective_date') FROM lifecycle_events e
+            WHERE e.booking_id=b.id AND e.event_type='REASSIGN' AND json_extract(e.details_json,'$.to_room_id')=b.room_id
+            ORDER BY e.created_at DESC,e.rowid DESC LIMIT 1),b.check_in)
+          AND n.stay_date < b.check_out) AS stray_current_claim_count
       FROM bookings b
       JOIN rooms old_room ON old_room.id=b.room_id
       JOIN rooms destination ON destination.id=?2
-      LEFT JOIN invoices i ON i.booking_id=b.id
-      WHERE b.id=?1
-        AND b.status='CHECKED_IN'
-        AND old_room.status='OCCUPIED'
-        AND destination.status='AVAILABLE'
-        AND NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=destination.id AND mc.status='OPEN' AND mc.impact='BLOCKING')`)
+      WHERE b.id=?1 AND b.status='CHECKED_IN'`)
       .bind(current.id, destinationRoomId).first<{
         room_id: string; check_in: string; check_out: string; status: string; total_cents: number;
-        destination_price_cents: number; extra_cents: number; invoice_id: string | null;
-        invoice_status: string | null; paid_amount_cents: number | null; ledger_paid_cents: number;
+        assignment_start_date: string; old_status: string; old_housekeeping_state: string | null;
+        old_service_state: string | null; old_room_version: number; old_checked_in_count: number;
+        old_open_maintenance_count: number; old_blocking_count: number; old_non_blocking_count: number;
+        destination_status: string; destination_housekeeping_state: string | null; destination_service_state: string | null;
+        destination_room_version: number; destination_checked_in_count: number;
+        destination_open_maintenance_count: number; destination_blocking_count: number; destination_non_blocking_count: number;
+        invoice_id: string | null; invoice_status: string | null; paid_amount_cents: number | null; ledger_paid_cents: number;
+        current_claim_count: number; stray_current_claim_count: number;
       }>();
-    if (!snapshot || snapshot.room_id === destinationRoomId || hotelLocalDate >= snapshot.check_out) return { ok: false };
+    if (!snapshot || snapshot.room_id !== current.room_id || snapshot.check_in !== current.check_in
+      || snapshot.check_out !== current.check_out || snapshot.status !== current.status
+      || snapshot.room_id === destinationRoomId || hotelLocalDate >= snapshot.check_out
+      || reason.trim().length < 6) return { ok: false };
     const effectiveDate = effectiveReassignmentDate(snapshot.check_in, hotelLocalDate);
     const dates = claimDates(effectiveDate, snapshot.check_out);
-    if (dates.length === 0) return { ok: false };
-    const nextTotal = snapshot.destination_price_cents * claimDates(snapshot.check_in, snapshot.check_out).length + snapshot.extra_cents;
-    if (!Number.isSafeInteger(nextTotal) || nextTotal < 0) return { ok: false };
+    if (!dates.length || !validHotelLocalDate(snapshot.assignment_start_date)
+      || snapshot.assignment_start_date < snapshot.check_in || snapshot.assignment_start_date >= snapshot.check_out) return { ok: false };
+    const expectedCurrentClaimCount = claimDates(snapshot.assignment_start_date, snapshot.check_out).length;
+    if (snapshot.current_claim_count !== expectedCurrentClaimCount || snapshot.stray_current_claim_count !== 0) return { ok: false };
+    const oldState = roomOperationalReadModel({
+      legacy_room_status: snapshot.old_status,
+      housekeeping_state: snapshot.old_housekeeping_state,
+      service_state: snapshot.old_service_state,
+      checked_in_booking_count: snapshot.old_checked_in_count,
+      blocking_maintenance_count: snapshot.old_blocking_count,
+      non_blocking_maintenance_count: snapshot.old_non_blocking_count,
+      open_maintenance_count: snapshot.old_open_maintenance_count,
+    });
+    const destinationState = roomOperationalReadModel({
+      legacy_room_status: snapshot.destination_status,
+      housekeeping_state: snapshot.destination_housekeeping_state,
+      service_state: snapshot.destination_service_state,
+      checked_in_booking_count: snapshot.destination_checked_in_count,
+      blocking_maintenance_count: snapshot.destination_blocking_count,
+      non_blocking_maintenance_count: snapshot.destination_non_blocking_count,
+      open_maintenance_count: snapshot.destination_open_maintenance_count,
+    });
+    if (oldState.occupancy !== "OCCUPIED" || oldState.maintenanceImpact === "UNRESOLVED"
+      || destinationState.readiness.state !== "READY_FOR_ARRIVAL") return { ok: false };
     if (snapshot.invoice_status === "VOIDED" || (snapshot.invoice_id && snapshot.paid_amount_cents !== snapshot.ledger_paid_cents)) return { ok: false };
     const now = new Date().toISOString();
     const lifecycleEventId = crypto.randomUUID();
-    const financialEventId = crypto.randomUUID();
     const details = JSON.stringify({
       from_room_id: snapshot.room_id,
       to_room_id: destinationRoomId,
+      operation_token: lifecycleEventId,
+      hotel_local_date: hotelLocalDate,
       effective_date: effectiveDate,
+      assignment_start_date: snapshot.assignment_start_date,
       reason,
       old_total_cents: snapshot.total_cents,
-      new_total_cents: nextTotal,
+      new_total_cents: snapshot.total_cents,
+      old_occupancy_before: "OCCUPIED",
+      old_occupancy_after: "VACANT",
+      old_housekeeping_state_before: snapshot.old_housekeeping_state,
+      old_housekeeping_state_after: "DIRTY",
+      old_maintenance_impact_before: oldState.maintenanceImpact,
+      old_maintenance_impact_after: oldState.maintenanceImpact,
+      old_service_state_before: snapshot.old_service_state,
+      old_service_state_after: snapshot.old_service_state,
+      old_room_version_before: snapshot.old_room_version,
+      old_room_version_after: snapshot.old_room_version + 1,
+      new_occupancy_before: "VACANT",
+      new_occupancy_after: "OCCUPIED",
+      new_housekeeping_state_before: snapshot.destination_housekeeping_state,
+      new_housekeeping_state_after: snapshot.destination_housekeeping_state,
+      new_maintenance_impact_before: destinationState.maintenanceImpact,
+      new_maintenance_impact_after: destinationState.maintenanceImpact,
+      new_service_state_before: snapshot.destination_service_state,
+      new_service_state_after: snapshot.destination_service_state,
+      new_room_version_before: snapshot.destination_room_version,
+      new_room_version_after: snapshot.destination_room_version + 1,
     });
     try {
-      await this.db.batch([
-        this.db.prepare(`UPDATE bookings SET room_id=?2, total_cents=?3, updated_at=?4
-          WHERE id=?1 AND status='CHECKED_IN' AND room_id=?5 AND check_out>?6 AND total_cents=?7
-            AND EXISTS (SELECT 1 FROM rooms old_room WHERE old_room.id=?5 AND old_room.status='OCCUPIED')
-            AND EXISTS (SELECT 1 FROM rooms destination WHERE destination.id=?2 AND destination.status='AVAILABLE' AND destination.price_cents=?8)
-            AND NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=?2 AND mc.status='OPEN' AND mc.impact='BLOCKING')
-            AND NOT EXISTS (SELECT 1 FROM room_holds h WHERE h.room_id=?2 AND h.start_date<?10 AND h.end_date>?9)
-            AND NOT EXISTS (SELECT 1 FROM room_inventory_nights n WHERE n.room_id=?2 AND n.stay_date>=?9 AND n.stay_date<?10)
-            AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id=?1 AND (i.status='VOIDED' OR i.paid_amount_cents<>(SELECT COALESCE(SUM(p.amount_cents),0) FROM payment_entries p WHERE p.invoice_id=i.id)))`)
-          .bind(current.id, destinationRoomId, nextTotal, now, snapshot.room_id, hotelLocalDate, snapshot.total_cents, snapshot.destination_price_cents, effectiveDate, snapshot.check_out),
-        this.db.prepare("DELETE FROM room_inventory_nights WHERE booking_id=?1 AND room_id=?2 AND stay_date>=?3 AND stay_date<?4 AND EXISTS (SELECT 1 FROM bookings WHERE id=?1 AND status='CHECKED_IN' AND room_id=?5)")
-          .bind(current.id, snapshot.room_id, effectiveDate, snapshot.check_out, destinationRoomId),
-        ...dates.map(date => this.db.prepare("INSERT INTO room_inventory_nights (room_id, stay_date, booking_id) SELECT ?1,?2,?3 WHERE EXISTS (SELECT 1 FROM bookings WHERE id=?3 AND status='CHECKED_IN' AND room_id=?1)").bind(destinationRoomId, date, current.id)),
-        this.db.prepare("UPDATE rooms SET status=CASE WHEN EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=?1 AND mc.status='OPEN' AND mc.impact='BLOCKING') THEN 'MAINTENANCE' ELSE 'DIRTY' END WHERE id=?1 AND status='OCCUPIED' AND EXISTS (SELECT 1 FROM bookings WHERE id=?2 AND status='CHECKED_IN' AND room_id=?3)").bind(snapshot.room_id, current.id, destinationRoomId),
-        this.db.prepare("UPDATE rooms SET status='OCCUPIED' WHERE id=?1 AND status='AVAILABLE' AND EXISTS (SELECT 1 FROM bookings WHERE id=?2 AND status='CHECKED_IN' AND room_id=?1)").bind(destinationRoomId, current.id),
-        this.db.prepare("INSERT INTO financial_events (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at) SELECT ?1,'PRICE_RECONCILIATION',?2,?3,?4,?5,?6,?7 WHERE ?8<>?9 AND EXISTS (SELECT 1 FROM bookings WHERE id=?2 AND total_cents=?8) AND EXISTS (SELECT 1 FROM invoices WHERE booking_id=?2 AND status<>'VOIDED')").bind(financialEventId, current.id, actor.subject, actor.requestId, actor.hotelId, details, now, nextTotal, snapshot.total_cents),
-        this.db.prepare("INSERT INTO lifecycle_events (id,booking_id,event_type,from_room_id,actor_subject,request_id,hotel_id,details_json,created_at) VALUES (?1,?2,'REASSIGN',?3,?4,?5,?6,?7,?8)").bind(lifecycleEventId, current.id, snapshot.room_id, actor.subject, actor.requestId, actor.hotelId, details, now),
+      const results = await this.db.batch([
+        this.db.prepare(`UPDATE bookings SET room_id=?2,updated_at=?3,last_reassignment_token=?13
+          WHERE id=?1 AND status='CHECKED_IN' AND room_id=?4 AND check_in=?5 AND check_out=?6 AND total_cents=?7
+            AND check_out>?8
+            AND EXISTS (SELECT 1 FROM rooms old_room WHERE old_room.id=?4 AND old_room.status='OCCUPIED' AND old_room.room_state_version=?9)
+            AND EXISTS (SELECT 1 FROM rooms destination WHERE destination.id=?2 AND destination.status='AVAILABLE'
+              AND destination.housekeeping_state='READY' AND destination.service_state='IN_SERVICE'
+              AND destination.room_state_version=?10
+              AND (SELECT COUNT(*) FROM bookings active WHERE active.room_id=destination.id AND active.status='CHECKED_IN')=0
+              AND NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=destination.id AND mc.status='OPEN' AND mc.impact='BLOCKING'))
+            AND COALESCE((SELECT json_extract(e.details_json,'$.effective_date') FROM lifecycle_events e
+              WHERE e.booking_id=?1 AND e.event_type='REASSIGN' AND json_extract(e.details_json,'$.to_room_id')=?4
+              ORDER BY e.created_at DESC,e.rowid DESC LIMIT 1),?5)=?11
+            AND (SELECT COUNT(*) FROM room_inventory_nights n WHERE n.booking_id=?1 AND n.room_id=?4
+              AND n.stay_date>=?11 AND n.stay_date<?6)=CAST(julianday(?6)-julianday(?11) AS INTEGER)
+            AND NOT EXISTS (SELECT 1 FROM room_inventory_nights n WHERE n.booking_id=?1 AND n.room_id<>?4
+              AND n.stay_date>=?11 AND n.stay_date<?6)
+            AND NOT EXISTS (SELECT 1 FROM room_holds h WHERE h.room_id=?2 AND h.start_date<?6 AND h.end_date>?12)
+            AND NOT EXISTS (SELECT 1 FROM room_inventory_nights n WHERE n.room_id=?2 AND n.stay_date>=?12 AND n.stay_date<?6)
+            AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id=?1 AND
+              (i.status='VOIDED' OR i.paid_amount_cents<>(SELECT COALESCE(SUM(p.amount_cents),0) FROM payment_entries p WHERE p.invoice_id=i.id)))`)
+          .bind(current.id, destinationRoomId, now, snapshot.room_id, snapshot.check_in, snapshot.check_out, snapshot.total_cents, hotelLocalDate,
+            snapshot.old_room_version, snapshot.destination_room_version, snapshot.assignment_start_date, effectiveDate, lifecycleEventId),
+        this.db.prepare(`DELETE FROM room_inventory_nights WHERE booking_id=?1 AND room_id=?2 AND stay_date>=?3 AND stay_date<?4
+          AND EXISTS (SELECT 1 FROM bookings WHERE id=?1 AND status='CHECKED_IN' AND room_id=?5)
+          AND EXISTS (SELECT 1 FROM rooms WHERE id=?2 AND room_state_version=?6)`)
+          .bind(current.id, snapshot.room_id, effectiveDate, snapshot.check_out, destinationRoomId, snapshot.old_room_version),
+        ...dates.map(date => this.db.prepare(`INSERT INTO room_inventory_nights (room_id,stay_date,booking_id)
+          SELECT ?1,?2,?3 WHERE EXISTS (SELECT 1 FROM bookings WHERE id=?3 AND status='CHECKED_IN' AND room_id=?1)
+          AND EXISTS (SELECT 1 FROM rooms WHERE id=?1 AND status='AVAILABLE' AND room_state_version=?4)`)
+          .bind(destinationRoomId, date, current.id, snapshot.destination_room_version)),
+        this.db.prepare(`UPDATE rooms SET status=CASE
+            WHEN EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=?1 AND mc.status='OPEN' AND mc.impact='BLOCKING') THEN 'MAINTENANCE'
+            WHEN service_state='OUT_OF_ORDER' THEN 'OUT_OF_ORDER' ELSE 'DIRTY' END,
+            housekeeping_state='DIRTY',room_state_version=?3
+          WHERE id=?1 AND status='OCCUPIED' AND room_state_version=?4
+            AND housekeeping_state IS ?5 AND service_state IS ?6
+            AND EXISTS (SELECT 1 FROM bookings WHERE id=?2 AND status='CHECKED_IN' AND room_id=?7)
+            AND (SELECT COUNT(*) FROM bookings active WHERE active.room_id=?1 AND active.status='CHECKED_IN')=0
+            AND room_state_version+1=?3`)
+          .bind(snapshot.room_id, current.id, snapshot.old_room_version + 1, snapshot.old_room_version,
+            snapshot.old_housekeeping_state, snapshot.old_service_state, destinationRoomId),
+        this.db.prepare(`UPDATE rooms SET status='OCCUPIED',room_state_version=?3
+          WHERE id=?1 AND status='AVAILABLE' AND room_state_version=?4
+            AND housekeeping_state='READY' AND service_state='IN_SERVICE'
+            AND EXISTS (SELECT 1 FROM bookings WHERE id=?2 AND status='CHECKED_IN' AND room_id=?1)
+            AND (SELECT COUNT(*) FROM bookings active WHERE active.room_id=?1 AND active.status='CHECKED_IN')=1
+            AND NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=?1 AND mc.status='OPEN' AND mc.impact='BLOCKING')
+            AND room_state_version+1=?3`)
+          .bind(destinationRoomId, current.id, snapshot.destination_room_version + 1, snapshot.destination_room_version),
+        this.db.prepare(`INSERT INTO lifecycle_events
+          (id,booking_id,event_type,from_room_id,actor_subject,request_id,hotel_id,details_json,created_at)
+          VALUES (?1,?2,'REASSIGN',?3,?4,?5,?6,?7,?8)`)
+          .bind(lifecycleEventId, current.id, snapshot.room_id, actor.subject, actor.requestId, actor.hotelId, details, now),
       ]);
+      if (results.at(-1)?.meta.changes !== 1) return { ok: false };
     } catch {
       return { ok: false };
     }
-    const final = await this.db.prepare(`SELECT
-        (SELECT room_id FROM bookings WHERE id=?1 AND status='CHECKED_IN') AS room_id,
-        (SELECT total_cents FROM bookings WHERE id=?1) AS total_cents,
-        (SELECT status FROM rooms WHERE id=?2) AS old_status,
-        (SELECT status FROM rooms WHERE id=?3) AS destination_status,
-        (SELECT COUNT(*) FROM room_inventory_nights WHERE booking_id=?1 AND room_id=?2 AND stay_date>=?4) AS old_remaining,
-        (SELECT COUNT(*) FROM room_inventory_nights WHERE booking_id=?1 AND room_id=?3 AND stay_date>=?4 AND stay_date<?5) AS destination_remaining,
-        (SELECT COUNT(*) FROM lifecycle_events WHERE id=?6 AND booking_id=?1 AND event_type='REASSIGN') AS lifecycle_events,
-        (SELECT COUNT(*) FROM financial_events WHERE id=?7 AND booking_id=?1 AND event_type='PRICE_RECONCILIATION') AS financial_events`)
-      .bind(current.id, snapshot.room_id, destinationRoomId, effectiveDate, snapshot.check_out, lifecycleEventId, financialEventId).first<{
-        room_id: string; total_cents: number; old_status: string; destination_status: string;
-        old_remaining: number; destination_remaining: number; lifecycle_events: number; financial_events: number;
-      }>();
-    const expectedOldStatus = await this.db.prepare("SELECT CASE WHEN EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id=?1 AND status='OPEN' AND impact='BLOCKING') THEN 'MAINTENANCE' ELSE 'DIRTY' END AS status").bind(snapshot.room_id).first<{ status: string }>();
-    const ok = Boolean(final
-      && final.room_id === destinationRoomId
-      && final.total_cents === nextTotal
-      && final.old_status === expectedOldStatus?.status
-      && final.destination_status === "OCCUPIED"
-      && final.old_remaining === 0
-      && final.destination_remaining === dates.length
-      && final.lifecycle_events === 1
-      && final.financial_events === (nextTotal !== snapshot.total_cents ? 1 : 0));
     return {
-      ok,
-      ...(ok ? {
-        reassignment: {
-          oldRoomId: snapshot.room_id,
-          newRoomId: destinationRoomId,
-          effectiveDate,
-          oldRoomStatus: final!.old_status,
-          destinationPriceCents: snapshot.destination_price_cents,
-          totalCents: nextTotal,
-        },
-      } : {}),
+      ok: true,
+      reassignment: {
+        oldRoomId: snapshot.room_id,
+        newRoomId: destinationRoomId,
+        hotelLocalDate,
+        effectiveDate,
+        remainingInterval: { startDate: effectiveDate, endDateExclusive: snapshot.check_out },
+        oldRoomStatus: oldState.maintenanceImpact === "BLOCKING" ? "MAINTENANCE" : oldState.serviceState === "OUT_OF_ORDER" ? "OUT_OF_ORDER" : "DIRTY",
+        totalCents: snapshot.total_cents,
+      },
     };
   }
 

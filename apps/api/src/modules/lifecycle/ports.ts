@@ -5,9 +5,10 @@ export type LifecycleMutationResult = {
   reassignment?: {
     oldRoomId: string;
     newRoomId: string;
+    hotelLocalDate: string;
     effectiveDate: string;
+    remainingInterval: { startDate: string; endDateExclusive: string };
     oldRoomStatus: string;
-    destinationPriceCents: number;
     totalCents: number;
   };
 };

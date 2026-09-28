@@ -12,6 +12,12 @@ export function effectiveReassignmentDate(checkIn: string, hotelLocalDate: strin
   return checkIn > hotelLocalDate ? checkIn : hotelLocalDate;
 }
 
+export function validHotelLocalDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const instant = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(instant.valueOf()) && instant.toISOString().slice(0, 10) === value;
+}
+
 export function reassignmentReason(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const normalized = value.trim();

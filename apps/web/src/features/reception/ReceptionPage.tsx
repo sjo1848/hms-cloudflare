@@ -40,7 +40,7 @@ const reasonLabelKeys: Record<QueueReason, MessageKey> = {
 function Bookings() {
   const { t, statusLabel, formatDate, formatCurrency } = useI18n();
   const {
-    bookings, frontDeskBoard, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignInvoice, reassignExtraCents, reassignHotelDate, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
+    bookings, frontDeskBoard, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
     setCheckInStep, setCheckInData, setForm, setEditForm,
     selectCase, closeCase, refreshQueue, refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
@@ -61,15 +61,9 @@ function Bookings() {
   const counts = queueCounts(queue);
   const visibleQueue = filterQueue(queue, queueFilter, queueSearch);
   const selectedBoardItem = frontDeskBoard?.items.find(item => item.booking.id === selected?.id);
-  const currentRoom = selected ? rooms.find(room => room.id === selected.room_id) : undefined;
-  const stayNights = selected ? Math.max(0, (Date.parse(`${selected.check_out}T00:00:00Z`) - Date.parse(`${selected.check_in}T00:00:00Z`)) / 86400000) : 0;
-  const extraCents = selected ? reassignExtraCents || Math.max(0, selected.total_cents - (currentRoom?.price_cents ?? 0) * stayNights) : 0;
   const reassignRooms = selected?.status === "CheckedIn" ? rooms.filter(room => room.id !== selected.room_id) : [];
   const boardByRoom = new Map((reassignBoard?.rooms ?? []).map(room => [room.room_id, room]));
   const effectiveDate = selected ? (reassignHotelDate && reassignHotelDate > selected.check_in ? reassignHotelDate : selected.check_in) : "";
-  const reassignTarget = rooms.find(room => room.id === reassignTargetId);
-  const reassignNewTotal = reassignTarget ? reassignTarget.price_cents * stayNights + extraCents : null;
-  const reassignDifference = reassignNewTotal == null || !selected ? null : reassignNewTotal - selected.total_cents;
   useEffect(() => { setReassignTargetId(""); }, [selected?.id]);
   useEffect(() => { setShowArrivalEdit(false); }, [selected?.id]);
 
@@ -269,13 +263,6 @@ function Bookings() {
               return <option key={room.id} value={room.id} disabled={!selectable}>{room.room_number} · {room.room_type} · {formatCurrency(room.price_cents)}{reason ? ` · ${reason}` : ""}</option>;
             })}</select></label>
             <p id="reassign-room-help" className="muted reassign-room-help">{t("reception.reassignRoomHelp")}</p>
-            <div className="reassign-price-summary" aria-label={t("reception.reassignPriceSummary")}>
-              <div><span className="muted">{t("billing.total")}</span><strong>{formatCurrency(selected.total_cents)}</strong></div>
-              <div><span className="muted">{t("reception.reassignNewTotal")}</span><strong data-testid="reassign-new-total">{reassignNewTotal == null ? t("reception.reassignChooseRoom") : formatCurrency(reassignNewTotal)}</strong></div>
-              <div><span className="muted">{t("billing.paid")}</span><strong>{formatCurrency(reassignInvoice?.paid_amount_cents ?? 0)}</strong></div>
-            </div>
-            <p className="muted reassign-price-note">{reassignDifference == null ? t("reception.reassignPriceNote", { nights: stayNights }) : reassignDifference > 0 ? t("reception.reassignIncrease", { amount: formatCurrency(reassignDifference) }) : reassignDifference < 0 ? t("reception.reassignCredit", { amount: formatCurrency(Math.abs(reassignDifference)) }) : t("reception.reassignNoPriceChange")}</p>
-            {reassignNewTotal != null && <p className="reassign-balance-note">{t("billing.remaining")}: {formatCurrency(Math.max(0, reassignNewTotal - (reassignInvoice?.paid_amount_cents ?? 0)))} · {t("reception.reassignCreditBalance")}: {formatCurrency(Math.max(0, (reassignInvoice?.paid_amount_cents ?? 0) - reassignNewTotal))}</p>}
             <label>{t("common.reason")} <input name="reason" minLength={6} maxLength={250} required aria-describedby="reassign-reason-help" disabled={actionBusy} /><span id="reassign-reason-help" className="field-hint">{t("reception.reassignReasonHint")}</span></label>
             <button disabled={actionBusy || !reassignBoard}>{actionBusy ? t("reception.reassignSubmitting") : t("reception.reassignRoom")}</button>
           </form>

@@ -13,6 +13,7 @@ import {
   reassignmentReason,
   requiredConfirmations,
   requiresCheckoutOverride,
+  validHotelLocalDate,
   type LifecycleActor,
 } from "../modules/lifecycle/domain";
 
@@ -62,10 +63,26 @@ export function createLifecycleRoutes(): LifecycleApp {
     if (!current) throw ApiError.notFound("Booking not found");
     if (current.status !== "CHECKED_IN") throw ApiError.conflict("Only checked-in bookings can be reassigned");
     if (roomId === current.room_id) throw ApiError.badRequest("room_id must change");
+    const hotelLocalDate = context.get("hotelTime")?.localDate;
+    if (!validHotelLocalDate(hotelLocalDate)) throw ApiError.unavailable("Hotel-local date context is unavailable");
     try {
-      const result = await repository.reassign(current, roomId, reason, context.get("hotelTime")?.localDate ?? new Date().toISOString().slice(0, 10), actor(context));
+      const result = await repository.reassign(current, roomId, reason, hotelLocalDate, actor(context));
       if (!result.ok || !result.reassignment) throw new Error("destination unavailable");
-      return context.json({ id, status: "CheckedIn", room_id: roomId, room_status: "Occupied", ...result.reassignment });
+      return context.json({
+        id,
+        status: "CheckedIn",
+        room_id: roomId,
+        room_status: "Occupied",
+        old_room_id: result.reassignment.oldRoomId,
+        new_room_id: result.reassignment.newRoomId,
+        hotel_local_date: result.reassignment.hotelLocalDate,
+        effective_date: result.reassignment.effectiveDate,
+        remaining_interval: {
+          start_date: result.reassignment.remainingInterval.startDate,
+          end_date_exclusive: result.reassignment.remainingInterval.endDateExclusive,
+        },
+        total_cents: result.reassignment.totalCents,
+      });
     } catch {
       throw ApiError.conflict("Room reassignment failed without changing the booking");
     }

@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import type { Booking, FrontDeskBoard, Guest, HousekeepingBoard, Invoice, MaintenanceCase, Room } from "../../domain/types";
+import type { Booking, FrontDeskBoard, Guest, HousekeepingBoard, MaintenanceCase, Room } from "../../domain/types";
 import {
   cancelBooking as cancelBookingRequest,
   checkInBooking,
   checkoutBooking,
   createBooking,
   loadAvailableRooms,
-  loadBillingContext,
   loadHotelContext,
   loadReceptionQueue,
   loadRoomMaintenanceCase,
@@ -35,8 +34,6 @@ export function useReceptionWorkspace() {
   const [reassignAvailableIds, setReassignAvailableIds] = useState<Set<string>>(new Set());
   const [reassignBoard, setReassignBoard] = useState<HousekeepingBoard | null>(null);
   const [reassignMaintenanceCase, setReassignMaintenanceCase] = useState<MaintenanceCase | null>(null);
-  const [reassignInvoice, setReassignInvoice] = useState<Invoice>(null);
-  const [reassignExtraCents, setReassignExtraCents] = useState(0);
   const [reassignHotelDate, setReassignHotelDate] = useState("");
   const [actionBusy, setActionBusy] = useState(false);
   const [notice, setNotice] = useState("");
@@ -117,8 +114,6 @@ export function useReceptionWorkspace() {
     setReassignAvailableIds(new Set());
     setReassignBoard(null);
     setReassignMaintenanceCase(null);
-    setReassignInvoice(null);
-    setReassignExtraCents(0);
     setReassignHotelDate("");
     resetLifecycleUi();
     setCheckInConflict("");
@@ -150,10 +145,10 @@ export function useReceptionWorkspace() {
   async function loadReassignmentContext(booking: Booking) {
     try {
       const hotelContext = await loadHotelContext();
-      const [available, billing] = await Promise.all([
-        loadAvailableRooms(booking.check_in, booking.check_out, booking.id),
-        loadBillingContext(booking.id),
-      ]);
+      const effectiveDate = hotelContext.hotel_local_date > booking.check_in ? hotelContext.hotel_local_date : booking.check_in;
+      const available = hotelContext.hotel_local_date < booking.check_out
+        ? await loadAvailableRooms(effectiveDate, booking.check_out, booking.id)
+        : [];
       const board: HousekeepingBoard = {
         date: hotelContext.hotel_local_date,
         rooms: available.map((room, index) => ({
@@ -166,8 +161,6 @@ export function useReceptionWorkspace() {
       setReassignHotelDate(hotelContext.hotel_local_date);
       setReassignAvailableIds(new Set(available.map(room => room.id)));
       setReassignBoard(board);
-      setReassignInvoice(billing[0]);
-      setReassignExtraCents(billing[1].reduce((sum, item) => sum + item.amount_cents, 0));
     } catch (e) {
       setReassignAvailableIds(new Set());
       setReassignBoard(null);
@@ -283,8 +276,15 @@ export function useReceptionWorkspace() {
       await load();
     } catch (e) {
       setNotice("");
-      setError(e instanceof ApiError && e.status === 409 ? t("reception.reassignConflict") : (e as Error).message);
-      await loadReassignmentContext(selected);
+      const conflict = e instanceof ApiError && e.status === 409;
+      if (conflict) {
+        const board = await load();
+        const latest = board?.items.find(item => item.booking.id === selected.id)?.booking;
+        if (latest?.status === "CheckedIn") await loadReassignmentContext(latest);
+        // load() clears stale errors while refreshing. Reassert the actionable
+        // conflict after authoritative booking/room context has been restored.
+        setError(t("reception.reassignConflict"));
+      } else setError((e as Error).message);
     } finally {
       setActionBusy(false);
     }
@@ -322,7 +322,7 @@ export function useReceptionWorkspace() {
   }
 
   return {
-    bookings, frontDeskBoard, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignInvoice, reassignExtraCents, reassignHotelDate, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
+    bookings, frontDeskBoard, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
     setCheckInStep, setCheckInData, setForm, setEditForm,
     selectCase, closeCase, refreshQueue: load, refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,

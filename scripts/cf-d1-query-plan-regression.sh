@@ -2,18 +2,20 @@
 set -euo pipefail
 export WRANGLER_SEND_METRICS=false
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+tmp_dir=$(mktemp -d)
+cleanup() { rm -rf "$tmp_dir"; }
+trap cleanup EXIT
 cd "$repo_dir"
 wrangler="$repo_dir/node_modules/.bin/wrangler"
-state_dir="$repo_dir/.wrangler/state"
-rm -rf "$state_dir"
+persist_args=(--persist-to "$tmp_dir/wrangler-state")
 
 run_d1() {
-  CI=1 timeout 12s "$wrangler" "$@"
+  CI=1 timeout 12s "$wrangler" "$@" "${persist_args[@]}"
 }
 
 # Applying the full local migration chain starts workerd repeatedly and is not
 # comparable to one EXPLAIN query. Keep the 12s query bound below.
-CI=1 timeout 90s "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >/dev/null
+CI=1 timeout 90s "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc "${persist_args[@]}" >/dev/null
 
 arrivals_plan=$(run_d1 d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "EXPLAIN QUERY PLAN SELECT id FROM bookings WHERE status='CONFIRMED' AND check_in='2026-09-01';" 2>&1)
 checkout_plan=$(run_d1 d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "EXPLAIN QUERY PLAN SELECT id FROM bookings WHERE status='CHECKED_IN' AND check_out='2026-09-01';" 2>&1)
