@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active F0.5 is frozen as Artifact A `0bafe4875de759869760cc4abdb08319c70e6b7a`. The task contract and all 24 invariant classifications are in A. Pre-Critic and required local/synthetic validation are complete; a fresh exact-pair Independent Critic is the next blocking boundary. Do not continue to F0.6 until that review is resolved. F0.6 alone owns legacy active-stay pricing bootstrap. No real data, PR/push/merge, main, staging, deploy, production, or Blocks A–H.
+Active task: F0.6 Task Contract and invariant map. F0.5 Artifact A `0bafe4875de759869760cc4abdb08319c70e6b7a` + Boundary B `2be85fa0d2d9f1a4656c3b608927af33726d2062` received fresh Independent Critic `PASS` from Halley (GPT-6 Luna Medium); no material findings and no F0.6 blocker. F0.5-only Development Gate is PASS. F0.6 is authorized by Foundation 0 RG1–RG7 and must remain synthetic/local; real active-stay reads/bootstrap are forbidden. No PR/push/merge, main, staging, deploy, production, or Blocks A–H.
 
 Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `18JGIQxyl8Bh6_w7H3eW1qdPL7jfUsdSLk43aE-G-90A`. Roadmap authority is Artifact A2 `b2581e4c370eeb6f74e9380af010e48386642b4f` and Boundary B2 `c6a4bcb9a2939505f7ddf8e72c02ec9b825f00f3`.
 
@@ -37,7 +37,7 @@ Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `
 - Repaired findings: Wrangler scalar-CASE trigger parser `incomplete input`; 409 message erased by authoritative refresh; stale date/queue selectors and browser harness assumptions; fixed-date CF-I03 fixture; two regression runners now isolate local Wrangler state rather than deleting `.wrangler/state`.
 - F0.4 Development Gate: `PASS` after exact A+B Independent Critic PASS and independent QA fulfillment of the sole condition. This does not close Foundation 0. Continue automatically to F0.5 under the approved DAG; no Block A–H. Preserve booking totals and billing rows in F0.4; F0.5 owns segmented active-stay pricing. Real data remains prohibited; no PR, push, merge, main, staging, deploy or production.
 
-### F0.5 — Segmented Reassignment Pricing (awaiting exact-pair Independent Critic)
+### F0.5 — Segmented Reassignment Pricing (Independent Critic PASS)
 
 - Frozen Task Contract: `.orchestration/contracts/HMS-F0-05-SEGMENTED-REASSIGNMENT-PRICING-001.md`; 24 registry invariants mapped. Bounded shared-room race repair contract: `.orchestration/contracts/HMS-F0-05-REPAIR-HOUSEKEEPING-AUDIT-RACE-001.md`.
 - Artifact A: `0bafe4875de759869760cc4abdb08319c70e6b7a`. It adds migration `0025_segmented_stay_pricing.sql`, append-only per-night rate segments and pricing versions, server-authoritative reassignment quote/commit, current destination rate for remaining hotel-local nights, D11 reconciliation while preserving extra charges and payment ledger, Reception price impact, directed/executing-D1 tests and evidence. No historical active stays were bootstrapped; F0.6 remains separate.
@@ -45,7 +45,14 @@ Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `
 - Browser finding disposition: an initial assertion observed old room text while Reception's three-request queue load (board/rooms/guests) was still in flight. This was a test synchronization race; condition-based DOM evidence now waits for authoritative room rendering without sleep/retry/timeout inflation. The integrated run passes.
 - Shared correctness finding discovered by CF-I05: two stale housekeeping callers could both record CLEANING_START although only one transition won. A narrow version-bound event `INSERT … SELECT` guard fixes the false loser event without `changes()` chaining. Directed executing-D1 and CF-I05 pass. This repair is explicitly scoped as inherited INV-ATOMIC/AUDIT correctness, not a new Housekeeping feature.
 - Earlier local-only caveat: the first CF-I06 attempt before its isolation repair used Wrangler's default local synthetic fixture store and changed named fixture rows. The runner now confines every operation to a unique temp persistence directory; subsequent CF-I06 passes. No remote/customer/staging/production data, real cutover or active-stay bootstrap was accessed or mutated; no attempt was made to reconstruct disposable local fixtures.
-- Pre-Critic and invariant evidence are in `.orchestration/evidence/HMS-F0-05-SEGMENTED-REASSIGNMENT-PRICING-001-{PRECRITIC,INVARIANTS}.md`. The Pre-Critic gate is eligible/pass internally only; no substantive PASS is self-issued. Await a fresh exact A+B Independent Critic before F0.6. No Block A–H, PR, push, merge, main, staging mutation, deploy or production.
+- Pre-Critic and invariant evidence are in `.orchestration/evidence/HMS-F0-05-SEGMENTED-REASSIGNMENT-PRICING-001-{PRECRITIC,INVARIANTS}.md`. Independent Critic verdict and exact pair are in `.orchestration/evidence/HMS-F0-05-INDEPENDENT-CRITIC.md`. F0.5 Development Gate: `PASS`. This is not aggregate Foundation 0 PASS.
+
+### F0.6 — Active-Stay Pricing Bootstrap (Task Contract preparation)
+
+- Approved source: F0.6 section in `docs/implementation-roadmap/HMS-FOUNDATION-0-CONTRACT-V1.md` and `docs/implementation-roadmap/HMS-ACTIVE-STAY-PRICING-BOOTSTRAP-PLAN-V1.md`.
+- DB/Data inventory reviewer Peirce (read-only GPT-6 Luna Medium) confirmed existing migration tooling has no row-level active-stay pricing classifier or resumable/replayable shadow bootstrap. The F0.3 checkpoint test is a pattern, not evidence for F0.6.
+- Material design guard: `booking_pricing_segments` is operational pricing input and inserts advance booking pricing version. Any F0.6 shadow/candidate state must be stored separately and must not alter quote output or canonical totals/invoices/charges/payment rows. Historical rate evidence cannot be inferred from current room price. Only explicit synthetic evidence can be classified `TRACEABLE_SEGMENTS`; missing evidence remains aggregate-only/held.
+- Unknown real-source history/currency completeness remains deferred to the separately required Human Gate before any real-data bootstrap. The current increment reads/writes only synthetic disposable fixtures. No real data/cutover.
 
 ## HISTORICAL BOUNDARY — HMS-ROADMAP-CTRL-REWORK-001
 
@@ -216,7 +223,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-External Independent Critic reviews F0.5 Artifact A `0bafe4875de759869760cc4abdb08319c70e6b7a` plus the immediately following orchestration-only Boundary B. This is an internal Foundation 0 review boundary, not a Human Gate. After the exact-pair verdict, continue the approved F0 DAG autonomously; do not begin Block A–H. No real data/cutover/bootstrap, PR, push, merge, main, acceptance/staging, deploy, or production.
+Freeze the F0.6 Task Contract and all-registry invariant map before implementation. Implement only a synthetic/local, explainable active-stay pricing classifier and separate shadow/recovery rehearsal as approved; never read or mutate real active stays. Continue F0 DAG only; do not begin Block A–H. No PR, push, merge, main, acceptance/staging, deploy, or production.
 
 ## MODEL ROUTING
 
