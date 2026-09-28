@@ -4,6 +4,14 @@
 
 Active task: implement F0.8 under frozen Task Contract `.orchestration/contracts/HMS-F0-08-GUEST-RESERVATION-RECOVERY-001.md` (clarified before product changes to use truthful operation-stage provenance instead of fabricating agent-session audit fields). F0.7 repair exact-pair Independent Critic returned `PASS` on A2 `715e6a593e967f70ff9c6fd5adb2d2d4db3efd1a` + B2 `604b36d1b34eb7db342df2813613c784530ef7d7`; verdict/evidence is `.orchestration/evidence/HMS-F0-07-REPAIR-BOOKING-PRICING-ABA-001-INDEPENDENT-CRITIC.md`. That is F0.7 increment acceptance only. Preserve disclosed direct-synthetic-SQL ABA interposition limitation and broad product-flow runner missing-`playwright` caveat. F0.8 is permitted after F0.2 by the approved DAG. No finite retention or cleanup policy is inferred for incomplete operation records; they remain discoverable without expiry. Foundation 0 is not closed. Real data/cutover/bootstrap remain prohibited. No PR/push/merge, main, staging, deploy, production, or Blocks A–H.
 
+### F0.8 — Recoverable guest + reservation creation — exact Artifact A awaiting Independent Critic
+
+- Frozen Task Contract: `.orchestration/contracts/HMS-F0-08-GUEST-RESERVATION-RECOVERY-001.md`; all 24 registry invariants are classified. Local/synthetic only; incomplete stages have no inferred expiry; no Blocks A–H or real-data action.
+- Immutable substantive Artifact A: `298545b23e59f8aabfef5a766f76249ee71e856b`. It adds forward migration `0029_reservation_creation_recovery.sql`, a focused operation repository and typed recovery API, stable token/payload replay, truthful guest/booking stage provenance, a Reception new-guest/recover-existing-guest task, executing-D1 tests, integrated Worker/D1/Vite runner and desktop/mobile evidence.
+- Validation: `npm run check` 33 files / 151 tests; F0.8 + F0.3 executing-D1 9/9; `npm run types:check`; `npm run web:build`; `npm run architecture:fitness`; `npm run test:d1-query-plan`; API/Web and staging-SPA Wrangler dry-runs; CF-I03/04, CF-I05, CF-I06 serial; `git diff --check`; integrated `scripts/cf-f0-08-reservation-recovery-integrated.sh` exit 0 at 1280×900 and 390×844. JS budget 299642/300000 raw, 86895/100000 gzip; CSS 40668/50000 raw, 8000/15000 gzip. Latest integrated log and screenshots are in Artifact A under `output/playwright/f0-08-*`; owned Worker/Vite process cleanup was verified.
+- Internal QA reviewer Beauvoir (read-only GPT-6 Luna Medium) identified seven technical/evidence gaps; each was repaired and directed/integrated evidence rerun. This reviewer is not the Independent Critic. Pre-Critic and invariant evidence are included in A. The broad product-flow runner's missing-`playwright` caveat remains explicitly unclaimed; F0.8 has its own Playwright CLI integration.
+- Artifact A is frozen. This orchestration-only boundary records the exact A and requires a fresh separate Independent Critic. No critic verdict is represented yet; F0.8 is not accepted/closed and Foundation 0 remains open. Continue along the approved DAG only after the exact A+B review boundary is satisfied.
+
 Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `18JGIQxyl8Bh6_w7H3eW1qdPL7jfUsdSLk43aE-G-90A`. Roadmap authority is Artifact A2 `b2581e4c370eeb6f74e9380af010e48386642b4f` and Boundary B2 `c6a4bcb9a2939505f7ddf8e72c02ec9b825f00f3`.
 
 - Dedicated branch: `impl/hms-foundation-0`, based exactly on roadmap Boundary B2. Replacement F0.2 Artifact A with finalized evidence is `25656bec8fcc125544934e63756df371d7b7ad79`; its orchestration-only Boundary B is `a84d9ab74aabc116878fd320e5e38588b372b666` and received Independent Critic PASS for F0.2 only.
@@ -244,7 +252,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-Implement only F0.7 under `.orchestration/contracts/HMS-F0-07-SETTLEMENT-GUARD-001.md`; run adversarial checkout/payment/charge races and integrated conflict recovery. Continue Foundation 0 DAG only; no Blocks A–H or real data, PR, push, merge, main, staging mutation, deploy or production.
+Obtain a fresh Independent Critic on exact F0.8 Artifact A `298545b23e59f8aabfef5a766f76249ee71e856b` plus this orchestration-only boundary. If the review identifies routine technical findings, repair within F0.8 and repeat gates; if it returns PASS and no architecture/product blocker exists, continue with the next Foundation 0 increment in the approved DAG. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
 
 ## MODEL ROUTING
 
