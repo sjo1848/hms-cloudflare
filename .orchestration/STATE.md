@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active task: bounded evidence repair for Independent Critic finding F0.10-IC-04 under `.orchestration/contracts/HMS-F0-10-REPAIR-NETWORK-MOBILE-KEYBOARD-001.md`; Pre-Critic `.orchestration/evidence/HMS-F0-10-REPAIR-NETWORK-MOBILE-KEYBOARD-001-PRECRITIC.md` is frozen. Fresh separate read-only Independent Critic Tesla (GPT-6 Luna Medium) reviewed A2 `3b4a9ea687e6ddc7a184b8cb3b13cc5e2f5d006f` + B2 `a6bdd79576d37de6b5f9ad78becc8ae806d85ef4` and returned `REWORK`: IC-01 and desktop IC-02 resolved, but mobile Network keyboard/DOM assertion missing. Reviewer confirmed synthetic hotels-list GET limitation is honestly disclosed, A2→B2→verdict→orchestration-only B3 closure of INV-STATE is non-circular/compliant, no blocker/architecture contradiction. Prior A1/B1 and A2/B2 remain immutable with REWORK. Add allowed+denied Network keyboard evidence at 1280×900 and 375×844; no product code change expected. F0.9/F0.7 critic PASS; F0.8 handoff closed. Foundation 0 remains incomplete: F0.10 → F0.11 → F0.12. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
+Active task: fresh Independent Critic review of F0.10 Artifact A3 `15835e28de8b6d3a7b069c65a197bd937a9596f5` + this orchestration-only Boundary B3. Tesla's prior A2 `3b4a9ea687e6ddc7a184b8cb3b13cc5e2f5d006f` + B2 `a6bdd79576d37de6b5f9ad78becc8ae806d85ef4` review returned `REWORK` only for missing mobile Network keyboard/DOM proof. A bounded evidence-only contract/Pre-Critic repaired that omission: real local Worker/two-D1/Vite browser now proves authorized and unauthorized keyboard/DOM behavior at desktop 1280×900 and mobile 375×844; denied POST is 403 and denied hotel rows remain zero. Initial runner race before `/auth/me` was awaited is documented; no product/schema changes. Exact output/screenshots and all 24 invariant dispositions are in A3. A3 is immutable; obtain a fresh Critic unrelated to Tesla/Lagrange and do not self-declare F0.10 PASS. F0.9/F0.7 critic PASS; F0.8 handoff closed. Foundation 0 remains incomplete: F0.10 review → F0.11 → F0.12. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
 
 ### F0.8 — Recoverable guest + reservation creation — implementation validated; handoff condition closed
 
@@ -257,7 +257,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-Add and verify Network desktop+mobile keyboard/DOM assertions for both allowed and denied contexts, publish replacement A3+B3 and obtain a fresh independent review. If no blocker/new product policy is found, finalize INV-STATE in an orchestration-only follow-up and continue F0.11 then F0.12; Foundation 0 is NOT complete. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
+Obtain a fresh Independent Critic verdict on exact A3 `15835e28de8b6d3a7b069c65a197bd937a9596f5` plus this orchestration-only B3. If no blocker/new product policy is found, record the verdict and finalize INV-STATE in an orchestration-only follow-up, then continue F0.11 and F0.12; Foundation 0 is NOT complete. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
 
 ## MODEL ROUTING
 
