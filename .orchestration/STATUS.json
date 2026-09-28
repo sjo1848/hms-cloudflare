@@ -5,19 +5,19 @@
   "phase": "FOUNDATION_0_IMPLEMENTATION",
   "runtime_status": "RUNNING",
   "resume_authorized": false,
-  "active_task": "HMS-F0-08-CONTRACT-AND-INVARIANT-MAP-001",
+  "active_task": "HMS-F0-08-GUEST-RESERVATION-RECOVERY-001",
   "last_completed_task": "F0.7 replacement ABA repair exact-pair Independent Critic PASS (increment only)",
   "last_completed_head": "715e6a593e967f70ff9c6fd5adb2d2d4db3efd1a",
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.7 REPAIR EXACT-PAIR CRITIC PASS; PREPARING NEXT AUTHORIZED F0.8 TASK CONTRACT",
-  "next_action": "READ_F0_08_AUTHORITY_AND_CREATE_TASK_CONTRACT_WITH_FULL_INVARIANT_MAP_BEFORE_IMPLEMENTATION",
+  "status_label": "F0.7 REPAIR EXACT-PAIR CRITIC PASS; F0.8 TASK CONTRACT FROZEN BEFORE IMPLEMENTATION",
+  "next_action": "IMPLEMENT_F0_08_GUEST_RESERVATION_RECOVERY_WITH_LOCAL_SYNTHETIC_EVIDENCE",
   "stop_reason": null,
   "event": {
-    "seq": 188,
-    "id": "HMS-F0-07-ABA-REPAIR-CRITIC-PASS",
-    "type": "F0_7_REPLACEMENT_ABA_REPAIR_CRITIC_PASS"
+    "seq": 189,
+    "id": "HMS-F0-08-TASK-CONTRACT-FROZEN",
+    "type": "F0_8_TASK_CONTRACT_FROZEN"
   },
   "external_review": {
     "required": false,
@@ -171,6 +171,7 @@
     "f0_7_replacement_boundary_b2": "this orchestration-only commit; exact A2 reference, external review required, continuation blocked",
     "f0_7_replacement_critic": "PASS: Hooke reviewed exact replacement A2+B2; previous Ampere A1+B1 verdict remains historical and separate",
     "f0_7_replacement_critic_verdict": "PASS: Hooke, fresh separate read-only GPT-6 Luna Medium; exact A2+B2; no conditions; direct-SQL synthetic ABA interposition limitation disclosed; no architecture contradiction or ROADMAP_BLOCKER",
+    "f0_8_task_contract": "FROZEN BEFORE IMPLEMENTATION: .orchestration/contracts/HMS-F0-08-GUEST-RESERVATION-RECOVERY-001.md; all 24 durable invariants classified; local/synthetic only; Peirce read-only contract review found no blocker; no expiry/cleanup policy inferred",
     "f0_7_broad_runner_finding": "RECORDED: broad product-flow runner cannot import missing npm playwright; not claimed PASS; required checkout flow independently exercised through Playwright CLI against real Worker/D1",
     "validation_parallel_attempt": "DISCARDED: fixed port 8787 CF-I03/CF-I04/CF-I06 collision and load-only 10-second rehearsal timeout; all regressions rerun serially and full Foundation CI passed",
     "extra_charge_atomic_rollback": "CONFIRMED",
