@@ -11,24 +11,24 @@
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.3 ARTIFACT A FROZEN; EXACT A+B AWAITS FRESH INDEPENDENT CRITIC; LOCAL_SYNTHETIC_ONLY",
-  "next_action": "INDEPENDENT_CRITIC_REVIEW_F0_3_EXACT_ARTIFACT_A_AND_BOUNDARY_B; DO_NOT_BEGIN_F0_4_UNTIL_REVIEW_RESOLVED",
-  "stop_reason": "F0.3 material data/cutover review boundary; no F0.4 work until the exact immutable A+B pair receives Independent Critic review.",
+  "status_label": "F0.3 REWORK ARTIFACT A2 FROZEN; EXACT A2+B2 AWAITS FRESH INDEPENDENT CRITIC; LOCAL_SYNTHETIC_ONLY",
+  "next_action": "INDEPENDENT_CRITIC_REVIEW_F0_3_EXACT_ARTIFACT_A2_AND_BOUNDARY_B2; DO_NOT_BEGIN_F0_4_UNTIL_REVIEW_RESOLVED",
+  "stop_reason": "F0.3 exact A2+B2 requires fresh Independent Critic review after repairing both HIGH findings; no F0.4 until review resolves.",
   "event": {
-    "seq": 155,
-    "id": "HMS-F0-03-ARTIFACT-A-BOUNDARY",
-    "type": "F0_3_ARTIFACT_A_FROZEN_BOUNDARY_B_REQUIRES_INDEPENDENT_CRITIC"
+    "seq": 156,
+    "id": "HMS-F0-03-ARTIFACT-A2-BOUNDARY-B2",
+    "type": "F0_3_REWORK_ARTIFACT_A2_FROZEN_BOUNDARY_B2_REQUIRES_INDEPENDENT_CRITIC"
   },
   "external_review": {
     "required": true,
     "last_audited_head": "25656bec8fcc125544934e63756df371d7b7ad79",
-    "last_verdict": "PASS — F0.2 EXACT A+B PAIR ONLY; F0.3 and FOUNDATION 0 GLOBAL STATUS NOT REVIEWED",
-    "artifact_head": "c4af224c0454b34ea2201db7f5726de446668aad",
-    "review_path": "Raman (GPT-6 Luna Medium), fresh Independent Critic, reviewed exact A 25656bec8fcc125544934e63756df371d7b7ad79 + B a84d9ab74aabc116878fd320e5e38588b372b666 and returned PASS for the F0.2 pair only. Reviewer verified both substantive repairs, corrected handoff, evidence scope and no-real-data limits. This does not approve F0.3 or Foundation 0 aggregate.",
+    "artifact_head": "3980ef3db3a4e0cb96f7102705d2719777d84f26",
+    "last_verdict": "REWORK — F0.3 initial exact A+B only; two HIGH findings recorded and repaired in A2; fresh review pending",
+    "review_path": "Raman (GPT-6 Luna Medium), fresh Independent Critic, reviewed exact F0.2 A 25656bec8fcc125544934e63756df371d7b7ad79 + B a84d9ab74aabc116878fd320e5e38588b372b666 and returned PASS for F0.2 only. Separately Pauli (fresh read-only GPT-6 Luna Medium) reviewed F0.3 exact A c4af224c0454b34ea2201db7f5726de446668aad + B 23de5ab46f68ce2a5c060bc9ff11c7c22ed6475d and returned REWORK: stale-guard request/zero-write proof and staged checkpoint restart proof missing. A2 adds those executing-D1 assertions; exact A2+B2 review pending.",
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B",
-      "F0.3 Artifact A c4af224c0454b34ea2201db7f5726de446668aad + pending orchestration Boundary B"
+      "F0.3 initial pair REWORK: A c4af224c0454b34ea2201db7f5726de446668aad + B 23de5ab46f68ce2a5c060bc9ff11c7c22ed6475d; repaired A2 3980ef3db3a4e0cb96f7102705d2719777d84f26 + pending B2"
     ]
   },
   "human_gate": {
@@ -85,13 +85,13 @@
     "f0_2_boundary_critic_rework": "REPAIRED: prior boundary-only rework corrected; latest exact boundary reviewed in subsequent PASS pair",
     "f0_3_task_contract": "FROZEN: .orchestration/contracts/HMS-F0-03-ROOM-STATE-CUTOVER-001.md; all 24 registry invariants classified; synthetic-only implementation",
     "f0_3_artifact_a": "c4af224c0454b34ea2201db7f5726de446668aad",
-    "f0_3_unit_executing_d1": "PASS: 16 mapper cases + 2 executing-D1 tests; full migration chain, source accounting, stable hashes, drift rejection, injected rollback/replay, tenant-isolated synthetic D1s and open-case uniqueness",
-    "f0_3_full_validation": "PASS: npm run check 29 files/116 tests; types:check; web build JS 296633 raw/86178 gzip, CSS 39735/7838; architecture/i18n/budgets; D1 plans; API/Web Wrangler dry-runs; diff and runner syntax checks",
+    "f0_3_unit_executing_d1": "PASS: 16 mapper cases + 2 executing-D1 tests; full migration chain; staged SOURCE_SNAPSHOT_CAPTURED → SHADOW_ROWS_WRITTEN → COMPLETE resume/replay; injected rollback; real synthetic request guard accepts current and rejects stale digest with exact zero-write assertions; tenant-isolated D1s and open-case uniqueness",
+    "f0_3_full_validation": "PASS after bounded critic rework: npm run check 29 files/116 tests; types:check; web build JS 296633 raw/86178 gzip, CSS 39735/7838; architecture/i18n/budgets; D1 plans; API/Web Wrangler dry-runs; diff check. Product code unchanged; prior real local browser evidence remains applicable.",
     "f0_3_browser": "PASS: real local Worker+D1 + Vite/Playwright at 1280x800 and 390x844; 3 unresolved rooms, ready metric 0; canonical_state UNCHANGED; owned processes and fixture cleaned",
-    "f0_3_synthetic_identities": "PASS: schema 5eacbc95ee0f4db1842ad333075cbd87626a7b62339f0ea13dbbaa402a240672; migration 051e64cb87d925427f20c04b69bf61a3b5a7bb58e5a2a8c938e201e2d5fda976; source 7ad97a67e3df98cfe5148ce097ca2ec511628219362850785013088e2b60d355; report 863e235a178d2a7b60e376d3738dc8ab40e71ba89e46b717b36bb87637537359",
-    "f0_3_precritic": "PASS: mandatory invariant and Pre-Critic records committed in Artifact A; implementation findings repaired; not Independent Critic",
+    "f0_3_synthetic_identities": "PASS: schema f4f26e960ce4058ccaf218e31f7c5b9807fa5e5e93b2f3fe8c8384cfbeec6431; migration 051e64cb87d925427f20c04b69bf61a3b5a7bb58e5a2a8c938e201e2d5fda976; source 479681109794c806447a783e0b8a758500206fe15937110d03cef0884fb78ed4; report c6699ec7bd4a58f08701aef3247b65bc1f73199af335bc4d08c40ad84345a7db",
+    "f0_3_precritic": "PASS after bounded rework: mandatory invariant and Pre-Critic records include Pauli's two initial HIGH findings, repairs and fresh gate evidence in A2; implementer evidence only, not Independent Critic",
     "f0_3_db_data_review": "Hilbert read-only DB/Data reviewer; two rounds. Follow-up found no open item among targeted repairs; not Independent Critic or acceptance.",
-    "f0_3_independent_critic": "PENDING: exact A c4af224c0454b34ea2201db7f5726de446668aad + orchestration Boundary B",
+    "f0_3_independent_critic": "PENDING: fresh review of exact rework A2 3980ef3db3a4e0cb96f7102705d2719777d84f26 + orchestration-only B2",
     "f0_3_real_data": "NOT ACCESSED OR MUTATED; no real cutover or active-stay pricing bootstrap",
     "d11_executing_d1": "4/4 PASS",
     "foundation_ci": "PASS",
