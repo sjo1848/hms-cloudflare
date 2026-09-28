@@ -5,26 +5,26 @@
   "phase": "FOUNDATION_0_IMPLEMENTATION",
   "runtime_status": "RUNNING",
   "resume_authorized": false,
-  "active_task": "HMS-F0-08-GUEST-RESERVATION-RECOVERY-001",
+  "active_task": "HMS-F0-08-REPAIR-RECOVERY-LIST-375-001",
   "last_completed_task": "F0.7 replacement ABA repair exact-pair Independent Critic PASS (increment only)",
   "last_completed_head": "715e6a593e967f70ff9c6fd5adb2d2d4db3efd1a",
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.8 ARTIFACT A FROZEN; EXACT-PAIR INDEPENDENT CRITIC PENDING",
-  "next_action": "OBTAIN_FRESH_INDEPENDENT_CRITIC_ON_F0_08_ARTIFACT_A_298545B23E59F8AABFEF5A766F76249EE71E856B_AND_THIS_ORCHESTRATION_BOUNDARY",
+  "status_label": "F0.8 CRITIC REWORK; BOUNDED REPAIR CONTRACT FROZEN",
+  "next_action": "REPAIR_INCOMPLETE_OPERATION_VISIBILITY_AND_RERUN_375PX_INTEGRATED_EVIDENCE",
   "stop_reason": null,
   "event": {
-    "seq": 191,
-    "id": "HMS-F0-08-ARTIFACT-A-PUBLISHED",
-    "type": "F0_8_ARTIFACT_A_PUBLISHED"
+    "seq": 192,
+    "id": "HMS-F0-08-INDEPENDENT-CRITIC-REWORK",
+    "type": "F0_8_INDEPENDENT_CRITIC_REWORK"
   },
   "external_review": {
-    "required": true,
+    "required": false,
     "last_audited_head": "298545b23e59f8aabfef5a766f76249ee71e856b",
     "artifact_head": "298545b23e59f8aabfef5a766f76249ee71e856b",
-    "last_verdict": null,
-    "review_path": null,
+    "last_verdict": "REWORK: Jason, fresh separate read-only GPT-6 Luna Medium; exact A 298545b23e59f8aabfef5a766f76249ee71e856b + B 5d6e9b37a58554a5b3d4e74bdf13ed7db7a09219; HIGH incomplete recovery operation hidden after separate booking for same guest; MEDIUM integrated mobile width 390px not contracted 375px; no ROADMAP_BLOCKER/architecture contradiction; no tests run, no edits",
+    "review_path": ".orchestration/evidence/HMS-F0-08-GUEST-RESERVATION-RECOVERY-001-INDEPENDENT-CRITIC-A1-B1.md",
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
@@ -37,6 +37,7 @@
   },
   "f0_8_artifact_a": "298545b23e59f8aabfef5a766f76249ee71e856b",
   "f0_8_artifact_summary": "F0.8 recovery API/repository, migration 0029, Reception new/existing guest recovery, 7 executing-D1 cases, integrated Worker/D1/Vite desktop/mobile browser evidence; 33 files/151 tests full check; all named gates PASS; independent critic pending",
+  "f0_8_rework_findings": "REWORK REQUIRED within F0.8: keep original GUEST_CREATED operation discoverable after a separate confirmed booking uses that guest; integrated mobile width must be 375px, not 390px. No product/scope gate.",
   "blocker": null,
   "promotion_finding": {
     "kind": "EXTERNAL_FINDING",
