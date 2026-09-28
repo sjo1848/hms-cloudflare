@@ -11,13 +11,13 @@
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.9 VALIDATED; PREPARING IMMUTABLE ARTIFACT A AND ORCHESTRATION B",
-  "next_action": "FINAL_SCOPE_AUDIT_THEN_FREEZE_F0_09_ARTIFACT_A_AND_BOUNDARY_B",
+  "status_label": "F0.9 ARTIFACT A FROZEN; EXACT A/B INDEPENDENT CRITIC DISPATCHED",
+  "next_action": "INDEPENDENT_CRITIC_REVIEW_F0_09_ARTIFACT_A_AND_BOUNDARY_B",
   "stop_reason": null,
   "event": {
-    "seq": 199,
-    "id": "HMS-F0-09-VALIDATION-COMPLETE",
-    "type": "F0_9_VALIDATION_COMPLETE"
+    "seq": 200,
+    "id": "HMS-F0-09-ARTIFACT-BOUNDARY-FROZEN",
+    "type": "F0_9_ARTIFACT_BOUNDARY_FROZEN"
   },
   "external_review": {
     "required": false,
@@ -44,7 +44,10 @@
   "f0_9_financial_final_state": "PASS: 12,750 total/invoice cents; paid 2,500; remaining 10,250; credit 0; PENDING; method/reference preserved; 2 charges, 4 events, 1 unchanged payment row; all failed paths zero additional effect",
   "f0_9_qa_findings": "Dirac read-only QA found replay/lookup missing durable event-pair proof and missing second-event failure injection; both repaired under bounded contract and fresh D1/API/browser/regression evidence rerun",
   "f0_9_precritic": "PASS internal gate; original Pre-Critic sequencing deviation disclosed; bounded repair contract and Pre-Critic frozen before repair; all 24 invariants mapped; not Independent Critic verdict",
-  "f0_9_artifact_boundary": "PREPARING exact immutable A plus orchestration-only B; fresh Independent Critic required; Foundation 0 remains incomplete; F0.10-F0.12 remain",
+  "f0_9_artifact_boundary": "Exact immutable A and orchestration-only B frozen; fresh Independent Critic required; Foundation 0 remains incomplete; F0.10-F0.12 remain",
+  "f0_9_artifact_a": "421b5f938dbd6e8a70ac51d0d8d2c6ce2341c8f0",
+  "f0_9_boundary_b": "this orchestration-only commit; exact Artifact A reference; independent review required; F0.10 is not active until F0.9 review closes",
+  "f0_9_critic_status": "DISPATCHED: fresh read-only independent reviewer of exact A+B; not the implementer or prior QA reviewer",
   "f0_8_artifact_a1": "298545b23e59f8aabfef5a766f76249ee71e856b",
   "f0_8_artifact_summary": "F0.8 recovery API/repository, migration 0029, Reception new/existing guest recovery, original incomplete operation remains discoverable after a separate booking; F0.8 D1 7/7, full check 33/151, fresh integrated Worker/D1/Vite desktop 1280 and mobile 375, required focused gates pass; A2+B2 PASS_WITH_CONDITIONS, sole condition discharged by bounded A2+B3 PASS",
   "f0_8_critic_a1_b1": "REWORK: Jason, fresh read-only GPT-6 Luna Medium; HIGH incomplete GUEST_CREATED operation hidden after a separate booking for same guest; MEDIUM mobile evidence 390px instead of required 375px; no blocker/architecture contradiction; no tests, no edits",
