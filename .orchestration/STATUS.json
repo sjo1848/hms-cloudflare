@@ -7,7 +7,7 @@
   "runtime_status": "RUNNING",
   "active_task": "HMS-F0-09-TASK-CONTRACT-AND-INVARIANT-MAP",
   "last_completed_task": "F0.8 A2+B2 PASS_WITH_CONDITIONS; sole handoff condition discharged by bounded A2+B3 PASS",
-  "last_completed_head": "482c8f782087f8cc195ca74d3aee43b887c58d50",
+  "last_completed_head": "89199186433dc06cb8519d44dbb4941b7c930816",
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
@@ -15,9 +15,9 @@
   "next_action": "READ_F0_09_AUTHORITY_AND_CREATE_TASK_CONTRACT_WITH_ALL_INVARIANTS",
   "stop_reason": null,
   "event": {
-    "seq": 196,
-    "id": "HMS-F0-08-REVIEW-CONDITION-DISCHARGED",
-    "type": "F0_8_REVIEW_CONDITION_DISCHARGED"
+    "seq": 197,
+    "id": "HMS-F0-09-DISPATCH-STATE-RECONCILED",
+    "type": "F0_9_DISPATCH_STATE_RECONCILED"
   },
   "external_review": {
     "required": false,
