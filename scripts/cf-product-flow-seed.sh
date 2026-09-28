@@ -4,8 +4,9 @@ set -euo pipefail
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 wrangler=${1:-$repo_dir/node_modules/.bin/wrangler}
 log_file=${2:-/dev/null}
+persist_to=${3:?isolated Wrangler persistence path is required}
 
-CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c "$repo_dir/apps/api/wrangler.jsonc" --command "
+CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c "$repo_dir/apps/api/wrangler.jsonc" --persist-to "$persist_to" --command "
   DELETE FROM room_inventory_nights WHERE room_id LIKE 'integral-%';
   DELETE FROM housekeeping_events WHERE room_id LIKE 'integral-%';
   DELETE FROM maintenance_cases WHERE room_id LIKE 'integral-%';

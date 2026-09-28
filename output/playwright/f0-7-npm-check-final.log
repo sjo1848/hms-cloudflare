@@ -1,0 +1,88 @@
+npm notice run check
+npm notice run npm run typecheck && npm run test
+npm notice run typecheck
+npm notice run tsc -b
+npm notice run test
+npm notice run vitest run --maxWorkers=2
+
+ RUN  v3.2.7 /home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare
+
+ ✓ apps/api/src/modules/billing/active-stay-pricing-bootstrap.executing-d1.test.ts (11 tests) 60732ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > classifies all five contract classes without inferring rates and is deterministic  5901ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > shadows and activates only exact traceable synthetic evidence; replay is idempotent and D11 truth stays byte-equivalent  6171ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > quarantines conflicting duplicate room snapshot identities instead of silently collapsing them  4917ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > holds an already segmented canonical stay without layering bootstrap segments over F0.5 pricing  4872ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > rejects a canonical segment set added after shadowing even when booking version fields are restored  4920ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > converges concurrent activation attempts without duplicate segments or financial drift  4962ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > isolates per-hotel checkpoints across independent operational D1 databases  9061ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > rolls back a partial shadow checkpoint and resumes from the same manifest  4615ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > rejects changed equal-count payment truth and source-digest supersession with zero activation drift  5429ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > rejects inventory ABA even when visible room-night keys are restored  4862ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > rolls back all activation writes when a later canonical segment insert fails  5019ms
+ ✓ apps/api/src/modules/lifecycle/check-in-concurrency.executing-d1.test.ts (1 test) 8231ms
+   ✓ check-in exact-winner guard on executing D1 > rejects a stale concurrent attempt without a second event or partial state  8228ms
+ ✓ apps/api/src/modules/lifecycle/reassignment-interval.executing-d1.test.ts (14 tests) 71356ms
+   ✓ F0.4 reassignment interval on executing D1 > creates and revises unconsumed booking pricing segments with an exact inventory replacement  4823ms
+   ✓ F0.4 reassignment interval on executing D1 > reprices only remaining nights, preserves charges and payment ledger, and reconciles D11 atomically  5753ms
+   ✓ F0.4 reassignment interval on executing D1 > reconciles downward and upward repricing across PAID/PENDING without changing ledger rows  5135ms
+   ✓ F0.4 reassignment interval on executing D1 > rejects a price quote after the destination rate changes away and back  4848ms
+   ✓ F0.4 reassignment interval on executing D1 > preserves elapsed claims and billing through repeated reassignment, with versioned room dimensions and truthful history  4935ms
+   ✓ F0.4 reassignment interval on executing D1 > uses check-in as the effective date before/equal arrival and rejects checkout overrun without drift  5240ms
+   ✓ F0.4 reassignment interval on executing D1 > rejects BLOCKING/unresolved destinations and ledger mismatch with zero business drift  5449ms
+   ✓ F0.4 reassignment interval on executing D1 > marks the vacated source DIRTY while preserving unresolved unrelated source dimensions  4501ms
+   ✓ F0.4 reassignment interval on executing D1 > rolls back every earlier write if the final reassignment event is rejected  4815ms
+   ✓ F0.4 reassignment interval on executing D1 > allows only one same-booking/same-destination concurrent winner  5076ms
+   ✓ F0.4 reassignment interval on executing D1 > allows only one of two bookings to win a shared destination  5569ms
+   ✓ F0.4 reassignment interval on executing D1 > rejects an equal-count wrong-date source claim between snapshot and batch  5173ms
+   ✓ F0.4 reassignment interval on executing D1 > rejects a destination room visible-state ABA using its advanced version  5131ms
+   ✓ F0.4 reassignment interval on executing D1 > rejects a payment posted after quote validation without rolling back the payment or partially reassigning  4904ms
+ ✓ apps/api/src/modules/billing/d1-billing-reconciliation.executing-d1.test.ts (4 tests) 4052ms
+   ✓ D11 reconciliation on executing D1 > supports upward/downward repricing with credit and deterministic paid_at transitions  1241ms
+   ✓ D11 reconciliation on executing D1 > fails closed before repricing on ledger mismatch or VOIDED invoice  867ms
+   ✓ D11 reconciliation on executing D1 > rejects invoice paid truth that is not backed by the payment ledger  872ms
+   ✓ D11 reconciliation on executing D1 > records extra charge + reconciliation atomically and rolls all of it back when audit fails  1069ms
+ ✓ apps/api/src/modules/room-state/legacy-cutover.executing-d1.test.ts (2 tests) 6728ms
+   ✓ F0.3 synthetic room-state shadow rehearsal on executing D1 > accounts source rows, preserves canonical data, resumes interrupted shadow mapping, rejects drift, and replays idempotently  5545ms
+   ✓ F0.3 synthetic room-state shadow rehearsal on executing D1 > keeps separate synthetic hotel D1 checkpoints isolated  1180ms
+ ✓ apps/api/src/routes/front-desk-board.executing-d1.test.ts (2 tests) 3770ms
+   ✓ GET /api/v1/front-desk/board on executing D1 > returns hotel-local date, canonical order, room readiness, and both maintenance impacts  1838ms
+   ✓ GET /api/v1/front-desk/board on executing D1 > enforces bookings.read and selects only the authorized hotel's operational D1  1931ms
+ ✓ apps/api/src/modules/room-state/shared-room-commands.executing-d1.test.ts (1 test) 2803ms
+   ✓ F0.2 shared room commands on executing D1 > preserves dimensions through blocking maintenance and cleaning, resolves to current housekeeping state, and rejects stale K1  2800ms
+ ✓ apps/api/src/modules/bookings/d1-booking-repository.executing-d1.test.ts (2 tests) 1556ms
+   ✓ D1BookingRepository cancellation attribution on executing D1 > persists exactly one ACP CANCEL event when ACP wins the CONFIRMED transition  844ms
+   ✓ D1BookingRepository cancellation attribution on executing D1 > persists zero ACP CANCEL events when an ordinary cancellation wins before the ACP D1 batch  709ms
+ ✓ apps/api/src/modules/room-state/room-state-route.executing-d1.test.ts (1 test) 2591ms
+   ✓ room dimension read API tenant and capability boundaries on executing D1 > returns only the selected hotel's canonical room projection and denies unauthorized roles  2589ms
+ ✓ apps/api/src/auth/access.test.ts (11 tests) 100ms
+ ✓ apps/api/src/modules/room-state/room-dimensions.executing-d1.test.ts (1 test) 973ms
+   ✓ F0.1 additive room dimension migration on executing D1 > preserves legacy data and leaves unreconstructable dimensions unresolved  970ms
+ ✓ apps/api/src/modules/room-state/legacy-cutover.test.ts (16 tests) 69ms
+ ✓ apps/api/src/index.test.ts (6 tests) 70ms
+ ✓ apps/web/src/i18n/index.test.ts (4 tests) 42ms
+ ✓ apps/api/src/time/hotel-time.test.ts (4 tests) 57ms
+stderr | apps/api/src/agent-hms-reservation-service.test.ts > AgentHmsReservationService > preserves an unexpected persistence failure as INTERNAL_ERROR when inventory is still valid
+{"event":"agent_hms_error","traceId":"trace-reserve-1","message":"simulated persistence failure"}
+
+ ✓ apps/api/src/agent-hms-reservation-service.test.ts (12 tests) 28ms
+ ✓ apps/api/src/agent-hms-service.test.ts (10 tests) 19ms
+ ✓ apps/api/src/modules/bookings/d1-booking-repository.agent-provenance.test.ts (4 tests) 11ms
+ ✓ apps/api/src/modules/billing/pricing-segments.test.ts (3 tests) 9ms
+ ✓ apps/api/src/modules/billing/domain.test.ts (6 tests) 10ms
+ ✓ apps/api/src/validation.test.ts (3 tests) 8ms
+ ✓ apps/api/src/modules/room-state/domain.test.ts (4 tests) 12ms
+ ✓ apps/api/src/auth/capabilities.test.ts (1 test) 7ms
+ ✓ apps/api/src/billing-route-uniqueness.test.ts (2 tests) 6ms
+ ✓ apps/api/src/modules/analytics/network-metrics.test.ts (1 test) 5ms
+ ✓ apps/api/src/modules/lifecycle/domain.test.ts (3 tests) 7ms
+ ✓ apps/web/src/features/reception/queue.test.ts (4 tests) 11ms
+ ✓ apps/api/src/auth/membership.test.ts (2 tests) 6ms
+ ✓ apps/api/src/room-availability.test.ts (2 tests) 6ms
+ ✓ apps/api/src/bookings.test.ts (2 tests) 8ms
+ ✓ apps/api/src/migration-booking-status.test.ts (2 tests) 7ms
+ ✓ apps/api/src/routing.test.ts (3 tests) 9ms
+
+ Test Files  32 passed (32)
+      Tests  144 passed (144)
+   Start at  08:51:38
+   Duration  91.91s (transform 1.48s, setup 0ms, collect 8.62s, tests 163.30s, environment 10ms, prepare 3.79s)

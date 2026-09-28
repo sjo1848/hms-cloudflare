@@ -1,0 +1,4 @@
+npm notice run test:cf-i03
+npm notice run bash scripts/cf-i03-regression.sh
+check-in race statuses: 200 409
+{"id":"5cc8906f-986f-4c32-a580-a7ec279c7d3d","status":"CheckedIn","room_status":"Occupied"}{"error":{"code":"CONFLICT","message":"Only confirmed bookings can be checked in","requestId":"40f79813-8306-4829-973e-ea133187a699"}}CF-I03 + CF-I04 lifecycle D1/API regression PASS

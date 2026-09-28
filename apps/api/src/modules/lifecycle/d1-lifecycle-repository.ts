@@ -11,6 +11,16 @@ export class D1LifecycleRepository implements LifecycleRepository {
     return this.db.prepare("SELECT id, room_id, check_in, check_out, status FROM bookings WHERE id = ?1").bind(id).first<LifecycleBooking>();
   }
 
+  async checkoutAccount(bookingId: string) {
+    return this.db.prepare(`SELECT b.status AS booking_status, i.status AS invoice_status,
+        COALESCE(i.amount_cents,b.total_cents) AS amount_cents, COALESCE(i.paid_amount_cents,0) AS paid_cents,
+        COALESCE((SELECT SUM(p.amount_cents) FROM payment_entries p WHERE p.invoice_id=i.id),0) AS ledger_paid_cents,
+        MAX(COALESCE(i.amount_cents,b.total_cents)-COALESCE(i.paid_amount_cents,0),0) AS remaining_cents,
+        MAX(COALESCE(i.paid_amount_cents,0)-COALESCE(i.amount_cents,b.total_cents),0) AS credit_cents
+      FROM bookings b LEFT JOIN invoices i ON i.booking_id=b.id WHERE b.id=?1`).bind(bookingId)
+      .first<{ booking_status: string; invoice_status: string | null; amount_cents: number; paid_cents: number; ledger_paid_cents: number; remaining_cents: number; credit_cents: number }>();
+  }
+
   async quoteReassignment(current: LifecycleBooking, destinationRoomId: string, hotelLocalDate: string) {
     const effectiveDate = current.check_in > hotelLocalDate ? current.check_in : hotelLocalDate;
     const destination = await this.db.prepare(`SELECT r.id FROM rooms r
@@ -306,6 +316,12 @@ export class D1LifecycleRepository implements LifecycleRepository {
 
   async checkout(current: LifecycleBooking, policy: CheckoutPolicy, reference: string | null, actor: LifecycleActor): Promise<LifecycleMutationResult> {
     const now = new Date().toISOString();
+    const accountSnapshot = await this.db.prepare(`SELECT b.total_cents, i.id AS invoice_id, i.status AS invoice_status,
+        i.amount_cents AS invoice_amount_cents, i.paid_amount_cents, i.paid_at,
+        COALESCE((SELECT SUM(p.amount_cents) FROM payment_entries p WHERE p.invoice_id=i.id),0) AS ledger_paid_cents
+      FROM bookings b LEFT JOIN invoices i ON i.booking_id=b.id WHERE b.id=?1`).bind(current.id)
+      .first<{ total_cents: number; invoice_id: string | null; invoice_status: string | null; invoice_amount_cents: number | null; paid_amount_cents: number | null; paid_at: string | null; ledger_paid_cents: number }>();
+    if (!accountSnapshot) return { ok: false };
     const snapshot = await this.db.prepare(`SELECT r.room_state_version, r.housekeeping_state, r.service_state,
         EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN' AND mc.impact='BLOCKING') AS blocking,
         (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN') AS maintenance_open_case_count,
@@ -315,13 +331,49 @@ export class D1LifecycleRepository implements LifecycleRepository {
     const versionBefore = snapshot.room_state_version;
     const versionAfter = versionBefore + 1;
     const legacyStatus = snapshot.service_state === "OUT_OF_ORDER" ? "OUT_OF_ORDER" : snapshot.blocking ? "MAINTENANCE" : "DIRTY";
+    const eventId = crypto.randomUUID();
     const results = await this.db.batch([
-      this.db.prepare("UPDATE bookings SET status = 'CHECKED_OUT', check_out_payment_policy = ?4, check_out_reference = ?5, checked_out_at = ?2, checked_out_by = ?3, updated_at = ?2 WHERE id = ?1 AND status = 'CHECKED_IN' AND room_id = ?6 AND EXISTS (SELECT 1 FROM rooms WHERE id = ?6 AND status = 'OCCUPIED' AND room_state_version=?7)").bind(current.id, now, actor.subject, policy, reference, current.room_id, versionBefore),
+      this.db.prepare(`UPDATE bookings SET status = 'CHECKED_OUT', check_out_payment_policy = ?4, check_out_reference = ?5, checked_out_at = ?2, checked_out_by = ?3, updated_at = ?2
+        WHERE id = ?1 AND status = 'CHECKED_IN' AND room_id = ?6
+          AND EXISTS (SELECT 1 FROM rooms WHERE id = ?6 AND status = 'OCCUPIED' AND room_state_version=?7)
+          AND total_cents=?8
+          AND ((?9 IS NULL AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id=?1)) OR EXISTS (
+            SELECT 1 FROM invoices i WHERE i.booking_id=?1 AND i.id=?9 AND i.status IS ?10
+              AND i.amount_cents IS ?11 AND i.paid_amount_cents IS ?12 AND i.paid_at IS ?13
+              AND (SELECT COALESCE(SUM(p.amount_cents),0) FROM payment_entries p WHERE p.invoice_id=i.id)=?14))
+          AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id=?1 AND
+            (i.status='VOIDED' OR i.amount_cents<>total_cents OR i.paid_amount_cents<>(SELECT COALESCE(SUM(p.amount_cents),0) FROM payment_entries p WHERE p.invoice_id=i.id)))
+          AND (?4<>'settled' OR
+            (NOT EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id=?1) AND total_cents=0)
+            OR EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id=?1 AND i.status<>'VOIDED' AND i.amount_cents=total_cents
+              AND i.paid_amount_cents=(SELECT COALESCE(SUM(p.amount_cents),0) FROM payment_entries p WHERE p.invoice_id=i.id)
+              AND i.paid_amount_cents>=i.amount_cents))`)
+        .bind(current.id, now, actor.subject, policy, reference, current.room_id, versionBefore,
+          accountSnapshot.total_cents, accountSnapshot.invoice_id, accountSnapshot.invoice_status,
+          accountSnapshot.invoice_amount_cents, accountSnapshot.paid_amount_cents, accountSnapshot.paid_at,
+          accountSnapshot.ledger_paid_cents),
       this.db.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND status = 'CHECKED_OUT' AND room_id = ?2)").bind(current.id, current.room_id),
       this.db.prepare("UPDATE rooms SET status=?2, housekeeping_state='DIRTY', room_state_version=?3 WHERE id=?1 AND status='OCCUPIED' AND room_state_version=?4 AND housekeeping_state IS ?6 AND service_state IS ?7 AND EXISTS (SELECT 1 FROM bookings WHERE id=?5 AND status='CHECKED_OUT' AND room_id=?1)").bind(current.room_id, legacyStatus, versionAfter, versionBefore, current.id, snapshot.housekeeping_state, snapshot.service_state),
-      this.db.prepare("INSERT OR IGNORE INTO invoices (id, booking_id, amount_cents, created_at) SELECT ?1, id, total_cents, ?2 FROM bookings WHERE id = ?3 AND status = 'CHECKED_OUT'").bind(crypto.randomUUID(), now, current.id),
-      this.db.prepare("INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at) VALUES (?1, ?2, 'CHECK_OUT', ?3, ?4, ?5, ?6, ?7, ?8)").bind(crypto.randomUUID(), current.id, current.room_id, actor.subject, actor.requestId, actor.hotelId, JSON.stringify({ handoff: "housekeeping", check_out_payment_policy: policy, check_out_reference: reference, charge_reviewed: true, release_confirmed: true, occupancy_before: "OCCUPIED", occupancy_after: "VACANT", housekeeping_state_before: snapshot.housekeeping_state, housekeeping_state_after: "DIRTY", room_state_version_before: versionBefore, room_state_version_after: versionAfter, service_state_before: snapshot.service_state, service_state_after: snapshot.service_state, maintenance_open_case_count_before: snapshot.maintenance_open_case_count, maintenance_open_case_count_after: snapshot.maintenance_open_case_count }), now),
+      this.db.prepare("INSERT OR IGNORE INTO invoices (id, booking_id, amount_cents, status, created_at) SELECT ?1, id, total_cents, CASE WHEN total_cents=0 THEN 'PAID' ELSE 'PENDING' END, ?2 FROM bookings WHERE id = ?3 AND status = 'CHECKED_OUT'").bind(crypto.randomUUID(), now, current.id),
+      this.db.prepare(`INSERT INTO lifecycle_events (id, booking_id, event_type, from_room_id, actor_subject, request_id, hotel_id, details_json, created_at)
+        SELECT ?1, b.id, 'CHECK_OUT', ?3, ?4, ?5, ?6,
+          json_object('handoff','housekeeping','check_out_payment_policy',b.check_out_payment_policy,'check_out_reference',b.check_out_reference,
+            'charge_reviewed',json('true'),'release_confirmed',json('true'),'occupancy_before','OCCUPIED','occupancy_after','VACANT',
+            'housekeeping_state_before',?7,'housekeeping_state_after','DIRTY','room_state_version_before',?8,'room_state_version_after',?9,
+            'service_state_before',?10,'service_state_after',?10,'maintenance_open_case_count_before',?11,'maintenance_open_case_count_after',?11,
+            'booking_total_cents',b.total_cents,'invoice_id',i.id,'invoice_status',i.status,'invoice_amount_cents',COALESCE(i.amount_cents,b.total_cents),
+            'paid_amount_cents',COALESCE(i.paid_amount_cents,0),'paid_at',i.paid_at,
+            'ledger_paid_cents',COALESCE((SELECT SUM(p.amount_cents) FROM payment_entries p WHERE p.invoice_id=i.id),0),
+            'remaining_cents',MAX(COALESCE(i.amount_cents,b.total_cents)-COALESCE(i.paid_amount_cents,0),0),
+            'credit_cents',MAX(COALESCE(i.paid_amount_cents,0)-COALESCE(i.amount_cents,b.total_cents),0)) , ?12
+        FROM bookings b LEFT JOIN invoices i ON i.booking_id=b.id
+        WHERE b.id=?2 AND b.status='CHECKED_OUT' AND b.room_id=?3`)
+        .bind(eventId, current.id, current.room_id, actor.subject, actor.requestId, actor.hotelId, snapshot.housekeeping_state,
+          versionBefore, versionAfter, snapshot.service_state, snapshot.maintenance_open_case_count, now),
     ]);
-    return { ok: results[0]?.meta.changes === 1 && results[2]?.meta.changes === 1 && results[4]?.meta.changes === 1 };
+    if (results[0]?.meta.changes !== 1 || results[2]?.meta.changes !== 1 || results[4]?.meta.changes !== 1) {
+      return { ok: false };
+    }
+    return { ok: true };
   }
 }

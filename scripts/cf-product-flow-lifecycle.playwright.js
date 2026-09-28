@@ -59,7 +59,7 @@
   }
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("http://127.0.0.1:4174/bookings", { waitUntil: "domcontentloaded" });
+  await page.goto(`${process.env.PRODUCT_FLOW_WEB_BASE ?? "http://127.0.0.1:4174"}/bookings`, { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "Gestión de reservas", exact: true }).waitFor();
 
   // create -> edit -> cancel; cancellation must release inventory again.
@@ -131,6 +131,16 @@
   await checkout.getByLabel("Cargos revisados").check();
   await checkout.getByLabel("Liberación de habitación confirmada").check();
   await checkout.getByLabel("Entrega a limpieza confirmada").check();
+  const rejectedCheckoutResponse = page.waitForResponse(response =>
+    response.url().includes("/check-out") && response.request().method() === "POST",
+  );
+  await checkout.getByRole("button", { name: "Completar salida" }).click();
+  if ((await rejectedCheckoutResponse).status() !== 409) throw new Error("unpaid settled checkout must be rejected with 409");
+  await selectedCase.getByText(/No se completó el checkout/).waitFor();
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await checkout.locator('select[name="policy"]').selectOption("pending-approved");
+  await checkout.locator('input[name="reference"]').fill("approved-by-manager");
   const checkoutResponse = page.waitForResponse(response =>
     response.url().includes("/check-out") && response.request().method() === "POST",
   );

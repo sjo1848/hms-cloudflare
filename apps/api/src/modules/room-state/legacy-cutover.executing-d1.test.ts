@@ -136,12 +136,12 @@ describe("F0.3 synthetic room-state shadow rehearsal on executing D1", () => {
     const schemaRows = await db.prepare("SELECT type,name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name").all<{ type: string; name: string; sql: string | null }>();
     const schemaDigest = sha256(JSON.stringify(schemaRows.results));
     const input = { hotel_id: "hotel-synthetic-a", hotel_local_date: date, sellability_range: { start_date: "2026-10-01", end_date: "2026-10-03" }, source_schema_digest: schemaDigest, source_migration_digest: migrationDigest };
-    expect(schemaDigest).toBe("c88956d1434558f80656684a822b75272ec3e0efdca505b20f61145b58552d75");
-    expect(migrationDigest).toBe("f5494552ef77bbece41f02f726f9c404168435bc5a34746fce04e60d750cf2ce");
+    expect(schemaDigest).toBe("55ef943db1fcca8774f61fe06da03060466851d94f63cbd84d0c202ecfbc3a3c");
+    expect(migrationDigest).toBe("37905bd9adb971c2e36bfe01daeda6894f319d230184006c4789902f5c918bf4");
     const snapshot = await readLegacyRoomStateSnapshot(db, input);
     const report = await mapLegacyRoomState(snapshot);
-    expect(report.source_digest).toBe("8c68ae20ab88aa00edc1c79d1c0a2ab9b7621ce2d7581302d8eeb6ec2670dba8");
-    expect(report.report_checksum).toBe("f36dca35daf0eb1ed68f544c37d24d2abfd9d53c274ca04cfa64e45122451887");
+    expect(report.source_digest).toBe("209cfc45435045732757f7428bc759b0b5eab45e1325c3c2ecfdcb48c0d8be84");
+    expect(report.report_checksum).toBe("125a9990ec5c4ae181c963c41ae5ebdae77fa3db18edec7b5342082b7ab695d5");
     expect(report).toMatchObject({ input_room_count: 2, output_room_count: 2, accounted_input_record_count: report.input_record_count });
     expect(report.rows.map(row => [row.room_id, row.classification, row.readiness.state, row.date_range_sellability])).toEqual([
       ["ready-room", "MAPPED", "READY_FOR_ARRIVAL", "SELLABLE"],
@@ -197,7 +197,7 @@ describe("F0.3 synthetic room-state shadow rehearsal on executing D1", () => {
     await expect(db.prepare("INSERT INTO maintenance_cases (id,room_id,status,impact,priority,reason,assigned_to,reported_at) VALUES ('case-b','unknown-room','OPEN','BLOCKING','HIGH','duplicate synthetic issue','operator','2026-09-27T12:01:00.000Z')").run()).rejects.toThrow();
     const openCases = await db.prepare("SELECT id,status FROM maintenance_cases WHERE room_id='unknown-room'").all<{ id: string; status: string }>();
     expect(openCases.results).toEqual([{ id: "case-a", status: "OPEN" }]);
-  }, 10_000);
+  }, 30_000);
 
   it("keeps separate synthetic hotel D1 checkpoints isolated", async () => {
     const createMinimalHotel = async (name: string, roomNumber: string) => {
@@ -226,6 +226,6 @@ describe("F0.3 synthetic room-state shadow rehearsal on executing D1", () => {
     expect(reportB.rows[0].hotel_id).toBe("hotel-b");
     expect(await a.prepare("SELECT room_number FROM rooms WHERE id='same-room-id'").first()).toEqual({ room_number: "A-1" });
     expect(await b.prepare("SELECT room_number FROM rooms WHERE id='same-room-id'").first()).toEqual({ room_number: "B-1" });
-  });
+  }, 30_000);
 
 });

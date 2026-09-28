@@ -82,6 +82,7 @@ export const receptionEn = {
   "reception.readinessHelp": "Refresh the details or resolve the blocker before continuing.",
   "reception.arrivalChanged": "This booking changed while you were working. Review its updated status.",
   "reception.checkInConflict": "The booking or room changed. Review the refreshed details before trying again.",
+  "reception.checkoutConflict": "Checkout was not completed. The booking account or stay changed; review the refreshed booking and invoice before retrying.",
   "reception.checkInConflictRefreshFailed": "Check-in did not complete and the latest state could not be loaded. Refresh the queue before retrying.",
   "reception.checkInRefreshFailed": "Check-in was recorded, but the refreshed queue could not be confirmed. Refresh before continuing.",
   "reception.checkInSubmitting": "Recording check-in…",

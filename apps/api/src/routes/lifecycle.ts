@@ -137,11 +137,25 @@ export function createLifecycleRoutes(): LifecycleApp {
     const repository = new D1LifecycleRepository(context.get("operationalDatabase"));
     const current = await repository.findBooking(id);
     if (!current) throw ApiError.notFound("Booking not found");
-    if (current.status !== "CHECKED_IN") throw ApiError.conflict("Only checked-in bookings can be checked out");
+    if (current.status !== "CHECKED_IN") {
+      if (current.status === "CHECKED_OUT") throw ApiError.conflict("Checkout is already recorded. Refresh the booking and review its current account before taking another action.");
+      throw ApiError.conflict("Only checked-in bookings can be checked out");
+    }
     try {
-      if (!(await repository.checkout(current, policy, reference, actor(context))).ok) throw new Error("checkout guard lost");
+      const result = await repository.checkout(current, policy, reference, actor(context));
+      if (!result.ok) {
+        const account = await repository.checkoutAccount(id);
+        if (account) {
+          const status = account.invoice_status ?? "not created";
+          throw ApiError.conflict(`Checkout was not completed; refresh and review the booking account. Total ${account.amount_cents} cents; paid ${account.paid_cents} cents; ledger ${account.ledger_paid_cents} cents; remaining ${account.remaining_cents} cents; credit ${account.credit_cents} cents; invoice ${status}.`);
+        }
+        throw ApiError.conflict("Checkout was not completed because the booking or room changed. Refresh the booking before retrying.");
+      }
     } catch {
-      throw ApiError.conflict("Booking became unavailable during checkout");
+      const account = await repository.checkoutAccount(id);
+      if (account?.booking_status === "CHECKED_OUT") throw ApiError.conflict("Checkout is already recorded. Refresh the booking and review its current account before taking another action.");
+      if (account) throw ApiError.conflict(`Checkout was rolled back; refresh and review the booking account. Total ${account.amount_cents} cents; paid ${account.paid_cents} cents; ledger ${account.ledger_paid_cents} cents; remaining ${account.remaining_cents} cents; credit ${account.credit_cents} cents; invoice ${account.invoice_status ?? "not created"}.`);
+      throw ApiError.conflict("Checkout was rolled back because the booking or room changed. Refresh the booking before retrying.");
     }
     return context.json({ id, status: "CheckedOut", room_status: "Dirty", housekeeping_handoff: true });
   });

@@ -28,15 +28,13 @@ cd "$repo_dir"
 mkdir -p output/playwright
 wrangler="$repo_dir/node_modules/.bin/wrangler"
 
-# This runner owns its D1 state. The isolated CI job starts from a clean checkout;
-# local invocations explicitly clear local D1 persistence so the result is order-independent.
-rm -rf apps/api/.wrangler/state/v3/d1
+persist_to="$tmp_dir/wrangler-state"
 
-CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc >"$tmp_dir/migrations.log" 2>&1
-CI=1 "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >>"$tmp_dir/migrations.log" 2>&1
-CI=1 "$wrangler" d1 migrations apply HOTEL_SECOND_DB --local -c apps/api/wrangler.jsonc >>"$tmp_dir/migrations.log" 2>&1
+CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc --persist-to "$persist_to" >"$tmp_dir/migrations.log" 2>&1
+CI=1 "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --persist-to "$persist_to" >>"$tmp_dir/migrations.log" 2>&1
+CI=1 "$wrangler" d1 migrations apply HOTEL_SECOND_DB --local -c apps/api/wrangler.jsonc --persist-to "$persist_to" >>"$tmp_dir/migrations.log" 2>&1
 
-CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --command "
+CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --persist-to "$persist_to" --command "
   INSERT OR REPLACE INTO control_hotels (id,slug,operational_binding,active) VALUES
     ('hotel-a','hotel-a','HOTEL_DEMO_DB',1),
     ('hotel-b','hotel-b','HOTEL_SECOND_DB',1);
@@ -56,10 +54,10 @@ CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --comm
     ('hotel-b','Hotel Isolation Target','PRO');
 " >>"$tmp_dir/migrations.log" 2>&1
 
-bash scripts/cf-product-flow-seed.sh "$wrangler" "$tmp_dir/migrations.log"
+bash scripts/cf-product-flow-seed.sh "$wrangler" "$tmp_dir/migrations.log" "$persist_to"
 
 start_api() {
-  "$wrangler" dev --local --ip 127.0.0.1 --port 8787 --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >>"$tmp_dir/api.log" 2>&1 & api_pid=$!
+  "$wrangler" dev --local --ip 127.0.0.1 --port 8787 --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc --persist-to "$persist_to" >>"$tmp_dir/api.log" 2>&1 & api_pid=$!
   api_ready=0
   for _ in {1..40}; do
     if curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1; then api_ready=1; break; fi
@@ -70,15 +68,15 @@ start_api() {
 
 start_api
 
-VITE_LOCAL_ACCEPTANCE_AUTH=true "$repo_dir/node_modules/.bin/vite" --host 127.0.0.1 --port 4174 --config apps/web/vite.config.ts >"$tmp_dir/web.log" 2>&1 & web_pid=$!
+VITE_LOCAL_ACCEPTANCE_AUTH=true "$repo_dir/node_modules/.bin/vite" --host 127.0.0.1 --port 4175 --config apps/web/vite.config.ts >"$tmp_dir/web.log" 2>&1 & web_pid=$!
 web_ready=0
 for _ in {1..40}; do
-  if curl -fsS http://127.0.0.1:4174/bookings >/dev/null 2>&1; then web_ready=1; break; fi
+  if curl -fsS http://127.0.0.1:4175/bookings >/dev/null 2>&1; then web_ready=1; break; fi
   sleep 1
 done
 if [[ "$web_ready" != "1" ]]; then echo "Web did not become ready" >&2; exit 1; fi
 
-PRODUCT_FLOW_PHASE=api node scripts/cf-product-flow-browser-ci.mjs 2>&1 | tee output/playwright/product-flow.log
+PRODUCT_FLOW_WEB_BASE=http://127.0.0.1:4175 PRODUCT_FLOW_PHASE=api node scripts/cf-product-flow-browser-ci.mjs 2>&1 | tee output/playwright/product-flow.log
 
 # Wrangler's local proxy can lose its internal connection after the intentional
 # concurrency stress. Restart only the Worker process while preserving the owned
@@ -89,7 +87,7 @@ wait "$api_pid" 2>/dev/null || true
 api_pid=""
 start_api
 
-PRODUCT_FLOW_PHASE=availability node scripts/cf-product-flow-browser-ci.mjs 2>&1 | tee -a output/playwright/product-flow.log
+PRODUCT_FLOW_WEB_BASE=http://127.0.0.1:4175 PRODUCT_FLOW_PHASE=availability node scripts/cf-product-flow-browser-ci.mjs 2>&1 | tee -a output/playwright/product-flow.log
 
 pkill -TERM -P "$api_pid" 2>/dev/null || true
 kill "$api_pid" 2>/dev/null || true
@@ -97,7 +95,7 @@ wait "$api_pid" 2>/dev/null || true
 api_pid=""
 start_api
 
-PRODUCT_FLOW_PHASE=lifecycle node scripts/cf-product-flow-browser-ci.mjs 2>&1 | tee -a output/playwright/product-flow.log
+PRODUCT_FLOW_WEB_BASE=http://127.0.0.1:4175 PRODUCT_FLOW_PHASE=lifecycle node scripts/cf-product-flow-browser-ci.mjs 2>&1 | tee -a output/playwright/product-flow.log
 
 pkill -TERM -P "$api_pid" 2>/dev/null || true
 kill "$api_pid" 2>/dev/null || true
@@ -105,4 +103,4 @@ wait "$api_pid" 2>/dev/null || true
 api_pid=""
 start_api
 
-PRODUCT_FLOW_PHASE=i18n node scripts/cf-product-flow-browser-ci.mjs 2>&1 | tee -a output/playwright/product-flow.log
+PRODUCT_FLOW_WEB_BASE=http://127.0.0.1:4175 PRODUCT_FLOW_PHASE=i18n node scripts/cf-product-flow-browser-ci.mjs 2>&1 | tee -a output/playwright/product-flow.log

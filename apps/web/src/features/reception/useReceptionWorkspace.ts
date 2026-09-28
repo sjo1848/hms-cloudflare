@@ -234,7 +234,10 @@ export function useReceptionWorkspace() {
       closeCase();
       await load();
     } catch (e) {
-      setError((e as Error).message);
+      if (e instanceof ApiError && e.status === 409) {
+        await load();
+        setError(t("reception.checkoutConflict"));
+      } else setError((e as Error).message);
     } finally {
       setActionBusy(false);
     }

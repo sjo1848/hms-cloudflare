@@ -82,6 +82,7 @@ export const receptionEsAR = {
   "reception.readinessHelp": "Actualizá los datos o resolvé el bloqueo antes de continuar.",
   "reception.arrivalChanged": "Esta reserva cambió mientras trabajabas. Revisá su estado actualizado.",
   "reception.checkInConflict": "La reserva o la habitación cambió. Revisá el estado actualizado antes de intentar de nuevo.",
+  "reception.checkoutConflict": "No se completó el checkout. Cambió la cuenta de la reserva o la estadía; revisá la reserva y la factura actualizadas antes de volver a intentar.",
   "reception.checkInConflictRefreshFailed": "El ingreso no se completó y no pudimos actualizar el estado. Volvé a cargar la cola antes de reintentar.",
   "reception.checkInRefreshFailed": "El ingreso se registró, pero no pudimos confirmar la cola actualizada. Actualizá antes de continuar.",
   "reception.checkInSubmitting": "Registrando ingreso…",

@@ -46,7 +46,7 @@
   }
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("http://127.0.0.1:4174/bookings", { waitUntil: "domcontentloaded" });
+  await page.goto(`${process.env.PRODUCT_FLOW_WEB_BASE ?? "http://127.0.0.1:4174"}/bookings`, { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "Recepción", exact: true }).waitFor();
   await page.getByRole("heading", { name: "Gestión de reservas", exact: true }).waitFor();
 

@@ -146,14 +146,18 @@ status=$(request -X POST -d '{"check_out_payment_policy":"pending-approved","che
 assert_status "$status" 400
 status=$(request -X POST -d '{"check_out_payment_policy":"pending-approved","check_out_reference":"short","charge_reviewed":true,"release_confirmed":true,"handoff_confirmed":true}' "$base/bookings/$lifecycle_id/check-out")
 assert_status "$status" 400
-status=$(request -X POST -d '{"check_out_payment_policy":"pending-approved","check_out_reference":"approved-123","charge_reviewed":true,"release_confirmed":true,"handoff_confirmed":true}' "$base/bookings/$lifecycle_id/check-out")
+status=$(curl -sS -o /dev/null -w '%{http_code}' "${common[@]}" -X POST -d '{"check_out_payment_policy":"pending-approved","check_out_reference":"approved-123","charge_reviewed":true,"release_confirmed":true,"handoff_confirmed":true}' "$base/bookings/$lifecycle_id/check-out")
 assert_status "$status" 200
-node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.status!=='CheckedOut'||r.room_status!=='Dirty'||!r.housekeeping_handoff) process.exit(1)"
 CI=1 wrangler_cmd d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT check_out_payment_policy,check_out_reference FROM bookings WHERE id='$lifecycle_id'" --json >"$tmp_dir/checkout-policy.json"
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/checkout-policy.json'))[0].results[0]; if(r.check_out_payment_policy!=='pending-approved'||r.check_out_reference!=='approved-123') process.exit(1)"
 status=$(request "$base/bookings/$lifecycle_id")
 assert_status "$status" 200
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.status!=='CheckedOut') process.exit(1)"
+status=$(request -X POST -d '{"check_out_payment_policy":"pending-approved","check_out_reference":"approved-123","charge_reviewed":true,"release_confirmed":true,"handoff_confirmed":true}' "$base/bookings/$lifecycle_id/check-out")
+assert_status "$status" 409
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(!r.error?.message?.includes('already recorded')) process.exit(1)"
+CI=1 wrangler_cmd d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT (SELECT COUNT(*) FROM lifecycle_events WHERE booking_id='$lifecycle_id' AND event_type='CHECK_OUT') AS checkout_events,(SELECT COUNT(*) FROM invoices WHERE booking_id='$lifecycle_id') AS invoices,(SELECT COUNT(*) FROM payment_entries WHERE booking_id='$lifecycle_id') AS payments" --json >"$tmp_dir/lost-response-counts.json"
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/lost-response-counts.json'))[0].results[0]; if(r.checkout_events!==1||r.invoices!==1||r.payments!==0) process.exit(1)"
 
 CI=1 wrangler_cmd d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "
   DELETE FROM payment_entries; DELETE FROM financial_events; DELETE FROM invoices; DELETE FROM extra_charges; DELETE FROM cash_closures;
@@ -187,16 +191,27 @@ CI=1 wrangler_cmd d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --
 node -e "const b=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); const r=JSON.parse(require('fs').readFileSync('$tmp_dir/race-claims.json'))[0].results; if(r.length!==1||r[0].room_id!==b.room_id) process.exit(1)"
 CI=1 wrangler_cmd d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT COUNT(*) AS count FROM lifecycle_events WHERE booking_id='$race_id' AND event_type='REASSIGN'" --json >"$tmp_dir/reassign-events.json"
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/reassign-events.json'))[0].results[0]; if(r.count!==1) process.exit(1)"
-curl -sS -o "$tmp_dir/checkout-1.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"check_out_payment_policy":"settled","check_out_reference":null,"charge_reviewed":true,"release_confirmed":true,"handoff_confirmed":true}' "$base/bookings/$race_id/check-out" >"$tmp_dir/checkout-1.status" & p1=$!
-curl -sS -o "$tmp_dir/checkout-2.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"check_out_payment_policy":"settled","check_out_reference":null,"charge_reviewed":true,"release_confirmed":true,"handoff_confirmed":true}' "$base/bookings/$race_id/check-out" >"$tmp_dir/checkout-2.status" & p2=$!
+curl -sS -o "$tmp_dir/checkout-1.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"check_out_payment_policy":"pending-approved","check_out_reference":"approved-reference","charge_reviewed":true,"release_confirmed":true,"handoff_confirmed":true}' "$base/bookings/$race_id/check-out" >"$tmp_dir/checkout-1.status" & p1=$!
+curl -sS -o "$tmp_dir/checkout-2.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"check_out_payment_policy":"pending-approved","check_out_reference":"approved-reference","charge_reviewed":true,"release_confirmed":true,"handoff_confirmed":true}' "$base/bookings/$race_id/check-out" >"$tmp_dir/checkout-2.status" & p2=$!
 wait "$p1" "$p2"
 node -e "const s=[require('fs').readFileSync('$tmp_dir/checkout-1.status','utf8').trim(),require('fs').readFileSync('$tmp_dir/checkout-2.status','utf8').trim()]; if(!s.every(x=>x==='200'||x==='409')) { console.error(s); process.exit(1); }"
 status=$(request "$base/bookings/$race_id"); assert_status "$status" 200
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.status!=='CheckedOut') process.exit(1)"
+status=$(request -X POST -d '{"check_out_payment_policy":"pending-approved","check_out_reference":"approved-reference","charge_reviewed":true,"release_confirmed":true,"handoff_confirmed":true}' "$base/bookings/$race_id/check-out")
+assert_status "$status" 409
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(!r.error?.message?.includes('already recorded')) process.exit(1)"
 CI=1 wrangler_cmd d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT COUNT(*) AS count FROM room_inventory_nights WHERE booking_id='$race_id'" --json >"$tmp_dir/race-claims-after-checkout.json"
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/race-claims-after-checkout.json'))[0].results[0]; if(r.count!==0) process.exit(1)"
 CI=1 wrangler_cmd d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT COUNT(*) AS count FROM lifecycle_events WHERE booking_id='$race_id'" --json >"$tmp_dir/race-events.json"
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/race-events.json'))[0].results[0]; if(r.count<2||r.count>4) process.exit(1)"
+CI=1 wrangler_cmd d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT status FROM bookings WHERE id='$race_id'; SELECT status,housekeeping_state FROM rooms WHERE id=(SELECT room_id FROM bookings WHERE id='$race_id'); SELECT COUNT(*) AS checkouts FROM lifecycle_events WHERE booking_id='$race_id' AND event_type='CHECK_OUT'; SELECT COUNT(*) AS invoices FROM invoices WHERE booking_id='$race_id'; SELECT COUNT(*) AS payments FROM payment_entries WHERE booking_id='$race_id';" --json >"$tmp_dir/checkout-retry.json"
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/checkout-retry.json')).flatMap(x=>x.results); if(r[0].status!=='CHECKED_OUT'||r[1].status!=='DIRTY'||r[1].housekeeping_state!=='DIRTY'||r[2].checkouts!==1||r[3].invoices!==1||r[4].payments!==0) process.exit(1)"
+CI=1 wrangler_cmd d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --command "UPDATE hotel_memberships SET role='receptionist' WHERE access_subject='subject-a' AND hotel_id='hotel-a'" >/dev/null
+status=$(request -X POST -d '{"check_out_payment_policy":"pending-approved","check_out_reference":"approved-reference","charge_reviewed":true,"release_confirmed":true,"handoff_confirmed":true}' "$base/bookings/$race_id/check-out")
+assert_status "$status" 403
+CI=1 wrangler_cmd d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT status FROM bookings WHERE id='$race_id'; SELECT COUNT(*) AS checkouts FROM lifecycle_events WHERE booking_id='$race_id' AND event_type='CHECK_OUT'; SELECT COUNT(*) AS invoices FROM invoices WHERE booking_id='$race_id';" --json >"$tmp_dir/checkout-override-denied.json"
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/checkout-override-denied.json')).flatMap(x=>x.results); if(r[0].status!=='CHECKED_OUT'||r[1].checkouts!==1||r[2].invoices!==1) process.exit(1)"
+CI=1 wrangler_cmd d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --command "UPDATE hotel_memberships SET role='admin' WHERE access_subject='subject-a' AND hotel_id='hotel-a'" >/dev/null
 CI=1 wrangler_cmd d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --command "UPDATE hotel_memberships SET role='housekeeping' WHERE access_subject='subject-a' AND hotel_id='hotel-a'" >/dev/null
 status=$(request -X POST -d '{"check_in_guests_count":2,"document_verified":true,"contact_confirmed":true,"stay_confirmed":true}' "$base/bookings/$race_id/check-in")
 assert_status "$status" 403
