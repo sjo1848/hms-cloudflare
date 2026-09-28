@@ -78,12 +78,12 @@ bash "$pwcli" -s "$session" run-code --filename scripts/cf-f0-08-reservation-rec
  SELECT COUNT(*) AS bookings FROM bookings b JOIN guests g ON g.id=b.guest_id WHERE g.email IN ('f08-integrated@example.test','f08-recovery@example.test','f08-mobile@example.test') AND b.status='CONFIRMED';
  SELECT COUNT(*) AS operations FROM reservation_creation_operations o JOIN guests g ON g.id=o.guest_id WHERE g.email IN ('f08-integrated@example.test','f08-recovery@example.test','f08-mobile@example.test') AND o.stage='BOOKING_CREATED';
  SELECT COUNT(*) AS events FROM reservation_creation_events e JOIN guests g ON g.id=e.guest_id WHERE g.email IN ('f08-integrated@example.test','f08-recovery@example.test','f08-mobile@example.test');
- SELECT COUNT(*) AS unresolved FROM reservation_creation_operations o JOIN guests g ON g.id=o.guest_id WHERE g.email IN ('f08-integrated@example.test','f08-recovery@example.test') AND o.stage<>'BOOKING_CREATED' AND NOT EXISTS (SELECT 1 FROM bookings recovered WHERE recovered.guest_id=o.guest_id AND recovered.id<>o.booking_id AND recovered.status='CONFIRMED');
+ SELECT COUNT(*) AS unresolved FROM reservation_creation_operations o JOIN guests g ON g.id=o.guest_id WHERE g.email='f08-recovery@example.test' AND o.stage='GUEST_CREATED';
 " --json >"$tmp_dir/final.json"
 node - "$tmp_dir/final.json" <<'NODE'
 const fs = require("node:fs");
 const result = JSON.parse(fs.readFileSync(process.argv[2], "utf8")).map(row => row.results[0]);
-if (result[0]?.guests !== 3 || result[1]?.bookings !== 3 || result[2]?.operations !== 3 || result[3]?.events !== 6 || result[4]?.unresolved !== 0) throw new Error(`unexpected final D1 recovery state: ${JSON.stringify(result)}`);
+if (result[0]?.guests !== 3 || result[1]?.bookings !== 3 || result[2]?.operations !== 3 || result[3]?.events !== 6 || result[4]?.unresolved !== 1) throw new Error(`unexpected final D1 recovery state: ${JSON.stringify(result)}`);
 NODE
 cleanup
 api_pid=""

@@ -52,8 +52,6 @@ export class D1ReservationCreationRepository {
       o.created_request_id,o.created_at,g.full_name AS guest_name
       FROM reservation_creation_operations o JOIN guests g ON g.id=o.guest_id
       WHERE o.stage <> 'BOOKING_CREATED'
-        AND NOT EXISTS (SELECT 1 FROM bookings recovered WHERE recovered.guest_id=o.guest_id
-          AND recovered.id<>o.booking_id AND recovered.status='CONFIRMED')
       ORDER BY o.created_at DESC,o.operation_token`).all<ReservationCreationOperation>();
     return result.results;
   }

@@ -117,6 +117,8 @@ const tokenB = "f0800000-0000-4000-8000-000000000002";
 const tokenC = "f0800000-0000-4000-8000-000000000003";
 const tokenD = "f0800000-0000-4000-8000-000000000006";
 const tokenE = "f0800000-0000-4000-8000-000000000007";
+const tokenF = "f0800000-0000-4000-8000-000000000008";
+const tokenG = "f0800000-0000-4000-8000-000000000009";
 
 function newGuestRequest(token: string, roomId = "hotel-a-room", checkIn = "2027-02-10") {
   const checkOut = new Date(`${checkIn}T00:00:00.000Z`);
@@ -191,7 +193,21 @@ describe("F0.8 recoverable guest + reservation creation on executing D1", () => 
     // by tenant-scoped GET, not depend on a response reaching the browser.
     const pending = await request("/reservation-creation-operations", undefined, { method: "GET" });
     expect(pending.status).toBe(200);
-    await expect(pending.json()).resolves.toMatchObject([{ operation_token: tokenB, stage: "GUEST_CREATED", guest_name: "Synthetic F0.8 Guest" }]);
+    const pendingOperations = await pending.json() as Array<{ operation_token: string; stage: string; guest_id: string; guest_name: string }>;
+    expect(pendingOperations).toContainEqual(expect.objectContaining({ operation_token: tokenB, stage: "GUEST_CREATED", guest_name: "Synthetic F0.8 Guest" }));
+    expect(await counts(db, tokenB)).toEqual({ guests: 1, operations: 1, bookings: 0, nights: 0, segments: 0, events: 1, agentEvents: 0, invoices: 0, payments: 0 });
+
+    const separateOperation = await request("/reservation-creation-operations", {
+      operation_token: tokenF,
+      guest_id: pendingOperations.find(item => item.operation_token === tokenB)!.guest_id,
+      booking: { room_id: "hotel-a-room-2", check_in: "2027-02-12", check_out: "2027-02-14", notes: "Separate booking using recovered guest" },
+    });
+    expect(separateOperation.status).toBe(201);
+    const stillPending = await request("/reservation-creation-operations", undefined, { method: "GET" });
+    const stillPendingOperations = await stillPending.json() as Array<{ operation_token: string; stage: string; guest_id: string }>;
+    expect(stillPendingOperations).toContainEqual(expect.objectContaining({ operation_token: tokenB, stage: "GUEST_CREATED", guest_id: pendingOperations.find(item => item.operation_token === tokenB)!.guest_id }));
+    expect(stillPendingOperations).not.toContainEqual(expect.objectContaining({ operation_token: tokenF }));
+    expect(await db.prepare("SELECT stage FROM reservation_creation_operations WHERE operation_token=?1").bind(tokenB).first()).toEqual({ stage: "GUEST_CREATED" });
     expect(await counts(db, tokenB)).toEqual({ guests: 1, operations: 1, bookings: 0, nights: 0, segments: 0, events: 1, agentEvents: 0, invoices: 0, payments: 0 });
 
     const competingBody = await competingBooking.clone().json() as { id: string };
@@ -275,7 +291,7 @@ describe("F0.8 recoverable guest + reservation creation on executing D1", () => 
     const db = hotels.a!;
     await db.prepare(`CREATE TRIGGER inject_f08_guest_event_failure BEFORE INSERT ON reservation_creation_events
       WHEN NEW.event_type='GUEST_CREATED' BEGIN SELECT RAISE(ABORT,'injected F0.8 guest audit failure'); END`).run();
-    const payload = newGuestRequest("f0800000-0000-4000-8000-000000000008", "hotel-a-room", "2027-02-28");
+    const payload = newGuestRequest(tokenG, "hotel-a-room", "2027-02-28");
     const failure = await request("/reservation-creation-operations", payload);
     expect(failure.status).toBe(500);
     expect(await db.prepare("SELECT COUNT(*) AS count FROM guests WHERE email=?1").bind(payload.guest.email).first()).toEqual({ count: 0 });

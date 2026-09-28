@@ -79,15 +79,19 @@
   await resumedForm.getByLabel("Room").selectOption("e2e-room-b");
   const retryResponse = page.waitForResponse(response => response.url().endsWith("/api/v1/reservation-creation-operations") && response.request().method() === "POST");
   const recoveryQueueRefresh = page.waitForResponse(response => response.url().endsWith("/api/v1/front-desk/board") && response.request().method() === "GET");
+  const recoveryListRefresh = page.waitForResponse(response => response.url().endsWith("/api/v1/reservation-creation-operations") && response.request().method() === "GET");
   await resumedForm.getByRole("button", { name: "Create booking" }).click();
   const retry = await retryResponse;
   if (retry.status() !== 201) throw new Error(`recovered guest booking returned ${retry.status()}: ${await retry.text()}`);
   await recoveryQueueRefresh;
+  const stillPending = await (await recoveryListRefresh).json();
+  if (!stillPending.some(operation => operation.operation_token === staged.token && operation.stage === "GUEST_CREATED" && operation.guest_id === staged.body.operation.guest_id)) throw new Error(`original incomplete operation disappeared after separate booking: ${JSON.stringify(stillPending)}`);
+  await page.locator(".reception-recovery-item").filter({ hasText: "F0.8 Recovery Guest" }).waitFor();
   const resumed = await retry.json();
   if (resumed.operation.stage !== "BOOKING_CREATED" || resumed.operation.guest_id !== staged.body.operation.guest_id) throw new Error(`recovery did not use original guest ${JSON.stringify(resumed)}`);
   await page.screenshot({ path: "output/playwright/f0-08-reception-recovery-desktop.png", fullPage: true });
 
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 375, height: 844 });
   await page.getByRole("button", { name: "Create booking" }).click();
   const mobileForm = page.locator("form[aria-label='Create booking']");
   await mobileForm.waitFor();
@@ -110,5 +114,5 @@
   const mobileResult = await mobileResponse.json();
   if (mobileResult.operation.stage !== "BOOKING_CREATED") throw new Error(`mobile reservation was not persisted: ${JSON.stringify(mobileResult)}`);
   await page.screenshot({ path: "output/playwright/f0-08-reception-recovery-mobile.png", fullPage: true });
-  console.log(JSON.stringify({ desktopCreateStatus: successfulResponse.status(), createdBooking: created.booking.id, stagedStatus: staged.status, stagedGuest: staged.body.operation.guest_id, recoveryStatus: retry.status(), recoveredBooking: resumed.booking.id, mobileCreateStatus: mobileResponse.status(), mobileBooking: mobileResult.booking.id, mobile: "390x844" }));
+  console.log(JSON.stringify({ desktopCreateStatus: successfulResponse.status(), createdBooking: created.booking.id, stagedStatus: staged.status, stagedGuest: staged.body.operation.guest_id, recoveryStatus: retry.status(), recoveredBooking: resumed.booking.id, originalOperationStillRecoverable: true, mobileCreateStatus: mobileResponse.status(), mobileBooking: mobileResult.booking.id, mobile: "375x844" }));
 })()
