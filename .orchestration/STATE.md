@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active task: F0.6 Task Contract and invariant map. F0.5 Artifact A `0bafe4875de759869760cc4abdb08319c70e6b7a` + Boundary B `2be85fa0d2d9f1a4656c3b608927af33726d2062` received fresh Independent Critic `PASS` from Halley (GPT-6 Luna Medium); no material findings and no F0.6 blocker. F0.5-only Development Gate is PASS. F0.6 is authorized by Foundation 0 RG1–RG7 and must remain synthetic/local; real active-stay reads/bootstrap are forbidden. No PR/push/merge, main, staging, deploy, production, or Blocks A–H.
+Active task: F0.6 synthetic active-stay pricing bootstrap; implementation and Pre-Critic validation are complete, exact Artifact A / Boundary B publication is next. F0.5 Artifact A `0bafe4875de759869760cc4abdb08319c70e6b7a` + Boundary B `2be85fa0d2d9f1a4656c3b608927af33726d2062` received fresh Independent Critic `PASS` from Halley (GPT-6 Luna Medium). F0.6 is authorized by Foundation 0 RG1–RG7 and remains synthetic/local; real active-stay reads/bootstrap are forbidden. No PR/push/merge, main, staging, deploy, production, or Blocks A–H.
 
 Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `18JGIQxyl8Bh6_w7H3eW1qdPL7jfUsdSLk43aE-G-90A`. Roadmap authority is Artifact A2 `b2581e4c370eeb6f74e9380af010e48386642b4f` and Boundary B2 `c6a4bcb9a2939505f7ddf8e72c02ec9b825f00f3`.
 
@@ -47,11 +47,17 @@ Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `
 - Earlier local-only caveat: the first CF-I06 attempt before its isolation repair used Wrangler's default local synthetic fixture store and changed named fixture rows. The runner now confines every operation to a unique temp persistence directory; subsequent CF-I06 passes. No remote/customer/staging/production data, real cutover or active-stay bootstrap was accessed or mutated; no attempt was made to reconstruct disposable local fixtures.
 - Pre-Critic and invariant evidence are in `.orchestration/evidence/HMS-F0-05-SEGMENTED-REASSIGNMENT-PRICING-001-{PRECRITIC,INVARIANTS}.md`. Independent Critic verdict and exact pair are in `.orchestration/evidence/HMS-F0-05-INDEPENDENT-CRITIC.md`. F0.5 Development Gate: `PASS`. This is not aggregate Foundation 0 PASS.
 
-### F0.6 — Active-Stay Pricing Bootstrap (Task Contract preparation)
+### F0.6 — Active-Stay Pricing Bootstrap (Task Contract frozen; implementation active)
 
 - Approved source: F0.6 section in `docs/implementation-roadmap/HMS-FOUNDATION-0-CONTRACT-V1.md` and `docs/implementation-roadmap/HMS-ACTIVE-STAY-PRICING-BOOTSTRAP-PLAN-V1.md`.
 - DB/Data inventory reviewer Peirce (read-only GPT-6 Luna Medium) confirmed existing migration tooling has no row-level active-stay pricing classifier or resumable/replayable shadow bootstrap. The F0.3 checkpoint test is a pattern, not evidence for F0.6.
 - Material design guard: `booking_pricing_segments` is operational pricing input and inserts advance booking pricing version. Any F0.6 shadow/candidate state must be stored separately and must not alter quote output or canonical totals/invoices/charges/payment rows. Historical rate evidence cannot be inferred from current room price. Only explicit synthetic evidence can be classified `TRACEABLE_SEGMENTS`; missing evidence remains aggregate-only/held.
+- Frozen implementation Task Contract: `.orchestration/contracts/HMS-F0-06-SYNTHETIC-ACTIVE-STAY-PRICING-BOOTSTRAP-001.md`; all 24 registry invariants are classified and mapped. It includes a narrow, provenance-bound forward guard path for activation of explicit synthetic historical rate versions while preserving the ordinary F0.5 current-rate guard.
+- Read-only DB/Data reviewer Laplace (GPT-6 Luna Medium) found F0.6-R1: duplicate room IDs could collapse through `INSERT OR IGNORE` without an explicit identity conflict/cardinality proof. Fixed by classifying duplicate room IDs as `ORPHAN_OR_CONFLICT` and checking every persisted snapshot-child cardinality against its original JSON array inside the D1 activation guard. Follow-up executing-D1 coverage also proves concurrent activation convergence, per-hotel independent D1 isolation and rollback/recovery from an injected staging interruption.
+- F0.6 directed executing-D1: 9/9 PASS. Full `npm run check`: 32 files / 142 tests PASS, including D11 4/4 and F0.4 14/14. Clean local Wrangler hotel migration chains 0001–0026 applied on separate fresh temporary persistence for HOTEL_DEMO_DB and HOTEL_SECOND_DB; 0024 parses/applies with the earlier boolean-predicate correction. F0.3 expected schema/migration/source/report digests were refreshed for additive 0026; all its migration rehearsal behavior assertions pass unchanged.
+- Final gates PASS: `npm run types:check`, web build, architecture fitness/i18n/budgets (JS 296651/300000 raw; 86095 gzip), D1 query plans, Wrangler API/Web dry-runs and staging SPA dry-run. CF-I03, CF-I04, CF-I05 and CF-I06 all PASS when run serially on isolated temporary state. One earlier parallel invocation caused fixed-port contention and a timeout under load; it was discarded, not counted.
+- `scripts/cf-wave12-reassignment-integrated.sh` exit 0 after final correction: local Worker + D1 + Vite + Playwright proves the same hotel-local remaining interval across availability search, preview/quote and mutation, persisted room-night reassignment, authoritative success refresh, BLOCKING/NON_BLOCKING behavior and mobile stale 409 recovery. Browser console shows expected stale 409s and pre-existing missing-favicon/no-open-maintenance 404 lookups; no 5xx, all script assertions passed.
+- Mandatory Pre-Critic and all-registry evidence: `.orchestration/evidence/HMS-F0-06-SYNTHETIC-ACTIVE-STAY-PRICING-BOOTSTRAP-001-{PRECRITIC,INVARIANTS}.md`. This is publication eligibility only, not a self-declared Independent Critic PASS or F0.6 development-gate verdict.
 - Unknown real-source history/currency completeness remains deferred to the separately required Human Gate before any real-data bootstrap. The current increment reads/writes only synthetic disposable fixtures. No real data/cutover.
 
 ## HISTORICAL BOUNDARY — HMS-ROADMAP-CTRL-REWORK-001
@@ -223,7 +229,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-Freeze the F0.6 Task Contract and all-registry invariant map before implementation. Implement only a synthetic/local, explainable active-stay pricing classifier and separate shadow/recovery rehearsal as approved; never read or mutate real active stays. Continue F0 DAG only; do not begin Block A–H. No PR, push, merge, main, acceptance/staging, deploy, or production.
+Publish immutable F0.6 Artifact A containing the validated synthetic/local implementation and evidence, then create orchestration-only Boundary B with exact A SHA and `external_review.required=true`. A fresh Independent Critic must review that exact pair before continuing to F0.7. Keep work on `impl/hms-foundation-0`; do not begin Block A–H or access/mutate real active stays. No PR, push, merge, main, acceptance/staging mutation, deploy or production.
 
 ## MODEL ROUTING
 

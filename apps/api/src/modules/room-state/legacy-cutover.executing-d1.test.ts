@@ -136,12 +136,12 @@ describe("F0.3 synthetic room-state shadow rehearsal on executing D1", () => {
     const schemaRows = await db.prepare("SELECT type,name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name").all<{ type: string; name: string; sql: string | null }>();
     const schemaDigest = sha256(JSON.stringify(schemaRows.results));
     const input = { hotel_id: "hotel-synthetic-a", hotel_local_date: date, sellability_range: { start_date: "2026-10-01", end_date: "2026-10-03" }, source_schema_digest: schemaDigest, source_migration_digest: migrationDigest };
-    expect(schemaDigest).toBe("0f542a6bd033b111211466a9177b146fd9ac3f50bf84f2fd2dd2ab5540208166");
-    expect(migrationDigest).toBe("a5377716c5c5c85584c5b514ba230d56df6a1f455be3aa2d094fde0b633a7efc");
+    expect(schemaDigest).toBe("0a9c340b1cefd1673d41fbee39f581b77b3f996c2809878912ba61d2f73aed9e");
+    expect(migrationDigest).toBe("fa442eeeeac9f099327877a13a793f68253a162b27180ca3da77167d119d7f57");
     const snapshot = await readLegacyRoomStateSnapshot(db, input);
     const report = await mapLegacyRoomState(snapshot);
-    expect(report.source_digest).toBe("7041046d067740feea5c1c234768f9bee271b629311aa3f2caf708872aac755e");
-    expect(report.report_checksum).toBe("caee2487a7c9d362fe30c7ded6bbd9993c50a0993a2476ee71a2dbd18423df7a");
+    expect(report.source_digest).toBe("cd3f592782559b05714c19649440eb947d3a9de48a14364aeca1b32294691456");
+    expect(report.report_checksum).toBe("10564b1b53d062162ae555d5935045c1a164efa141bb13fd76362bccaadcf3f6");
     expect(report).toMatchObject({ input_room_count: 2, output_room_count: 2, accounted_input_record_count: report.input_record_count });
     expect(report.rows.map(row => [row.room_id, row.classification, row.readiness.state, row.date_range_sellability])).toEqual([
       ["ready-room", "MAPPED", "READY_FOR_ARRIVAL", "SELLABLE"],
