@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { api } from "../../api/client";
 import type { Booking, Hold, Room } from "../../domain/types";
+import type { MessageKey } from "../../i18n/message-key";
 import { AsyncState } from "../../components/AsyncState";
 import { StatusBadge } from "../../components/StatusBadge";
 import { useI18n } from "../../i18n";
@@ -19,6 +20,13 @@ function localTodayKey() {
 
 function normalizedStatus(status: string) {
   return status.replace(/[\s_-]/g, "").toLowerCase();
+}
+
+function readinessLabel(room: Room, t: (key: "reception.roomReady" | "reception.roomNotReady" | "reception.readinessUnknown") => string) {
+  const readiness = room.operational_state?.readiness.state;
+  if (readiness === "READY_FOR_ARRIVAL") return t("reception.roomReady");
+  if (readiness === "NOT_READY") return t("reception.roomNotReady");
+  return t("reception.readinessUnknown");
 }
 
 function roomContext(room: Room, bookings: Booking[]): RoomContext {
@@ -39,7 +47,9 @@ function roomContext(room: Room, bookings: Booking[]): RoomContext {
 }
 
 export function RoomsPage() {
-  const { t, statusLabel, formatCurrency, formatDate } = useI18n();
+  const { t: translate, statusLabel, formatCurrency, formatDate } = useI18n();
+  const t = (key: MessageKey, values?: Record<string, string | number>) =>
+    key === "rooms.availableNow" ? translate("reception.readinessReadyLabel") : translate(key, values);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selected, setSelected] = useState<Room | null>(null);
@@ -66,9 +76,10 @@ export function RoomsPage() {
         api<Room[]>("/rooms"),
         api<Booking[]>("/bookings?limit=100"),
       ]);
-      setRooms(nextRooms);
+      const displayRooms = nextRooms.map(room => ({ ...room, status: readinessLabel(room, t) }));
+      setRooms(displayRooms);
       setBookings(nextBookings);
-      if (selected) setSelected(nextRooms.find(room => room.id === selected.id) ?? null);
+      if (selected) setSelected(displayRooms.find(room => room.id === selected.id) ?? null);
     } catch (e) { setError((e as Error).message); }
     finally { setLoading(false); }
   }
@@ -149,7 +160,7 @@ export function RoomsPage() {
   const visible = roomRows.filter(({ room, context }) => `${room.room_number} ${room.room_type} ${room.status} ${context.booking?.guest_name ?? ""}`.toLocaleLowerCase().includes(query));
   const occupiedCount = roomRows.filter(item => item.context.kind === "occupied").length;
   const arrivalCount = roomRows.filter(item => item.context.kind === "arrival-due").length;
-  const availableCount = roomRows.filter(item => item.room.status === "Available" && item.context.kind === "none").length;
+  const availableCount = roomRows.filter(item => item.room.operational_state?.readiness.state === "READY_FOR_ARRIVAL" && item.context.kind === "none").length;
   const selectedContext = selected ? roomContext(selected, bookings) : null;
 
   function contextLabel(context: RoomContext) {

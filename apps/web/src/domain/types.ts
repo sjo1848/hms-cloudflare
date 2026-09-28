@@ -1,4 +1,17 @@
-export type Room = { id: string; room_number: string; room_type: string; status: string; price_cents: number };
+export type Room = {
+  id: string;
+  room_number: string;
+  room_type: string;
+  status: string;
+  price_cents: number;
+  operational_state?: {
+    occupancy: string;
+    housekeeping: string;
+    maintenanceImpact: string;
+    serviceState: string;
+    readiness: { state: "READY_FOR_ARRIVAL" | "NOT_READY" | "UNRESOLVED"; reasons: string[] };
+  };
+};
 export type MaintenanceCase = { id: string; room_id: string; status: string; impact: "NON_BLOCKING" | "BLOCKING"; priority: string; reason: string };
 export type HousekeepingBoardRoom = { room_id: string; room_number: string; room_type: string; room_status: string; maintenance_case?: MaintenanceCase };
 export type HousekeepingBoard = { date: string; rooms: HousekeepingBoardRoom[] };

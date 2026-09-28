@@ -65,9 +65,17 @@
   justify-content: space-between;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
   min-width: 0;
 }
 .room-operational-top > strong { font-size: 15px; }
+.room-operational-top > .status-badge {
+  flex: 1 1 100%;
+  justify-content: flex-start;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 .room-operational-context {
   font-size: 12px;
   font-weight: 800;
