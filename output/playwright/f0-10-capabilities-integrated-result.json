@@ -14,7 +14,18 @@
     "networkOnlyNavigation": "PASS",
     "networkWriteAction": "visible-and-keyboard-reachable",
     "networkDeniedWritesHidden": "PASS",
-    "networkKeyboard": "PASS",
+    "networkKeyboard": {
+      "authorizedDesktop": "PASS",
+      "unauthorizedDesktop": "PASS",
+      "authorizedMobile": "PASS",
+      "unauthorizedMobile": "PASS",
+      "deniedWriteDesktop": 403,
+      "deniedWriteMobile": 403,
+      "unauthorizedViewports": [
+        "1280x900:PASS",
+        "375x844:PASS"
+      ]
+    },
     "directDenied": "PASS",
     "unmemberedHotel": 403,
     "outOfOrderAuthMe": "PASS"
@@ -23,7 +34,8 @@
     "allowedRoomCount": 1,
     "deniedRoomCount": 0,
     "finalRole": "receptionist",
-    "roleAuditCount": 2
+    "roleAuditCount": 2,
+    "deniedNetworkHotelCount": 0
   },
   "cleanup": "owned Worker/Vite/Playwright processes verified stopped"
 }

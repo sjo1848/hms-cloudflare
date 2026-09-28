@@ -188,6 +188,22 @@
   if (deniedHotelRead !== 403) throw new Error(`network-only identity accessed hotel API: ${deniedHotelRead}`);
   await page.screenshot({ path: "output/playwright/f0-10-network-only-navigation.png", fullPage: true });
 
+  await page.setViewportSize({ width: 375, height: 844 });
+  const authorizedMobileAuth = page.waitForResponse(response => response.url().endsWith("/api/v1/auth/me") && response.status() === 200);
+  await page.goto("http://127.0.0.1:4178/network");
+  await page.getByRole("heading", { name: "Hotel network" }).waitFor();
+  await authorizedMobileAuth;
+  await page.locator(".admin-surface > details").waitFor({ state: "visible" });
+  await tabTo(".admin-surface > details > summary");
+  await page.keyboard.press("Enter");
+  await page.locator(".admin-surface > details[open]").waitFor();
+  await tabTo("#hotel-id");
+  await page.getByRole("button", { name: /Hotel Norte/ }).click();
+  await tabTo(".network-detail select");
+  if (!(await page.locator(".network-detail select").isVisible())) throw new Error("authorized mobile plan editor is not keyboard reachable");
+  if (await page.evaluate(() => document.documentElement.scrollWidth) > 375) throw new Error("authorized mobile Network surface overflows viewport");
+  await page.screenshot({ path: "output/playwright/f0-10-network-admin-mobile-keyboard.png", fullPage: true });
+
   await profile.selectOption("2");
   await page.setExtraHTTPHeaders({
     "x-local-access-subject": "source-user:24000000-0000-0000-0000-000000000001",
@@ -209,17 +225,41 @@
   if (!(await page.getByRole("button", { name: /Hotel Sur/ }).innerText()).includes("Basic")
     || !(await page.locator(".network-detail").innerText()).includes("Basic")) throw new Error("read-only hotel plan is not legible without network write capability");
   await page.locator("body").click({ position: { x: 2, y: 2 } });
+  const networkNoWriteViewportResults = [];
   for (let i = 0; i < 40; i += 1) {
     await page.keyboard.press("Tab");
     const focusedWriteControl = await page.evaluate(() => document.activeElement?.matches("#hotel-id, #hotel-slug, #hotel-name, #hotel-binding, .network-detail select") ?? false);
     if (focusedWriteControl) throw new Error("keyboard traversal reached a network write control without saas.hotels.write");
   }
   await page.screenshot({ path: "output/playwright/f0-10-network-no-write-keyboard.png", fullPage: true });
+  networkNoWriteViewportResults.push("1280x900:PASS");
   const deniedNetworkWrite = await page.evaluate(async () => {
     const response = await fetch("/api/v1/hotels", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: "denied-hotel", slug: "denied", name: "Denied", operational_binding: "HOTEL_SECOND_DB", plan_tier: "BASIC" }) });
     return response.status;
   });
   if (deniedNetworkWrite !== 403) throw new Error(`hotel member without network write capability received network write: ${deniedNetworkWrite}`);
+  await page.setViewportSize({ width: 375, height: 844 });
+  await page.goto("http://127.0.0.1:4178/network");
+  await page.getByRole("button", { name: /Hotel Sur/ }).waitFor({ state: "visible" });
+  await page.getByRole("button", { name: /Hotel Sur/ }).click();
+  await page.locator(".network-detail").waitFor({ state: "visible" });
+  if (await page.locator(".admin-surface > details").count() !== 0
+    || await page.locator(".network-detail select").count() !== 0) throw new Error("mobile network write affordances remained in DOM without saas.hotels.write");
+  if (!(await page.locator(".network-detail").innerText()).includes("Basic")) throw new Error("mobile read-only hotel plan is not legible without network write capability");
+  await page.locator("body").click({ position: { x: 2, y: 2 } });
+  for (let i = 0; i < 40; i += 1) {
+    await page.keyboard.press("Tab");
+    const focusedWriteControl = await page.evaluate(() => document.activeElement?.matches("#hotel-id, #hotel-slug, #hotel-name, #hotel-binding, .network-detail select") ?? false);
+    if (focusedWriteControl) throw new Error("mobile keyboard traversal reached a network write control without saas.hotels.write");
+  }
+  if (await page.evaluate(() => document.documentElement.scrollWidth) > 375) throw new Error("unauthorized mobile Network surface overflows viewport");
+  await page.screenshot({ path: "output/playwright/f0-10-network-no-write-mobile-keyboard.png", fullPage: true });
+  networkNoWriteViewportResults.push("375x844:PASS");
+  const deniedNetworkWriteMobile = await page.evaluate(async () => {
+    const response = await fetch("/api/v1/hotels", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: "denied-hotel-mobile", slug: "denied-mobile", name: "Denied Mobile", operational_binding: "HOTEL_SECOND_DB", plan_tier: "BASIC" }) });
+    return response.status;
+  });
+  if (deniedNetworkWriteMobile !== 403) throw new Error(`mobile direct API did not deny hotel member network write: ${deniedNetworkWriteMobile}`);
   await page.unroute("**/api/v1/hotels");
 
   await profile.selectOption("1");
@@ -289,5 +329,5 @@
   if (!afterStaleResponse?.includes("bookings.read") || afterStaleResponse.includes("rooms.write")
     || await roomWrite.isVisible()) throw new Error(`out-of-order /auth/me response restored stale capabilities: ${afterStaleResponse}`);
   await page.unroute("**/api/v1/auth/me");
-  return { desktop: "1280x900", mobile: "375x844", dualScope: "PASS", adminRoomGuestUserControls: "visible", beforeDowngrade: allowedWrite.status, afterDowngrade: deniedWrite.status, roomActionHidden: true, userControlsHidden: true, cashCloseHidden: true, opsRoomWrite: false, housekeepingRoleAction: "visible", networkOnlyNavigation: "PASS", networkWriteAction: "visible-and-keyboard-reachable", networkDeniedWritesHidden: "PASS", networkKeyboard: "PASS", directDenied: "PASS", unmemberedHotel: unmemberedContext.status, outOfOrderAuthMe: "PASS" };
+  return { desktop: "1280x900", mobile: "375x844", dualScope: "PASS", adminRoomGuestUserControls: "visible", beforeDowngrade: allowedWrite.status, afterDowngrade: deniedWrite.status, roomActionHidden: true, userControlsHidden: true, cashCloseHidden: true, opsRoomWrite: false, housekeepingRoleAction: "visible", networkOnlyNavigation: "PASS", networkWriteAction: "visible-and-keyboard-reachable", networkDeniedWritesHidden: "PASS", networkKeyboard: { authorizedDesktop: "PASS", unauthorizedDesktop: "PASS", authorizedMobile: "PASS", unauthorizedMobile: "PASS", deniedWriteDesktop: deniedNetworkWrite, deniedWriteMobile: deniedNetworkWriteMobile, unauthorizedViewports: networkNoWriteViewportResults }, directDenied: "PASS", unmemberedHotel: unmemberedContext.status, outOfOrderAuthMe: "PASS" };
 })()
