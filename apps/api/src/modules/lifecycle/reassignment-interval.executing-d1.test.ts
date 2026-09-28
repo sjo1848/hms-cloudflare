@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { convertV4MiniflareOptions, Miniflare } from "miniflare";
 import { D1LifecycleRepository } from "./d1-lifecycle-repository";
 import { claimDates, type LifecycleBooking } from "./domain";
+import { D1BookingRepository } from "../bookings/d1-booking-repository";
 
 const miniflares: Miniflare[] = [];
 afterEach(async () => Promise.all(miniflares.splice(0).map(mf => mf.dispose())));
@@ -58,12 +59,26 @@ async function seedBooking(db: D1Database, id: string, roomId: string, checkIn: 
       VALUES (?1,?2,'STANDARD',?3,10000,?4,'IN_SERVICE',0)`)
       .bind(room, room, occupied ? "OCCUPIED" : "AVAILABLE", "READY").run();
   }
+  const totalCents = claimDates(checkIn, checkOut).length * 10000;
   await db.prepare(`INSERT INTO bookings
     (id,guest_id,room_id,check_in,check_out,status,total_cents,created_at,updated_at)
-    VALUES (?1,?2,?3,?4,?5,'CHECKED_IN',70000,'2026-09-20T12:00:00.000Z','2026-09-20T12:00:00.000Z')`)
-    .bind(id, `guest-${id}`, roomId, checkIn, checkOut).run();
+    VALUES (?1,?2,?3,?4,?5,'CHECKED_IN',?6,'2026-09-20T12:00:00.000Z','2026-09-20T12:00:00.000Z')`)
+    .bind(id, `guest-${id}`, roomId, checkIn, checkOut, totalCents).run();
+  const operationToken = `seed-pricing:${id}`;
+  await db.prepare("UPDATE bookings SET last_pricing_operation_token=?2 WHERE id=?1").bind(id, operationToken).run();
+  await db.prepare(`INSERT INTO booking_pricing_segments
+    (segment_id,booking_id,room_id,effective_start,effective_end,rate_cents,room_pricing_version,segment_version,operation_token,actor_subject,hotel_id,request_id,created_at)
+    VALUES (?1,?2,?3,?4,?5,10000,0,1,?6,?7,?8,?9,'2026-09-20T12:00:00.000Z')`)
+    .bind(`${id}:initial`, id, roomId, checkIn, checkOut, operationToken, actor.subject, actor.hotelId, actor.requestId).run();
   await db.batch(claimDates(checkIn, checkOut).map(date =>
     db.prepare("INSERT INTO room_inventory_nights(room_id,stay_date,booking_id) VALUES (?1,?2,?3)").bind(roomId, date, id)));
+}
+
+async function reassign(db: D1Database, bookingId: string, destinationRoomId: string, reason: string, hotelLocalDate: string, actorContext = actor, repositoryDb = db) {
+  const repo = new D1LifecycleRepository(repositoryDb);
+  const current = await booking(db, bookingId);
+  const quote = await repo.quoteReassignment(current, destinationRoomId, hotelLocalDate);
+  return repo.reassign(current, destinationRoomId, reason, hotelLocalDate, quote?.quoteToken ?? "", actorContext);
 }
 
 async function booking(db: D1Database, id: string): Promise<LifecycleBooking> {
@@ -73,18 +88,139 @@ async function booking(db: D1Database, id: string): Promise<LifecycleBooking> {
 async function snapshot(db: D1Database, bookingId: string, roomIds: string[]) {
   const rows = await Promise.all([
     db.prepare("SELECT id,room_id,check_in,check_out,status,total_cents,updated_at FROM bookings WHERE id=?1").bind(bookingId).first(),
-    ...roomIds.map(id => db.prepare("SELECT id,status,housekeeping_state,service_state,room_state_version FROM rooms WHERE id=?1").bind(id).first()),
+    ...roomIds.map(id => db.prepare("SELECT id,status,housekeeping_state,service_state,room_state_version,pricing_version,inventory_version FROM rooms WHERE id=?1").bind(id).first()),
     db.prepare("SELECT room_id,stay_date FROM room_inventory_nights WHERE booking_id=?1 ORDER BY stay_date,room_id").bind(bookingId).all(),
     db.prepare("SELECT id,event_type,from_room_id,actor_subject,request_id,hotel_id,details_json FROM lifecycle_events WHERE booking_id=?1 ORDER BY rowid").bind(bookingId).all(),
     db.prepare("SELECT id,event_type,details_json FROM financial_events WHERE booking_id=?1 ORDER BY rowid").bind(bookingId).all(),
     db.prepare("SELECT id,amount_cents,paid_amount_cents,status FROM invoices WHERE booking_id=?1").bind(bookingId).all(),
     db.prepare("SELECT id,amount_cents,payment_method,payment_reference FROM payment_entries WHERE booking_id=?1 ORDER BY id").bind(bookingId).all(),
     db.prepare("SELECT id,amount_cents FROM extra_charges WHERE booking_id=?1 ORDER BY id").bind(bookingId).all(),
+    db.prepare("SELECT segment_id,room_id,effective_start,effective_end,rate_cents,room_pricing_version,segment_version,operation_token FROM booking_pricing_segments WHERE booking_id=?1 ORDER BY segment_version").bind(bookingId).all(),
   ]);
   return rows.map(row => "results" in (row as object) ? (row as { results: unknown[] }).results : row);
 }
 
 describe("F0.4 reassignment interval on executing D1", () => {
+  it("creates and revises unconsumed booking pricing segments with an exact inventory replacement", async () => {
+    const db = await database(`booking-pricing-create-edit-${crypto.randomUUID()}`);
+    await seedBooking(db, "booking-pricing-setup", "room-a", "2027-06-20", "2027-06-23", ["room-a", "room-b", "room-c"]);
+    await db.prepare("INSERT INTO guests (id,full_name,email,created_at) VALUES ('guest-create-edit','Create Edit Guest','create-edit@example.test','2027-06-01')").run();
+    const repository = new D1BookingRepository(db as unknown as import("../../routing").OperationalDatabase);
+    const pricingProvenance = { actorSubject: actor.subject, hotelId: actor.hotelId, requestId: "create-edit-create" };
+    const base = {
+      id: "booking-pricing-create-edit", guestId: "guest-create-edit", roomId: "room-b",
+      start: "2027-06-24", end: "2027-06-26", totalCents: 20000, notes: null,
+      now: "2027-06-01T12:00:00Z", claimNights: ["2027-06-24", "2027-06-25"],
+      roomRateCents: 10000, roomPricingVersion: 0, pricingProvenance,
+    };
+    expect((await repository.create(base)).meta.changes).toBe(1);
+    expect(await db.prepare("SELECT room_id,stay_date FROM room_inventory_nights WHERE booking_id='booking-pricing-create-edit' ORDER BY stay_date").all())
+      .toMatchObject({ results: [{ room_id: "room-b", stay_date: "2027-06-24" }, { room_id: "room-b", stay_date: "2027-06-25" }] });
+    expect(await db.prepare("SELECT effective_start,effective_end,rate_cents,segment_version FROM booking_pricing_segments WHERE booking_id='booking-pricing-create-edit'").all())
+      .toMatchObject({ results: [{ effective_start: "2027-06-24", effective_end: "2027-06-26", rate_cents: 10000, segment_version: 1 }] });
+
+    const edited = { ...base, bookingId: base.id, roomId: "room-c", start: "2027-06-25", end: "2027-06-27",
+      totalCents: 20000, claimNights: ["2027-06-25", "2027-06-26"], requestId: undefined,
+      pricingProvenance: { ...pricingProvenance, requestId: "create-edit-update" } };
+    expect((await repository.update(edited)).meta.changes).toBe(1);
+    expect(await db.prepare("SELECT room_id,stay_date FROM room_inventory_nights WHERE booking_id='booking-pricing-create-edit' ORDER BY stay_date").all())
+      .toMatchObject({ results: [{ room_id: "room-c", stay_date: "2027-06-25" }, { room_id: "room-c", stay_date: "2027-06-26" }] });
+    expect(await db.prepare("SELECT room_id,effective_start,effective_end,rate_cents,segment_version,actor_subject,hotel_id,request_id FROM booking_pricing_segments WHERE booking_id='booking-pricing-create-edit' ORDER BY segment_version").all())
+      .toMatchObject({ results: [
+        { room_id: "room-b", effective_start: "2027-06-24", effective_end: "2027-06-26", rate_cents: 10000, segment_version: 1, request_id: "create-edit-create" },
+        { room_id: "room-c", effective_start: "2027-06-25", effective_end: "2027-06-27", rate_cents: 10000, segment_version: 2, request_id: "create-edit-update" },
+      ] });
+  }, 20_000);
+
+  it("reprices only remaining nights, preserves charges and payment ledger, and reconciles D11 atomically", async () => {
+    const db = await database(`reassign-reprice-${crypto.randomUUID()}`);
+    await seedBooking(db, "repriced-stay", "room-a", "2026-09-20", "2026-09-24", ["room-a", "room-b", "room-c"]);
+    await db.prepare("UPDATE rooms SET price_cents=15000 WHERE id='room-b'").run();
+    await db.prepare("INSERT INTO extra_charges (id,booking_id,description,amount_cents,category,created_at) VALUES ('charge-existing','repriced-stay','Existing extra',2000,'OTHER','2026-09-20T13:00:00Z')").run();
+    await db.prepare("UPDATE bookings SET total_cents=total_cents+2000 WHERE id='repriced-stay'").run();
+    await db.prepare("INSERT INTO invoices (id,booking_id,amount_cents,paid_amount_cents,status,created_at) VALUES ('invoice-repriced','repriced-stay',42000,0,'PENDING','2026-09-20T13:00:00Z')").run();
+    await db.prepare("INSERT INTO payment_entries (id,invoice_id,booking_id,amount_cents,payment_method,payment_reference,note,received_by_user_id,received_at) VALUES ('payment-preserved','invoice-repriced','repriced-stay',20000,'CARD','receipt-1','deposit','operator','2026-09-20T14:00:00Z')").run();
+    await db.prepare("UPDATE invoices SET paid_amount_cents=20000 WHERE id='invoice-repriced'").run();
+
+    const repo = new D1LifecycleRepository(db);
+    const before = await booking(db, "repriced-stay");
+    const quote = await repo.quoteReassignment(before, "room-b", "2026-09-21");
+    expect(quote).toMatchObject({ effectiveDate: "2026-09-21", currentTotalCents: 42000, currentLodgingTotalCents: 40000,
+      extraChargesCents: 2000, lodgingTotalCents: 55000, newTotalCents: 57000, deltaCents: 15000, destinationRateCents: 15000 });
+    const paymentBefore = await db.prepare("SELECT * FROM payment_entries WHERE id='payment-preserved'").first();
+    const result = await repo.reassign(before, "room-b", "Guest requested room change", "2026-09-21", quote!.quoteToken, actor);
+    expect(result).toMatchObject({ ok: true, reassignment: { effectiveDate: "2026-09-21", totalCents: 57000, previousTotalCents: 42000, priceDeltaCents: 15000 } });
+    expect(await db.prepare("SELECT amount_cents,paid_amount_cents,status FROM invoices WHERE id='invoice-repriced'").first())
+      .toEqual({ amount_cents: 57000, paid_amount_cents: 20000, status: "PENDING" });
+    expect(await db.prepare("SELECT * FROM payment_entries WHERE id='payment-preserved'").first()).toEqual(paymentBefore);
+    expect(await db.prepare("SELECT id,amount_cents FROM extra_charges WHERE booking_id='repriced-stay'").all())
+      .toMatchObject({ results: [{ id: "charge-existing", amount_cents: 2000 }] });
+    expect(await db.prepare("SELECT room_id,stay_date FROM room_inventory_nights WHERE booking_id='repriced-stay' ORDER BY stay_date").all())
+      .toMatchObject({ results: [
+        { room_id: "room-a", stay_date: "2026-09-20" }, { room_id: "room-b", stay_date: "2026-09-21" },
+        { room_id: "room-b", stay_date: "2026-09-22" }, { room_id: "room-b", stay_date: "2026-09-23" },
+      ] });
+    expect(await db.prepare("SELECT effective_start,effective_end,rate_cents,segment_version FROM booking_pricing_segments WHERE booking_id='repriced-stay' ORDER BY segment_version").all())
+      .toMatchObject({ results: [
+        { effective_start: "2026-09-20", effective_end: "2026-09-24", rate_cents: 10000, segment_version: 1 },
+        { effective_start: "2026-09-21", effective_end: "2026-09-24", rate_cents: 15000, segment_version: 2 },
+      ] });
+    expect(await db.prepare("SELECT event_type,COUNT(*) AS count FROM financial_events WHERE booking_id='repriced-stay' GROUP BY event_type").all())
+      .toMatchObject({ results: [{ event_type: "PRICE_RECONCILIATION", count: 1 }] });
+    expect(await db.prepare("SELECT COUNT(*) AS count FROM lifecycle_events WHERE booking_id='repriced-stay' AND event_type='REASSIGN'").first())
+      .toEqual({ count: 1 });
+    await db.prepare("UPDATE invoices SET amount_cents=56999 WHERE id='invoice-repriced'").run();
+    const inconsistentInvoice = await snapshot(db, "repriced-stay", ["room-a", "room-b", "room-c"]);
+    expect(await repo.quoteReassignment(await booking(db, "repriced-stay"), "room-c", "2026-09-21")).toBeNull();
+    expect(await snapshot(db, "repriced-stay", ["room-a", "room-b", "room-c"])).toEqual(inconsistentInvoice);
+  }, 20_000);
+
+  it("reconciles downward and upward repricing across PAID/PENDING without changing ledger rows", async () => {
+    const db = await database(`reassign-credit-status-${crypto.randomUUID()}`);
+    await seedBooking(db, "credit-stay", "room-a", "2026-09-20", "2026-09-24", ["room-a", "room-b", "room-c"]);
+    await db.prepare("UPDATE rooms SET price_cents=5000 WHERE id='room-b'").run();
+    await db.prepare("UPDATE rooms SET price_cents=15000 WHERE id='room-c'").run();
+    await db.prepare("INSERT INTO extra_charges (id,booking_id,description,amount_cents,category,created_at) VALUES ('credit-charge','credit-stay','Existing extra',2000,'OTHER','2026-09-20T13:00:00Z')").run();
+    await db.prepare("UPDATE bookings SET total_cents=total_cents+2000 WHERE id='credit-stay'").run();
+    await db.prepare("INSERT INTO invoices (id,booking_id,amount_cents,paid_amount_cents,status,paid_at,created_at) VALUES ('credit-invoice','credit-stay',42000,0,'PENDING',NULL,'2026-09-20T13:00:00Z')").run();
+    await db.prepare("INSERT INTO payment_entries (id,invoice_id,booking_id,amount_cents,payment_method,received_by_user_id,received_at) VALUES ('credit-payment','credit-invoice','credit-stay',30000,'CASH','operator','2026-09-20T14:00:00Z')").run();
+    await db.prepare("UPDATE invoices SET paid_amount_cents=30000 WHERE id='credit-invoice'").run();
+    const repo = new D1LifecycleRepository(db);
+    const firstBooking = await booking(db, "credit-stay");
+    const lowerQuote = await repo.quoteReassignment(firstBooking, "room-b", "2026-09-21");
+    expect(lowerQuote).toMatchObject({ currentTotalCents: 42000, newTotalCents: 27000, deltaCents: -15000 });
+    expect((await repo.reassign(firstBooking, "room-b", "Lower destination rate", "2026-09-21", lowerQuote!.quoteToken, actor)).ok).toBe(true);
+    const paidInvoice = await db.prepare("SELECT amount_cents,paid_amount_cents,status,paid_at FROM invoices WHERE id='credit-invoice'").first<{ amount_cents: number; paid_amount_cents: number; status: string; paid_at: string | null }>();
+    expect(paidInvoice).toMatchObject({ amount_cents: 27000, paid_amount_cents: 30000, status: "PAID" });
+    expect(paidInvoice!.paid_at).toBe(await db.prepare("SELECT updated_at FROM bookings WHERE id='credit-stay'").first<{ updated_at: string }>().then(row => row!.updated_at));
+    const ledgerBeforeSecond = await db.prepare("SELECT * FROM payment_entries WHERE booking_id='credit-stay' ORDER BY id").all();
+
+    const secondBooking = await booking(db, "credit-stay");
+    const higherQuote = await repo.quoteReassignment(secondBooking, "room-c", "2026-09-21");
+    expect(higherQuote).toMatchObject({ currentTotalCents: 27000, newTotalCents: 57000, deltaCents: 30000 });
+    expect((await repo.reassign(secondBooking, "room-c", "Higher destination rate", "2026-09-21", higherQuote!.quoteToken,
+      { ...actor, requestId: "synthetic-reassign-higher" })).ok).toBe(true);
+    expect(await db.prepare("SELECT amount_cents,paid_amount_cents,status,paid_at FROM invoices WHERE id='credit-invoice'").first())
+      .toEqual({ amount_cents: 57000, paid_amount_cents: 30000, status: "PENDING", paid_at: null });
+    const ledgerAfterSecond = await db.prepare("SELECT * FROM payment_entries WHERE booking_id='credit-stay' ORDER BY id").all();
+    expect(ledgerAfterSecond.results).toEqual(ledgerBeforeSecond.results);
+    expect(await db.prepare("SELECT id,amount_cents FROM extra_charges WHERE booking_id='credit-stay'").all())
+      .toMatchObject({ results: [{ id: "credit-charge", amount_cents: 2000 }] });
+  }, 20_000);
+
+  it("rejects a price quote after the destination rate changes away and back", async () => {
+    const db = await database(`reassign-price-aba-${crypto.randomUUID()}`);
+    await seedBooking(db, "price-aba", "room-a", "2026-09-20", "2026-09-24", ["room-a", "room-b"]);
+    const repo = new D1LifecycleRepository(db);
+    const current = await booking(db, "price-aba");
+    const quote = await repo.quoteReassignment(current, "room-b", "2026-09-21");
+    await db.prepare("UPDATE rooms SET price_cents=11000 WHERE id='room-b'").run();
+    await db.prepare("UPDATE rooms SET price_cents=10000 WHERE id='room-b'").run();
+    const before = await snapshot(db, "price-aba", ["room-a", "room-b"]);
+    expect((await repo.reassign(current, "room-b", "Rate changed then restored", "2026-09-21", quote!.quoteToken, actor)).ok).toBe(false);
+    expect(await snapshot(db, "price-aba", ["room-a", "room-b"])).toEqual(before);
+  }, 20_000);
+
   it("preserves elapsed claims and billing through repeated reassignment, with versioned room dimensions and truthful history", async () => {
     const db = await database(`reassign-repeat-${crypto.randomUUID()}`);
     await seedBooking(db, "stay-1", "room-a", "2026-09-20", "2026-09-27", ["room-a", "room-b", "room-c"]);
@@ -92,7 +228,7 @@ describe("F0.4 reassignment interval on executing D1", () => {
       (id,room_id,status,impact,priority,reason,assigned_to,reported_by_user_id,reported_at)
       VALUES ('advisory-b','room-b','OPEN','NON_BLOCKING','LOW','Lamp advisory','ops','operator','2026-09-26T10:00:00Z')`).run();
 
-    const first = await new D1LifecycleRepository(db).reassign(await booking(db, "stay-1"), "room-b", "Guest requested move", "2026-09-24", actor);
+    const first = await reassign(db, "stay-1", "room-b", "Guest requested move", "2026-09-24");
     expect(first).toMatchObject({ ok: true, reassignment: {
       oldRoomId: "room-a", newRoomId: "room-b", hotelLocalDate: "2026-09-24", effectiveDate: "2026-09-24",
       remainingInterval: { startDate: "2026-09-24", endDateExclusive: "2026-09-27" }, totalCents: 70000,
@@ -114,7 +250,7 @@ describe("F0.4 reassignment interval on executing D1", () => {
       assignment_start_date: "2026-09-20", reason: "Guest requested move", old_total_cents: 70000, new_total_cents: 70000,
       old_room_version_before: 0, old_room_version_after: 1, new_room_version_before: 0, new_room_version_after: 1,
     });
-    expect(await db.prepare("SELECT COUNT(*) AS count FROM financial_events WHERE booking_id='stay-1'").first()).toEqual({ count: 0 });
+    expect(await db.prepare("SELECT event_type FROM financial_events WHERE booking_id='stay-1'").all()).toMatchObject({ results: [{ event_type: "PRICE_RECONCILIATION" }] });
 
     expect(await db.prepare(`SELECT b.room_id,b.check_in,
       (SELECT json_extract(e.details_json,'$.effective_date') FROM lifecycle_events e WHERE e.booking_id=b.id AND e.event_type='REASSIGN'
@@ -123,7 +259,7 @@ describe("F0.4 reassignment interval on executing D1", () => {
         ORDER BY e.created_at DESC,e.rowid DESC LIMIT 1) AS event_target
       FROM bookings b WHERE b.id='stay-1'`).first()).toEqual({ room_id: "room-b", check_in: "2026-09-20", derived_start: "2026-09-24", event_target: "room-b" });
 
-    const second = await new D1LifecycleRepository(db).reassign(await booking(db, "stay-1"), "room-c", "Room issue reported", "2026-09-25", { ...actor, requestId: "synthetic-reassign-2" });
+    const second = await reassign(db, "stay-1", "room-c", "Room issue reported", "2026-09-25", { ...actor, requestId: "synthetic-reassign-2" });
     expect(second).toMatchObject({ ok: true, reassignment: { oldRoomId: "room-b", newRoomId: "room-c", effectiveDate: "2026-09-25" } });
     expect(await db.prepare("SELECT room_id,stay_date FROM room_inventory_nights WHERE booking_id='stay-1' ORDER BY stay_date,room_id").all()).toMatchObject({ results: [
       { room_id: "room-a", stay_date: "2026-09-20" }, { room_id: "room-a", stay_date: "2026-09-21" },
@@ -133,18 +269,18 @@ describe("F0.4 reassignment interval on executing D1", () => {
     ] });
     expect(await db.prepare("SELECT COUNT(*) AS count FROM lifecycle_events WHERE booking_id='stay-1' AND event_type='REASSIGN'").first()).toEqual({ count: 2 });
     expect(await db.prepare("SELECT total_cents FROM bookings WHERE id='stay-1'").first()).toEqual({ total_cents: 70000 });
-    expect(await db.prepare("SELECT COUNT(*) AS count FROM financial_events WHERE booking_id='stay-1'").first()).toEqual({ count: 0 });
+    expect(await db.prepare("SELECT COUNT(*) AS count FROM financial_events WHERE booking_id='stay-1'").first()).toEqual({ count: 2 });
   }, 20_000);
 
   it("uses check-in as the effective date before/equal arrival and rejects checkout overrun without drift", async () => {
     const db = await database(`reassign-boundary-${crypto.randomUUID()}`);
     await seedBooking(db, "same-day", "room-a", "2026-10-01", "2026-10-03", ["room-a", "room-b", "room-c"]);
-    const before = await new D1LifecycleRepository(db).reassign(await booking(db, "same-day"), "room-b", "Arrival day change", "2026-09-30", actor);
+    const before = await reassign(db, "same-day", "room-b", "Arrival day change", "2026-09-30");
     expect(before).toMatchObject({ ok: true, reassignment: { effectiveDate: "2026-10-01", hotelLocalDate: "2026-09-30" } });
-    const sameDay = await new D1LifecycleRepository(db).reassign(await booking(db, "same-day"), "room-c", "Same day second move", "2026-10-01", { ...actor, requestId: "same-day-2" });
+    const sameDay = await reassign(db, "same-day", "room-c", "Same day second move", "2026-10-01", { ...actor, requestId: "same-day-2" });
     expect(sameDay).toMatchObject({ ok: true, reassignment: { effectiveDate: "2026-10-01" } });
     const beforeOverrun = await snapshot(db, "same-day", ["room-a", "room-b", "room-c"]);
-    const overrun = await new D1LifecycleRepository(db).reassign(await booking(db, "same-day"), "room-b", "After checkout", "2026-10-03", actor);
+    const overrun = await reassign(db, "same-day", "room-b", "After checkout", "2026-10-03");
     expect(overrun.ok).toBe(false);
     expect(await snapshot(db, "same-day", ["room-a", "room-b", "room-c"])).toEqual(beforeOverrun);
   }, 20_000);
@@ -156,16 +292,15 @@ describe("F0.4 reassignment interval on executing D1", () => {
       (id,room_id,status,impact,priority,reason,assigned_to,reported_by_user_id,reported_at)
       VALUES ('block-b','room-b','OPEN','BLOCKING','HIGH','Room is unsafe','ops','operator','2026-09-26T10:00:00Z')`).run();
     await db.prepare("INSERT INTO rooms (id,room_number,room_type,status,price_cents,housekeeping_state,service_state,room_state_version) VALUES ('room-d','104','STANDARD','AVAILABLE',10000,NULL,'IN_SERVICE',0)").run();
-    const repo = new D1LifecycleRepository(db);
     const before = await snapshot(db, "stay-2", ["room-a", "room-b", "room-c", "room-d"]);
-    expect((await repo.reassign(await booking(db, "stay-2"), "room-b", "Blocking room", "2026-11-02", actor)).ok).toBe(false);
-    expect((await repo.reassign(await booking(db, "stay-2"), "room-d", "Unknown readiness", "2026-11-02", actor)).ok).toBe(false);
+    expect((await reassign(db, "stay-2", "room-b", "Blocking room", "2026-11-02")).ok).toBe(false);
+    expect((await reassign(db, "stay-2", "room-d", "Unknown readiness", "2026-11-02")).ok).toBe(false);
     expect(await snapshot(db, "stay-2", ["room-a", "room-b", "room-c", "room-d"])).toEqual(before);
 
     await db.prepare("INSERT INTO invoices (id,booking_id,amount_cents,paid_amount_cents,status,created_at) VALUES ('invoice-2','stay-2',70000,5000,'PENDING','2026-09-27T00:00:00Z')").run();
     await db.prepare("INSERT INTO payment_entries (id,invoice_id,booking_id,amount_cents,payment_method,received_by_user_id,received_at) VALUES ('entry-2','invoice-2','stay-2',4000,'CASH','operator','2026-09-27T00:00:00Z')").run();
     const beforeMismatch = await snapshot(db, "stay-2", ["room-a", "room-b", "room-c", "room-d"]);
-    expect((await repo.reassign(await booking(db, "stay-2"), "room-c", "Ledger mismatch", "2026-11-02", actor)).ok).toBe(false);
+    expect((await reassign(db, "stay-2", "room-c", "Ledger mismatch", "2026-11-02")).ok).toBe(false);
     expect(await snapshot(db, "stay-2", ["room-a", "room-b", "room-c", "room-d"])).toEqual(beforeMismatch);
   }, 20_000);
 
@@ -173,7 +308,7 @@ describe("F0.4 reassignment interval on executing D1", () => {
     const db = await database(`reassign-unresolved-source-${crypto.randomUUID()}`);
     await seedBooking(db, "unresolved-source", "room-a", "2027-04-01", "2027-04-04", ["room-a", "room-b"]);
     await db.prepare("UPDATE rooms SET housekeeping_state=NULL,service_state=NULL WHERE id='room-a'").run();
-    const result = await new D1LifecycleRepository(db).reassign(await booking(db, "unresolved-source"), "room-b", "Safe source handoff", "2027-04-02", actor);
+    const result = await reassign(db, "unresolved-source", "room-b", "Safe source handoff", "2027-04-02");
     expect(result.ok).toBe(true);
     expect(await db.prepare("SELECT status,housekeeping_state,service_state FROM rooms WHERE id='room-a'").first())
       .toEqual({ status: "DIRTY", housekeeping_state: "DIRTY", service_state: null });
@@ -187,7 +322,7 @@ describe("F0.4 reassignment interval on executing D1", () => {
     const before = await snapshot(db, "stay-3", ["room-a", "room-b"]);
     await db.prepare(`CREATE TRIGGER reject_reassign BEFORE INSERT ON lifecycle_events
       WHEN NEW.event_type='REASSIGN' BEGIN SELECT RAISE(ABORT,'injected audit failure'); END`).run();
-    expect((await new D1LifecycleRepository(db).reassign(await booking(db, "stay-3"), "room-b", "Trigger rollback", "2026-12-02", actor)).ok).toBe(false);
+    expect((await reassign(db, "stay-3", "room-b", "Trigger rollback", "2026-12-02")).ok).toBe(false);
     expect(await snapshot(db, "stay-3", ["room-a", "room-b"])).toEqual(before);
   }, 20_000);
 
@@ -195,10 +330,12 @@ describe("F0.4 reassignment interval on executing D1", () => {
     const db = await database(`reassign-same-booking-race-${crypto.randomUUID()}`);
     await seedBooking(db, "race-stay", "room-a", "2027-01-01", "2027-01-05", ["room-a", "room-b", "room-c"]);
     const stale = await booking(db, "race-stay");
+    const raceRepo = new D1LifecycleRepository(db);
+    const raceQuote = await raceRepo.quoteReassignment(stale, "room-b", "2027-01-02");
     const before = await snapshot(db, "race-stay", ["room-a", "room-b", "room-c"]);
     const results = await Promise.all([
-      new D1LifecycleRepository(db).reassign(stale, "room-b", "Concurrent target B", "2027-01-02", { ...actor, requestId: "race-b" }),
-      new D1LifecycleRepository(db).reassign(stale, "room-b", "Concurrent target B", "2027-01-02", { ...actor, requestId: "race-b-duplicate" }),
+      raceRepo.reassign(stale, "room-b", "Concurrent target B", "2027-01-02", raceQuote!.quoteToken, { ...actor, requestId: "race-b" }),
+      raceRepo.reassign(stale, "room-b", "Concurrent target B", "2027-01-02", raceQuote!.quoteToken, { ...actor, requestId: "race-b-duplicate" }),
     ]);
     expect(results.filter(result => result.ok)).toHaveLength(1);
     expect(await db.prepare("SELECT COUNT(*) AS count FROM lifecycle_events WHERE booking_id='race-stay' AND event_type='REASSIGN'").first()).toEqual({ count: 1 });
@@ -211,11 +348,14 @@ describe("F0.4 reassignment interval on executing D1", () => {
     const db = await database(`reassign-shared-destination-race-${crypto.randomUUID()}`);
     await seedBooking(db, "race-stay-a", "room-a", "2027-02-01", "2027-02-05", ["room-a", "room-shared"]);
     await seedBooking(db, "race-stay-b", "room-b", "2027-02-01", "2027-02-05", ["room-b", "room-shared"]);
+    const repo = new D1LifecycleRepository(db);
+    const quoteA = await repo.quoteReassignment(await booking(db, "race-stay-a"), "room-shared", "2027-02-02");
+    const quoteB = await repo.quoteReassignment(await booking(db, "race-stay-b"), "room-shared", "2027-02-02");
     const beforeA = await snapshot(db, "race-stay-a", ["room-a", "room-shared"]);
     const beforeB = await snapshot(db, "race-stay-b", ["room-b", "room-shared"]);
     const results = await Promise.all([
-      new D1LifecycleRepository(db).reassign(await booking(db, "race-stay-a"), "room-shared", "Shared destination race", "2027-02-02", { ...actor, requestId: "race-a" }),
-      new D1LifecycleRepository(db).reassign(await booking(db, "race-stay-b"), "room-shared", "Shared destination race", "2027-02-02", { ...actor, requestId: "race-b" }),
+      repo.reassign(await booking(db, "race-stay-a"), "room-shared", "Shared destination race", "2027-02-02", quoteA!.quoteToken, { ...actor, requestId: "race-a" }),
+      repo.reassign(await booking(db, "race-stay-b"), "room-shared", "Shared destination race", "2027-02-02", quoteB!.quoteToken, { ...actor, requestId: "race-b" }),
     ]);
     expect(results.filter(result => result.ok)).toHaveLength(1);
     const [a, b] = await Promise.all([booking(db, "race-stay-a"), booking(db, "race-stay-b")]);
@@ -244,7 +384,7 @@ describe("F0.4 reassignment interval on executing D1", () => {
         return db.batch(statements);
       },
     } as unknown as D1Database;
-    const result = await new D1LifecycleRepository(interleavedDb).reassign(await booking(db, "claim-race"), "room-b", "Concurrent claim change", "2027-03-02", actor);
+    const result = await reassign(db, "claim-race", "room-b", "Concurrent claim change", "2027-03-02", actor, interleavedDb);
     expect(result.ok).toBe(false);
     expect(stateAfterConcurrentChange).toBeDefined();
     expect(await snapshot(db, "claim-race", ["room-a", "room-b"])).toEqual(stateAfterConcurrentChange);
@@ -266,12 +406,37 @@ describe("F0.4 reassignment interval on executing D1", () => {
         return db.batch(statements);
       },
     } as unknown as D1Database;
-    const result = await new D1LifecycleRepository(interleavedDb).reassign(await booking(db, "room-aba"), "room-b", "Room state ABA", "2027-03-11", actor);
+    const result = await reassign(db, "room-aba", "room-b", "Room state ABA", "2027-03-11", actor, interleavedDb);
     expect(result.ok).toBe(false);
     expect(stateAfterAba).toBeDefined();
     expect(stateAfterAba![2]).toMatchObject({ status: "AVAILABLE", room_state_version: 2 });
     expect(stateAfterAba![0]).toEqual(before[0]);
     expect(stateAfterAba![3]).toEqual(before[3]);
     expect(await snapshot(db, "room-aba", ["room-a", "room-b"])).toEqual(stateAfterAba);
+  }, 20_000);
+
+  it("rejects a payment posted after quote validation without rolling back the payment or partially reassigning", async () => {
+    const db = await database(`reassign-payment-race-${crypto.randomUUID()}`);
+    await seedBooking(db, "payment-race", "room-a", "2027-05-01", "2027-05-05", ["room-a", "room-b"]);
+    await db.prepare("INSERT INTO invoices (id,booking_id,amount_cents,paid_amount_cents,status,created_at) VALUES ('invoice-payment-race','payment-race',40000,0,'PENDING','2027-04-01T00:00:00Z')").run();
+    let afterPayment: unknown[] | undefined;
+    const interleavedDb = {
+      prepare: db.prepare.bind(db),
+      batch: async (statements: D1PreparedStatement[]) => {
+        await db.prepare("INSERT INTO payment_entries (id,invoice_id,booking_id,amount_cents,payment_method,received_by_user_id,received_at) VALUES ('payment-raced','invoice-payment-race','payment-race',1000,'CASH','operator','2027-05-02T12:00:00Z')").run();
+        await db.prepare("UPDATE invoices SET paid_amount_cents=1000 WHERE id='invoice-payment-race'").run();
+        afterPayment = await snapshot(db, "payment-race", ["room-a", "room-b"]);
+        return db.batch(statements);
+      },
+    } as unknown as D1Database;
+    const result = await reassign(db, "payment-race", "room-b", "Concurrent payment", "2027-05-02", actor, interleavedDb);
+    expect(result.ok).toBe(false);
+    expect(afterPayment).toBeDefined();
+    expect(await snapshot(db, "payment-race", ["room-a", "room-b"])).toEqual(afterPayment);
+    expect(afterPayment![0]).toMatchObject({ room_id: "room-a", total_cents: 40000 });
+    expect(afterPayment![6]).toEqual([{ id: "invoice-payment-race", amount_cents: 40000, paid_amount_cents: 1000, status: "PENDING" }]);
+    expect(afterPayment![7]).toEqual([{ id: "payment-raced", amount_cents: 1000, payment_method: "CASH", payment_reference: null }]);
+    expect(afterPayment![8]).toEqual([]);
+    expect(afterPayment![9]).toEqual([{ segment_id: "payment-race:initial", room_id: "room-a", effective_start: "2027-05-01", effective_end: "2027-05-05", rate_cents: 10000, room_pricing_version: 0, segment_version: 1, operation_token: "seed-pricing:payment-race" }]);
   }, 20_000);
 });

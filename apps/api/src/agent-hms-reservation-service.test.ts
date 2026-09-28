@@ -59,6 +59,18 @@ class FakeBookingRepository implements BookingRepository {
     return this.options.unavailable ? null : 10000;
   }
 
+  async validatePricingReferences(
+    _guestId: string,
+    _roomId: string,
+    _bookingId: string | null,
+    _start: string,
+    _end: string,
+  ) {
+    return this.options.unavailable ? null : { priceCents: 10000, pricingVersion: 0 };
+  }
+
+  async extraChargeTotal(_bookingId: string): Promise<number> { return 0; }
+
   async create(record: CreateBookingRecord): Promise<BookingUpdateResult> {
     this.createCalls += 1;
     if (this.options.zeroRowCreate) return { meta: { changes: 0 } };

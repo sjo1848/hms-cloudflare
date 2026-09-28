@@ -2,12 +2,27 @@ import type { OperationalDatabase } from "../../routing";
 import { claimDates, effectiveReassignmentDate, validHotelLocalDate, type CheckoutPolicy, type LifecycleActor, type LifecycleBooking } from "./domain";
 import type { LifecycleMutationResult, LifecycleRepository } from "./ports";
 import { ROOM_DIMENSION_SELECT, roomOperationalReadModel, type RoomDimensionRow } from "../room-state/read-model";
+import { createReassignmentQuote } from "../billing/d1-stay-pricing";
 
 export class D1LifecycleRepository implements LifecycleRepository {
   public constructor(private readonly db: OperationalDatabase) {}
 
   findBooking(id: string): Promise<LifecycleBooking | null> {
     return this.db.prepare("SELECT id, room_id, check_in, check_out, status FROM bookings WHERE id = ?1").bind(id).first<LifecycleBooking>();
+  }
+
+  async quoteReassignment(current: LifecycleBooking, destinationRoomId: string, hotelLocalDate: string) {
+    const effectiveDate = current.check_in > hotelLocalDate ? current.check_in : hotelLocalDate;
+    const destination = await this.db.prepare(`SELECT r.id FROM rooms r
+      WHERE r.id=?1 AND r.id<>?2 AND r.status='AVAILABLE'
+        AND r.housekeeping_state='READY' AND r.service_state='IN_SERVICE'
+        AND NOT EXISTS (SELECT 1 FROM bookings active WHERE active.room_id=r.id AND active.status='CHECKED_IN')
+        AND NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN' AND mc.impact='BLOCKING')
+        AND NOT EXISTS (SELECT 1 FROM room_holds h WHERE h.room_id=r.id AND h.start_date<?4 AND h.end_date>?3)
+        AND NOT EXISTS (SELECT 1 FROM room_inventory_nights n WHERE n.room_id=r.id AND n.stay_date>=?3 AND n.stay_date<?4)`)
+      .bind(destinationRoomId, current.room_id, effectiveDate, current.check_out).first();
+    if (!destination) return null;
+    return createReassignmentQuote(this.db, current.id, destinationRoomId, hotelLocalDate);
   }
 
   async checkIn(current: LifecycleBooking, guestCount: number, actor: LifecycleActor): Promise<LifecycleMutationResult> {
@@ -28,22 +43,24 @@ export class D1LifecycleRepository implements LifecycleRepository {
     return { ok: results[0]?.meta.changes === 1 && results[1]?.meta.changes === 1 && results[2]?.meta.changes === 1 };
   }
 
-  async reassign(current: LifecycleBooking, destinationRoomId: string, reason: string, hotelLocalDate: string, actor: LifecycleActor): Promise<LifecycleMutationResult> {
+  async reassign(current: LifecycleBooking, destinationRoomId: string, reason: string, hotelLocalDate: string, quoteToken: string, actor: LifecycleActor): Promise<LifecycleMutationResult> {
     if (!validHotelLocalDate(hotelLocalDate)) return { ok: false };
     const snapshot = await this.db.prepare(`SELECT
-        b.room_id, b.check_in, b.check_out, b.status, b.total_cents,
+        b.room_id, b.check_in, b.check_out, b.status, b.total_cents, b.pricing_version,
         COALESCE((SELECT json_extract(e.details_json,'$.effective_date') FROM lifecycle_events e
           WHERE e.booking_id=b.id AND e.event_type='REASSIGN'
             AND json_extract(e.details_json,'$.to_room_id')=b.room_id
           ORDER BY e.created_at DESC,e.rowid DESC LIMIT 1), b.check_in) AS assignment_start_date,
         old_room.status AS old_status, old_room.housekeeping_state AS old_housekeeping_state,
         old_room.service_state AS old_service_state, old_room.room_state_version AS old_room_version,
+        old_room.inventory_version AS old_inventory_version,
         (SELECT COUNT(*) FROM bookings active WHERE active.room_id=old_room.id AND active.status='CHECKED_IN') AS old_checked_in_count,
         (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id=old_room.id AND mc.status='OPEN') AS old_open_maintenance_count,
         (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id=old_room.id AND mc.status='OPEN' AND mc.impact='BLOCKING') AS old_blocking_count,
         (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id=old_room.id AND mc.status='OPEN' AND mc.impact='NON_BLOCKING') AS old_non_blocking_count,
         destination.status AS destination_status, destination.housekeeping_state AS destination_housekeeping_state,
         destination.service_state AS destination_service_state, destination.room_state_version AS destination_room_version,
+        destination.inventory_version AS destination_inventory_version,
         (SELECT COUNT(*) FROM bookings active WHERE active.room_id=destination.id AND active.status='CHECKED_IN') AS destination_checked_in_count,
         (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id=destination.id AND mc.status='OPEN') AS destination_open_maintenance_count,
         (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id=destination.id AND mc.status='OPEN' AND mc.impact='BLOCKING') AS destination_blocking_count,
@@ -75,12 +92,12 @@ export class D1LifecycleRepository implements LifecycleRepository {
       JOIN rooms destination ON destination.id=?2
       WHERE b.id=?1 AND b.status='CHECKED_IN'`)
       .bind(current.id, destinationRoomId).first<{
-        room_id: string; check_in: string; check_out: string; status: string; total_cents: number;
+        room_id: string; check_in: string; check_out: string; status: string; total_cents: number; pricing_version: number;
         assignment_start_date: string; old_status: string; old_housekeeping_state: string | null;
-        old_service_state: string | null; old_room_version: number; old_checked_in_count: number;
+        old_service_state: string | null; old_room_version: number; old_inventory_version: number; old_checked_in_count: number;
         old_open_maintenance_count: number; old_blocking_count: number; old_non_blocking_count: number;
         destination_status: string; destination_housekeeping_state: string | null; destination_service_state: string | null;
-        destination_room_version: number; destination_checked_in_count: number;
+        destination_room_version: number; destination_inventory_version: number; destination_checked_in_count: number;
         destination_open_maintenance_count: number; destination_blocking_count: number; destination_non_blocking_count: number;
         invoice_id: string | null; invoice_status: string | null; paid_amount_cents: number | null; ledger_paid_cents: number;
         current_claim_count: number; current_claim_dates: string; stray_current_claim_count: number;
@@ -90,6 +107,9 @@ export class D1LifecycleRepository implements LifecycleRepository {
       || snapshot.room_id === destinationRoomId || hotelLocalDate >= snapshot.check_out
       || reason.trim().length < 6) return { ok: false };
     const effectiveDate = effectiveReassignmentDate(snapshot.check_in, hotelLocalDate);
+    const quote = await this.quoteReassignment(current, destinationRoomId, hotelLocalDate);
+    if (!quote || quote.quoteToken !== quoteToken || quote.effectiveDate !== effectiveDate
+      || quote.currentTotalCents !== snapshot.total_cents) return { ok: false };
     const dates = claimDates(effectiveDate, snapshot.check_out);
     if (!dates.length || !validHotelLocalDate(snapshot.assignment_start_date)
       || snapshot.assignment_start_date < snapshot.check_in || snapshot.assignment_start_date >= snapshot.check_out) return { ok: false };
@@ -134,7 +154,16 @@ export class D1LifecycleRepository implements LifecycleRepository {
       expected_remaining_claim_dates: dates,
       reason,
       old_total_cents: snapshot.total_cents,
-      new_total_cents: snapshot.total_cents,
+      new_total_cents: quote.newTotalCents,
+      old_lodging_total_cents: quote.currentLodgingTotalCents,
+      new_lodging_total_cents: quote.lodgingTotalCents,
+      extra_charges_cents: quote.extraChargesCents,
+      price_delta_cents: quote.deltaCents,
+      quote_token: quote.quoteToken,
+      old_booking_pricing_version: quote.bookingPricingVersion,
+      new_booking_pricing_version: quote.bookingPricingVersion + 1,
+      destination_rate_cents: quote.destinationRateCents,
+      destination_pricing_version: quote.destinationPricingVersion,
       old_occupancy_before: "OCCUPIED",
       old_occupancy_after: "VACANT",
       old_housekeeping_state_before: snapshot.old_housekeeping_state,
@@ -145,6 +174,8 @@ export class D1LifecycleRepository implements LifecycleRepository {
       old_service_state_after: snapshot.old_service_state,
       old_room_version_before: snapshot.old_room_version,
       old_room_version_after: snapshot.old_room_version + 1,
+      old_inventory_version_before: snapshot.old_inventory_version,
+      old_inventory_version_after: snapshot.old_inventory_version + dates.length,
       new_occupancy_before: "VACANT",
       new_occupancy_after: "OCCUPIED",
       new_housekeeping_state_before: snapshot.destination_housekeeping_state,
@@ -155,16 +186,20 @@ export class D1LifecycleRepository implements LifecycleRepository {
       new_service_state_after: snapshot.destination_service_state,
       new_room_version_before: snapshot.destination_room_version,
       new_room_version_after: snapshot.destination_room_version + 1,
+      new_inventory_version_before: snapshot.destination_inventory_version,
+      new_inventory_version_after: snapshot.destination_inventory_version + dates.length,
     });
     try {
       const results = await this.db.batch([
-        this.db.prepare(`UPDATE bookings SET room_id=?2,updated_at=?3,last_reassignment_token=?13
+        this.db.prepare(`UPDATE bookings SET room_id=?2,total_cents=?15,updated_at=?3,last_reassignment_token=?13,last_pricing_operation_token=?13
           WHERE id=?1 AND status='CHECKED_IN' AND room_id=?4 AND check_in=?5 AND check_out=?6 AND total_cents=?7
+            AND pricing_version=?16
             AND check_out>?8
-            AND EXISTS (SELECT 1 FROM rooms old_room WHERE old_room.id=?4 AND old_room.status='OCCUPIED' AND old_room.room_state_version=?9)
+            AND EXISTS (SELECT 1 FROM rooms old_room WHERE old_room.id=?4 AND old_room.status='OCCUPIED' AND old_room.room_state_version=?9 AND old_room.inventory_version=?20)
             AND EXISTS (SELECT 1 FROM rooms destination WHERE destination.id=?2 AND destination.status='AVAILABLE'
               AND destination.housekeeping_state='READY' AND destination.service_state='IN_SERVICE'
               AND destination.room_state_version=?10
+              AND destination.price_cents=?17 AND destination.pricing_version=?18 AND destination.inventory_version=?19
               AND (SELECT COUNT(*) FROM bookings active WHERE active.room_id=destination.id AND active.status='CHECKED_IN')=0
               AND NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=destination.id AND mc.status='OPEN' AND mc.impact='BLOCKING'))
             AND COALESCE((SELECT json_extract(e.details_json,'$.effective_date') FROM lifecycle_events e
@@ -182,10 +217,41 @@ export class D1LifecycleRepository implements LifecycleRepository {
             AND NOT EXISTS (SELECT 1 FROM room_holds h WHERE h.room_id=?2 AND h.start_date<?6 AND h.end_date>?12)
             AND NOT EXISTS (SELECT 1 FROM room_inventory_nights n WHERE n.room_id=?2 AND n.stay_date>=?12 AND n.stay_date<?6)
             AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id=?1 AND
-              (i.status='VOIDED' OR i.paid_amount_cents<>(SELECT COALESCE(SUM(p.amount_cents),0) FROM payment_entries p WHERE p.invoice_id=i.id)))`)
+              (i.status='VOIDED' OR i.paid_amount_cents<>(SELECT COALESCE(SUM(p.amount_cents),0) FROM payment_entries p WHERE p.invoice_id=i.id)))
+            AND ((?21 IS NULL AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id=?1)) OR EXISTS (
+              SELECT 1 FROM invoices i WHERE i.booking_id=?1 AND i.id=?21 AND i.status=?22
+                AND i.paid_amount_cents=?23 AND i.amount_cents=?25
+                AND (?22='PAID' AND ?23>=?25 OR ?22='PENDING' AND ?23<?25)
+                AND (SELECT COALESCE(SUM(p.amount_cents),0) FROM payment_entries p WHERE p.invoice_id=i.id)=?24))
+            AND (SELECT COUNT(*) FROM extra_charges c WHERE c.booking_id=?1)=json_array_length(?26)
+            AND NOT EXISTS (SELECT 1 FROM extra_charges c WHERE c.booking_id=?1 AND NOT EXISTS (
+              SELECT 1 FROM json_each(?26) expected
+              WHERE json_extract(expected.value,'$.id')=c.id
+                AND CAST(json_extract(expected.value,'$.amount_cents') AS INTEGER)=c.amount_cents))`)
           .bind(current.id, destinationRoomId, now, snapshot.room_id, snapshot.check_in, snapshot.check_out, snapshot.total_cents, hotelLocalDate,
             snapshot.old_room_version, snapshot.destination_room_version, snapshot.assignment_start_date, effectiveDate, lifecycleEventId,
-            JSON.stringify(expectedCurrentClaimDates)),
+            JSON.stringify(expectedCurrentClaimDates), quote.newTotalCents, quote.bookingPricingVersion, quote.destinationRateCents, quote.destinationPricingVersion,
+            quote.destinationInventoryVersion, quote.currentInventoryVersion,
+            quote.invoiceId, quote.invoiceStatus, quote.invoicePaidCents, quote.ledgerPaidCents, quote.invoiceAmountCents,
+            JSON.stringify(quote.chargeSnapshot)),
+        this.db.prepare(`INSERT INTO booking_pricing_segments
+          (segment_id,booking_id,room_id,effective_start,effective_end,rate_cents,room_pricing_version,segment_version,operation_token,actor_subject,hotel_id,request_id,created_at)
+          SELECT ?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13
+          WHERE EXISTS (SELECT 1 FROM bookings b WHERE b.id=?2 AND b.status='CHECKED_IN' AND b.room_id=?3
+            AND b.last_pricing_operation_token=?9 AND b.total_cents=?14 AND b.pricing_version=?15)`)
+          .bind(`${lifecycleEventId}:segment`, current.id, destinationRoomId, effectiveDate, snapshot.check_out,
+            quote.destinationRateCents, quote.destinationPricingVersion, quote.bookingPricingVersion + 1, lifecycleEventId,
+            actor.subject, actor.hotelId, actor.requestId, now, quote.newTotalCents, quote.bookingPricingVersion),
+        this.db.prepare(`INSERT INTO financial_events (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at)
+          SELECT ?1,'PRICE_RECONCILIATION',?2,?3,?4,?5,?6,?7
+          WHERE EXISTS (SELECT 1 FROM booking_pricing_segments WHERE booking_id=?2 AND operation_token=?8)`)
+          .bind(`${lifecycleEventId}:price`, current.id, actor.subject, actor.requestId, actor.hotelId,
+            JSON.stringify({ operation_token: lifecycleEventId, quote_token: quote.quoteToken, old_total_cents: snapshot.total_cents,
+              new_total_cents: quote.newTotalCents, old_lodging_total_cents: quote.currentLodgingTotalCents,
+              new_lodging_total_cents: quote.lodgingTotalCents, extra_charges_cents: quote.extraChargesCents,
+              price_delta_cents: quote.deltaCents, effective_date: effectiveDate, check_out: snapshot.check_out,
+              destination_room_id: destinationRoomId, destination_rate_cents: quote.destinationRateCents,
+              destination_pricing_version: quote.destinationPricingVersion }), now, lifecycleEventId),
         this.db.prepare(`DELETE FROM room_inventory_nights WHERE booking_id=?1 AND room_id=?2 AND stay_date>=?3 AND stay_date<?4
           AND EXISTS (SELECT 1 FROM bookings WHERE id=?1 AND status='CHECKED_IN' AND room_id=?5)
           AND EXISTS (SELECT 1 FROM rooms WHERE id=?2 AND room_state_version=?6)`)
@@ -231,7 +297,9 @@ export class D1LifecycleRepository implements LifecycleRepository {
         effectiveDate,
         remainingInterval: { startDate: effectiveDate, endDateExclusive: snapshot.check_out },
         oldRoomStatus: oldState.maintenanceImpact === "BLOCKING" ? "MAINTENANCE" : oldState.serviceState === "OUT_OF_ORDER" ? "OUT_OF_ORDER" : "DIRTY",
-        totalCents: snapshot.total_cents,
+        totalCents: quote.newTotalCents,
+        previousTotalCents: snapshot.total_cents,
+        priceDeltaCents: quote.deltaCents,
       },
     };
   }

@@ -273,10 +273,10 @@ export function createInventoryRoutes(): InventoryApp {
 
   app.delete("/rooms/:id/holds/:hold_id", async (context) => {
     requireCapability(context, "rooms.write");
-    const result = await context.get("operationalDatabase").prepare(
-      "DELETE FROM room_holds WHERE id = ?1 AND room_id = ?2",
-    ).bind(context.req.param("hold_id"), context.req.param("id")).run();
-    if (result.meta.changes !== 1) throw ApiError.notFound("Hold not found");
+    const deleted = await context.get("operationalDatabase").prepare(
+      "DELETE FROM room_holds WHERE id = ?1 AND room_id = ?2 RETURNING id",
+    ).bind(context.req.param("hold_id"), context.req.param("id")).first<{ id: string }>();
+    if (!deleted) throw ApiError.notFound("Hold not found");
     return context.json({ status: "ok" });
   });
 

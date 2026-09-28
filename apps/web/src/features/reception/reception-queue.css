@@ -105,6 +105,13 @@
 .reassign-price-summary{grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
 .reassign-price-summary strong{font-size:16px;color:#1f3651}
 .reassign-room-help,.reassign-price-note,.reassign-balance-note{margin:-7px 0 0;font-size:12px}
+.reassign-price-impact{display:grid;gap:8px;padding:12px;border:1px solid #d7e2eb;border-radius:12px;background:#fff}
+.reassign-price-impact h5{margin:0;color:#1f3651}
+.reassign-price-impact p{margin:0;font-size:12px}
+.reassign-price-impact dl{display:grid;gap:7px;margin:0}
+.reassign-price-impact dl div{display:flex;justify-content:space-between;gap:12px}
+.reassign-price-impact dt{color:#526173}
+.reassign-price-impact dd{margin:0;font-weight:650;text-align:right}
 .reassign-balance-note{padding:9px 11px;border-radius:10px;background:#fff7e7;color:#744a13;font-weight:700}
 .field-hint{display:block;margin-top:4px;color:#68778a;font-size:11px}
 .ui-dropdown-root{position:relative}

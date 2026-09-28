@@ -9,6 +9,7 @@ import {
   loadAvailableRooms,
   loadHotelContext,
   loadReceptionQueue,
+  loadReassignmentQuote,
   loadRoomMaintenanceCase,
   reassignBooking,
   updateBooking,
@@ -19,6 +20,7 @@ import {
   type BookingEditForm,
   type BookingForm,
   type CheckInData,
+  type ReassignmentQuote,
 } from "./model";
 import { useI18n } from "../../i18n";
 import { ApiError } from "../../api/client";
@@ -35,6 +37,7 @@ export function useReceptionWorkspace() {
   const [reassignBoard, setReassignBoard] = useState<HousekeepingBoard | null>(null);
   const [reassignMaintenanceCase, setReassignMaintenanceCase] = useState<MaintenanceCase | null>(null);
   const [reassignHotelDate, setReassignHotelDate] = useState("");
+  const [reassignQuote, setReassignQuote] = useState<ReassignmentQuote | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
@@ -50,6 +53,7 @@ export function useReceptionWorkspace() {
   const [editForm, setEditForm] = useState<BookingEditForm>(emptyBookingForm);
   const loadEpoch = useRef(0);
   const checkInInFlight = useRef(false);
+  const reassignQuoteEpoch = useRef(0);
 
   async function load() {
     const epoch = ++loadEpoch.current;
@@ -115,6 +119,8 @@ export function useReceptionWorkspace() {
     setReassignBoard(null);
     setReassignMaintenanceCase(null);
     setReassignHotelDate("");
+    setReassignQuote(null);
+    reassignQuoteEpoch.current += 1;
     resetLifecycleUi();
     setCheckInConflict("");
     setCheckInNeedsRefresh(false);
@@ -169,13 +175,24 @@ export function useReceptionWorkspace() {
   }
 
   async function selectReassignDestination(roomId: string) {
+    const epoch = ++reassignQuoteEpoch.current;
     setReassignMaintenanceCase(null);
-    if (!roomId) return;
+    setReassignQuote(null);
+    if (!roomId || !selected) return;
     try {
-      setReassignMaintenanceCase(await loadRoomMaintenanceCase(roomId));
+      const [maintenance, quote] = await Promise.all([
+        loadRoomMaintenanceCase(roomId).catch(error => {
+          if (error instanceof ApiError && error.status === 404) return null;
+          throw error;
+        }),
+        loadReassignmentQuote(selected.id, roomId),
+      ]);
+      if (epoch !== reassignQuoteEpoch.current) return;
+      setReassignMaintenanceCase(maintenance);
+      setReassignQuote(quote);
     } catch (e) {
-      if (e instanceof ApiError && e.status === 404) return;
-      if (typeof e === "object" && e !== null && "status" in e && (e as { status?: unknown }).status === 404) return;
+      if (epoch !== reassignQuoteEpoch.current) return;
+      setReassignQuote(null);
       setError((e as Error).message);
     }
   }
@@ -267,10 +284,14 @@ export function useReceptionWorkspace() {
     event.preventDefault();
     if (!selected || actionBusy) return;
     const data = new FormData(event.currentTarget as HTMLFormElement);
+    if (!reassignQuote || reassignQuote.destination_room_id !== data.get("room_id")) {
+      setError(t("reception.reassignQuoteLoading"));
+      return;
+    }
     setActionBusy(true);
     setError("");
     try {
-      await reassignBooking(selected.id, data.get("room_id"), String(data.get("reason") ?? "").trim());
+      await reassignBooking(selected.id, data.get("room_id"), String(data.get("reason") ?? "").trim(), reassignQuote.quote_token);
       setNotice(t("reception.reassignSuccess"));
       closeCase();
       await load();
@@ -278,9 +299,14 @@ export function useReceptionWorkspace() {
       setNotice("");
       const conflict = e instanceof ApiError && e.status === 409;
       if (conflict) {
+        setReassignQuote(null);
         const board = await load();
         const latest = board?.items.find(item => item.booking.id === selected.id)?.booking;
-        if (latest?.status === "CheckedIn") await loadReassignmentContext(latest);
+        if (latest?.status === "CheckedIn") {
+          await loadReassignmentContext(latest);
+          const roomId = String(data.get("room_id") ?? "");
+          if (roomId) await selectReassignDestination(roomId);
+        }
         // load() clears stale errors while refreshing. Reassert the actionable
         // conflict after authoritative booking/room context has been restored.
         setError(t("reception.reassignConflict"));
@@ -322,7 +348,7 @@ export function useReceptionWorkspace() {
   }
 
   return {
-    bookings, frontDeskBoard, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
+    bookings, frontDeskBoard, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, reassignQuote, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
     setCheckInStep, setCheckInData, setForm, setEditForm,
     selectCase, closeCase, refreshQueue: load, refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,

@@ -65,6 +65,17 @@ function audit(db: Db, eventId: string, roomId: string, caseId: string | null, e
   return db.prepare("INSERT INTO housekeeping_events (id, room_id, maintenance_case_id, event_type, from_status, to_status, actor_subject, request_id, hotel_id, details_json, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)").bind(eventId, roomId, caseId, eventType, fromStatus, toStatus, context.get("identity").subject, context.get("requestId"), context.get("membership").hotelId, JSON.stringify(details), new Date().toISOString());
 }
 
+function guardedTransitionAudit(db: Db, eventId: string, roomId: string, eventType: string, fromStatus: string, toStatus: string, versionAfter: number, context: RouteContext, details: Record<string, unknown>) {
+  return db.prepare(`INSERT INTO housekeeping_events (id, room_id, maintenance_case_id, event_type, from_status, to_status, actor_subject, request_id, hotel_id, details_json, created_at)
+    SELECT ?1, ?2, NULL, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10
+    WHERE EXISTS (SELECT 1 FROM rooms r WHERE r.id=?2 AND r.status=?5 AND r.room_state_version=?11)
+      AND NOT EXISTS (SELECT 1 FROM housekeeping_events e WHERE e.room_id=?2 AND e.event_type=?3
+        AND CAST(json_extract(e.details_json, '$.room_state_version_after') AS INTEGER)=?11)`)
+    .bind(eventId, roomId, eventType, fromStatus, toStatus, context.get("identity").subject,
+      context.get("requestId"), context.get("membership").hotelId, JSON.stringify(details),
+      new Date().toISOString(), versionAfter);
+}
+
 async function eventWasRecorded(db: Db, eventId: string): Promise<boolean> {
   return Boolean(await db.prepare("SELECT id FROM housekeeping_events WHERE id = ?1").bind(eventId).first<{ id: string }>());
 }
@@ -295,7 +306,7 @@ async function transition(context: RouteContext, from: string, to: string, event
           AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.room_id=?1 AND b.status='CHECKED_IN')
           AND (?8 <> 'CLEANING' OR NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=?1 AND mc.status='OPEN' AND mc.impact='BLOCKING'))`)
         .bind(roomId, to, targetStatus, to, versionAfter, versionBefore, from, to),
-      audit(db, eventId, roomId, null, eventType, from, targetStatus, context, {
+      guardedTransitionAudit(db, eventId, roomId, eventType, from, targetStatus, versionAfter, context, {
         housekeeping_state_before: from,
         housekeeping_state_after: to,
         occupancy_before: "VACANT",

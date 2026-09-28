@@ -82,7 +82,7 @@ CI=1 "$wrangler" d1 execute HOTEL_SECOND_DB --local -c apps/api/wrangler.jsonc -
 CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --persist-to "$tmp_dir/wrangler-state" --command "
   DELETE FROM payment_entries; DELETE FROM financial_events; DELETE FROM invoices; DELETE FROM extra_charges; DELETE FROM cash_closures; DELETE FROM housekeeping_events; DELETE FROM maintenance_cases; DELETE FROM lifecycle_events; DELETE FROM room_inventory_nights; DELETE FROM room_holds; DELETE FROM bookings; DELETE FROM guests; DELETE FROM rooms;
   INSERT INTO rooms (id,room_number,room_type,status,price_cents,housekeeping_state,service_state) VALUES
-    ('e2e-room-a','101','STANDARD','OCCUPIED',10000,'READY','IN_SERVICE'),('e2e-room-b','102','STANDARD','AVAILABLE',12000,'READY','IN_SERVICE'),('e2e-room-c','103','STANDARD','OCCUPIED',11000,'READY','IN_SERVICE'),('e2e-room-d','104','STANDARD','MAINTENANCE',14000,'READY','IN_SERVICE'),('e2e-room-e','105','STANDARD','AVAILABLE',15000,'READY','IN_SERVICE');
+    ('e2e-room-a','101','STANDARD','OCCUPIED',10000,'READY','IN_SERVICE'),('e2e-room-b','102','STANDARD','AVAILABLE',12000,'READY','IN_SERVICE'),('e2e-room-c','103','STANDARD','OCCUPIED',10000,'READY','IN_SERVICE'),('e2e-room-d','104','STANDARD','MAINTENANCE',14000,'READY','IN_SERVICE'),('e2e-room-e','105','STANDARD','AVAILABLE',15000,'READY','IN_SERVICE');
   INSERT INTO maintenance_cases (id,room_id,status,impact,priority,reason,assigned_to,reported_by_user_id,reported_at) VALUES
     ('e2e-case-nonblocking','e2e-room-b','OPEN','NON_BLOCKING','LOW','Advisory maintenance','ops','source-user:subject-admin','2026-01-01T00:00:00Z'),
     ('e2e-case-blocking','e2e-room-d','OPEN','BLOCKING','HIGH','Blocking maintenance','ops','source-user:subject-admin','2026-01-01T00:00:00Z');
@@ -90,6 +90,11 @@ CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --p
   INSERT INTO bookings (id,guest_id,room_id,check_in,check_out,status,total_cents,created_at,updated_at) VALUES
     ('e2e-booking-success','e2e-guest-success','e2e-room-a','$check_in','$check_out','CHECKED_IN',30000,'2026-01-01','2026-01-01'),
     ('e2e-booking-stale','e2e-guest-stale','e2e-room-c','$check_in','$check_out','CHECKED_IN',30000,'2026-01-01','2026-01-01');
+  UPDATE bookings SET last_pricing_operation_token='seed:e2e-booking-success' WHERE id='e2e-booking-success';
+  UPDATE bookings SET last_pricing_operation_token='seed:e2e-booking-stale' WHERE id='e2e-booking-stale';
+  INSERT INTO booking_pricing_segments (segment_id,booking_id,room_id,effective_start,effective_end,rate_cents,room_pricing_version,segment_version,operation_token,actor_subject,hotel_id,request_id,created_at) VALUES
+    ('e2e-segment-success','e2e-booking-success','e2e-room-a','$check_in','$check_out',10000,0,1,'seed:e2e-booking-success','fixture','10000000-0000-0000-0000-000000000001','seed-success','2026-01-01'),
+    ('e2e-segment-stale','e2e-booking-stale','e2e-room-c','$check_in','$check_out',10000,0,1,'seed:e2e-booking-stale','fixture','10000000-0000-0000-0000-000000000001','seed-stale','2026-01-01');
   INSERT INTO room_inventory_nights (room_id,stay_date,booking_id) VALUES
     ('e2e-room-a','$check_in','e2e-booking-success'),('e2e-room-a','$hotel_local_date','e2e-booking-success'),('e2e-room-a','$remaining_second_night','e2e-booking-success'),
     ('e2e-room-c','$check_in','e2e-booking-stale'),('e2e-room-c','$hotel_local_date','e2e-booking-stale'),('e2e-room-c','$remaining_second_night','e2e-booking-stale');
@@ -134,11 +139,11 @@ if [[ "$browser_mode" == "success" ]]; then
 CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --persist-to "$tmp_dir/wrangler-state" --command "SELECT id,room_id,total_cents FROM bookings WHERE id='e2e-booking-success'; SELECT amount_cents,paid_amount_cents,status FROM invoices WHERE booking_id='e2e-booking-success'; SELECT id,status FROM rooms WHERE id IN ('e2e-room-a','e2e-room-b'); SELECT booking_id,room_id,COUNT(*) AS claims FROM room_inventory_nights WHERE booking_id='e2e-booking-success' GROUP BY booking_id,room_id; SELECT event_type,COUNT(*) AS events FROM lifecycle_events WHERE booking_id='e2e-booking-success' GROUP BY event_type; SELECT event_type,COUNT(*) AS events FROM financial_events WHERE booking_id='e2e-booking-success' GROUP BY event_type; SELECT COUNT(*) AS payments FROM payment_entries WHERE booking_id='e2e-booking-success';" --json >"$tmp_dir/final-state.json"
 node - "$tmp_dir/final-state.json" <<'NODE'
 const fs = require("fs"); const [booking, invoice, rooms, inventory, lifecycle, financial, payments] = JSON.parse(fs.readFileSync(process.argv[2], "utf8")).map(item => item.results);
-if (booking[0]?.room_id !== "e2e-room-b" || booking[0]?.total_cents !== 30000) throw new Error(`success booking mismatch ${JSON.stringify(booking)}`);
-if (invoice[0]?.amount_cents !== 30000 || invoice[0]?.paid_amount_cents !== 0 || invoice[0]?.status !== "PENDING") throw new Error(`invoice mismatch ${JSON.stringify(invoice)}`);
+if (booking[0]?.room_id !== "e2e-room-b" || booking[0]?.total_cents !== 34000) throw new Error(`success booking mismatch ${JSON.stringify(booking)}`);
+if (invoice[0]?.amount_cents !== 34000 || invoice[0]?.paid_amount_cents !== 0 || invoice[0]?.status !== "PENDING") throw new Error(`invoice mismatch ${JSON.stringify(invoice)}`);
 if (rooms.find(row => row.id === "e2e-room-a")?.status !== "DIRTY" || rooms.find(row => row.id === "e2e-room-b")?.status !== "OCCUPIED") throw new Error(`room mismatch ${JSON.stringify(rooms)}`);
 if (!inventory.some(row => row.room_id === "e2e-room-a" && row.claims === 1) || !inventory.some(row => row.room_id === "e2e-room-b" && row.claims === 2)) throw new Error(`inventory mismatch ${JSON.stringify(inventory)}`);
-if (!lifecycle.some(row => row.event_type === "REASSIGN" && row.events === 1) || financial.length !== 0 || payments.some(row => row.payments !== 0)) throw new Error(`event/payment mismatch ${JSON.stringify({ lifecycle, financial, payments })}`);
+if (!lifecycle.some(row => row.event_type === "REASSIGN" && row.events === 1) || !financial.some(row => row.event_type === "PRICE_RECONCILIATION" && row.events === 1) || payments.some(row => row.payments !== 0)) throw new Error(`event/payment mismatch ${JSON.stringify({ lifecycle, financial, payments })}`);
 NODE
 elif [[ "$browser_mode" == "conflict" ]]; then
 CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --persist-to "$tmp_dir/wrangler-state" --command "SELECT id,room_id,total_cents FROM bookings WHERE id='e2e-booking-stale'; SELECT id,status FROM rooms WHERE id IN ('e2e-room-c','e2e-room-e'); SELECT event_type,COUNT(*) AS events FROM lifecycle_events WHERE booking_id='e2e-booking-stale' GROUP BY event_type; SELECT event_type,COUNT(*) AS events FROM financial_events WHERE booking_id='e2e-booking-stale' GROUP BY event_type;" --json >"$tmp_dir/final-state.json"
@@ -164,16 +169,16 @@ const groups = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 const [bookings, invoices, rooms, inventory, lifecycle, financial, payments] = groups.map(item => item.results);
 const success = bookings.find(row => row.id === "e2e-booking-success");
 const stale = bookings.find(row => row.id === "e2e-booking-stale");
-if (success?.room_id !== "e2e-room-b" || success?.total_cents !== 30000) throw new Error(`success booking mismatch ${JSON.stringify(success)}`);
+if (success?.room_id !== "e2e-room-b" || success?.total_cents !== 34000) throw new Error(`success booking mismatch ${JSON.stringify(success)}`);
 if (stale?.room_id !== "e2e-room-c" || stale?.total_cents !== 30000) throw new Error(`stale booking drift ${JSON.stringify(stale)}`);
 const invoice = invoices.find(row => row.booking_id === "e2e-booking-success");
-if (invoice?.amount_cents !== 30000 || invoice?.paid_amount_cents !== 0 || invoice?.status !== "PENDING") throw new Error(`invoice mismatch ${JSON.stringify(invoice)}`);
+if (invoice?.amount_cents !== 34000 || invoice?.paid_amount_cents !== 0 || invoice?.status !== "PENDING") throw new Error(`invoice mismatch ${JSON.stringify(invoice)}`);
 const room = id => rooms.find(row => row.id === id)?.status;
 if (room("e2e-room-a") !== "DIRTY" || room("e2e-room-b") !== "OCCUPIED" || room("e2e-room-e") !== "MAINTENANCE") throw new Error(`room state mismatch ${JSON.stringify(rooms)}`);
 const claim = (bookingId, roomId) => inventory.find(row => row.booking_id === bookingId && row.room_id === roomId)?.claims ?? 0;
 if (claim("e2e-booking-success", "e2e-room-a") !== 1 || claim("e2e-booking-success", "e2e-room-b") !== 2) throw new Error(`inventory history mismatch ${JSON.stringify(inventory)}`);
 if (!lifecycle.some(row => row.booking_id === "e2e-booking-success" && row.event_type === "REASSIGN" && row.events === 1) || lifecycle.some(row => row.booking_id === "e2e-booking-stale")) throw new Error(`lifecycle event mismatch ${JSON.stringify(lifecycle)}`);
-if (financial.length !== 0) throw new Error(`financial event mismatch ${JSON.stringify(financial)}`);
+if (!financial.some(row => row.booking_id === "e2e-booking-success" && row.event_type === "PRICE_RECONCILIATION" && row.events === 1) || financial.some(row => row.booking_id === "e2e-booking-stale")) throw new Error(`financial event mismatch ${JSON.stringify(financial)}`);
 if (payments.length !== 0) throw new Error(`payment ledger changed ${JSON.stringify(payments)}`);
 NODE
 fi

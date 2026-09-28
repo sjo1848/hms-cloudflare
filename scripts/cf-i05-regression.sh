@@ -64,7 +64,7 @@ curl -sS -o "$tmp_dir/race-start-b.json" -w '%{http_code}' "${common[@]}" -X POS
 wait "$race_a" "$race_b"
 node -e "const s=[require('fs').readFileSync('$tmp_dir/race-start-a.status','utf8'),require('fs').readFileSync('$tmp_dir/race-start-b.status','utf8')].sort(); if(s.join(',')!=='200,409') process.exit(1)"
 serialized_d1 HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT status FROM rooms WHERE id='room-e'; SELECT COUNT(*) AS events FROM housekeeping_events WHERE room_id='room-e' AND event_type='CLEANING_START';" --json >"$tmp_dir/race-start-db.json"
-node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/race-start-db.json')).flatMap(x=>x.results); if(r[0].status!=='CLEANING'||r[1].events!==1) process.exit(1)"
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/race-start-db.json')).flatMap(x=>x.results); if(r[0].status!=='CLEANING'||r[1].events!==1) { console.error('race-start state mismatch',r); process.exit(1) }"
 
 curl -sS -o "$tmp_dir/race-finish-a.json" -w '%{http_code}' "${common[@]}" -X POST "$base/housekeeping/room-b/finish" >"$tmp_dir/race-finish-a.status" & race_a=$!
 curl -sS -o "$tmp_dir/race-finish-b.json" -w '%{http_code}' "${common[@]}" -X POST "$base/housekeeping/room-b/finish" >"$tmp_dir/race-finish-b.status" & race_b=$!

@@ -65,8 +65,9 @@ export function createLifecycleRoutes(): LifecycleApp {
     if (roomId === current.room_id) throw ApiError.badRequest("room_id must change");
     const hotelLocalDate = context.get("hotelTime")?.localDate;
     if (!validHotelLocalDate(hotelLocalDate)) throw ApiError.unavailable("Hotel-local date context is unavailable");
+    const quoteToken = requiredText(body.quote_token, "quote_token", 64, 64);
     try {
-      const result = await repository.reassign(current, roomId, reason, hotelLocalDate, actor(context));
+      const result = await repository.reassign(current, roomId, reason, hotelLocalDate, quoteToken, actor(context));
       if (!result.ok || !result.reassignment) throw new Error("destination unavailable");
       return context.json({
         id,
@@ -82,10 +83,42 @@ export function createLifecycleRoutes(): LifecycleApp {
           end_date_exclusive: result.reassignment.remainingInterval.endDateExclusive,
         },
         total_cents: result.reassignment.totalCents,
+        previous_total_cents: result.reassignment.previousTotalCents,
+        price_delta_cents: result.reassignment.priceDeltaCents,
       });
     } catch {
       throw ApiError.conflict("Room reassignment failed without changing the booking");
     }
+  });
+
+  app.post("/bookings/:id/reassignment-quote", async context => {
+    requireLifecycle(context);
+    const body = await jsonBody<LifecycleBody>(context.req.raw);
+    const roomId = requiredText(body.room_id, "room_id", 1, 100);
+    const id = context.req.param("id");
+    const repository = new D1LifecycleRepository(context.get("operationalDatabase"));
+    const current = await repository.findBooking(id);
+    if (!current) throw ApiError.notFound("Booking not found");
+    if (current.status !== "CHECKED_IN") throw ApiError.conflict("Only checked-in bookings can be repriced by reassignment");
+    const hotelLocalDate = context.get("hotelTime")?.localDate;
+    if (!validHotelLocalDate(hotelLocalDate)) throw ApiError.unavailable("Hotel-local date context is unavailable");
+    const quote = await repository.quoteReassignment(current, roomId, hotelLocalDate);
+    if (!quote) throw ApiError.conflict("Room or booking is not eligible for a current reassignment quote");
+    return context.json({
+      booking_id: quote.bookingId,
+      current_room_id: quote.currentRoomId,
+      destination_room_id: quote.destinationRoomId,
+      hotel_local_date: quote.hotelLocalDate,
+      effective_date: quote.effectiveDate,
+      check_out: quote.checkOut,
+      destination_rate_cents: quote.destinationRateCents,
+      lodging_total_cents: quote.lodgingTotalCents,
+      extra_charges_cents: quote.extraChargesCents,
+      current_total_cents: quote.currentTotalCents,
+      new_total_cents: quote.newTotalCents,
+      delta_cents: quote.deltaCents,
+      quote_token: quote.quoteToken,
+    });
   });
 
   app.post("/bookings/:id/check-out", async context => {

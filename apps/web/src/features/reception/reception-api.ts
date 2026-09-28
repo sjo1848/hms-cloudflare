@@ -1,6 +1,6 @@
 import { api } from "../../api/client";
 import type { ActiveHotelContext, Booking, ExtraCharge, FrontDeskBoard, Guest, HousekeepingBoard, Invoice, MaintenanceCase, Room } from "../../domain/types";
-import type { BookingEditForm, BookingForm, CheckInData } from "./model";
+import type { BookingEditForm, BookingForm, CheckInData, ReassignmentQuote } from "./model";
 
 export async function loadReceptionQueue() {
   const [board, rooms, guests] = await Promise.all([
@@ -56,8 +56,12 @@ export function checkInBooking(bookingId: string, data: CheckInData) {
   });
 }
 
-export function reassignBooking(bookingId: string, roomId: FormDataEntryValue | null, reason: FormDataEntryValue | null) {
-  return api(`/bookings/${bookingId}/reassign`, { method: "POST", body: JSON.stringify({ room_id: roomId, reason }) });
+export function loadReassignmentQuote(bookingId: string, roomId: string) {
+  return api<ReassignmentQuote>(`/bookings/${bookingId}/reassignment-quote`, { method: "POST", body: JSON.stringify({ room_id: roomId }) });
+}
+
+export function reassignBooking(bookingId: string, roomId: FormDataEntryValue | null, reason: FormDataEntryValue | null, quoteToken: string) {
+  return api(`/bookings/${bookingId}/reassign`, { method: "POST", body: JSON.stringify({ room_id: roomId, reason, quote_token: quoteToken }) });
 }
 
 export function checkoutBooking(bookingId: string, data: FormData) {

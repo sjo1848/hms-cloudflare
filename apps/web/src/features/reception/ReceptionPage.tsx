@@ -40,7 +40,7 @@ const reasonLabelKeys: Record<QueueReason, MessageKey> = {
 function Bookings() {
   const { t, statusLabel, formatDate, formatCurrency } = useI18n();
   const {
-    bookings, frontDeskBoard, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
+    bookings, frontDeskBoard, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, reassignQuote, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
     setCheckInStep, setCheckInData, setForm, setEditForm,
     selectCase, closeCase, refreshQueue, refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
@@ -263,8 +263,19 @@ function Bookings() {
               return <option key={room.id} value={room.id} disabled={!selectable}>{room.room_number} · {room.room_type} · {formatCurrency(room.price_cents)}{reason ? ` · ${reason}` : ""}</option>;
             })}</select></label>
             <p id="reassign-room-help" className="muted reassign-room-help">{t("reception.reassignRoomHelp")}</p>
+            {reassignTargetId && <section className="reassign-price-impact" aria-live="polite" aria-label={t("reception.reassignPriceSummary")}>
+              <h5>{t("reception.reassignPriceSummary")}</h5>
+              {reassignQuote?.destination_room_id === reassignTargetId ? <>
+                <p className="muted">{t("reception.reassignPriceNote")}</p>
+                <dl>
+                  <div><dt>{t("reception.reassignCurrentTotal")}</dt><dd>{formatCurrency(reassignQuote.current_total_cents)}</dd></div>
+                  <div><dt>{t("reception.reassignNewTotal")}</dt><dd>{formatCurrency(reassignQuote.new_total_cents)}</dd></div>
+                  <div><dt>{t("reception.reassignPriceDifference")}</dt><dd>{reassignQuote.delta_cents > 0 ? t("reception.reassignIncrease", { amount: formatCurrency(reassignQuote.delta_cents) }) : reassignQuote.delta_cents < 0 ? t("reception.reassignCredit", { amount: formatCurrency(Math.abs(reassignQuote.delta_cents)) }) : t("reception.reassignNoPriceChange")}</dd></div>
+                </dl>
+              </> : <p className="muted" role="status">{t("reception.reassignQuoteLoading")}</p>}
+            </section>}
             <label>{t("common.reason")} <input name="reason" minLength={6} maxLength={250} required aria-describedby="reassign-reason-help" disabled={actionBusy} /><span id="reassign-reason-help" className="field-hint">{t("reception.reassignReasonHint")}</span></label>
-            <button disabled={actionBusy || !reassignBoard}>{actionBusy ? t("reception.reassignSubmitting") : t("reception.reassignRoom")}</button>
+            <button disabled={actionBusy || !reassignBoard || !reassignQuote || reassignQuote.destination_room_id !== reassignTargetId}>{actionBusy ? t("reception.reassignSubmitting") : t("reception.reassignRoom")}</button>
           </form>
           <form onSubmit={checkout} aria-label={t("reception.checkoutAria")}>
             <h4>{t("reception.nextCheckout")}</h4>

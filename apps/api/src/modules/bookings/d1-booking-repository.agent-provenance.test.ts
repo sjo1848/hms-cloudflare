@@ -87,13 +87,17 @@ describe("D1BookingRepository ACP mutation provenance", () => {
       notes: "ACP E2E staging",
       now: "2026-08-30T02:00:00.000Z",
       claimNights: ["2027-02-10", "2027-02-11"],
+      roomRateCents: 10000,
+      roomPricingVersion: 0,
+      pricingProvenance: { actorSubject: "operator", hotelId: provenance.hotelId, requestId: "trace-create" },
       provenance,
     });
 
     expect(database.batches).toHaveLength(1);
     const batch = database.batches[0];
-    expect(batch).toHaveLength(4);
+    expect(batch).toHaveLength(5);
     expect(batch[0].sql).toContain("INSERT INTO bookings");
+    expect(batch[1].sql).toContain("INSERT INTO booking_pricing_segments");
     expect(batch.filter((statement) => statement.sql.includes("room_inventory_nights"))).toHaveLength(2);
     auditStatement(batch, "CREATE");
   });
@@ -139,6 +143,9 @@ describe("D1BookingRepository ACP mutation provenance", () => {
       notes: null,
       now: "2026-08-30T02:00:00.000Z",
       claimNights: ["2027-03-10"],
+      roomRateCents: 10000,
+      roomPricingVersion: 0,
+      pricingProvenance: { actorSubject: "operator", hotelId: "hotel-demo", requestId: "trace-create" },
     });
     expect(createCase.database.batches[0].some((statement) => statement.sql.includes("agent_mutation_events"))).toBe(false);
 

@@ -139,7 +139,7 @@ export class D1PaymentRepository implements BillingPaymentRepository {
           END,
           ?4,?5,?6,?7)`).bind(
             reconciliationEventId, write.bookingId, write.actor.subject, write.actor.requestId, write.actor.hotelId,
-            JSON.stringify({ reason: "EXTRA_CHARGE", ...auditDetails }),
+            JSON.stringify({ reason: "EXTRA_CHARGE", cause_event_id: businessEventId, charge_id: chargeId, ...auditDetails }),
             now, businessEventId, nextTotal,
           ),
     ]);

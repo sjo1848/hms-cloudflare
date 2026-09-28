@@ -56,6 +56,7 @@ describe("F0.2 shared room commands on executing D1", () => {
       db.prepare("INSERT INTO rooms (id,room_number,room_type,status,price_cents,housekeeping_state,service_state) VALUES ('room-b','102','Standard','AVAILABLE',10000,'READY','IN_SERVICE')"),
       db.prepare("INSERT INTO rooms (id,room_number,room_type,status,price_cents,housekeeping_state,service_state) VALUES ('room-c','103','Standard','DIRTY',10000,'DIRTY','IN_SERVICE')"),
       db.prepare("INSERT INTO rooms (id,room_number,room_type,status,price_cents,housekeeping_state,service_state) VALUES ('room-d','104','Standard','MAINTENANCE',10000,'READY','IN_SERVICE')"),
+      db.prepare("INSERT INTO rooms (id,room_number,room_type,status,price_cents,housekeeping_state,service_state) VALUES ('room-race','105','Standard','DIRTY',10000,'DIRTY','IN_SERVICE')"),
       db.prepare("INSERT INTO maintenance_cases (id,room_id,status,impact,priority,reason,assigned_to,reported_at) VALUES ('legacy-nonblocking','room-d','OPEN','NON_BLOCKING','LOW','Legacy mixed room evidence','maintenance','2026-09-27T12:00:00.000Z')"),
     ]);
 
@@ -131,6 +132,14 @@ describe("F0.2 shared room commands on executing D1", () => {
     const successfulEvents = await db.prepare("SELECT event_type,actor_subject,request_id,hotel_id FROM housekeeping_events ORDER BY rowid").all<any>();
     expect(successfulEvents.results.map((event) => event.event_type)).toEqual(["CLEANING_START", "MAINTENANCE_OPEN", "CLEANING_FINISH", "MAINTENANCE_RESOLVE", "MAINTENANCE_OPEN", "MAINTENANCE_RESOLVE", "MAINTENANCE_OPEN"]);
     expect(successfulEvents.results.every((event) => event.actor_subject === "operator-synthetic" && event.hotel_id === "hotel-synthetic" && event.request_id.startsWith("request-"))).toBe(true);
+
+    const raceResults = await Promise.all([
+      post("/housekeeping/room-race/start"),
+      post("/housekeeping/room-race/start"),
+    ]);
+    expect(raceResults.map((response) => response.status).sort()).toEqual([200, 409]);
+    expect(await db.prepare("SELECT status,housekeeping_state,room_state_version FROM rooms WHERE id='room-race'").first()).toEqual({ status: "CLEANING", housekeeping_state: "CLEANING", room_state_version: 1 });
+    expect(await db.prepare("SELECT COUNT(*) AS count FROM housekeeping_events WHERE room_id='room-race' AND event_type='CLEANING_START' AND json_extract(details_json,'$.room_state_version_after')=1").first()).toEqual({ count: 1 });
 
     await db.batch([
       db.prepare("UPDATE rooms SET status='CLEANING',housekeeping_state='CLEANING',room_state_version=1 WHERE id='room-c' AND room_state_version=0"),

@@ -62,11 +62,13 @@ export function createBookingRoutes(): BookingApp {
     const notes = optionalNotes(body.notes);
     const repository = new D1BookingRepository(context.get("operationalDatabase"));
     const id = crypto.randomUUID(); const now = new Date().toISOString(); const claimNights = nights(range.start, range.end);
-    const priceCents = await repository.validateReferences(guestId, roomId, null, range.start, range.end);
-    if (priceCents == null) throw ApiError.conflict("Guest, room or availability is invalid");
-    const total = bookingTotal(priceCents, claimNights.length);
+    const pricing = await repository.validatePricingReferences(guestId, roomId, null, range.start, range.end);
+    if (!pricing) throw ApiError.conflict("Guest, room or availability is invalid");
+    const total = bookingTotal(pricing.priceCents, claimNights.length);
     try {
-      await repository.create({ id, guestId, roomId, start: range.start, end: range.end, totalCents: total, notes, now, claimNights });
+      await repository.create({ id, guestId, roomId, start: range.start, end: range.end, totalCents: total, notes, now, claimNights,
+        roomRateCents: pricing.priceCents, roomPricingVersion: pricing.pricingVersion,
+        pricingProvenance: { actorSubject: context.get("identity").subject, hotelId: context.get("membership").hotelId, requestId: context.get("requestId") } });
     } catch { throw ApiError.conflict("Room is unavailable for one or more nights"); }
     const row = await repository.find(id);
     if (!row) throw ApiError.conflict("Guest, room or availability is invalid");
@@ -101,9 +103,11 @@ export function createBookingRoutes(): BookingApp {
       const range = dateRange(body.check_in ?? current.check_in, body.check_out ?? current.check_out);
       const notes = optionalNotes(body.notes, current.notes);
       const claimNights = nights(range.start, range.end);
-      const priceCents = await repository.validateReferences(guestId, roomId, id, range.start, range.end);
-      if (priceCents == null) throw ApiError.conflict("Guest, room or availability is invalid");
-      const total = bookingTotal(priceCents, claimNights.length);
+      const pricing = await repository.validatePricingReferences(guestId, roomId, id, range.start, range.end);
+      if (!pricing) throw ApiError.conflict("Guest, room or availability is invalid");
+      const lodging = bookingTotal(pricing.priceCents, claimNights.length);
+      const total = lodging + await repository.extraChargeTotal(id);
+      if (!Number.isSafeInteger(total)) throw ApiError.badRequest("booking account total exceeds the supported integer range");
       try {
         assertBookingUpdateApplied(await repository.update({
           bookingId: id,
@@ -116,6 +120,9 @@ export function createBookingRoutes(): BookingApp {
           notes,
           now: new Date().toISOString(),
           claimNights,
+          roomRateCents: pricing.priceCents,
+          roomPricingVersion: pricing.pricingVersion,
+          pricingProvenance: { actorSubject: context.get("identity").subject, hotelId: context.get("membership").hotelId, requestId: context.get("requestId") },
         }));
       } catch (error) {
         if (error instanceof ApiError) throw error;

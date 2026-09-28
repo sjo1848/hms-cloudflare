@@ -35,6 +35,7 @@ When an Independent Critic finds a defect whose root cause can recur outside the
 - exact final-state assertions for every affected entity/table, including newer/current related records;
 - zero unauthorized event/audit side effects;
 - endpoint/business operation must not return success for the stale operation.
+- D1 `meta.changes` may include rows affected by triggers; do not interpret an exact count of `1` as proof that the directly targeted row changed (or any other exact count as direct-row identity). Use `RETURNING`/returned identity or another authoritative winner proof when trigger side effects are present; test the API result and durable target row together.
 
 **Origin:** CF-I04 lifecycle races; CF-I05 cleaning/maintenance concurrency review; CF-I05 REWORK-1 stale maintenance-case ABA review; F0.4 Independent Critic finding that equal-count wrong-date room-night substitution escaped count-only validation.
 

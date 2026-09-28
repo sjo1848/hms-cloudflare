@@ -20,6 +20,8 @@ export type BookingMutationProvenance = {
   traceId: string;
 };
 
+export type PricingMutationProvenance = { actorSubject: string; hotelId: string; requestId: string };
+
 export type CreateBookingRecord = {
   id: string;
   guestId: string;
@@ -30,6 +32,9 @@ export type CreateBookingRecord = {
   notes: string | null;
   now: string;
   claimNights: string[];
+  roomRateCents: number;
+  roomPricingVersion: number;
+  pricingProvenance: PricingMutationProvenance;
   provenance?: BookingMutationProvenance;
 };
 

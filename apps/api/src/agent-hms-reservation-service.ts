@@ -161,8 +161,8 @@ export class AgentHmsReservationService {
       }
 
       const claimNights = nights(range.start, range.end);
-      const priceCents = await repository.validateReferences(guestId, roomId, null, range.start, range.end);
-      if (priceCents == null) {
+      const pricing = await repository.validatePricingReferences(guestId, roomId, null, range.start, range.end);
+      if (pricing == null) {
         const raced = await repository.find(bookingId);
         if (raced && sameReservation(raced, expected)) {
           return { ok: true, data: reservationData(raced, hotelId, traceId, true) };
@@ -171,7 +171,7 @@ export class AgentHmsReservationService {
         throw ApiError.conflict("Guest, room or availability is invalid");
       }
 
-      const total = totalCents(priceCents, claimNights.length);
+      const total = totalCents(pricing.priceCents, claimNights.length);
       if (total == null) throw ApiError.badRequest("booking total exceeds the supported integer range");
 
       try {
@@ -186,6 +186,9 @@ export class AgentHmsReservationService {
           notes,
           now,
           claimNights,
+          roomRateCents: pricing.priceCents,
+          roomPricingVersion: pricing.pricingVersion,
+          pricingProvenance: { actorSubject: context.actorId, hotelId, requestId: context.traceId },
           provenance: mutationProvenance(context, hotelId),
         });
         if (createResult.meta.changes !== 1) {
