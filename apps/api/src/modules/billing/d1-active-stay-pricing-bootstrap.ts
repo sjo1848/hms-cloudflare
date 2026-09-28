@@ -37,6 +37,10 @@ function assertManifest(manifest: ActiveStayPricingManifest): void {
       throw new Error("Bootstrap manifest tenant/booking identity mismatch");
     }
     ids.add(candidate.bookingId);
+    if (!Array.isArray(candidate.sourceSnapshot.pricingSegments)
+      || candidate.sourceSnapshot.pricingSegments.some(segment => segment.bookingId !== candidate.bookingId || segment.hotelId !== manifest.hotelId)) {
+      throw new Error("Bootstrap manifest canonical pricing segment snapshot identity mismatch");
+    }
     if ((candidate.classification === "TRACEABLE_SEGMENTS") !== (candidate.segments.length > 0)) {
       throw new Error("Only traceable candidates may contain activation segments");
     }

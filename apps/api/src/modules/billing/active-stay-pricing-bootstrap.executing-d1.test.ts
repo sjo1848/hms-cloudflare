@@ -70,6 +70,21 @@ async function seedTraceable(db: D1Database) {
     VALUES('payment-a','invoice-a','stay-a',5000,'CARD','receipt-a','synthetic deposit','synthetic-actor','2026-09-20T02:30:00.000Z','f06-payment-a')`).run();
 }
 
+async function seedExistingCanonicalSegments(db: D1Database) {
+  await db.prepare("UPDATE bookings SET last_pricing_operation_token='existing-segment-1' WHERE id='stay-a'").run();
+  await db.prepare(`INSERT INTO booking_pricing_segments
+    (segment_id,booking_id,room_id,effective_start,effective_end,rate_cents,room_pricing_version,segment_version,
+     operation_token,actor_subject,hotel_id,request_id,created_at)
+    VALUES('existing-segment-1','stay-a','room-b','2026-09-20','2026-09-21',8000,1,1,
+      'existing-segment-1','synthetic-legacy','synthetic-hotel','existing-request-1','2026-09-20T00:00:00.000Z')`).run();
+  await db.prepare("UPDATE bookings SET last_pricing_operation_token='existing-segment-2' WHERE id='stay-a'").run();
+  await db.prepare(`INSERT INTO booking_pricing_segments
+    (segment_id,booking_id,room_id,effective_start,effective_end,rate_cents,room_pricing_version,segment_version,
+     operation_token,actor_subject,hotel_id,request_id,created_at)
+    VALUES('existing-segment-2','stay-a','room-b','2026-09-21','2026-09-23',12000,1,2,
+      'existing-segment-2','synthetic-legacy','synthetic-hotel','existing-request-2','2026-09-20T00:00:01.000Z')`).run();
+}
+
 async function sourceFor(db: D1Database, bookingId: string, historicalRates: HistoricalRateEvidence[] = sourceRates, hotelId = "synthetic-hotel"): Promise<ActiveStayPricingSource> {
   const b = await db.prepare(`SELECT id,status,room_id,check_in,check_out,total_cents,pricing_version,last_pricing_operation_token,updated_at
     FROM bookings WHERE id=?1`).bind(bookingId).first<any>();
@@ -85,6 +100,9 @@ async function sourceFor(db: D1Database, bookingId: string, historicalRates: His
     FROM invoices WHERE booking_id=?1`).bind(bookingId).first<any>();
   const payments = invoice ? await db.prepare(`SELECT id,booking_id,amount_cents,payment_method,payment_reference,note,received_by_user_id,received_at,operation_token
     FROM payment_entries WHERE invoice_id=?1 ORDER BY id`).bind(invoice.id).all<any>() : { results: [] };
+  const pricingSegments = await db.prepare(`SELECT segment_id,booking_id,room_id,effective_start,effective_end,rate_cents,
+    room_pricing_version,segment_version,operation_token,actor_subject,hotel_id,request_id,created_at
+    FROM booking_pricing_segments WHERE booking_id=?1 ORDER BY segment_version,segment_id`).bind(bookingId).all<any>();
   return {
     hotelId, currencyBasis: "ARS", booking: {
       id: b.id, status: b.status, roomId: b.room_id, checkIn: b.check_in, checkOut: b.check_out,
@@ -93,6 +111,13 @@ async function sourceFor(db: D1Database, bookingId: string, historicalRates: His
     },
     rooms: rooms.results.map(row => ({ id: row.id, priceCents: row.price_cents, pricingVersion: row.pricing_version,
       inventoryVersion: row.inventory_version, roomStateVersion: row.room_state_version })),
+    pricingSegments: pricingSegments.results.map(row => ({
+      segmentId: row.segment_id, bookingId: row.booking_id, roomId: row.room_id,
+      effectiveStart: row.effective_start, effectiveEnd: row.effective_end, rateCents: row.rate_cents,
+      roomPricingVersion: row.room_pricing_version, segmentVersion: row.segment_version,
+      operationToken: row.operation_token, actorSubject: row.actor_subject, hotelId: row.hotel_id,
+      requestId: row.request_id, createdAt: row.created_at,
+    })),
     inventory: inventory.results.map(row => ({ roomId: row.room_id, stayDate: row.stay_date, bookingId: row.booking_id })),
     charges: charges.results.map(row => ({ id: row.id, amountCents: row.amount_cents, description: row.description,
       category: row.category, createdAt: row.created_at })),
@@ -255,6 +280,55 @@ describe("F0.6 active-stay bootstrap classifier and D1 shadow/activation", () =>
       .rejects.toThrow(/No traceable synthetic stay/);
     expect(await productSnapshot(db, "stay-a")).toEqual(before);
     expect(await db.prepare("SELECT COUNT(*) count FROM booking_pricing_segments WHERE booking_id='stay-a'").first()).toEqual({ count: 0 });
+  }, 30_000);
+
+  it("holds an already segmented canonical stay without layering bootstrap segments over F0.5 pricing", async () => {
+    const db = await database();
+    await seedTraceable(db);
+    await seedExistingCanonicalSegments(db);
+    const before = await productSnapshot(db, "stay-a");
+    const manifest = await createActiveStayPricingManifest("synthetic-hotel", [await sourceFor(db, "stay-a")]);
+    expect(manifest.candidates[0]).toMatchObject({
+      classification: "ORPHAN_OR_CONFLICT",
+      blockers: expect.arrayContaining(["CANONICAL_PRICING_SEGMENTS_PRESENT"]),
+      segments: [],
+    });
+
+    await stageActiveStayPricingManifest(db as unknown as OperationalDatabase, manifest, "2026-09-24T00:00:00.000Z");
+    expect(await db.prepare("SELECT status FROM active_stay_bootstrap_candidates WHERE booking_id='stay-a'").first())
+      .toEqual({ status: "HELD" });
+    await expect(activateSyntheticActiveStayPricing(db as unknown as OperationalDatabase, manifest,
+      { subject: "synthetic", requestId: "already-segmented-attempt" }, "2026-09-24T00:01:00.000Z"))
+      .rejects.toThrow(/No traceable synthetic stay/);
+    expect(await productSnapshot(db, "stay-a")).toEqual(before);
+    expect(await db.prepare("SELECT COUNT(*) count FROM booking_pricing_segments WHERE booking_id='stay-a'").first()).toEqual({ count: 2 });
+  }, 30_000);
+
+  it("rejects a canonical segment set added after shadowing even when booking version fields are restored", async () => {
+    const db = await database();
+    await seedTraceable(db);
+    const source = await sourceFor(db, "stay-a");
+    const manifest = await createActiveStayPricingManifest("synthetic-hotel", [source]);
+    await stageActiveStayPricingManifest(db as unknown as OperationalDatabase, manifest, "2026-09-24T00:00:00.000Z");
+    await db.prepare("UPDATE bookings SET last_pricing_operation_token='external-segment' WHERE id='stay-a'").run();
+    await db.prepare(`INSERT INTO booking_pricing_segments
+      (segment_id,booking_id,room_id,effective_start,effective_end,rate_cents,room_pricing_version,segment_version,
+       operation_token,actor_subject,hotel_id,request_id,created_at)
+      VALUES('external-segment','stay-a','room-b','2026-09-20','2026-09-23',10000,1,1,
+        'external-segment','synthetic-external','synthetic-hotel','external-request','2026-09-24T00:00:30.000Z')`).run();
+    await db.prepare(`UPDATE bookings SET pricing_version=?2,last_pricing_operation_token=?3,updated_at=?4 WHERE id=?1`)
+      .bind(source.booking.id, source.booking.pricingVersion, source.booking.lastPricingOperationToken, source.booking.updatedAt).run();
+    const beforeAttempt = await productSnapshot(db, "stay-a");
+    expect(beforeAttempt.booking).toMatchObject({ pricing_version: 0, last_pricing_operation_token: null });
+    expect(beforeAttempt.segments).toHaveLength(1);
+
+    await expect(activateSyntheticActiveStayPricing(db as unknown as OperationalDatabase, manifest,
+      { subject: "synthetic", requestId: "segment-set-stale-attempt" }, "2026-09-24T00:01:00.000Z"))
+      .rejects.toThrow(/canonical pricing segment snapshot is stale/i);
+    expect(await productSnapshot(db, "stay-a")).toEqual(beforeAttempt);
+    expect(await db.prepare("SELECT status FROM active_stay_bootstrap_runs").first()).toEqual({ status: "SHADOWED" });
+    expect(await db.prepare("SELECT status FROM active_stay_bootstrap_candidates WHERE booking_id='stay-a'").first())
+      .toEqual({ status: "SHADOWED" });
   }, 30_000);
 
   it("converges concurrent activation attempts without duplicate segments or financial drift", async () => {

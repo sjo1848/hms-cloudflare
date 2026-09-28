@@ -17,6 +17,22 @@ export type HistoricalRateEvidence = {
   sourceRateVersion: number;
 };
 
+export type CanonicalPricingSegmentSnapshot = {
+  segmentId: string;
+  bookingId: string;
+  roomId: string;
+  effectiveStart: string;
+  effectiveEnd: string;
+  rateCents: number;
+  roomPricingVersion: number;
+  segmentVersion: number;
+  operationToken: string;
+  actorSubject: string;
+  hotelId: string;
+  requestId: string;
+  createdAt: string;
+};
+
 export type ActiveStayPricingSource = {
   hotelId: string;
   currencyBasis: string;
@@ -32,6 +48,7 @@ export type ActiveStayPricingSource = {
     updatedAt: string;
   };
   rooms: Array<{ id: string; priceCents: number; pricingVersion: number; inventoryVersion: number; roomStateVersion: number }>;
+  pricingSegments: CanonicalPricingSegmentSnapshot[];
   inventory: Array<{ roomId: string; stayDate: string; bookingId: string }>;
   charges: Array<{ id: string; amountCents: number; description: string; category: string; createdAt: string }>;
   invoice: null | {
@@ -113,6 +130,19 @@ function classify(source: ActiveStayPricingSource, baselineDigest: string): Acti
   const booking = source.booking;
   const roomIds = new Set(source.rooms.map(room => room.id));
   if (roomIds.size !== source.rooms.length) blockers.push("DUPLICATE_ROOM_SNAPSHOT_ID");
+  const pricingSegmentIds = new Set<string>();
+  for (const segment of source.pricingSegments) {
+    if (pricingSegmentIds.has(segment.segmentId)) blockers.push("DUPLICATE_CANONICAL_PRICING_SEGMENT_ID");
+    pricingSegmentIds.add(segment.segmentId);
+    if (segment.bookingId !== booking.id || segment.hotelId !== source.hotelId || !segment.segmentId || !segment.operationToken
+      || !segment.actorSubject || !segment.requestId || !safeCents(segment.rateCents)
+      || !Number.isSafeInteger(segment.roomPricingVersion) || segment.roomPricingVersion < 0
+      || !Number.isSafeInteger(segment.segmentVersion) || segment.segmentVersion <= 0
+      || !isValidDate(segment.effectiveStart) || !isValidDate(segment.effectiveEnd) || segment.effectiveStart >= segment.effectiveEnd) {
+      blockers.push("CANONICAL_PRICING_SEGMENT_SNAPSHOT_INVALID");
+    }
+  }
+  if (source.pricingSegments.length > 0) blockers.push("CANONICAL_PRICING_SEGMENTS_PRESENT");
   const chargeIds = new Set<string>();
   const paymentIds = new Set<string>();
   let accountTotal = booking.totalCents;
@@ -221,7 +251,7 @@ function classify(source: ActiveStayPricingSource, baselineDigest: string): Acti
 
   const normalizedBlockers = uniqueStrings(blockers);
   let classification: ActiveStayClassification;
-  if (normalizedBlockers.some(code => ["BOOKING_NOT_CHECKED_IN", "CURRENT_ROOM_MISSING_OR_FOREIGN", "CURRENT_ROOM_HISTORY_MISMATCH", "INVALID_STAY_INTERVAL", "DUPLICATE_ROOM_SNAPSHOT_ID", "INVENTORY_CLAIM_ORPHAN", "DUPLICATE_STAY_NIGHT_CLAIM", "OVERLAPPING_STAY_NIGHT_CLAIM", "INVENTORY_HISTORY_MISMATCH", "HISTORICAL_RATE_OVERLAP_OR_OUTSIDE_STAY", "HISTORICAL_RATE_INTERVAL_INVALID", "HISTORICAL_RATE_EVIDENCE_INVALID", "HISTORICAL_SOURCE_CONFLICT"].includes(code))) {
+  if (normalizedBlockers.some(code => ["BOOKING_NOT_CHECKED_IN", "CURRENT_ROOM_MISSING_OR_FOREIGN", "CURRENT_ROOM_HISTORY_MISMATCH", "INVALID_STAY_INTERVAL", "DUPLICATE_ROOM_SNAPSHOT_ID", "DUPLICATE_CANONICAL_PRICING_SEGMENT_ID", "CANONICAL_PRICING_SEGMENT_SNAPSHOT_INVALID", "CANONICAL_PRICING_SEGMENTS_PRESENT", "INVENTORY_CLAIM_ORPHAN", "DUPLICATE_STAY_NIGHT_CLAIM", "OVERLAPPING_STAY_NIGHT_CLAIM", "INVENTORY_HISTORY_MISMATCH", "HISTORICAL_RATE_OVERLAP_OR_OUTSIDE_STAY", "HISTORICAL_RATE_INTERVAL_INVALID", "HISTORICAL_RATE_EVIDENCE_INVALID", "HISTORICAL_SOURCE_CONFLICT"].includes(code))) {
     classification = "ORPHAN_OR_CONFLICT";
   } else if (source.invoice?.status === "VOIDED") {
     classification = "VOIDED";
