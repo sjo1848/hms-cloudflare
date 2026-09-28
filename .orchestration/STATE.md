@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active task: F0.7 exact-pair Independent Critic dispatch on immutable Artifact A `c356fd04563513859e1f6f919b02aeb48f7264c7` and orchestration-only Boundary B (this commit). F0.7 implementation/evidence is frozen; no self-approval. F0.6 A2 `1b83cc1a6832e8fb4f95dfdfa7b134021075775d` received Independent Critic `PASS_WITH_CONDITIONS`; all conditions are discharged. F0.6 is accepted as an upstream dependency only; this is not aggregate Foundation 0 PASS. Real active-stay data/bootstrap remains forbidden. No PR/push/merge, main, staging, deploy, production, or Blocks A–H.
+Active task: fresh Independent Critic dispatch on replacement F0.7 Artifact A2 `715e6a593e967f70ff9c6fd5adb2d2d4db3efd1a` + orchestration-only Boundary B2 (this commit). The prior account ABA gap is repaired by binding existing `bookings.pricing_version`; focused D1, Foundation checks, sequential CF-I03–I06 and fresh local Worker/D1/Vite checkout browser pass. Ampere's prior A1/B1 verdict remains historical and does not apply to A2. Broad product-flow runner limitation remains disclosed for aggregate reporting. F0.6 is accepted as upstream dependency only; Foundation 0 is not closed. Real data/cutover/bootstrap remain prohibited. No PR/push/merge, main, staging, deploy, production, or Blocks A–H.
 
 Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `18JGIQxyl8Bh6_w7H3eW1qdPL7jfUsdSLk43aE-G-90A`. Roadmap authority is Artifact A2 `b2581e4c370eeb6f74e9380af010e48386642b4f` and Boundary B2 `c6a4bcb9a2939505f7ddf8e72c02ec9b825f00f3`.
 
@@ -71,7 +71,7 @@ Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `
 - `npm run check`: 32 files / 144 tests PASS; types, web build, architecture/i18n/budgets, query plans, Wrangler API/Web dry-runs, staging SPA dry-run, CF-I03–I06 and `git diff --check` PASS. The broad product-flow runner limitation (missing npm `playwright`) is recorded; it is not counted PASS. Required checkout browser flow was executed separately through Playwright CLI against real Worker/D1.
 - Pre-Critic found the response-loss assertion needed explicit response discard. Regression now discards successful checkout response, resolves via authoritative read, retries and verifies one CHECK_OUT event/invoice and no fabricated payment. Final amended CF-I03 rerun exited 0; final `npm run check` passed 32 files / 144 tests; `git diff --check` passed. Evidence is committed in Artifact A.
 - No remote/customer data was read or mutated, and no cutover/bootstrap occurred. No PR, push, merge, main, staging mutation, deploy, production or Blocks A–H.
-- Artifact A is `c356fd04563513859e1f6f919b02aeb48f7264c7`; Boundary B is the current orchestration-only commit. Fresh separate Independent Critic is required before continuation. No aggregate Foundation 0 PASS is claimed.
+- Prior A/B remain immutable as reviewed history; their verdict does not apply to the replacement artifact. Replacement Artifact A2 is `715e6a593e967f70ff9c6fd5adb2d2d4db3efd1a`; Boundary B2 is the current orchestration-only commit. Fresh separate Independent Critic is required on the exact pair; no self-approval. No aggregate Foundation 0 PASS is claimed.
 
 ## HISTORICAL BOUNDARY — HMS-ROADMAP-CTRL-REWORK-001
 
