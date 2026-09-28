@@ -1,0 +1,27 @@
+{
+  "browser": {
+    "desktop": "1280x900",
+    "mobile": "375x844",
+    "dualScope": "PASS",
+    "adminRoomGuestUserControls": "visible",
+    "beforeDowngrade": 201,
+    "afterDowngrade": 403,
+    "roomActionHidden": true,
+    "userControlsHidden": true,
+    "cashCloseHidden": true,
+    "opsRoomWrite": false,
+    "housekeepingRoleAction": "visible",
+    "networkOnlyNavigation": "PASS",
+    "networkWriteAction": "visible",
+    "directDenied": "PASS",
+    "unmemberedHotel": 403,
+    "outOfOrderAuthMe": "PASS"
+  },
+  "d1": {
+    "allowedRoomCount": 1,
+    "deniedRoomCount": 0,
+    "finalRole": "receptionist",
+    "roleAuditCount": 2
+  },
+  "cleanup": "owned Worker/Vite/Playwright processes verified stopped"
+}

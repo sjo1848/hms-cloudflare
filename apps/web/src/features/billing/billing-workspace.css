@@ -23,3 +23,10 @@
     white-space: normal;
   }
 }
+.app-content:not([data-hotel-capabilities~="bookings.read"]) .billing-account-workspace,
+.app-content:not([data-hotel-capabilities~="billing.invoice.read"]) .billing-account-workspace,
+.app-content:not([data-hotel-capabilities~="bookings.extra_charges.read"]) .billing-account-workspace,
+.app-content:not([data-hotel-capabilities~="billing.balance.read"]) .billing-cash-workspace,
+.app-content:not([data-hotel-capabilities~="bookings.extra_charges.write"]) .billing-extra-charge-form,
+.app-content:not([data-hotel-capabilities~="bookings.update"]) .billing-payment-form,
+.app-content:not([data-hotel-capabilities~="billing.close_cash.write"]) .billing-close-cash-form { display: none; }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import app from "./index";
+import { capabilitiesForRole, ROLE_CAPABILITIES } from "./auth/capabilities";
 
 describe("API foundation", () => {
   const database = (result: { ready: number } | null, rejects = false) => ({
@@ -96,9 +97,111 @@ describe("API foundation", () => {
       hotel_id: "hotel-a",
       hotel_name: "Hotel Norte",
       hotel_timezone: "America/Argentina/Mendoza",
+      capabilities: {
+        hotel: capabilitiesForRole("receptionist"),
+        network: [],
+      },
     });
     expect(payload.hotel_local_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(payload.server_now).toMatch(/Z$/);
+  });
+
+  it("keeps network capabilities separate for a network-only identity", async () => {
+    const control = {
+      prepare: (query: string) => ({
+        bind: (...values: string[]) => ({
+          first: async () => query.includes("network_memberships") ? { role: "saas_admin" } : null,
+          all: async () => ({ results: [] }),
+        }),
+      }),
+    } as unknown as D1Database;
+    const response = await app.request("http://127.0.0.1/api/v1/auth/me", {
+      headers: { "x-local-access-subject": "network-only", "x-local-access-email": "network@example.test" },
+    }, {
+      ENVIRONMENT: "development",
+      LOCAL_DEV_AUTH: "true",
+      CONTROL_DB: control,
+      HOTEL_DEMO_DB: control,
+      HOTEL_SECOND_DB: control,
+    });
+
+    expect(response.status).toBe(200);
+    const payload = await response.json() as { hotel_id: string | null; capabilities: { hotel: string[]; network: string[] } };
+    expect(payload.hotel_id).toBeNull();
+    expect(payload.capabilities).toEqual({ hotel: [], network: capabilitiesForRole("saas_admin") });
+  });
+
+  it("denies /auth/me to an authenticated identity without any hotel or network membership", async () => {
+    const control = {
+      prepare: () => ({
+        bind: () => ({
+          first: async () => null,
+          all: async () => ({ results: [] }),
+        }),
+      }),
+    } as unknown as D1Database;
+    const response = await app.request("http://127.0.0.1/api/v1/auth/me", {
+      headers: { "x-local-access-subject": "unmembered", "x-local-access-email": "unmembered@example.test" },
+    }, {
+      ENVIRONMENT: "development",
+      LOCAL_DEV_AUTH: "true",
+      CONTROL_DB: control,
+      HOTEL_DEMO_DB: control,
+      HOTEL_SECOND_DB: control,
+    });
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: "FORBIDDEN" } });
+  });
+
+  it.each(Object.keys(ROLE_CAPABILITIES))("exposes the exact server capability set for canonical role %s", async role => {
+    const control = {
+      prepare: (query: string) => ({
+        bind: (...values: string[]) => ({
+          first: async () => query.includes("network_memberships") ? (role === "saas_admin" ? { role } : null) : { name: "Hotel Norte" },
+          all: async () => role === "saas_admin" ? { results: [] } : { results: [{ hotel_id: "hotel-a", role, email: "a@example.test", operational_binding: "HOTEL_DEMO_DB", timezone: "America/Argentina/Mendoza" }] },
+        }),
+      }),
+    } as unknown as D1Database;
+    const response = await app.request("http://127.0.0.1/api/v1/auth/me", {
+      headers: { "x-local-access-subject": `subject-${role}`, "x-local-access-email": `${role}@example.test`, "x-hotel-id": "hotel-a" },
+    }, {
+      ENVIRONMENT: "development",
+      LOCAL_DEV_AUTH: "true",
+      CONTROL_DB: control,
+      HOTEL_DEMO_DB: control,
+      HOTEL_SECOND_DB: control,
+    });
+
+    expect(response.status).toBe(200);
+    const payload = await response.json() as { capabilities: { hotel: string[]; network: string[] } };
+    expect(payload.capabilities).toEqual({
+      hotel: role === "saas_admin" ? [] : capabilitiesForRole(role),
+      network: role === "saas_admin" ? capabilitiesForRole(role) : [],
+    });
+  });
+
+  it("fails closed for an authenticated membership with an unknown role", async () => {
+    const control = {
+      prepare: (query: string) => ({
+        bind: (...values: string[]) => ({
+          first: async () => query.includes("network_memberships") ? null : { name: "Hotel Norte" },
+          all: async () => ({ results: [{ hotel_id: "hotel-a", role: "future_unknown_role", email: "a@example.test", operational_binding: "HOTEL_DEMO_DB", timezone: "America/Argentina/Mendoza" }] }),
+        }),
+      }),
+    } as unknown as D1Database;
+    const response = await app.request("http://127.0.0.1/api/v1/auth/me", {
+      headers: { "x-local-access-subject": "unknown-role", "x-local-access-email": "unknown@example.test", "x-hotel-id": "hotel-a" },
+    }, {
+      ENVIRONMENT: "development",
+      LOCAL_DEV_AUTH: "true",
+      CONTROL_DB: control,
+      HOTEL_DEMO_DB: control,
+      HOTEL_SECOND_DB: control,
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ capabilities: { hotel: [], network: [] } });
   });
 
 });

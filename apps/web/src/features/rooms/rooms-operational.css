@@ -152,3 +152,11 @@
   .rooms-edit-actions { display: grid; grid-template-columns: 1fr; }
   .rooms-edit-actions button { width: 100%; }
 }
+.app-content:not([data-hotel-capabilities~="rooms.write"]) .rooms-heading-actions > button,
+.app-content:not([data-hotel-capabilities~="rooms.write"]) .rooms-create-form,
+.app-content:not([data-hotel-capabilities~="rooms.write"]) .rooms-edit-trigger,
+.app-content:not([data-hotel-capabilities~="rooms.write"]) .rooms-edit-form,
+.app-content:not([data-hotel-capabilities~="rooms.write"]) .rooms-detail > form.resource-subform,
+.app-content:not([data-hotel-capabilities~="rooms.write"]) .hold-row > button {
+  display: none;
+}

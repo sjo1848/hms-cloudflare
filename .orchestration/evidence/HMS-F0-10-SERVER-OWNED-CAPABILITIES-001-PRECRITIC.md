@@ -20,3 +20,14 @@ Task Contract: `.orchestration/contracts/HMS-F0-10-SERVER-OWNED-CAPABILITIES-001
 `PRE-CRITIC: PASS FOR CONTRACT FREEZE / IMPLEMENTATION MAY BEGIN`
 
 This is a pre-implementation admission check, not implementation validation, Independent Critic, F0.10 Development Gate, or aggregate Foundation 0 PASS. No product code has been changed for F0.10 at this point.
+
+## Final post-implementation evidence cross-check
+
+- The exact protected route/control map and bounded repair are recorded in `.orchestration/contracts/HMS-F0-10-REPAIR-CAPABILITY-CONTROL-MAPPING-001.md`; the actual `bookings.write` lifecycle guard is preserved. No route, grant or auth boundary changed.
+- Existing middleware behavior is preserved: network-only identities can load `/auth/me` with an empty hotel capability scope; identities with neither hotel nor network membership receive 403. This does not grant new access.
+- `npm run check` PASS (33 files/168 tests), `npm run types:check`, `npm run web:build`, `npm run architecture:fitness`, `npm run test:d1-query-plan`, `npm run wrangler:dry-run` PASS. Serial CF-I03/04, CF-I05, CF-I06, CF-I07 PASS.
+- Final real local Worker/D1/Vite/browser runner passed desktop 1280×900/mobile 375×844, role visibility, two hotel scopes, network-only context, same-subject downgrade and delayed stale `/auth/me` response. It asserted zero denied room mutation and runner process cleanup. Exact results: `output/playwright/f0-10-capabilities-integrated-result.json`.
+- Final raw JS is 299,981/300,000 bytes. It is under ceiling but leaves 19 bytes of raw headroom; this is not a comfortable reserve.
+- No production, remote environment, real data, migration or deployment was touched.
+
+`POST-IMPLEMENTATION PRE-CRITIC: PASS — exact Artifact A + orchestration-only Boundary B may be submitted to a separate Independent Critic. No self-acceptance is claimed.`

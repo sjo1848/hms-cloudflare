@@ -19,6 +19,7 @@ import { OperationalRoutingError, resolveOperationalDatabase } from "./routing";
 import { createAnalyticsRoutes } from "./routes/analytics";
 import { createFrontDeskRoutes } from "./routes/front-desk";
 import { createHotelTimeContext } from "./time/hotel-time";
+import { capabilitiesForRole } from "./auth/capabilities";
 
 const app = new Hono<{ Bindings: Env; Variables: ApiVariables }>();
 
@@ -138,6 +139,10 @@ app.get("/api/v1/auth/me", async (context) => {
     hotel_id: membership?.hotelId ?? null,
     hotel_name: hotel?.name ?? null,
     role: membership?.role ?? null,
+    capabilities: {
+      hotel: capabilitiesForRole(membership?.role),
+      network: capabilitiesForRole(networkRole),
+    },
     operational_binding: membership?.operationalBinding ?? null,
     hotel_timezone: membership?.timeZone ?? null,
     hotel_local_date: context.get("hotelTime")?.localDate ?? null,

@@ -1,14 +1,16 @@
 import type { MessageKey } from "../i18n";
 
+export type NavigationAccess = { scope: "hotel" | "network"; allOf: readonly string[] };
+
 export const navigation = [
-  ["bookings", "/bookings", "nav.reception", "nav.receptionDescription"],
-  ["rooms", "/rooms", "nav.rooms", "nav.roomsDescription"],
-  ["guests", "/guests", "nav.guests", "nav.guestsDescription"],
-  ["housekeeping", "/housekeeping", "nav.housekeeping", "nav.housekeepingDescription"],
-  ["reports", "/reports", "nav.reports", "nav.reportsDescription"],
-  ["users", "/users", "nav.users", "nav.usersDescription"],
-  ["network", "/network", "nav.network", "nav.networkDescription"],
-] as const satisfies ReadonlyArray<readonly [string, string, MessageKey, MessageKey]>;
+  ["bookings", "/bookings", "nav.reception", "nav.receptionDescription", { scope: "hotel", allOf: ["bookings.read"] }],
+  ["rooms", "/rooms", "nav.rooms", "nav.roomsDescription", { scope: "hotel", allOf: ["rooms.read"] }],
+  ["guests", "/guests", "nav.guests", "nav.guestsDescription", { scope: "hotel", allOf: ["guests.read"] }],
+  ["housekeeping", "/housekeeping", "nav.housekeeping", "nav.housekeepingDescription", { scope: "hotel", allOf: ["housekeeping.read"] }],
+  ["reports", "/reports", "nav.reports", "nav.reportsDescription", { scope: "hotel", allOf: ["reports.revenue.read", "reports.occupancy.read"] }],
+  ["users", "/users", "nav.users", "nav.usersDescription", { scope: "hotel", allOf: ["users.read"] }],
+  ["network", "/network", "nav.network", "nav.networkDescription", { scope: "network", allOf: ["saas.hotels.read"] }],
+] as const satisfies ReadonlyArray<readonly [string, string, MessageKey, MessageKey, NavigationAccess]>;
 
 export type PageKey = typeof navigation[number][0];
 export function pageFromPath(pathname: string): PageKey {

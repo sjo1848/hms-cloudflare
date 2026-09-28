@@ -1,0 +1,4 @@
+.app-content:not([data-network-capabilities~="saas.hotels.write"]) .network-operational details,
+.app-content:not([data-network-capabilities~="saas.hotels.write"]) .network-detail select {
+  display: none;
+}

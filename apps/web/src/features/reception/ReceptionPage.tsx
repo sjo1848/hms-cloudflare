@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { BillingWorkspace } from "../billing/BillingWorkspace";
 import { StatusBadge } from "../../components/StatusBadge";
 import { DropdownMenu, DropdownMenuItem } from "../../components/ui/dropdown-menu";
 import { useReceptionWorkspace } from "./useReceptionWorkspace";
 import { useI18n } from "../../i18n";
+import { CapabilitiesContext } from "../../app/capabilities";
 import type { MessageKey } from "../../i18n";
 import { filterQueue, queueCounts, queueFilters } from "./queue";
 import type { QueueFilter, QueueLane, QueueReason } from "./queue";
@@ -39,6 +40,9 @@ const reasonLabelKeys: Record<QueueReason, MessageKey> = {
 
 function Bookings() {
   const { t, statusLabel, formatDate, formatCurrency } = useI18n();
+  const { hotel } = useContext(CapabilitiesContext);
+  const canWriteBookings = hotel.includes("bookings.write");
+  const canCreateGuest = hotel.includes("guests.write");
   const {
     bookings, frontDeskBoard, rooms, guests, recoverableOperations, newGuestMode, newGuest, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, reassignQuote, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
@@ -165,14 +169,14 @@ function Bookings() {
       <div><p className="eyebrow">{t("reception.eyebrow")}</p><h2>{t("reception.title")}</h2><p className="muted">{t("reception.subtitle")}</p></div>
       <div className="reception-heading-actions">
         <span className="case-count">{t("reception.queueSummary", { attention: counts.attention, all: counts.all })}</span>
-        <button type="button" className="secondary-button reception-create-trigger" onClick={() => setShowCreate(current => !current)}>{showCreate ? t("common.close") : t("reception.createBooking")}</button>
+        {canWriteBookings && <button type="button" className="secondary-button reception-create-trigger" onClick={() => setShowCreate(current => !current)}>{showCreate ? t("common.close") : t("reception.createBooking")}</button>}
       </div>
     </div>
 
-    {showCreate && <form onSubmit={submit} aria-label={t("reception.createAria")} className="case-create reception-create-panel">
+    {showCreate && canWriteBookings && <form onSubmit={submit} aria-label={t("reception.createAria")} className="case-create reception-create-panel">
       <h3>{t("reception.openCase")}</h3>
-      <label><input type="checkbox" checked={newGuestMode} onChange={event => setNewGuestMode(event.target.checked)} />{t("guests.add")}</label>
-      {newGuestMode ? <>
+      {canCreateGuest && <label><input type="checkbox" checked={newGuestMode} onChange={event => setNewGuestMode(event.target.checked)} />{t("guests.add")}</label>}
+      {newGuestMode && canCreateGuest ? <>
         <input required autoComplete="name" aria-label={t("guests.fullName")} placeholder={t("guests.namePlaceholder")} value={newGuest.full_name} onChange={event => setNewGuest({ ...newGuest, full_name: event.target.value })} />
         <input required type="email" autoComplete="email" aria-label={t("reception.guestEmail")} placeholder={t("reception.guestEmail")} value={newGuest.email} onChange={event => setNewGuest({ ...newGuest, email: event.target.value })} />
         <input type="tel" autoComplete="tel" aria-label={t("guests.phone")} placeholder={t("guests.phone")} value={newGuest.phone} onChange={event => setNewGuest({ ...newGuest, phone: event.target.value })} />
@@ -245,9 +249,9 @@ function Bookings() {
           <StatusBadge>{statusLabel(selected.status)}</StatusBadge>
         </div>
 
-        {selected.status === "Confirmed" && selectedBoardItem?.lane === "arrival" && <div className="reception-arrival-actions"><button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button><DropdownMenu label={t("reception.moreActions")}><DropdownMenuItem onClick={() => setShowArrivalEdit(current => !current)}>{showArrivalEdit ? t("common.close") : t("reception.editAria")}</DropdownMenuItem><DropdownMenuItem onClick={clearSelectedCase}>{t("reception.closeCase")}</DropdownMenuItem></DropdownMenu></div>}
+        {selected.status === "Confirmed" && selectedBoardItem?.lane === "arrival" && <div className="reception-arrival-actions">{canWriteBookings && <button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button>}<DropdownMenu label={t("reception.moreActions")}>{canWriteBookings && <DropdownMenuItem onClick={() => setShowArrivalEdit(current => !current)}>{showArrivalEdit ? t("common.close") : t("reception.editAria")}</DropdownMenuItem>}<DropdownMenuItem onClick={clearSelectedCase}>{t("reception.closeCase")}</DropdownMenuItem></DropdownMenu></div>}
 
-        {selected.status === "Confirmed" && (selectedBoardItem?.lane !== "arrival" || showArrivalEdit) ? <form onSubmit={saveEdit} aria-label={t("reception.editAria")}>
+        {selected.status === "Confirmed" && canWriteBookings && (selectedBoardItem?.lane !== "arrival" || showArrivalEdit) ? <form onSubmit={saveEdit} aria-label={t("reception.editAria")}>
           <h4>{t("reception.stayDetails")}</h4>
           <label>{t("common.guest")} <select aria-label={t("reception.editGuest")} value={editForm.guest_id} onChange={e => setEditForm({ ...editForm, guest_id: e.target.value })} required>{guests.map(guest => <option key={guest.id} value={guest.id}>{guest.full_name}</option>)}</select></label>
           <label>{t("common.room")} <select aria-label={t("reception.editRoom")} value={editForm.room_id} onChange={e => setEditForm({ ...editForm, room_id: e.target.value })} required><option value="">{t("reception.selectRoomDates")}</option>{editAvailableRooms.map(room => <option key={room.id} value={room.id}>{room.room_number} · {room.room_type}</option>)}</select></label>
@@ -259,9 +263,9 @@ function Bookings() {
           <button type="button" onClick={clearSelectedCase}>{t("reception.closeCase")}</button>
         </form> : selected.status !== "Confirmed" ? <div className="locked-stay-details"><h4>{t("reception.stayDetails")}</h4><p className="muted">{t("reception.assignmentLocked")}</p></div> : null}
 
-        {selected.status === "Confirmed" && selectedBoardItem?.lane !== "arrival" && <button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button>}
+        {selected.status === "Confirmed" && selectedBoardItem?.lane !== "arrival" && canWriteBookings && <button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button>}
 
-        {selected.status === "CheckedIn" && <>
+        {selected.status === "CheckedIn" && canWriteBookings && <>
           <form onSubmit={reassign} aria-label={t("reception.reassignAria")} className="reassign-surface">
             <div className="reassign-surface-heading"><div><p className="eyebrow">{t("reception.reassignContext")}</p><h4>{t("reception.nextReassign")}</h4><p className="muted">{t("reception.reassignStayContext", { room: selected.room_number, checkout: formatDate(selected.check_out) })}</p></div><span className="reassign-date-chip">{effectiveDate ? formatDate(effectiveDate) : t("common.loading")}</span></div>
             <div className="reassign-room-summary"><div><span className="muted">{t("reception.reassignCurrentRoom")}</span><strong>{selected.room_number}</strong></div><span aria-hidden="true">→</span><div><span className="muted">{t("reception.reassignDestinationRoom")}</span><strong>{t("reception.reassignChooseRoom")}</strong></div></div>

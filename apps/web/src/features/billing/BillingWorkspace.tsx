@@ -230,7 +230,7 @@ function BillingPanel() {
 
   const chargeLocked = Boolean(pendingCharge) || submittingCharge || chargeRecovery === "conflict";
   return (
-    <section className="billing-workspace">
+    <section className="billing-workspace billing-account-workspace">
       <div className="workspace-heading">
         <div>
           <p className="eyebrow">{t("billing.finance")}</p>
@@ -265,7 +265,7 @@ function BillingPanel() {
             {" "}{t("billing.remaining")} {formatCurrency(Math.max(0, (invoice?.amount_cents ?? selected.total_cents) - (invoice?.paid_amount_cents ?? 0)))} ·
             {" "}{statusLabel(invoice?.status ?? "PENDING")}
           </p>
-          <form onSubmit={submitCharge} aria-label={t("billing.extraChargeAria")}>
+          <form className="billing-extra-charge-form" onSubmit={submitCharge} aria-label={t("billing.extraChargeAria")}>
             <input
               required aria-label={t("billing.chargeDescriptionAria")} placeholder={t("billing.description")}
               value={charge.description} disabled={chargeLocked}
@@ -295,7 +295,7 @@ function BillingPanel() {
               )}
             </div>
           )}
-          <form onSubmit={submitPayment} aria-label={t("billing.paymentAria")}>
+          <form className="billing-payment-form" onSubmit={submitPayment} aria-label={t("billing.paymentAria")}>
             <input required min="1" type="number" aria-label={t("billing.paymentAmountAria")} placeholder={t("billing.paymentAmount")} value={payment.amount} onChange={event => setPayment({ ...payment, amount: event.target.value })} />
             <select aria-label={t("billing.paymentMethodAria")} value={payment.method} onChange={event => setPayment({ ...payment, method: event.target.value })}>
               <option value="CASH">{paymentMethodLabel("CASH")}</option>
@@ -321,7 +321,7 @@ function CashBalancePanel() {
   async function refresh() { try { setBalance(await api<CashBalance>("/billing/balance")); } catch (e) { setError((e as Error).message); } }
   useEffect(() => { void refresh(); }, []);
   async function closeShift(event: FormEvent) { event.preventDefault(); if (!balance) return; setError(""); setMessage(""); try { const result = await api<{ cash_difference_cents: number }>("/billing/close-cash", { method: "POST", body: JSON.stringify({ expected_cash_amount_cents: balance.cash_amount_cents, expected_total_amount_cents: balance.total_amount_cents, expected_non_cash_amount_cents: balance.non_cash_amount_cents, expected_payment_count: balance.payment_count, counted_cash_amount_cents: Number(counted), handoff_to: handoff, notes: notes || undefined }) }); setMessage(t("billing.shiftClosed", { amount: formatCurrency(result.cash_difference_cents) })); setCounted(""); setHandoff(""); setNotes(""); await refresh(); } catch (e) { setError((e as Error).message); await refresh(); } }
-  return <section className="billing-workspace" aria-label={t("billing.cashBalanceAria")}><div className="workspace-heading"><div><p className="eyebrow">{t("billing.cashOperations")}</p><h2>{t("billing.shiftBalance")}</h2><p className="muted">{t("billing.shiftSubtitle")}</p></div><button type="button" onClick={() => void refresh()}>{t("billing.refreshBalance")}</button></div>{error && <p className="error" role="alert">{error}</p>}{message && <p className="status-badge" role="status">{message}</p>}{balance && <><div className="cards"><article><strong>{t("billing.total")} {formatCurrency(balance.total_amount_cents)}</strong><span>{t("billing.cash")} {formatCurrency(balance.cash_amount_cents)}</span><span>{t("billing.nonCash")} {formatCurrency(balance.non_cash_amount_cents)}</span><span>{balance.payment_count} {t("billing.payments")}</span></article><article><span>{t("billing.pendingInvoices")} {formatCurrency(balance.pending_amount_cents)}</span><span>{t("billing.opening")} {formatTime(balance.opening_time)}</span></article></div><form onSubmit={closeShift} aria-label={t("billing.closeShiftAria")}><label>{t("billing.expectedCash")} <input aria-label={t("billing.expectedCashAria")} type="number" value={balance.cash_amount_cents} readOnly /></label><label>{t("billing.countedCash")} <input required min="0" aria-label={t("billing.countedCashAria")} type="number" value={counted} onChange={e => setCounted(e.target.value)} /></label><label>{t("billing.handoffTo")} <input required minLength={1} aria-label={t("billing.handoffTo")} value={handoff} onChange={e => setHandoff(e.target.value)} /></label><label>{t("common.notes")} <input aria-label={t("billing.closeNotesAria")} value={notes} onChange={e => setNotes(e.target.value)} /></label><button>{t("billing.closeShift")}</button></form></>}</section>;
+  return <section className="billing-workspace billing-cash-workspace" aria-label={t("billing.cashBalanceAria")}><div className="workspace-heading"><div><p className="eyebrow">{t("billing.cashOperations")}</p><h2>{t("billing.shiftBalance")}</h2><p className="muted">{t("billing.shiftSubtitle")}</p></div><button type="button" onClick={() => void refresh()}>{t("billing.refreshBalance")}</button></div>{error && <p className="error" role="alert">{error}</p>}{message && <p className="status-badge" role="status">{message}</p>}{balance && <><div className="cards"><article><strong>{t("billing.total")} {formatCurrency(balance.total_amount_cents)}</strong><span>{t("billing.cash")} {formatCurrency(balance.cash_amount_cents)}</span><span>{t("billing.nonCash")} {formatCurrency(balance.non_cash_amount_cents)}</span><span>{balance.payment_count} {t("billing.payments")}</span></article><article><span>{t("billing.pendingInvoices")} {formatCurrency(balance.pending_amount_cents)}</span><span>{t("billing.opening")} {formatTime(balance.opening_time)}</span></article></div><form className="billing-close-cash-form" onSubmit={closeShift} aria-label={t("billing.closeShiftAria")}><label>{t("billing.expectedCash")} <input aria-label={t("billing.expectedCashAria")} type="number" value={balance.cash_amount_cents} readOnly /></label><label>{t("billing.countedCash")} <input required min="0" aria-label={t("billing.countedCashAria")} type="number" value={counted} onChange={e => setCounted(e.target.value)} /></label><label>{t("billing.handoffTo")} <input required minLength={1} aria-label={t("billing.handoffTo")} value={handoff} onChange={e => setHandoff(e.target.value)} /></label><label>{t("common.notes")} <input aria-label={t("billing.closeNotesAria")} value={notes} onChange={e => setNotes(e.target.value)} /></label><button>{t("billing.closeShift")}</button></form></>}</section>;
 }
 
 export function BillingWorkspace() {

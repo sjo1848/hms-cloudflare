@@ -6,3 +6,8 @@
 .housekeeping-status-controls button.selected strong{color:#fff}
 .housekeeping-status-controls small{margin-left:auto;color:#78879a}
 @media(max-width:560px){.housekeeping-status-controls{display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;padding:8px 10px}.housekeeping-status-controls button{flex:0 0 auto}.housekeeping-status-controls small{flex:0 0 auto;margin-left:0;padding:0 4px;align-self:center}}
+.app-content:not([data-hotel-capabilities~="housekeeping.write"]) .housekeeping-action button,
+.app-content:not([data-hotel-capabilities~="maintenance.report"]) [data-maintenance-mode="report"] label,
+.app-content:not([data-hotel-capabilities~="maintenance.report"]) [data-maintenance-mode="report"] button,
+.app-content:not([data-hotel-capabilities~="maintenance.resolve"]) [data-maintenance-mode="resolve"] label,
+.app-content:not([data-hotel-capabilities~="maintenance.resolve"]) [data-maintenance-mode="resolve"] button { display: none; }

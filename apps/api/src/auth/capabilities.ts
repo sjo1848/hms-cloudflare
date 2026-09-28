@@ -13,3 +13,7 @@ export const ROLE_CAPABILITIES: Record<string, ReadonlySet<string>> = {
 export function hasCapability(role: string, capability: string): boolean {
   return ROLE_CAPABILITIES[role]?.has(capability) ?? false;
 }
+
+export function capabilitiesForRole(role: string | null | undefined): string[] {
+  return [...(ROLE_CAPABILITIES[role ?? ""] ?? [])].sort();
+}
