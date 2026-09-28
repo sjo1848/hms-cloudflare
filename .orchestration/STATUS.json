@@ -11,20 +11,20 @@
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.6 BOUNDED CRITIC REWORK IN PROGRESS",
-  "next_action": "PUBLISH_REPAIRED_F0_6_ARTIFACT_A2_AND_ORCHESTRATION_BOUNDARY_B2_FOR_FRESH_INDEPENDENT_CRITIC",
-  "stop_reason": null,
+  "status_label": "F0.6 REPAIRED ARTIFACT A2 FROZEN; EXACT B2 + FRESH INDEPENDENT CRITIC REQUIRED",
+  "next_action": "CREATE_ORCHESTRATION_ONLY_BOUNDARY_B2_FOR_ARTIFACT_1b83cc1a6832e8fb4f95dfdfa7b134021075775d_THEN_FRESH_INDEPENDENT_CRITIC",
+  "stop_reason": "Substantive immutable Artifact A2 is frozen; routine Foundation 0 work remains paused at exact-pair Independent Critic boundary.",
   "event": {
-    "seq": 176,
-    "id": "HMS-F0-06-IC-01-REPAIR-VALIDATED",
-    "type": "F0_6_BOUNDED_TECHNICAL_REPAIR_VALIDATED_AWAITING_ARTIFACT_PUBLICATION"
+    "seq": 177,
+    "id": "HMS-F0-06-ARTIFACT-A2-FROZEN",
+    "type": "F0_6_REPLACEMENT_ARTIFACT_FROZEN_AWAITING_BOUNDARY_AND_FRESH_CRITIC"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": "ac0b42cb6bdc787726b3160957464af1298eb52a",
-    "artifact_head": "ac0b42cb6bdc787726b3160957464af1298eb52a",
-    "last_verdict": "REWORK: Galileo (fresh Independent Critic, GPT-6 Luna Medium) reviewed exact A=ac0b42cb6bdc787726b3160957464af1298eb52a and its Boundary B; HIGH F0.6-IC-01 existing canonical pricing segments omitted from snapshot/activation guard. Bounded technical repair authorized; fresh critic required for replacement A2+B2.",
-    "review_path": ".orchestration/evidence/HMS-F0-06-SYNTHETIC-ACTIVE-STAY-PRICING-BOOTSTRAP-001-INDEPENDENT-CRITIC.md",
+    "artifact_head": "1b83cc1a6832e8fb4f95dfdfa7b134021075775d",
+    "last_verdict": "PENDING: fresh separate Independent Critic must review exact replacement Artifact A2 1b83cc1a6832e8fb4f95dfdfa7b134021075775d plus orchestration-only Boundary B2; A1+B1 REWORK remains preserved and is not transferable.",
+    "review_path": ".orchestration/evidence/HMS-F0-06-SYNTHETIC-ACTIVE-STAY-PRICING-BOOTSTRAP-001-INDEPENDENT-CRITIC.md; repaired implementation evidence HMS-F0-06-REPAIR-CANONICAL-PRICING-SNAPSHOT-001.md",
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
@@ -150,6 +150,8 @@
     "f0_6_precritic": "PASS: all 24 registry invariants mapped; includes F0.6-IC-01 repair and migration 0027; exact claims in .orchestration/evidence/HMS-F0-06-SYNTHETIC-ACTIVE-STAY-PRICING-BOOTSTRAP-001-PRECRITIC.md, -INVARIANTS.md and HMS-F0-06-REPAIR-CANONICAL-PRICING-SNAPSHOT-001.md; not Independent Critic verdict",
     "f0_6_real_data": "NONE: no real active-stay reads/writes, no production/customer D1, no cutover/bootstrap",
     "f0_6_repair_validation": "PASS: npm run check 32/144; F0.6 11/11; F0.3 2/2; clean Wrangler 0001-0027 on 3 local D1 bindings; types/build/budgets/architecture/query plans/Wrangler and staging SPA dry-runs; CF-I03-I06 sequential; integrated Worker/D1/Vite/browser exit 0; exact evidence in repair record",
+    "f0_6_artifact_a2": "1b83cc1a6832e8fb4f95dfdfa7b134021075775d",
+    "f0_6_artifact_boundary": "Exact A2 SHA recorded in the following orchestration-only Boundary B2; fresh Independent Critic required before F0.7",
     "validation_parallel_attempt": "DISCARDED: fixed port 8787 CF-I03/CF-I04/CF-I06 collision and load-only 10-second rehearsal timeout; all regressions rerun serially and full Foundation CI passed",
     "extra_charge_atomic_rollback": "CONFIRMED",
     "browser_gate": "FAIL: SHARED_PREEXISTING_USERS_REPORTS_RUNNER_FINDING",

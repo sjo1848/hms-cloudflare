@@ -58,7 +58,7 @@ Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `
 - Bounded repair now snapshots the exact canonical segment rows into manifest/digest, holds pre-segmented bookings without bootstrap candidates, and adds forward-only `0027_active_stay_bootstrap_segment_snapshot_guard.sql` to compare the exact set inside the activation batch. Adversarial executing-D1 coverage restores booking version/token/timestamp after an injected segment-set change and proves fail-closed behavior and zero drift.
 - Fresh validation after the repair: F0.6 executing-D1 11/11; F0.3 synthetic cutover rehearsal 2/2; `npm run check` 32 files / 144 tests; clean local Wrangler chains 0001–0027 on CONTROL_DB, HOTEL_DEMO_DB and HOTEL_SECOND_DB; `npm run types:check`, web build, architecture/i18n/budgets (JS 296651/300000 raw; 86095 gzip), D1 query plans, Wrangler API/Web dry-runs and staging SPA dry-run; CF-I03–I06 sequential PASS; `scripts/cf-wave12-reassignment-integrated.sh` exit 0 with Worker/D1/Vite/browser and unchanged remaining-stay interval across search/quote/mutation, desktop persistence/refresh and mobile stale 409 recovery. No remote or real data accessed.
 - Updated invariant and Pre-Critic records include the finding and repair; complete fresh evidence is in `.orchestration/evidence/HMS-F0-06-REPAIR-CANONICAL-PRICING-SNAPSHOT-001.md`. These are internal publication gates only and do not self-declare Independent Critic PASS or F0.6 Development Gate.
-- A1+B1 remain immutable and retain `REWORK`. Replacement Artifact A2 and orchestration-only Boundary B2 are being prepared for a fresh Independent Critic; do not resume F0.7 before that exact pair receives a verdict.
+- A1+B1 remain immutable and retain `REWORK`. Replacement Artifact A2 is frozen at `1b83cc1a6832e8fb4f95dfdfa7b134021075775d`; the next orchestration-only Boundary B2 records this exact A2 SHA and requires a fresh Independent Critic. Do not resume F0.7 before that exact pair receives a verdict.
 - Unknown real-source history/currency completeness remains deferred to the separately required Human Gate before any real-data bootstrap. The current increment reads/writes only synthetic disposable fixtures. No real data/cutover.
 
 ## HISTORICAL BOUNDARY — HMS-ROADMAP-CTRL-REWORK-001
@@ -230,7 +230,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-Publish the repaired F0.6 implementation/evidence as immutable Artifact A2, then create orchestration-only Boundary B2 with exact A2 SHA and require a fresh Independent Critic. Do not advance to F0.7 until A2+B2 receives a verdict. No real-data access, Blocks A–H, PR, push, merge, main, staging mutation, deploy or production.
+Create orchestration-only Boundary B2 recording exact Artifact A2 `1b83cc1a6832e8fb4f95dfdfa7b134021075775d`, then obtain a fresh Independent Critic verdict on A2+B2. Do not advance to F0.7 until that exact pair receives a verdict. No real-data access, Blocks A–H, PR, push, merge, main, staging mutation, deploy or production.
 
 ## MODEL ROUTING
 
