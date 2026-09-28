@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active task: F0.6 synthetic active-stay pricing bootstrap; implementation and Pre-Critic validation are complete, exact Artifact A / Boundary B publication is next. F0.5 Artifact A `0bafe4875de759869760cc4abdb08319c70e6b7a` + Boundary B `2be85fa0d2d9f1a4656c3b608927af33726d2062` received fresh Independent Critic `PASS` from Halley (GPT-6 Luna Medium). F0.6 is authorized by Foundation 0 RG1–RG7 and remains synthetic/local; real active-stay reads/bootstrap are forbidden. No PR/push/merge, main, staging, deploy, production, or Blocks A–H.
+Active task: F0.6 synthetic active-stay pricing bootstrap; Artifact A `ac0b42cb6bdc787726b3160957464af1298eb52a` is frozen and Boundary B records it for fresh Independent Critic review. F0.5 Artifact A `0bafe4875de759869760cc4abdb08319c70e6b7a` + Boundary B `2be85fa0d2d9f1a4656c3b608927af33726d2062` received fresh Independent Critic `PASS` from Halley (GPT-6 Luna Medium). F0.6 is authorized by Foundation 0 RG1–RG7 and remains synthetic/local; real active-stay reads/bootstrap are forbidden. No PR/push/merge, main, staging, deploy, production, or Blocks A–H.
 
 Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `18JGIQxyl8Bh6_w7H3eW1qdPL7jfUsdSLk43aE-G-90A`. Roadmap authority is Artifact A2 `b2581e4c370eeb6f74e9380af010e48386642b4f` and Boundary B2 `c6a4bcb9a2939505f7ddf8e72c02ec9b825f00f3`.
 
@@ -58,6 +58,7 @@ Human approved Foundation 0 implementation (RG1–RG7) via Drive authorization `
 - Final gates PASS: `npm run types:check`, web build, architecture fitness/i18n/budgets (JS 296651/300000 raw; 86095 gzip), D1 query plans, Wrangler API/Web dry-runs and staging SPA dry-run. CF-I03, CF-I04, CF-I05 and CF-I06 all PASS when run serially on isolated temporary state. One earlier parallel invocation caused fixed-port contention and a timeout under load; it was discarded, not counted.
 - `scripts/cf-wave12-reassignment-integrated.sh` exit 0 after final correction: local Worker + D1 + Vite + Playwright proves the same hotel-local remaining interval across availability search, preview/quote and mutation, persisted room-night reassignment, authoritative success refresh, BLOCKING/NON_BLOCKING behavior and mobile stale 409 recovery. Browser console shows expected stale 409s and pre-existing missing-favicon/no-open-maintenance 404 lookups; no 5xx, all script assertions passed.
 - Mandatory Pre-Critic and all-registry evidence: `.orchestration/evidence/HMS-F0-06-SYNTHETIC-ACTIVE-STAY-PRICING-BOOTSTRAP-001-{PRECRITIC,INVARIANTS}.md`. This is publication eligibility only, not a self-declared Independent Critic PASS or F0.6 development-gate verdict.
+- Immutable Artifact A: `ac0b42cb6bdc787726b3160957464af1298eb52a` (`Implement synthetic F0.6 pricing bootstrap rehearsal`). Boundary B is orchestration-only and records the full A SHA; fresh Independent Critic review is now the required next boundary.
 - Unknown real-source history/currency completeness remains deferred to the separately required Human Gate before any real-data bootstrap. The current increment reads/writes only synthetic disposable fixtures. No real data/cutover.
 
 ## HISTORICAL BOUNDARY — HMS-ROADMAP-CTRL-REWORK-001
@@ -229,7 +230,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-Publish immutable F0.6 Artifact A containing the validated synthetic/local implementation and evidence, then create orchestration-only Boundary B with exact A SHA and `external_review.required=true`. A fresh Independent Critic must review that exact pair before continuing to F0.7. Keep work on `impl/hms-foundation-0`; do not begin Block A–H or access/mutate real active stays. No PR, push, merge, main, acceptance/staging mutation, deploy or production.
+Obtain a fresh Independent Critic verdict on immutable F0.6 Artifact A `ac0b42cb6bdc787726b3160957464af1298eb52a` plus its orchestration-only Boundary B. Do not continue to F0.7 until that external review is resolved. Keep work on `impl/hms-foundation-0`; do not begin Block A–H or access/mutate real active stays. No PR, push, merge, main, acceptance/staging mutation, deploy or production.
 
 ## MODEL ROUTING
 

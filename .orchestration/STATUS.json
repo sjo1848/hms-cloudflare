@@ -3,7 +3,7 @@
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
   "phase": "FOUNDATION_0_IMPLEMENTATION",
-  "runtime_status": "RUNNING",
+  "runtime_status": "WAITING_EXTERNAL_REVIEW",
   "resume_authorized": false,
   "active_task": "HMS-F0-06-SYNTHETIC-ACTIVE-STAY-PRICING-BOOTSTRAP-001",
   "last_completed_task": "HMS-F0-05-SEGMENTED-REASSIGNMENT-PRICING-001 (Independent Critic PASS)",
@@ -11,20 +11,20 @@
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.6 IMPLEMENTATION AND PRECRITIC EVIDENCE COMPLETE; IMMUTABLE ARTIFACT PUBLICATION NEXT",
-  "next_action": "PUBLISH_F0_6_ARTIFACT_A_THEN_ORCHESTRATION_ONLY_BOUNDARY_B_FOR_FRESH_INDEPENDENT_CRITIC",
-  "stop_reason": null,
+  "status_label": "F0.6 ARTIFACT A FROZEN; FRESH INDEPENDENT CRITIC REQUIRED",
+  "next_action": "INDEPENDENT_CRITIC_REVIEW_EXACT_F0_6_ARTIFACT_A_AND_BOUNDARY_B",
+  "stop_reason": "Substantive immutable artifact external-review boundary; routine Foundation 0 work resumes only after exact-pair Independent Critic verdict is recorded.",
   "event": {
-    "seq": 173,
-    "id": "HMS-F0-06-PRECRITIC-AND-VALIDATION-COMPLETE",
-    "type": "F0_6_IMPLEMENTATION_EVIDENCE_READY_FOR_PUBLICATION"
+    "seq": 174,
+    "id": "HMS-F0-06-ARTIFACT-A-FROZEN",
+    "type": "F0_6_AWAITING_FRESH_INDEPENDENT_CRITIC"
   },
   "external_review": {
-    "required": false,
-    "last_audited_head": "2be85fa0d2d9f1a4656c3b608927af33726d2062",
-    "artifact_head": "0bafe4875de759869760cc4abdb08319c70e6b7a",
-    "last_verdict": "PASS: Halley (fresh Independent Critic, GPT-6 Luna Medium) reviewed exact F0.5 A=0bafe4875de759869760cc4abdb08319c70e6b7a + B=2be85fa0d2d9f1a4656c3b608927af33726d2062; no material findings; no tests run by reviewer",
-    "review_path": ".orchestration/evidence/HMS-F0-05-INDEPENDENT-CRITIC.md; prior F0.3/F0.4 reviews remain historical and scoped to their own artifacts",
+    "required": true,
+    "last_audited_head": "ac0b42cb6bdc787726b3160957464af1298eb52a",
+    "artifact_head": "ac0b42cb6bdc787726b3160957464af1298eb52a",
+    "last_verdict": "PENDING: fresh Independent Critic must review exact F0.6 Artifact A ac0b42cb6bdc787726b3160957464af1298eb52a plus the following orchestration-only Boundary B; prior F0.5 PASS is not reused",
+    "review_path": ".orchestration/evidence/HMS-F0-06-SYNTHETIC-ACTIVE-STAY-PRICING-BOOTSTRAP-001-{PRECRITIC,INVARIANTS}.md; exact A+B review pending",
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
