@@ -5,19 +5,19 @@
   "phase": "FOUNDATION_0_IMPLEMENTATION",
   "resume_authorized": false,
   "runtime_status": "RUNNING",
-  "active_task": "HMS-F0-09-TASK-CONTRACT-AND-INVARIANT-MAP",
-  "last_completed_task": "F0.8 A2+B2 PASS_WITH_CONDITIONS; sole handoff condition discharged by bounded A2+B3 PASS",
+  "active_task": "HMS-F0-09-EXTRA-CHARGE-IDEMPOTENCY-001",
+  "last_completed_task": "F0.9 Task Contract frozen; separate Contract Reviewer and DB/Data Reviewer found no blocker",
   "last_completed_head": "89199186433dc06cb8519d44dbb4941b7c930816",
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.8 REVIEW CONDITION CLOSED; CONTINUING FOUNDATION 0 DAG",
-  "next_action": "READ_F0_09_AUTHORITY_AND_CREATE_TASK_CONTRACT_WITH_ALL_INVARIANTS",
+  "status_label": "F0.9 CONTRACT FROZEN; PRE-CRITIC IMPLEMENTATION PREFLIGHT",
+  "next_action": "IMPLEMENT_F0_09_WITH_FRESH_D1_AND_INTEGRATED_RECOVERY_EVIDENCE",
   "stop_reason": null,
   "event": {
-    "seq": 197,
-    "id": "HMS-F0-09-DISPATCH-STATE-RECONCILED",
-    "type": "F0_9_DISPATCH_STATE_RECONCILED"
+    "seq": 198,
+    "id": "HMS-F0-09-CONTRACT-FROZEN",
+    "type": "F0_9_CONTRACT_FROZEN"
   },
   "external_review": {
     "required": false,
@@ -36,6 +36,10 @@
     "implementation_authorized": true
   },
   "f0_8_artifact_a": "abd9afdd7537ecef29ad4ae099d769c38b137f6d",
+  "f0_9_task_contract": ".orchestration/contracts/HMS-F0-09-EXTRA-CHARGE-IDEMPOTENCY-001.md",
+  "f0_9_contract_reviewer": "Separate read-only GPT-6 Luna Medium Contract Reviewer; all 24 invariants mapped; no ROADMAP_BLOCKER; exact checklist and retention condition recorded in Task Contract",
+  "f0_9_db_data_reviewer": "Averroes, separate read-only GPT-6 Luna Medium; confirmed no blocker; highlighted trigger-inflated changes metadata, durable token winner proof, D11 and rollback assertions",
+  "f0_9_multi_agent_available": true,
   "f0_8_artifact_a1": "298545b23e59f8aabfef5a766f76249ee71e856b",
   "f0_8_artifact_summary": "F0.8 recovery API/repository, migration 0029, Reception new/existing guest recovery, original incomplete operation remains discoverable after a separate booking; F0.8 D1 7/7, full check 33/151, fresh integrated Worker/D1/Vite desktop 1280 and mobile 375, required focused gates pass; A2+B2 PASS_WITH_CONDITIONS, sole condition discharged by bounded A2+B3 PASS",
   "f0_8_critic_a1_b1": "REWORK: Jason, fresh read-only GPT-6 Luna Medium; HIGH incomplete GUEST_CREATED operation hidden after a separate booking for same guest; MEDIUM mobile evidence 390px instead of required 375px; no blocker/architecture contradiction; no tests, no edits",
