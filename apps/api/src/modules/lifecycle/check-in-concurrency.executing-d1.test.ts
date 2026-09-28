@@ -324,5 +324,28 @@ describe("check-in exact-winner guard on executing D1", () => {
     expect(refreshedChargeCheckout.ok).toBe(true);
     const refreshedChargeEvent = await db.prepare("SELECT details_json FROM lifecycle_events WHERE booking_id='stale-charge-booking' AND event_type='CHECK_OUT'").first<{ details_json: string }>();
     expect(JSON.parse(refreshedChargeEvent!.details_json)).toMatchObject({ booking_total_cents: 12500, invoice_amount_cents: 12500, paid_amount_cents: 0, ledger_paid_cents: 0, remaining_cents: 12500, credit_cents: 0, paid_at: null });
+
+    await addCheckedIn("pricing-aba-booking", "pricing-aba-room", 10000);
+    let pricingAbaInterposed = false;
+    const pricingAbaDb = {
+      prepare: (...args: Parameters<D1Database["prepare"]>) => db.prepare(...args),
+      batch: async (statements: Parameters<D1Database["batch"]>[0]) => {
+        if (!pricingAbaInterposed) {
+          pricingAbaInterposed = true;
+          await db.prepare("UPDATE bookings SET total_cents=12500,pricing_version=pricing_version+1,updated_at='2026-09-26T12:00:01.000Z' WHERE id='pricing-aba-booking'").run();
+          await db.prepare("UPDATE bookings SET total_cents=10000,pricing_version=pricing_version+1,updated_at='2026-09-26T12:00:02.000Z' WHERE id='pricing-aba-booking'").run();
+        }
+        return db.batch(statements);
+      },
+    } as OperationalDatabase;
+    const pricingAbaRepository = new D1LifecycleRepository(pricingAbaDb);
+    const pricingAbaCheckout = await pricingAbaRepository.checkout(checkedInBooking("pricing-aba-booking", "pricing-aba-room"), "pending-approved", "approved-reference", { subject: "actor", requestId: "pricing-aba-checkout", hotelId: "hotel-a" });
+    expect(pricingAbaInterposed).toBe(true);
+    expect(pricingAbaCheckout.ok).toBe(false);
+    expect(await db.prepare("SELECT status,total_cents,pricing_version FROM bookings WHERE id='pricing-aba-booking'").first()).toEqual({ status: "CHECKED_IN", total_cents: 10000, pricing_version: 2 });
+    expect(await db.prepare("SELECT status,housekeeping_state,room_state_version FROM rooms WHERE id='pricing-aba-room'").first()).toEqual({ status: "OCCUPIED", housekeeping_state: "READY", room_state_version: 1 });
+    expect(await db.prepare("SELECT COUNT(*) count FROM room_inventory_nights WHERE booking_id='pricing-aba-booking'").first()).toEqual({ count: 2 });
+    expect(await db.prepare("SELECT COUNT(*) count FROM invoices WHERE booking_id='pricing-aba-booking'").first()).toEqual({ count: 0 });
+    expect(await db.prepare("SELECT COUNT(*) count FROM lifecycle_events WHERE booking_id='pricing-aba-booking'").first()).toEqual({ count: 0 });
   }, 30000);
 });

@@ -1,0 +1,3 @@
+npm notice run test:cf-i06
+npm notice run bash scripts/cf-i06-regression.sh
+CF-I06 billing/atomic cents/closure regression PASS

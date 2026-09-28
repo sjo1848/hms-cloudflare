@@ -316,11 +316,11 @@ export class D1LifecycleRepository implements LifecycleRepository {
 
   async checkout(current: LifecycleBooking, policy: CheckoutPolicy, reference: string | null, actor: LifecycleActor): Promise<LifecycleMutationResult> {
     const now = new Date().toISOString();
-    const accountSnapshot = await this.db.prepare(`SELECT b.total_cents, i.id AS invoice_id, i.status AS invoice_status,
+    const accountSnapshot = await this.db.prepare(`SELECT b.total_cents, b.pricing_version, i.id AS invoice_id, i.status AS invoice_status,
         i.amount_cents AS invoice_amount_cents, i.paid_amount_cents, i.paid_at,
         COALESCE((SELECT SUM(p.amount_cents) FROM payment_entries p WHERE p.invoice_id=i.id),0) AS ledger_paid_cents
       FROM bookings b LEFT JOIN invoices i ON i.booking_id=b.id WHERE b.id=?1`).bind(current.id)
-      .first<{ total_cents: number; invoice_id: string | null; invoice_status: string | null; invoice_amount_cents: number | null; paid_amount_cents: number | null; paid_at: string | null; ledger_paid_cents: number }>();
+      .first<{ total_cents: number; pricing_version: number; invoice_id: string | null; invoice_status: string | null; invoice_amount_cents: number | null; paid_amount_cents: number | null; paid_at: string | null; ledger_paid_cents: number }>();
     if (!accountSnapshot) return { ok: false };
     const snapshot = await this.db.prepare(`SELECT r.room_state_version, r.housekeeping_state, r.service_state,
         EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN' AND mc.impact='BLOCKING') AS blocking,
@@ -336,7 +336,7 @@ export class D1LifecycleRepository implements LifecycleRepository {
       this.db.prepare(`UPDATE bookings SET status = 'CHECKED_OUT', check_out_payment_policy = ?4, check_out_reference = ?5, checked_out_at = ?2, checked_out_by = ?3, updated_at = ?2
         WHERE id = ?1 AND status = 'CHECKED_IN' AND room_id = ?6
           AND EXISTS (SELECT 1 FROM rooms WHERE id = ?6 AND status = 'OCCUPIED' AND room_state_version=?7)
-          AND total_cents=?8
+          AND total_cents=?8 AND pricing_version=?15
           AND ((?9 IS NULL AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id=?1)) OR EXISTS (
             SELECT 1 FROM invoices i WHERE i.booking_id=?1 AND i.id=?9 AND i.status IS ?10
               AND i.amount_cents IS ?11 AND i.paid_amount_cents IS ?12 AND i.paid_at IS ?13
@@ -351,7 +351,7 @@ export class D1LifecycleRepository implements LifecycleRepository {
         .bind(current.id, now, actor.subject, policy, reference, current.room_id, versionBefore,
           accountSnapshot.total_cents, accountSnapshot.invoice_id, accountSnapshot.invoice_status,
           accountSnapshot.invoice_amount_cents, accountSnapshot.paid_amount_cents, accountSnapshot.paid_at,
-          accountSnapshot.ledger_paid_cents),
+          accountSnapshot.ledger_paid_cents, accountSnapshot.pricing_version),
       this.db.prepare("DELETE FROM room_inventory_nights WHERE booking_id = ?1 AND EXISTS (SELECT 1 FROM bookings WHERE id = ?1 AND status = 'CHECKED_OUT' AND room_id = ?2)").bind(current.id, current.room_id),
       this.db.prepare("UPDATE rooms SET status=?2, housekeeping_state='DIRTY', room_state_version=?3 WHERE id=?1 AND status='OCCUPIED' AND room_state_version=?4 AND housekeeping_state IS ?6 AND service_state IS ?7 AND EXISTS (SELECT 1 FROM bookings WHERE id=?5 AND status='CHECKED_OUT' AND room_id=?1)").bind(current.room_id, legacyStatus, versionAfter, versionBefore, current.id, snapshot.housekeeping_state, snapshot.service_state),
       this.db.prepare("INSERT OR IGNORE INTO invoices (id, booking_id, amount_cents, status, created_at) SELECT ?1, id, total_cents, CASE WHEN total_cents=0 THEN 'PAID' ELSE 'PENDING' END, ?2 FROM bookings WHERE id = ?3 AND status = 'CHECKED_OUT'").bind(crypto.randomUUID(), now, current.id),
