@@ -3,7 +3,7 @@
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
   "phase": "FOUNDATION_0_IMPLEMENTATION",
-  "runtime_status": "RUNNING",
+  "runtime_status": "HUMAN_ACTION_REQUIRED",
   "resume_authorized": false,
   "active_task": "HMS-F0-03-ROOM-STATE-CUTOVER-001",
   "last_completed_task": "HMS-F0-02-SHARED-ROOM-INVARIANTS-001 (fresh Independent Critic PASS for exact A+B; F0.2-only gate)",
@@ -11,23 +11,24 @@
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.2 INDEPENDENT CRITIC PASS; F0.3 CONTRACT FROZEN / IMPLEMENTATION STARTING; LOCAL_SYNTHETIC_ONLY",
-  "next_action": "IMPLEMENT_F0_3_SHADOW_MAPPING_AND_SYNTHETIC_RECONCILIATION_ONLY; REAL_DATA_AND_LIVE_ACTIVATION_FORBIDDEN",
-  "stop_reason": null,
+  "status_label": "F0.3 ARTIFACT A FROZEN; EXACT A+B AWAITS FRESH INDEPENDENT CRITIC; LOCAL_SYNTHETIC_ONLY",
+  "next_action": "INDEPENDENT_CRITIC_REVIEW_F0_3_EXACT_ARTIFACT_A_AND_BOUNDARY_B; DO_NOT_BEGIN_F0_4_UNTIL_REVIEW_RESOLVED",
+  "stop_reason": "F0.3 material data/cutover review boundary; no F0.4 work until the exact immutable A+B pair receives Independent Critic review.",
   "event": {
-    "seq": 154,
-    "id": "HMS-F0-03-TASK-CONTRACT-FROZEN",
-    "type": "F0_3_CONTRACT_AND_INVARIANT_MAP_ESTABLISHED_START_SYNTHETIC_IMPLEMENTATION"
+    "seq": 155,
+    "id": "HMS-F0-03-ARTIFACT-A-BOUNDARY",
+    "type": "F0_3_ARTIFACT_A_FROZEN_BOUNDARY_B_REQUIRES_INDEPENDENT_CRITIC"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "last_audited_head": "25656bec8fcc125544934e63756df371d7b7ad79",
     "last_verdict": "PASS — F0.2 EXACT A+B PAIR ONLY; F0.3 and FOUNDATION 0 GLOBAL STATUS NOT REVIEWED",
-    "artifact_head": "25656bec8fcc125544934e63756df371d7b7ad79",
+    "artifact_head": "c4af224c0454b34ea2201db7f5726de446668aad",
     "review_path": "Raman (GPT-6 Luna Medium), fresh Independent Critic, reviewed exact A 25656bec8fcc125544934e63756df371d7b7ad79 + B a84d9ab74aabc116878fd320e5e38588b372b666 and returned PASS for the F0.2 pair only. Reviewer verified both substantive repairs, corrected handoff, evidence scope and no-real-data limits. This does not approve F0.3 or Foundation 0 aggregate.",
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
-      "Wave 1.2 artifact A + boundary B"
+      "Wave 1.2 artifact A + boundary B",
+      "F0.3 Artifact A c4af224c0454b34ea2201db7f5726de446668aad + pending orchestration Boundary B"
     ]
   },
   "human_gate": {
@@ -82,7 +83,16 @@
     "f0_2_rework_artifact_a": "25656bec8fcc125544934e63756df371d7b7ad79 (replaces evidence-incomplete candidate f1ab1798133fca72dfb4fe5faf18e5058b5aa3e1)",
     "f0_2_critic_rework_01": "REPAIRED: attributed explicit legacy recovery proof; actual-app two D1 auth/routing test applies migrations 0022–0023 and verifies installed trigger; independent reviewer confirmed both prior substantive findings closed",
     "f0_2_boundary_critic_rework": "REPAIRED: prior boundary-only rework corrected; latest exact boundary reviewed in subsequent PASS pair",
-    "f0_3_task_contract": "FROZEN: .orchestration/contracts/HMS-F0-03-ROOM-STATE-CUTOVER-001.md; all 24 registry invariants classified; DB/Data Luna Medium read-only review found no contradiction; synthetic-only implementation",
+    "f0_3_task_contract": "FROZEN: .orchestration/contracts/HMS-F0-03-ROOM-STATE-CUTOVER-001.md; all 24 registry invariants classified; synthetic-only implementation",
+    "f0_3_artifact_a": "c4af224c0454b34ea2201db7f5726de446668aad",
+    "f0_3_unit_executing_d1": "PASS: 16 mapper cases + 2 executing-D1 tests; full migration chain, source accounting, stable hashes, drift rejection, injected rollback/replay, tenant-isolated synthetic D1s and open-case uniqueness",
+    "f0_3_full_validation": "PASS: npm run check 29 files/116 tests; types:check; web build JS 296633 raw/86178 gzip, CSS 39735/7838; architecture/i18n/budgets; D1 plans; API/Web Wrangler dry-runs; diff and runner syntax checks",
+    "f0_3_browser": "PASS: real local Worker+D1 + Vite/Playwright at 1280x800 and 390x844; 3 unresolved rooms, ready metric 0; canonical_state UNCHANGED; owned processes and fixture cleaned",
+    "f0_3_synthetic_identities": "PASS: schema 5eacbc95ee0f4db1842ad333075cbd87626a7b62339f0ea13dbbaa402a240672; migration 051e64cb87d925427f20c04b69bf61a3b5a7bb58e5a2a8c938e201e2d5fda976; source 7ad97a67e3df98cfe5148ce097ca2ec511628219362850785013088e2b60d355; report 863e235a178d2a7b60e376d3738dc8ab40e71ba89e46b717b36bb87637537359",
+    "f0_3_precritic": "PASS: mandatory invariant and Pre-Critic records committed in Artifact A; implementation findings repaired; not Independent Critic",
+    "f0_3_db_data_review": "Hilbert read-only DB/Data reviewer; two rounds. Follow-up found no open item among targeted repairs; not Independent Critic or acceptance.",
+    "f0_3_independent_critic": "PENDING: exact A c4af224c0454b34ea2201db7f5726de446668aad + orchestration Boundary B",
+    "f0_3_real_data": "NOT ACCESSED OR MUTATED; no real cutover or active-stay pricing bootstrap",
     "d11_executing_d1": "4/4 PASS",
     "foundation_ci": "PASS",
     "unit_integration": "23 files / 91 tests PASS",
