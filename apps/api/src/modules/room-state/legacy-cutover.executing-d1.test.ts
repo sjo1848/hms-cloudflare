@@ -42,6 +42,79 @@ async function createHotelDatabase(name: string) {
   return { db, paths };
 }
 
+type SyntheticShadowRun = { status: "INCOMPLETE" | "STAGING" | "COMPLETE"; checkpoint: string; checksum: string | null; payload: string | null };
+
+function shadowRowInsert(db: D1Database, report: Awaited<ReturnType<typeof mapLegacyRoomState>>, row: Awaited<ReturnType<typeof mapLegacyRoomState>>["rows"][number]) {
+  return db.prepare("INSERT INTO f03_shadow_rows VALUES (?1,?2,?3,?4,?5,?6,?7) ON CONFLICT DO UPDATE SET classification=excluded.classification,readiness=excluded.readiness,sellability=excluded.sellability")
+    .bind(report.hotel_id, report.source_digest, report.mapping_version, row.room_id, row.classification, row.readiness.state, row.date_range_sellability);
+}
+
+async function stageSyntheticShadowRows(db: D1Database, report: Awaited<ReturnType<typeof mapLegacyRoomState>>, injectFailure = false) {
+  const inserts = report.rows.map(row => shadowRowInsert(db, report, row));
+  const statements = injectFailure
+    ? [inserts[0], db.prepare("INSERT INTO f03_injected_failure_table VALUES ('failure')"), ...inserts.slice(1)]
+    : inserts;
+  const result = await db.batch([
+    ...statements,
+    db.prepare("UPDATE f03_shadow_runs SET status='STAGING',checkpoint='SHADOW_ROWS_WRITTEN',checksum=?4,payload=?5 WHERE hotel_id=?1 AND source_digest=?2 AND mapping_version=?3 AND status='INCOMPLETE'")
+      .bind(report.hotel_id, report.source_digest, report.mapping_version, report.report_checksum, JSON.stringify(report)),
+  ]);
+  if (result.at(-1)?.meta.changes !== 1) throw new Error("Synthetic shadow stage lost its INCOMPLETE run checkpoint");
+}
+
+async function resumeSyntheticShadow(
+  db: D1Database,
+  input: Parameters<typeof readLegacyRoomStateSnapshot>[1],
+) {
+  const report = await mapLegacyRoomState(await readLegacyRoomStateSnapshot(db, input));
+  const run = await db.prepare("SELECT status,checkpoint,checksum,payload FROM f03_shadow_runs WHERE hotel_id=?1 AND source_digest=?2 AND mapping_version=?3")
+    .bind(report.hotel_id, report.source_digest, report.mapping_version).first<SyntheticShadowRun>();
+  if (!run) throw new Error("Synthetic shadow run checkpoint is missing");
+  if (run.status === "INCOMPLETE") {
+    await stageSyntheticShadowRows(db, report);
+    return resumeSyntheticShadow(db, input);
+  }
+  const persistedRows = await db.prepare("SELECT room_id,classification,readiness,sellability FROM f03_shadow_rows WHERE hotel_id=?1 AND source_digest=?2 AND mapping_version=?3 ORDER BY room_id")
+    .bind(report.hotel_id, report.source_digest, report.mapping_version).all();
+  const expectedRows = report.rows.map(row => ({ room_id: row.room_id, classification: row.classification, readiness: row.readiness.state, sellability: row.date_range_sellability }));
+  if (JSON.stringify(persistedRows.results) !== JSON.stringify(expectedRows)) throw new Error("Synthetic shadow rows do not match the current deterministic report");
+  if (run.status === "STAGING") {
+    const completion = await db.prepare("UPDATE f03_shadow_runs SET status='COMPLETE',checkpoint='COMPLETE' WHERE hotel_id=?1 AND source_digest=?2 AND mapping_version=?3 AND status='STAGING' AND checksum=?4")
+      .bind(report.hotel_id, report.source_digest, report.mapping_version, report.report_checksum).run();
+    if (completion.meta.changes !== 1) throw new Error("Synthetic shadow completion lost its exact STAGING checkpoint");
+  } else if (run.checksum !== report.report_checksum || run.checkpoint !== "COMPLETE") {
+    throw new Error("Completed synthetic shadow report/checkpoint is inconsistent");
+  }
+  return report;
+}
+
+async function requestSyntheticActivationSimulation(
+  db: D1Database,
+  input: Parameters<typeof readLegacyRoomStateSnapshot>[1],
+  expectedSourceDigest: string,
+) {
+  const current = await mapLegacyRoomState(await readLegacyRoomStateSnapshot(db, input));
+  const run = await db.prepare("SELECT status,checkpoint,checksum,payload FROM f03_shadow_runs WHERE hotel_id=?1 AND source_digest=?2 AND mapping_version=?3")
+    .bind(current.hotel_id, expectedSourceDigest, current.mapping_version).first<SyntheticShadowRun>();
+  if (current.source_digest !== expectedSourceDigest || run?.status !== "COMPLETE" || run.checksum !== current.report_checksum || run.checkpoint !== "COMPLETE") {
+    return { allowed: false as const, reason: "STALE_OR_INCOMPLETE_SHADOW" };
+  }
+  await db.prepare("INSERT INTO f03_shadow_activation_simulations (hotel_id,source_digest,mapping_version,report_checksum,decision) VALUES (?1,?2,?3,?4,'SIMULATED_ALLOWED')")
+    .bind(current.hotel_id, current.source_digest, current.mapping_version, current.report_checksum).run();
+  return { allowed: true as const, reason: "SYNTHETIC_GUARD_ACCEPTED" };
+}
+
+async function syntheticShadowSideEffects(db: D1Database) {
+  const [runs, rows, simulatedApprovals, housekeepingEvents, lifecycleEvents] = await Promise.all([
+    db.prepare("SELECT * FROM f03_shadow_runs ORDER BY hotel_id,source_digest,mapping_version").all(),
+    db.prepare("SELECT * FROM f03_shadow_rows ORDER BY hotel_id,source_digest,mapping_version,room_id").all(),
+    db.prepare("SELECT * FROM f03_shadow_activation_simulations ORDER BY hotel_id,source_digest,mapping_version").all(),
+    db.prepare("SELECT * FROM housekeeping_events ORDER BY id").all(),
+    db.prepare("SELECT * FROM lifecycle_events ORDER BY id").all(),
+  ]);
+  return { runs: runs.results, rows: rows.results, simulatedApprovals: simulatedApprovals.results, housekeepingEvents: housekeepingEvents.results, lifecycleEvents: lifecycleEvents.results };
+}
+
 function sha256(input: string) {
   return createHash("sha256").update(input).digest("hex");
 }
@@ -55,59 +128,69 @@ describe("F0.3 synthetic room-state shadow rehearsal on executing D1", () => {
     await db.batch([
       db.prepare("INSERT INTO rooms (id,room_number,room_type,status,price_cents,housekeeping_state,service_state) VALUES ('ready-room','101','STANDARD','AVAILABLE',12000,'READY','IN_SERVICE')"),
       db.prepare("INSERT INTO rooms (id,room_number,room_type,status,price_cents) VALUES ('unknown-room','102','STANDARD','AVAILABLE',12000)"),
-      db.prepare("CREATE TABLE f03_shadow_runs (hotel_id TEXT NOT NULL, source_digest TEXT NOT NULL, mapping_version TEXT NOT NULL, status TEXT NOT NULL, checksum TEXT, payload TEXT, PRIMARY KEY(hotel_id,source_digest,mapping_version))"),
+      db.prepare("CREATE TABLE f03_shadow_runs (hotel_id TEXT NOT NULL, source_digest TEXT NOT NULL, mapping_version TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('INCOMPLETE','STAGING','COMPLETE')), checkpoint TEXT NOT NULL, checksum TEXT, payload TEXT, PRIMARY KEY(hotel_id,source_digest,mapping_version))"),
       db.prepare("CREATE TABLE f03_shadow_rows (hotel_id TEXT NOT NULL, source_digest TEXT NOT NULL, mapping_version TEXT NOT NULL, room_id TEXT NOT NULL, classification TEXT NOT NULL, readiness TEXT NOT NULL, sellability TEXT NOT NULL, PRIMARY KEY(hotel_id,source_digest,mapping_version,room_id))"),
+      db.prepare("CREATE TABLE f03_shadow_activation_simulations (hotel_id TEXT NOT NULL, source_digest TEXT NOT NULL, mapping_version TEXT NOT NULL, report_checksum TEXT NOT NULL, decision TEXT NOT NULL, PRIMARY KEY(hotel_id,source_digest,mapping_version))"),
     ]);
     const migrationDigest = sha256(paths.map(path => readFileSync(path, "utf8")).join("\n"));
     const schemaRows = await db.prepare("SELECT type,name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name").all<{ type: string; name: string; sql: string | null }>();
     const schemaDigest = sha256(JSON.stringify(schemaRows.results));
     const input = { hotel_id: "hotel-synthetic-a", hotel_local_date: date, sellability_range: { start_date: "2026-10-01", end_date: "2026-10-03" }, source_schema_digest: schemaDigest, source_migration_digest: migrationDigest };
-    expect(schemaDigest).toBe("5eacbc95ee0f4db1842ad333075cbd87626a7b62339f0ea13dbbaa402a240672");
+    expect(schemaDigest).toBe("f4f26e960ce4058ccaf218e31f7c5b9807fa5e5e93b2f3fe8c8384cfbeec6431");
     expect(migrationDigest).toBe("051e64cb87d925427f20c04b69bf61a3b5a7bb58e5a2a8c938e201e2d5fda976");
     const snapshot = await readLegacyRoomStateSnapshot(db, input);
     const report = await mapLegacyRoomState(snapshot);
-    expect(report.source_digest).toBe("7ad97a67e3df98cfe5148ce097ca2ec511628219362850785013088e2b60d355");
-    expect(report.report_checksum).toBe("863e235a178d2a7b60e376d3738dc8ab40e71ba89e46b717b36bb87637537359");
+    expect(report.source_digest).toBe("479681109794c806447a783e0b8a758500206fe15937110d03cef0884fb78ed4");
+    expect(report.report_checksum).toBe("c6699ec7bd4a58f08701aef3247b65bc1f73199af335bc4d08c40ad84345a7db");
     expect(report).toMatchObject({ input_room_count: 2, output_room_count: 2, accounted_input_record_count: report.input_record_count });
     expect(report.rows.map(row => [row.room_id, row.classification, row.readiness.state, row.date_range_sellability])).toEqual([
       ["ready-room", "MAPPED", "READY_FOR_ARRIVAL", "SELLABLE"],
       ["unknown-room", "REVIEW_REQUIRED", "UNRESOLVED", "UNRESOLVED"],
     ]);
 
-    const canonicalBefore = await db.prepare("SELECT id,status,housekeeping_state,service_state,room_state_version FROM rooms ORDER BY id").all();
-    await db.prepare("INSERT INTO f03_shadow_runs VALUES (?1,?2,?3,'INCOMPLETE',NULL,NULL)").bind(report.hotel_id, report.source_digest, report.mapping_version).run();
-    // Inject process loss after the per-hotel checkpoint was durably marked incomplete.
-    expect(await db.prepare("SELECT status FROM f03_shadow_runs WHERE hotel_id=?1").bind(report.hotel_id).first()).toEqual({ status: "INCOMPLETE" });
-    const firstShadowRow = report.rows[0];
-    await expect(db.batch([
-      db.prepare("INSERT INTO f03_shadow_rows VALUES (?1,?2,?3,?4,?5,?6,?7)")
-        .bind(report.hotel_id, report.source_digest, report.mapping_version, firstShadowRow.room_id, firstShadowRow.classification, firstShadowRow.readiness.state, firstShadowRow.date_range_sellability),
-      db.prepare("INSERT INTO f03_injected_failure_table VALUES ('failure')"),
-    ])).rejects.toThrow();
-    expect(await db.prepare("SELECT COUNT(*) AS count FROM f03_shadow_rows").first()).toEqual({ count: 0 });
-    expect(await db.prepare("SELECT status FROM f03_shadow_runs WHERE hotel_id=?1").bind(report.hotel_id).first()).toEqual({ status: "INCOMPLETE" });
-    const replay = await mapLegacyRoomState(await readLegacyRoomStateSnapshot(db, input));
-    expect(replay.report_checksum).toBe(report.report_checksum);
-    await db.batch([
-      ...replay.rows.map(row => db.prepare("INSERT INTO f03_shadow_rows VALUES (?1,?2,?3,?4,?5,?6,?7) ON CONFLICT DO UPDATE SET classification=excluded.classification,readiness=excluded.readiness,sellability=excluded.sellability")
-        .bind(replay.hotel_id, replay.source_digest, replay.mapping_version, row.room_id, row.classification, row.readiness.state, row.date_range_sellability)),
-      db.prepare("UPDATE f03_shadow_runs SET status='COMPLETE',checksum=?4,payload=?5 WHERE hotel_id=?1 AND source_digest=?2 AND mapping_version=?3")
-        .bind(replay.hotel_id, replay.source_digest, replay.mapping_version, replay.report_checksum, JSON.stringify(replay)),
-    ]);
-    const replayAgain = await mapLegacyRoomState(await readLegacyRoomStateSnapshot(db, input));
-    expect(replayAgain.report_checksum).toBe(replay.report_checksum);
-    expect(await db.prepare("SELECT COUNT(*) AS count FROM f03_shadow_rows").first()).toEqual({ count: 2 });
-    expect(await db.prepare("SELECT status,checksum FROM f03_shadow_runs WHERE hotel_id=?1").bind(report.hotel_id).first()).toEqual({ status: "COMPLETE", checksum: report.report_checksum });
+    const canonicalBefore = (await db.prepare("SELECT id,status,housekeeping_state,service_state,room_state_version FROM rooms ORDER BY id").all()).results;
+    await db.prepare("INSERT INTO f03_shadow_runs (hotel_id,source_digest,mapping_version,status,checkpoint,checksum,payload) VALUES (?1,?2,?3,'INCOMPLETE','SOURCE_SNAPSHOT_CAPTURED',NULL,NULL)")
+      .bind(report.hotel_id, report.source_digest, report.mapping_version).run();
+    // Simulate process loss after the first durable per-hotel checkpoint.
+    expect(await db.prepare("SELECT status,checkpoint FROM f03_shadow_runs WHERE hotel_id=?1").bind(report.hotel_id).first()).toEqual({ status: "INCOMPLETE", checkpoint: "SOURCE_SNAPSHOT_CAPTURED" });
+    expect((await db.prepare("SELECT * FROM f03_shadow_rows").all()).results).toEqual([]);
 
+    // Inject a failure after one row statement but before the STAGING checkpoint; D1 rolls back the row and status together.
+    await expect(stageSyntheticShadowRows(db, report, true)).rejects.toThrow();
+    expect((await db.prepare("SELECT * FROM f03_shadow_rows").all()).results).toEqual([]);
+    expect(await db.prepare("SELECT status,checkpoint FROM f03_shadow_runs WHERE hotel_id=?1").bind(report.hotel_id).first()).toEqual({ status: "INCOMPLETE", checkpoint: "SOURCE_SNAPSHOT_CAPTURED" });
+
+    // Restart from SOURCE_SNAPSHOT_CAPTURED and durably commit the second checkpoint.
+    await stageSyntheticShadowRows(db, report);
+    expect(await db.prepare("SELECT status,checkpoint FROM f03_shadow_runs WHERE hotel_id=?1").bind(report.hotel_id).first()).toEqual({ status: "STAGING", checkpoint: "SHADOW_ROWS_WRITTEN" });
+    expect((await db.prepare("SELECT COUNT(*) AS count FROM f03_shadow_rows").first())).toEqual({ count: 2 });
+    const replay = await resumeSyntheticShadow(db, input); // process loss after SHADOW_ROWS_WRITTEN; restart verifies rows and advances to COMPLETE
+    expect(replay.report_checksum).toBe(report.report_checksum);
+    expect(await db.prepare("SELECT status,checkpoint,checksum FROM f03_shadow_runs WHERE hotel_id=?1").bind(report.hotel_id).first()).toEqual({ status: "COMPLETE", checkpoint: "COMPLETE", checksum: report.report_checksum });
+
+    // Simulate process loss after the final checkpoint; same-source restart must be idempotent.
+    const replayAgain = await resumeSyntheticShadow(db, input);
+    expect(replayAgain.report_checksum).toBe(report.report_checksum);
+    expect((await db.prepare("SELECT COUNT(*) AS count FROM f03_shadow_rows").first())).toEqual({ count: 2 });
+    expect((await db.prepare("SELECT id,status,housekeeping_state,service_state,room_state_version FROM rooms ORDER BY id").all()).results).toEqual(canonicalBefore);
+
+    // A current digest can pass the synthetic gate, but only a test-scoped marker is written; canonical room/event rows remain read-only.
+    expect(await requestSyntheticActivationSimulation(db, input, report.source_digest)).toEqual({ allowed: true, reason: "SYNTHETIC_GUARD_ACCEPTED" });
+    expect((await db.prepare("SELECT COUNT(*) AS count FROM f03_shadow_activation_simulations").first())).toEqual({ count: 1 });
+    expect((await db.prepare("SELECT id,status,housekeeping_state,service_state,room_state_version FROM rooms ORDER BY id").all()).results).toEqual(canonicalBefore);
+
+    // Deliberate synthetic source drift makes the old completed report stale.
     await db.prepare("UPDATE rooms SET service_state='OUT_OF_ORDER' WHERE id='ready-room'").run();
     const drifted = await mapLegacyRoomState(await readLegacyRoomStateSnapshot(db, input));
     expect(drifted.source_digest).not.toBe(report.source_digest);
     expect(drifted.rows.find(row => row.room_id === "ready-room")?.date_range_sellability).toBe("NOT_SELLABLE");
-    const activationGuard = (shadowDigest: string, currentDigest: string) => shadowDigest === currentDigest;
-    expect(activationGuard(report.source_digest, drifted.source_digest)).toBe(false);
-    expect(await db.prepare("SELECT id,status,housekeeping_state,service_state,room_state_version FROM rooms ORDER BY id").all()).not.toEqual(canonicalBefore);
-    expect(await db.prepare("SELECT status FROM f03_shadow_runs WHERE hotel_id=?1 AND source_digest=?2").bind(report.hotel_id, report.source_digest).first()).toEqual({ status: "COMPLETE" });
-    // The only changed canonical value is the deliberate synthetic source-drift mutation.
+    const canonicalAtStaleRequest = (await db.prepare("SELECT id,status,housekeeping_state,service_state,room_state_version FROM rooms ORDER BY id").all()).results;
+    const sideEffectsBeforeStaleRequest = await syntheticShadowSideEffects(db);
+    expect(await requestSyntheticActivationSimulation(db, input, report.source_digest)).toEqual({ allowed: false, reason: "STALE_OR_INCOMPLETE_SHADOW" });
+    expect(await syntheticShadowSideEffects(db)).toEqual(sideEffectsBeforeStaleRequest);
+    expect((await db.prepare("SELECT id,status,housekeeping_state,service_state,room_state_version FROM rooms ORDER BY id").all()).results).toEqual(canonicalAtStaleRequest);
+    expect((await db.prepare("SELECT status,checkpoint FROM f03_shadow_runs WHERE hotel_id=?1 AND source_digest=?2").bind(report.hotel_id, report.source_digest).first()).status).toBe("COMPLETE");
+    // The only canonical change is the deliberate synthetic service-state drift itself.
     expect(await db.prepare("SELECT status,housekeeping_state,service_state,room_state_version FROM rooms WHERE id='unknown-room'").first()).toEqual({ status: "AVAILABLE", housekeeping_state: null, service_state: null, room_state_version: 0 });
     await db.prepare("INSERT INTO maintenance_cases (id,room_id,status,impact,priority,reason,assigned_to,reported_at) VALUES ('case-a','unknown-room','OPEN','NON_BLOCKING','MEDIUM','synthetic issue','operator','2026-09-27T12:00:00.000Z')").run();
     await expect(db.prepare("INSERT INTO maintenance_cases (id,room_id,status,impact,priority,reason,assigned_to,reported_at) VALUES ('case-b','unknown-room','OPEN','BLOCKING','HIGH','duplicate synthetic issue','operator','2026-09-27T12:01:00.000Z')").run()).rejects.toThrow();

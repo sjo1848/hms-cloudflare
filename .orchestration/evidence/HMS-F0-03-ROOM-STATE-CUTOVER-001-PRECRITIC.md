@@ -21,7 +21,7 @@ Authority: frozen Blueprint 001, Reconciliation 007 Amendment A, Final Dispositi
 
 - Product mapper is pure; source extraction is read-only and all seven mapping-relevant table SELECTs are sent in one D1 batch. Report digest includes hotel/date/range/schema/migration identities and canonicalized complete returned source arrays.
 - No product business-state mutation, activation, event insertion or financial operation was added. Synthetic shadow tables exist only inside disposable executing-D1 tests.
-- Injected failure in a synthetic shadow write batch rolls all shadow rows back and leaves the run `INCOMPLETE`; deterministic retry materializes exactly one keyed row per room and completes the same digest/version. Drift changes the source digest and fails the equality activation guard.
+- Synthetic checkpoint execution persists `INCOMPLETE/SOURCE_SNAPSHOT_CAPTURED`; an injected failed row batch rolls back every row and preserves that checkpoint. Resume writes the rows and `STAGING/SHADOW_ROWS_WRITTEN`; restart validates the durable rows before `COMPLETE`; a further COMPLETE replay is idempotent. A test-only activation-request function re-reads and maps executing D1. The fresh digest accepts only into a test-owned marker table; after source drift the stale request is denied and exact before/after snapshots assert zero change to shadow runs/rows, approval markers, room state, or Housekeeping/lifecycle events.
 - The F0.3 data reviewer’s findings were repaired and follow-up rechecked: source hotel is checked before event-type allow-list, each disposition verifies the row’s explicit hotel ID, contradictory reassignment `from_room_id` representations are conflicts, and cross-room collision semantics include booking identity.
 - No business audit/event side effects are produced by mapping. Executing-D1 assertions check zero Housekeeping/lifecycle events and payment entries in the integrated synthetic browser fixture.
 
@@ -49,7 +49,7 @@ Authority: frozen Blueprint 001, Reconciliation 007 Amendment A, Final Dispositi
 |---|---|---|
 | Complete mapping of the seven declared source arrays | `readLegacyRoomStateSnapshot()` fixed query set, source dispositions and counts; unit/D1 tests | Executing D1 + static |
 | Stable synthetic source/result identity | Four fixed SHA-256 assertions in executing-D1 baseline test; same-input report replay | Executing D1 |
-| Failure-safe restart/drift behavior | Injected batch failure, exact zero shadow-row count, INCOMPLETE checkpoint, replay and stale digest assertion | Executing D1 |
+| Failure-safe staged restart and stale-request behavior | Executing-D1 assertions for failure rollback; restart from `SOURCE_SNAPSHOT_CAPTURED` and `SHADOW_ROWS_WRITTEN`; idempotent COMPLETE replay; accepted current digest; stale request rejection; exact zero-side-effect table snapshots | Executing D1 |
 | Rooms API tenant/capability remains protected | Existing executing-D1 route test in `npm run check` | Executing D1/API |
 | Operator sees unresolved rather than false-ready state | `scripts/f03-room-state-browser.playwright.js` with local Worker+D1 plus three screenshots | Integrated browser |
 | No real records or canonical room values were mutated | Fresh synthetic paths only; runner D1 audit `canonical_state: UNCHANGED`; no migration or live binding used | Local synthetic |
@@ -74,14 +74,15 @@ Authority: frozen Blueprint 001, Reconciliation 007 Amendment A, Final Dispositi
 | Successful browser run retained fixture due path-form mismatch | Absolute temp path and repeat run proved process/fixture cleanup |
 | One-open-case uniqueness was only implicit | Executing-D1 duplicate OPEN insert is rejected; exactly one case remains |
 
-Read-only DB/Data reviewer Hilbert rechecked the addressed findings and reported no remaining issue among the requested items. This is not the Independent Critic and did not issue acceptance. The reviewer notes that live source-write freeze and D1 identity attestation belong to separately prohibited live-cutover policy; no such claim is made here.
+Read-only DB/Data reviewer Hilbert rechecked the earlier mapper findings; that review did not cover the subsequent Independent Critic findings. The initial exact A+B pair received `REWORK` from Pauli (fresh read-only GPT-6 Luna Medium): (1) stale digest denial had not been exercised as a request with zero-write assertions; (2) staged checkpoint restart was not covered. The current test/evidence adds both cases; this remains implementer evidence, not an Independent Critic verdict. Live source-write freeze and D1 identity attestation remain outside the synthetic scope.
 
 ## 10. Publication readiness
 
 - [x] Applicable invariants are PASS; N/A entries carry explicit scope rationale in companion invariant evidence.
 - [x] No migration history was edited; no live data/binding/canonical write was used.
 - [x] Every material claim is tied to executable or static evidence and the limitations above are explicit.
-- [x] Artifact A and orchestration-only Boundary B are published as a non-circular exact pair; B requests fresh independent review.
-- [x] Do not start F0.4 until the Independent Critic reviews this exact A+B pair and the canonical state authorizes continuation.
+- [x] Re-ran `npm run check` (29 files / 116 tests), `npm run types:check`, `npm run web:build`, `npm run architecture:fitness` (architecture, i18n and Cloudflare budgets), `npm run test:d1-query-plan`, `npm run wrangler:dry-run`, and `git diff --check`; all PASS. The executing-D1 rework test passes 2/2. Product runtime/UI files are unchanged by this rework, so the existing real local Worker+D1 desktop/mobile evidence remains scoped to the identical product code.
+- [ ] Publish immutable Artifact A2, then orchestration-only Boundary B2 with exact SHAs and the Independent Critic REWORK history.
+- [ ] Do not start F0.4 until a fresh Independent Critic reviews the exact A2+B2 pair and canonical state authorizes continuation.
 
 This Pre-Critic record is not a self-approved F0.3 substantive PASS and does not close Foundation 0.

@@ -13,7 +13,7 @@ Binding sources: Blueprint 001, Reconciliation 007 Amendment A, Final Dispositio
 | Coherent source snapshot | `readLegacyRoomStateSnapshot()` | Seven source-table SELECTs use one sequential D1 `batch`; source digest covers the complete returned snapshot plus schema/migration identity | Executing-D1 tests; Cloudflare documents `batch()` as sequential transactional statements [D1 `batch()` contract](https://developers.cloudflare.com/d1/worker-api/d1-database/) |
 | Assignment and room-night reconciliation | Mapper + lifecycle event evidence | Reassignment history is contiguous, provenance-consistent and agrees with booking assignment and every expected night; duplicate claim of the same booking/night across rooms is conflict; independent bookings in different rooms on the same night remain valid | Unit valid/invalid reassignment and separate-booking/collision cases; executing-D1 report accounting |
 | Safe room readiness exposure | `apps/api/src/modules/room-state/read-model.ts`, `apps/web/src/features/rooms/RoomsPage.tsx`, `apps/web/src/domain/types.ts`, `rooms-operational.css` | Legacy AVAILABLE does not display as ready; unresolved is visible in card/detail and excluded from ready count | Executing-D1 Rooms API route regression and real Worker+D1 desktop/390px browser assertions/screenshots |
-| Synthetic restart/drift rehearsal | Executing-D1 test-owned shadow tables only | `INCOMPLETE` survives interrupted/failed shadow batch; failed batch leaves zero shadow rows; same digest replay is deterministic/idempotent; drift yields a new digest and stale activation guard rejects | `legacy-cutover.executing-d1.test.ts`; canonical room dimensions and source events remain unchanged |
+| Synthetic restart/drift rehearsal | Executing-D1 test-owned shadow tables and test-only activation simulation only | Restart from `SOURCE_SNAPSHOT_CAPTURED` resumes staging; restart from `SHADOW_ROWS_WRITTEN` verifies persisted output and advances to `COMPLETE`; replay from `COMPLETE` is idempotent. Injected batch failure rolls back shadow rows and leaves the prior checkpoint. A stale activation request is denied before writes, with exact before/after comparison of shadow runs/rows, synthetic approval markers, canonical room state, and business events. | `legacy-cutover.executing-d1.test.ts`; exact assertions and updated fixture identities below |
 | Migration compatibility / uniqueness | Existing hotel migration chain, including 0020 | One OPEN maintenance case per room remains enforced after applying the complete migration chain | Executing-D1 duplicate-open insert regression |
 
 ## Synthetic fixture identity and reconciliation
@@ -22,15 +22,15 @@ The deterministic two-room rehearsal applies every existing `apps/api/schema/hot
 
 | Identity | SHA-256 |
 |---|---|
-| Executing-D1 schema manifest | `5eacbc95ee0f4db1842ad333075cbd87626a7b62339f0ea13dbbaa402a240672` |
+| Executing-D1 schema manifest | `f4f26e960ce4058ccaf218e31f7c5b9807fa5e5e93b2f3fe8c8384cfbeec6431` |
 | Full hotel migration source manifest | `051e64cb87d925427f20c04b69bf61a3b5a7bb58e5a2a8c938e201e2d5fda976` |
-| Source snapshot digest | `7ad97a67e3df98cfe5148ce097ca2ec511628219362850785013088e2b60d355` |
-| Canonical report checksum | `863e235a178d2a7b60e376d3738dc8ab40e71ba89e46b717b36bb87637537359` |
+| Source snapshot digest | `479681109794c806447a783e0b8a758500206fe15937110d03cef0884fb78ed4` |
+| Canonical report checksum | `c6699ec7bd4a58f08701aef3247b65bc1f73199af335bc4d08c40ad84345a7db` |
 | Mapping version | `room-state-cutover-v1` |
 
 The deterministic baseline has 2 input rooms and 2 output rooms; every input row is accounted (`input_record_count === accounted_input_record_count`). Row classes are `MAPPED: 1`, `REVIEW_REQUIRED: 1`; the mapped room is READY/SELLABLE from explicit independent dimensions, while the legacy AVAILABLE room with missing dimensions is `UNRESOLVED`/not sellable. The test fixes all four hashes as assertions and repeats mapping/replay to require an identical report checksum.
 
-Interruption evidence marks one synthetic per-hotel run `INCOMPLETE`, injects a failing statement in the shadow-row batch, then asserts transaction rollback (zero shadow rows, run still `INCOMPLETE`). A subsequent replay writes two shadow rows and marks the run COMPLETE; a repeated mapping produces the same checksum and no duplicate rows. A deliberate synthetic service-state change changes source digest and trips the exact digest equality activation guard. The canonical room table differs only by that deliberate source mutation; the other room dimensions remain exactly unchanged. A separate pair of synthetic hotel D1s with the same room ID but different room data has distinct digests and no cross-store data access.
+Interruption evidence persists `INCOMPLETE/SOURCE_SNAPSHOT_CAPTURED` with zero rows, injects a failing statement after a shadow-row insert, and verifies transactional rollback leaves zero rows and the original checkpoint. Resume writes two rows and advances to `STAGING/SHADOW_ROWS_WRITTEN`; simulated process loss at that checkpoint is followed by a restart that verifies exact persisted rows and advances to `COMPLETE`. A further restart from `COMPLETE` keeps row count/checksum stable. A test-only activation request using the current digest is accepted into a test-only marker table; after deliberate synthetic service-state drift, a request against the prior digest is denied. Exact before/after snapshots prove the stale request changes no checkpoint, shadow row, simulated-approval marker, Housekeeping/lifecycle event, or canonical room state. The only canonical room difference is the deliberate source mutation before the stale request. A separate pair of synthetic hotel D1s with the same room ID but different room data has distinct digests and no cross-store data access. The activation helper/table exist only in this test and do not implement or claim production activation.
 
 The D1 rehearsal creates only test-scoped `f03_shadow_runs` / `f03_shadow_rows` tables. These are not production migrations or an activation system. No schema migration file was added or modified.
 
@@ -68,8 +68,8 @@ The executing-D1 test applies the full existing hotel migration chain to fresh s
 
 | Invariant | Applies? | Status | Concrete evidence | Notes |
 |---|---|---|---|---|
-| INV-ATOMIC-001 | APPLIES | PASS | Injected D1 batch failure rolls back all shadow rows while retaining `INCOMPLETE`; stale digest guard rejects drift | Shadow-only, synthetic transaction; no canonical activation |
-| INV-AUDIT-001 | APPLIES | PASS | D1 before/after assertions: no lifecycle/Housekeeping business events are written by mapping, restart or rejected activation | No fabricated operational history |
+| INV-ATOMIC-001 | APPLIES | PASS | Executing-D1 assertions cover rollback to `INCOMPLETE/SOURCE_SNAPSHOT_CAPTURED`, recovery from both durable checkpoints, idempotent COMPLETE replay, current-digest guard acceptance, stale-request denial, and exact zero-side-effect snapshots around rejection | Test-only shadow/activation simulation; no production activation or canonical mutation |
+| INV-AUDIT-001 | APPLIES | PASS | D1 before/after assertions show no lifecycle/Housekeeping business events from mapping, restart, current synthetic guard acceptance or stale rejection | No fabricated operational history; synthetic approval marker is isolated and explicitly test-only |
 | INV-DOMAIN-001 | APPLIES | PASS | Diff/route audit: pure mapper and read-only Rooms projection; no generic domain mutation/API was added | Shadow mapping never mutates product domain |
 | INV-TENANT-001 | APPLIES | PASS | Two synthetic D1s plus foreign event/disposition adversarial test; no cross-store read/write; foreign row disposition is ORPHAN | Storage boundary is the routed hotel-local D1 |
 | INV-RBAC-001 | APPLIES | PASS | Existing Rooms read route test asserts authorized hotel projection and denied role; no new capability or weaker frontend authority | `room-state-route.executing-d1.test.ts` |
@@ -81,7 +81,7 @@ The executing-D1 test applies the full existing hotel migration chain to fresh s
 | INV-EVID-001 | APPLIES | PASS | Every claim above maps to a named test, assertion, command or screenshot; mock/live-data claims excluded | — |
 | INV-LEGACY-001 | APPLIES | PASS | Ambiguous/foreign/orphan rows retain identifiers and quarantine class; exact D1 assertions show zero generated operational events/cases | No anonymous recovery record synthesized |
 | INV-MONEY-001 | N/A | N/A | No financial amount, invoice, payment, charge or settlement is read or changed | D1 browser audit confirms zero payment entries in fixture |
-| INV-STATE-001 | APPLIES | PASS | Non-circular A then orchestration-only B publication; B records exact A and requires a fresh independent critic | Exact SHA is canonical in B; no self-approval |
+| INV-STATE-001 | APPLIES | PASS | Rework will publish new immutable Artifact A2, then orchestration-only Boundary B2 recording exact A2 and requiring a fresh independent critic | Exact pair and prior REWORK preserved; no self-approval |
 | INV-CF-I07-001 | N/A | N/A | No protected admin/network/audit route or capability authority changed | — |
 | INV-CF-I07-002 | N/A | N/A | No administrative mutation | — |
 | INV-CF-I07-003 | N/A | N/A | No role downgrade | — |
@@ -92,6 +92,16 @@ The executing-D1 test applies the full existing hotel migration chain to fresh s
 | INV-CF-I08-004 | N/A | N/A | No booking-state expansion | — |
 | INV-CF-I08-005 | N/A | N/A | No reporting clock default or cross-surface mutation | — |
 | INV-SCOPE-001 | APPLIES | PASS | Diff contains mapper/tests/read-only Rooms readiness presentation/browser/evidence only; no migration change, F0.4, Blocks A–H, cutover, pricing, PR or deploy | Task Contract boundary retained |
+
+## Initial Independent Critic findings and bounded rework
+
+The first exact A+B pair (`c4af224c0454b34ea2201db7f5726de446668aad` + `23de5ab46f68ce2a5c060bc9ff11c7c22ed6475d`) received `REWORK` from Pauli (fresh read-only GPT-6 Luna Medium). Both HIGH findings are addressed by the new executing-D1 assertions above; this is implementer evidence, not a new Critic verdict. The replacement A2+B2 must be reviewed as an exact pair before F0.4.
+
+| Critic finding | Repair/evidence |
+|---|---|
+| HIGH — stale-digest guard was only reconstructed as a local boolean; no activation request or exact zero-write proof | Test-only `requestSyntheticActivationSimulation()` now re-reads executing D1, checks digest/completion/checksum/checkpoint, records only accepted synthetic requests, and is invoked for both fresh and stale snapshots. The stale case snapshots all shadow/checkpoint/approval/event side effects and canonical room rows before and after; exact equality is asserted. |
+| HIGH — no staged checkpoint restart coverage | Executing-D1 test persists `SOURCE_SNAPSHOT_CAPTURED`, injects failure and verifies rollback, resumes through `SHADOW_ROWS_WRITTEN`, simulates process loss there, restarts by verifying persisted rows and completes, then replays from `COMPLETE` idempotently. |
+| Evidence overclaimed those cases | Exact identities, test behavior and scope limitations in this file and Pre-Critic record were updated; old hashes/claims are superseded, not treated as current evidence. |
 
 ## Pre-Critic findings and disposition
 
