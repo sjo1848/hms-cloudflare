@@ -7,7 +7,7 @@ export type { MessageKey } from "./message-key";
 export type Locale = "es-AR" | "en";
 const STORAGE_KEY = "hms.locale";
 const DEFAULT_LOCALE: Locale = "es-AR";
-const EXPECTED_MESSAGE_COUNT = 515;
+const EXPECTED_MESSAGE_COUNT = 522;
 
 type Catalog = Record<MessageKey, string>;
 export const en = {} as Catalog;

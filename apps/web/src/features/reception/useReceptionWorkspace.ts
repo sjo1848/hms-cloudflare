@@ -5,7 +5,7 @@ import {
   cancelBooking as cancelBookingRequest,
   checkInBooking,
   checkoutBooking,
-  createBooking,
+  createReservationOperation,
   loadAvailableRooms,
   loadHotelContext,
   loadReceptionQueue,
@@ -13,6 +13,7 @@ import {
   loadRoomMaintenanceCase,
   reassignBooking,
   updateBooking,
+  type ReservationCreationOperation,
 } from "./reception-api";
 import {
   emptyBookingForm,
@@ -31,6 +32,9 @@ export function useReceptionWorkspace() {
   const [frontDeskBoard, setFrontDeskBoard] = useState<FrontDeskBoard | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [guests, setGuests] = useState<Guest[]>([]);
+  const [recoverableOperations, setRecoverableOperations] = useState<ReservationCreationOperation[]>([]);
+  const [newGuestMode, setNewGuestMode] = useState(false);
+  const [newGuest, setNewGuest] = useState({ full_name: "", email: "", phone: "" });
   const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
   const [editAvailableRooms, setEditAvailableRooms] = useState<Room[]>([]);
   const [reassignAvailableIds, setReassignAvailableIds] = useState<Set<string>>(new Set());
@@ -54,6 +58,7 @@ export function useReceptionWorkspace() {
   const loadEpoch = useRef(0);
   const checkInInFlight = useRef(false);
   const reassignQuoteEpoch = useRef(0);
+  const reservationOperationToken = useRef(crypto.randomUUID());
 
   async function load() {
     const epoch = ++loadEpoch.current;
@@ -67,6 +72,7 @@ export function useReceptionWorkspace() {
       setBookings(next.bookings);
       setRooms(next.rooms);
       setGuests(next.guests);
+      setRecoverableOperations(next.recoverableOperations);
       setSelected(current => current ? next.bookings.find(booking => booking.id === current.id) ?? current : null);
       return next.board;
     } catch (e) {
@@ -214,16 +220,50 @@ export function useReceptionWorkspace() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (actionBusy) return;
+    setActionBusy(true);
     setError("");
     setNotice("");
     try {
-      await createBooking(form);
+      const result = await createReservationOperation({
+        operation_token: reservationOperationToken.current,
+        ...(newGuestMode
+          ? { guest: { full_name: newGuest.full_name, email: newGuest.email, phone: newGuest.phone || null } }
+          : { guest_id: form.guest_id }),
+        booking: { room_id: form.room_id, check_in: form.check_in, check_out: form.check_out, notes: form.notes },
+      });
+      if (!result.booking) throw new Error(t("reception.recoveryGuestSaved"));
+      reservationOperationToken.current = crypto.randomUUID();
+      setNewGuest({ full_name: "", email: "", phone: "" });
+      setNewGuestMode(false);
+      setRecoverableOperations(current => current.filter(operation => operation.operation_token !== result.operation.operation_token));
       setForm(emptyBookingForm());
       setAvailableRooms([]);
+      setNotice(t("reception.reservationCreated"));
       await load();
     } catch (e) {
-      setError((e as Error).message);
+      if (e instanceof ApiError && e.status === 409 && e.detail && typeof e.detail === "object") {
+        const detail = e.detail as { operation?: ReservationCreationOperation; recoveryReason?: string };
+        const operation = detail.operation;
+        if (operation?.operation_token) setRecoverableOperations(current => [operation, ...current.filter(item => item.operation_token !== operation.operation_token)]);
+        if (detail.recoveryReason === "ROOM_UNAVAILABLE") setError(t("reception.recoveryAvailableConflict"));
+        else if (detail.recoveryReason === "PAYLOAD_MISMATCH") setError(t("reception.recoveryPayloadConflict"));
+        else setError((e as Error).message);
+      } else {
+        setError((e as Error).message);
+      }
+    } finally {
+      setActionBusy(false);
     }
+  }
+
+  function useRecoveredGuest(operation: ReservationCreationOperation) {
+    setNewGuestMode(false);
+    setForm(current => ({ ...current, guest_id: operation.guest_id, room_id: operation.room_id, check_in: operation.check_in, check_out: operation.check_out }));
+    setNewGuest({ full_name: "", email: "", phone: "" });
+    reservationOperationToken.current = crypto.randomUUID();
+    setError("");
+    setNotice(`${operation.guest_name} · ${t("guests.selected")}`);
   }
 
   async function runLifecycle(action: () => Promise<unknown>) {
@@ -351,10 +391,10 @@ export function useReceptionWorkspace() {
   }
 
   return {
-    bookings, frontDeskBoard, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, reassignQuote, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
+    bookings, frontDeskBoard, rooms, guests, recoverableOperations, newGuestMode, newGuest, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, reassignQuote, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
-    setCheckInStep, setCheckInData, setForm, setEditForm,
+    setCheckInStep, setCheckInData, setForm, setEditForm, setNewGuestMode, setNewGuest,
     selectCase, closeCase, refreshQueue: load, refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
-    saveEdit, cancelBooking,
+    saveEdit, cancelBooking, useRecoveredGuest,
   };
 }

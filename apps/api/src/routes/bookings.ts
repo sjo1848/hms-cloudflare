@@ -2,9 +2,10 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import type { ApiVariables } from "../context";
 import { ApiError } from "../errors";
-import { dateRange, jsonBody, requiredText } from "../validation";
+import { dateRange, email, jsonBody, requiredText } from "../validation";
 import { hasCapability } from "../auth/capabilities";
 import { D1BookingRepository } from "../modules/bookings/d1-booking-repository";
+import { D1ReservationCreationRepository, type ReservationCreationOperation } from "../modules/bookings/d1-reservation-creation-repository";
 import {
   bookingStatusView,
   bookingView,
@@ -18,6 +19,52 @@ type BookingApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 
 function requireCapability(context: Context<{ Bindings: Env; Variables: ApiVariables }>, capability: string): void {
   if (!hasCapability(context.get("membership").role, capability)) throw ApiError.forbidden();
+}
+
+function requireCapabilities(context: Context<{ Bindings: Env; Variables: ApiVariables }>, ...capabilities: string[]): void {
+  for (const capability of capabilities) requireCapability(context, capability);
+}
+
+function reservationOperationView(operation: ReservationCreationOperation) {
+  return {
+    operation_token: operation.operation_token,
+    stage: operation.stage,
+    guest_id: operation.guest_id,
+    guest_name: operation.guest_name,
+    booking_id: operation.booking_id,
+    room_id: operation.room_id,
+    check_in: operation.check_in,
+    check_out: operation.check_out,
+    hotel_id: operation.hotel_id,
+    created_at: operation.created_at,
+  };
+}
+
+function reservationOperationConflict(
+  context: Context<{ Bindings: Env; Variables: ApiVariables }>,
+  operation: ReservationCreationOperation,
+  message: string,
+  recoveryReason: "PAYLOAD_MISMATCH" | "ROOM_UNAVAILABLE",
+) {
+  return context.json({
+    error: { code: "CONFLICT", message, requestId: context.get("requestId") },
+    operation: reservationOperationView(operation),
+    recovery_reason: recoveryReason,
+  }, 409);
+}
+
+async function payloadDigest(value: unknown): Promise<string> {
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+  return Array.from(digest, byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function operationToken(value: unknown): string {
+  const token = requiredText(value, "operation_token", 36, 36).toLowerCase();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(token)) {
+    throw ApiError.badRequest("operation_token must be a UUID");
+  }
+  return token;
 }
 
 function optionalNotes(value: unknown, current: string | null = null): string | null {
@@ -73,6 +120,156 @@ export function createBookingRoutes(): BookingApp {
     const row = await repository.find(id);
     if (!row) throw ApiError.conflict("Guest, room or availability is invalid");
     return context.json(bookingView(row, context.get("membership").hotelId), 201);
+  });
+
+  app.get("/reservation-creation-operations", async (context) => {
+    requireCapability(context, "guests.read");
+    const repository = new D1ReservationCreationRepository(context.get("operationalDatabase"));
+    const hotelId = context.get("membership").hotelId;
+    const rows = await repository.listIncomplete();
+    return context.json(rows.filter(row => row.hotel_id === hotelId).map(reservationOperationView));
+  });
+
+  app.get("/reservation-creation-operations/:token", async (context) => {
+    requireCapability(context, "guests.read");
+    const token = operationToken(context.req.param("token"));
+    const repository = new D1ReservationCreationRepository(context.get("operationalDatabase"));
+    const operation = await repository.find(token);
+    if (!operation || operation.hotel_id !== context.get("membership").hotelId) throw ApiError.notFound("Reservation creation operation not found");
+    const booking = operation.stage === "BOOKING_CREATED"
+      ? await new D1BookingRepository(context.get("operationalDatabase")).find(operation.booking_id)
+      : null;
+    if (operation.stage === "BOOKING_CREATED" && !booking) throw ApiError.conflict("Completed reservation could not be reloaded");
+    return context.json({ operation: reservationOperationView(operation), booking });
+  });
+
+  app.post("/reservation-creation-operations", async (context) => {
+    const body = await jsonBody<Record<string, unknown>>(context.req.raw);
+    const token = operationToken(body.operation_token);
+    const bookingBody = body.booking;
+    if (!bookingBody || typeof bookingBody !== "object" || Array.isArray(bookingBody)) throw ApiError.badRequest("booking is invalid");
+    const bookingInput = bookingBody as Record<string, unknown>;
+    const guestInput = body.guest;
+    const existingGuestId = body.guest_id == null ? null : requiredText(body.guest_id, "guest_id", 1, 100);
+    if (existingGuestId && guestInput != null) throw ApiError.badRequest("Choose either an existing guest or new guest details");
+    const guest = existingGuestId ? null : (() => {
+      if (!guestInput || typeof guestInput !== "object" || Array.isArray(guestInput)) throw ApiError.badRequest("guest is required");
+      const value = guestInput as Record<string, unknown>;
+      return {
+        fullName: requiredText(value.full_name, "full_name", 2, 120),
+        email: email(value.email),
+        phone: value.phone == null ? null : requiredText(value.phone, "phone", 3, 50),
+      };
+    })();
+    const roomId = requiredText(bookingInput.room_id, "room_id", 1, 100);
+    const range = dateRange(bookingInput.check_in, bookingInput.check_out);
+    const notes = optionalNotes(bookingInput.notes);
+    const canonicalPayload = {
+      guest: guest ? { mode: "NEW", full_name: guest.fullName, email: guest.email, phone: guest.phone } : { mode: "EXISTING", guest_id: existingGuestId },
+      booking: { room_id: roomId, check_in: range.start, check_out: range.end, notes },
+    };
+    const hash = await payloadDigest(canonicalPayload);
+    const hotelId = context.get("membership").hotelId;
+    if (guest) requireCapabilities(context, "guests.write", "bookings.write");
+    else requireCapability(context, "bookings.write");
+
+    const database = context.get("operationalDatabase");
+    const creationRepository = new D1ReservationCreationRepository(database);
+    let operation = await creationRepository.find(token);
+    if (operation && operation.hotel_id !== hotelId) throw ApiError.notFound("Reservation creation operation not found");
+    if (operation && operation.payload_hash !== hash) {
+      return reservationOperationConflict(context, operation, "This operation token is already bound to different reservation details. Start a new operation.", "PAYLOAD_MISMATCH");
+    }
+
+    const now = new Date().toISOString();
+    if (!operation) {
+      const record = {
+        operationToken: token,
+        payloadHash: hash,
+        guestId: existingGuestId ?? crypto.randomUUID(),
+        bookingId: crypto.randomUUID(),
+        guestSource: guest ? "NEW" as const : "EXISTING" as const,
+        roomId,
+        checkIn: range.start,
+        checkOut: range.end,
+        hotelId,
+        actorSubject: context.get("identity").subject,
+        requestId: context.get("requestId"),
+        now,
+      };
+      try {
+        if (guest) await creationRepository.createNewGuest(record, guest);
+        else {
+          const inserted = await creationRepository.createExistingGuest(record);
+          if (!inserted) throw ApiError.notFound("Guest not found");
+        }
+      } catch (error) {
+        operation = await creationRepository.find(token);
+        if (!operation) {
+          if (!guest && error instanceof ApiError) throw error;
+          if (guest) {
+            if (await creationRepository.emailExists(guest.email)) throw ApiError.conflict("A guest with this email already exists. Select that guest instead of creating a duplicate.");
+          }
+          throw error;
+        }
+        if (operation.payload_hash !== hash || operation.hotel_id !== hotelId) {
+          return reservationOperationConflict(context, operation, "This operation token was concurrently claimed by different reservation details.", "PAYLOAD_MISMATCH");
+        }
+      }
+      operation ??= await creationRepository.find(token);
+    }
+
+    if (!operation) throw ApiError.conflict("Reservation operation could not be recovered");
+    if (operation.hotel_id !== hotelId) throw ApiError.notFound("Reservation creation operation not found");
+    if (operation.payload_hash !== hash) {
+      return reservationOperationConflict(context, operation, "This operation token is already bound to different reservation details. Start a new operation.", "PAYLOAD_MISMATCH");
+    }
+    const bookingRepository = new D1BookingRepository(database);
+    if (operation.stage === "BOOKING_CREATED") {
+      const booking = await bookingRepository.find(operation.booking_id);
+      if (!booking) throw ApiError.conflict("Completed reservation could not be reloaded");
+      return context.json({ operation: reservationOperationView(operation), booking, replayed: true });
+    }
+
+    const pricing = await bookingRepository.validatePricingReferences(operation.guest_id, roomId, null, range.start, range.end);
+    if (!pricing) return reservationOperationConflict(context, operation, "The selected room is no longer available for these dates. Use the created guest to start a new reservation.", "ROOM_UNAVAILABLE");
+    const stayNights = nights(range.start, range.end);
+    const lodgingTotal = bookingTotal(pricing.priceCents, stayNights.length);
+    if (!Number.isSafeInteger(lodgingTotal)) throw ApiError.badRequest("booking total exceeds the supported integer range");
+    const requestId = context.get("requestId");
+    try {
+      await bookingRepository.create({
+        id: operation.booking_id,
+        guestId: operation.guest_id,
+        roomId,
+        start: range.start,
+        end: range.end,
+        totalCents: lodgingTotal,
+        notes,
+        now,
+        claimNights: stayNights,
+        roomRateCents: pricing.priceCents,
+        roomPricingVersion: pricing.pricingVersion,
+        pricingProvenance: { actorSubject: context.get("identity").subject, hotelId, requestId },
+        operationToken: `reservation-create:${operation.booking_id}`,
+        recovery: { operationToken: token, payloadHash: hash, actorSubject: context.get("identity").subject, hotelId, requestId },
+      });
+    } catch (error) {
+      const latest = await creationRepository.find(token);
+      if (latest?.hotel_id === hotelId && latest.payload_hash === hash && latest.stage === "BOOKING_CREATED") {
+        const booking = await bookingRepository.find(latest.booking_id);
+        if (booking) return context.json({ operation: reservationOperationView(latest), booking, replayed: true });
+      }
+      throw error;
+    }
+    const completed = await creationRepository.find(token);
+    if (!completed || completed.hotel_id !== hotelId || completed.payload_hash !== hash || completed.stage !== "BOOKING_CREATED") {
+      const current = completed ?? operation;
+      return reservationOperationConflict(context, current, "The reservation could not be completed because availability changed. The guest remains saved and can be used for a new reservation.", "ROOM_UNAVAILABLE");
+    }
+    const booking = await bookingRepository.find(completed.booking_id);
+    if (!booking) throw ApiError.conflict("Completed reservation could not be reloaded");
+    return context.json({ operation: reservationOperationView(completed), booking, replayed: false }, 201);
   });
 
   app.get("/bookings/:id", async (context) => {

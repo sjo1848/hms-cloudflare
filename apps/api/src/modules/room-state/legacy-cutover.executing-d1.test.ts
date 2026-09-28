@@ -136,12 +136,15 @@ describe("F0.3 synthetic room-state shadow rehearsal on executing D1", () => {
     const schemaRows = await db.prepare("SELECT type,name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name").all<{ type: string; name: string; sql: string | null }>();
     const schemaDigest = sha256(JSON.stringify(schemaRows.results));
     const input = { hotel_id: "hotel-synthetic-a", hotel_local_date: date, sellability_range: { start_date: "2026-10-01", end_date: "2026-10-03" }, source_schema_digest: schemaDigest, source_migration_digest: migrationDigest };
-    expect(schemaDigest).toBe("55ef943db1fcca8774f61fe06da03060466851d94f63cbd84d0c202ecfbc3a3c");
-    expect(migrationDigest).toBe("37905bd9adb971c2e36bfe01daeda6894f319d230184006c4789902f5c918bf4");
+    // Pinned against the complete current chain, including F0.8's additive
+    // reservation recovery schema; each digest is intentionally recomputed when
+    // the forward migration set changes.
+    expect(schemaDigest).toBe("e07f44d24dcb3c39b4f978078a9a6bbb870ced3e79f89a8c1b5ea8117eecfe89");
+    expect(migrationDigest).toBe("7d43cebbe52f9d186d90c256f5a03d222b217ea742ae27c9911436813c753d0b");
     const snapshot = await readLegacyRoomStateSnapshot(db, input);
     const report = await mapLegacyRoomState(snapshot);
-    expect(report.source_digest).toBe("209cfc45435045732757f7428bc759b0b5eab45e1325c3c2ecfdcb48c0d8be84");
-    expect(report.report_checksum).toBe("125a9990ec5c4ae181c963c41ae5ebdae77fa3db18edec7b5342082b7ab695d5");
+    expect(report.source_digest).toBe("a6eb2714a29767770ef5b9a30e16d5ac649ca3ddd604ad6d07749015a08269af");
+    expect(report.report_checksum).toBe("29cb0114519445ce9862036cd16887051754d2011619afd378518f3fc4e33059");
     expect(report).toMatchObject({ input_room_count: 2, output_room_count: 2, accounted_input_record_count: report.input_record_count });
     expect(report.rows.map(row => [row.room_id, row.classification, row.readiness.state, row.date_range_sellability])).toEqual([
       ["ready-room", "MAPPED", "READY_FOR_ARRIVAL", "SELLABLE"],

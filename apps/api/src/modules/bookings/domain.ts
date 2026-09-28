@@ -36,6 +36,14 @@ export type CreateBookingRecord = {
   roomPricingVersion: number;
   pricingProvenance: PricingMutationProvenance;
   provenance?: BookingMutationProvenance;
+  operationToken?: string;
+  recovery?: {
+    operationToken: string;
+    payloadHash: string;
+    actorSubject: string;
+    hotelId: string;
+    requestId: string;
+  };
 };
 
 export type UpdateBookingRecord = CreateBookingRecord & { bookingId: string };

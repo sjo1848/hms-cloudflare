@@ -14,7 +14,8 @@ let activeLocalDevProfile = localDevProfiles[initialLocalProfileIndex] ?? localD
 
 export class ApiError extends Error {
   status: number;
-  constructor(message: string, status: number) { super(message); this.name = "ApiError"; this.status = status; }
+  detail: unknown;
+  constructor(message: string, status: number, detail: unknown = null) { super(message); this.name = "ApiError"; this.status = status; this.detail = detail; }
 }
 
 export function getActiveLocalProfileIndex() {
@@ -35,8 +36,9 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   }
   const response = await fetch(`/api/v1${path}`, { ...init, headers });
   if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null;
-    throw new ApiError(localizedHttpError(response.status, payload?.error?.message), response.status);
+    const payload = await response.json().catch(() => null) as { error?: { message?: string }; operation?: unknown; recovery_reason?: string } | null;
+    const detail = payload?.operation ? { operation: payload.operation, recoveryReason: payload.recovery_reason } : null;
+    throw new ApiError(localizedHttpError(response.status, payload?.error?.message), response.status, detail);
   }
   return response.json();
 }

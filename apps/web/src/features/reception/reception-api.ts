@@ -3,13 +3,19 @@ import type { ActiveHotelContext, Booking, ExtraCharge, FrontDeskBoard, Guest, H
 import type { BookingEditForm, BookingForm, CheckInData, ReassignmentQuote } from "./model";
 
 export async function loadReceptionQueue() {
-  const [board, rooms, guests] = await Promise.all([
+  const [board, rooms, guests, recoverableOperations] = await Promise.all([
     api<FrontDeskBoard>("/front-desk/board"),
     api<Room[]>("/rooms"),
     api<Guest[]>("/guests"),
+    api<ReservationCreationOperation[]>("/reservation-creation-operations"),
   ]);
-  return { board, bookings: board.items.map(item => item.booking), rooms, guests };
+  return { board, bookings: board.items.map(item => item.booking), rooms, guests, recoverableOperations };
 }
+
+export type ReservationCreationOperation = {
+  operation_token: string; stage: "GUEST_CREATED" | "EXISTING_GUEST_SELECTED"; guest_id: string;
+  guest_name: string; booking_id: string; room_id: string; check_in: string; check_out: string;
+};
 
 export function loadAvailableRooms(start: string, end: string, excludeBookingId?: string) {
   const query = new URLSearchParams({ start, end });
@@ -34,6 +40,15 @@ export function loadBillingContext(bookingId: string) {
 
 export function createBooking(form: BookingForm) {
   return api<Booking>("/bookings", { method: "POST", body: JSON.stringify(form) });
+}
+
+export function createReservationOperation(input: {
+  operation_token: string; guest_id?: string; guest?: { full_name: string; email: string; phone?: string | null };
+  booking: { room_id: string; check_in: string; check_out: string; notes: string };
+}) {
+  return api<{ operation: ReservationCreationOperation; booking: Booking | null; replayed: boolean }>(
+    "/reservation-creation-operations", { method: "POST", body: JSON.stringify(input) },
+  );
 }
 
 export function updateBooking(bookingId: string, form: BookingEditForm) {

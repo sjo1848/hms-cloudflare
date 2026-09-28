@@ -146,3 +146,8 @@
   .checkin-status-heading{align-items:flex-start;flex-direction:column;gap:4px}
   .reassign-room-summary>span{display:none}
 }
+.reception-recovery-list{grid-column:1/-1;border-top:1px solid var(--border-subtle,#dce3eb);padding-top:12px;display:grid;gap:8px}
+.reception-recovery-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;border-radius:10px;background:var(--surface-muted,#f5f7fa)}
+.reception-recovery-item span{display:grid;gap:3px;min-width:0}
+.reception-recovery-item small{color:var(--text-muted,#657386)}
+.reception-recovery-item button{min-height:40px}

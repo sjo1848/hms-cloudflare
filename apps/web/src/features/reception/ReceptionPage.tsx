@@ -40,11 +40,11 @@ const reasonLabelKeys: Record<QueueReason, MessageKey> = {
 function Bookings() {
   const { t, statusLabel, formatDate, formatCurrency } = useI18n();
   const {
-    bookings, frontDeskBoard, rooms, guests, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, reassignQuote, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
+    bookings, frontDeskBoard, rooms, guests, recoverableOperations, newGuestMode, newGuest, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, reassignQuote, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
-    setCheckInStep, setCheckInData, setForm, setEditForm,
+    setCheckInStep, setCheckInData, setForm, setEditForm, setNewGuestMode, setNewGuest,
     selectCase, closeCase, refreshQueue, refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
-    saveEdit, cancelBooking,
+    saveEdit, cancelBooking, useRecoveredGuest,
   } = useReceptionWorkspace();
   const [queueFilter, setQueueFilter] = useState<QueueFilter>(() => {
     const value = new URLSearchParams(window.location.search).get("lane");
@@ -171,9 +171,14 @@ function Bookings() {
 
     {showCreate && <form onSubmit={submit} aria-label={t("reception.createAria")} className="case-create reception-create-panel">
       <h3>{t("reception.openCase")}</h3>
-      <select required aria-label={t("common.guest")} value={form.guest_id} onChange={e => setForm({ ...form, guest_id: e.target.value })}>
+      <label><input type="checkbox" checked={newGuestMode} onChange={event => setNewGuestMode(event.target.checked)} />{t("guests.add")}</label>
+      {newGuestMode ? <>
+        <input required autoComplete="name" aria-label={t("guests.fullName")} placeholder={t("guests.namePlaceholder")} value={newGuest.full_name} onChange={event => setNewGuest({ ...newGuest, full_name: event.target.value })} />
+        <input required type="email" autoComplete="email" aria-label={t("reception.guestEmail")} placeholder={t("reception.guestEmail")} value={newGuest.email} onChange={event => setNewGuest({ ...newGuest, email: event.target.value })} />
+        <input type="tel" autoComplete="tel" aria-label={t("guests.phone")} placeholder={t("guests.phone")} value={newGuest.phone} onChange={event => setNewGuest({ ...newGuest, phone: event.target.value })} />
+      </> : <select required aria-label={t("common.guest")} value={form.guest_id} onChange={e => setForm({ ...form, guest_id: e.target.value })}>
         <option value="">{t("reception.selectGuest")}</option>{guests.map(guest => <option key={guest.id} value={guest.id}>{guest.full_name}</option>)}
-      </select>
+      </select>}
       <select required aria-label={t("common.room")} value={form.room_id} onChange={e => setForm({ ...form, room_id: e.target.value })}>
         <option value="">{t("reception.selectAvailableRoom")}</option>{availableRooms.map(room => <option key={room.id} value={room.id}>{room.room_number} · {room.room_type}</option>)}
       </select>
@@ -182,6 +187,13 @@ function Bookings() {
       <button type="button" onClick={() => void refreshAvailability()}>{t("reception.findRooms")}</button>
       <input placeholder={t("reception.notesOptional")} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
       <button>{t("reception.createBooking")}</button>
+      {recoverableOperations.length > 0 && <section aria-label={t("reception.openCase")} className="reception-recovery-list">
+        <h4>{t("reception.recoveryPendingTitle")}</h4>
+        {recoverableOperations.map(operation => <div key={operation.operation_token} className="reception-recovery-item">
+          <span><strong>{operation.guest_name}</strong><small>{formatDate(operation.check_in)} → {formatDate(operation.check_out)}</small></span>
+          <button type="button" onClick={() => useRecoveredGuest(operation)}>{t("reception.recoverGuest")}</button>
+        </div>)}
+      </section>}
     </form>}
 
     {error && <p className="error" role="alert">{error}</p>}

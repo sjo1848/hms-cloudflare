@@ -82,15 +82,20 @@ export class D1BookingRepository implements BookingRepository {
   }
 
   async create(record: CreateBookingRecord): Promise<BookingUpdateResult> {
-    const operationToken = `booking:${record.id}`;
+    const operationToken = record.operationToken ?? `booking:${record.id}`;
     const results = await this.database.batch([
       this.database.prepare(`INSERT INTO bookings (id, guest_id, room_id, check_in, check_out, status, total_cents, notes, created_at, updated_at,last_pricing_operation_token)
         SELECT ?1, g.id, r.id, ?4, ?5, 'CONFIRMED', ?6, ?7, ?8, ?8,?9 FROM guests AS g JOIN rooms AS r ON r.id = ?3
         WHERE g.id = ?2 AND ${ADVANCE_RESERVABLE_ROOM_SQL}
         AND r.price_cents=?10 AND r.pricing_version=?11
-        AND NOT EXISTS (SELECT 1 FROM room_holds AS h WHERE h.room_id = r.id AND h.start_date < ?5 AND h.end_date > ?4)`)
+        AND NOT EXISTS (SELECT 1 FROM room_holds AS h WHERE h.room_id = r.id AND h.start_date < ?5 AND h.end_date > ?4)
+        AND (?12 IS NULL OR EXISTS (SELECT 1 FROM reservation_creation_operations o
+          WHERE o.operation_token=?12 AND o.payload_hash=?13 AND o.booking_id=?1 AND o.guest_id=g.id
+            AND o.room_id=r.id AND o.check_in=?4 AND o.check_out=?5
+            AND o.stage IN ('GUEST_CREATED','EXISTING_GUEST_SELECTED')))`)
         .bind(record.id, record.guestId, record.roomId, record.start, record.end, record.totalCents, record.notes, record.now,
-          operationToken, record.roomRateCents, record.roomPricingVersion),
+          operationToken, record.roomRateCents, record.roomPricingVersion,
+          record.recovery?.operationToken ?? null, record.recovery?.payloadHash ?? null),
       this.database.prepare(`INSERT INTO booking_pricing_segments
         (segment_id,booking_id,room_id,effective_start,effective_end,rate_cents,room_pricing_version,segment_version,operation_token,actor_subject,hotel_id,request_id,created_at)
         SELECT ?1,?2,?3,?4,?5,r.price_cents,r.pricing_version,1,?6,?7,?8,?9,?10
@@ -102,6 +107,42 @@ export class D1BookingRepository implements BookingRepository {
           record.now, record.totalCents, record.roomRateCents, record.roomPricingVersion),
       ...claimStatements(this.database, record.id, record.roomId, record.claimNights, record.start, record.end),
       ...(record.provenance ? [mutationEventStatement(this.database, record.id, "CREATE", record.provenance, record.now)] : []),
+      ...(record.recovery ? [
+        this.database.prepare(`UPDATE reservation_creation_operations
+          SET stage='BOOKING_CREATED',updated_at=?7,booking_created_by_subject=?4,
+              booking_request_id=?5,booking_created_at=?6
+          WHERE operation_token=?1 AND payload_hash=?2 AND booking_id=?3
+            AND stage IN ('GUEST_CREATED','EXISTING_GUEST_SELECTED')
+            AND EXISTS (
+              SELECT 1 FROM bookings b
+              WHERE b.id=?3 AND b.guest_id=reservation_creation_operations.guest_id
+                AND b.room_id=reservation_creation_operations.room_id
+                AND b.check_in=reservation_creation_operations.check_in
+                AND b.check_out=reservation_creation_operations.check_out
+                AND b.status='CONFIRMED' AND b.last_pricing_operation_token=?8
+                AND (SELECT COUNT(*) FROM room_inventory_nights n WHERE n.booking_id=b.id)=json_array_length(?9)
+                AND NOT EXISTS (SELECT 1 FROM room_inventory_nights n WHERE n.booking_id=b.id
+                  AND NOT EXISTS (SELECT 1 FROM json_each(?9) expected WHERE expected.value=n.stay_date AND n.room_id=b.room_id))
+                AND NOT EXISTS (SELECT 1 FROM json_each(?9) expected
+                  WHERE NOT EXISTS (SELECT 1 FROM room_inventory_nights n WHERE n.booking_id=b.id
+                    AND n.room_id=b.room_id AND n.stay_date=expected.value))
+                AND EXISTS (SELECT 1 FROM booking_pricing_segments s WHERE s.booking_id=b.id
+                  AND s.room_id=b.room_id AND s.effective_start=b.check_in AND s.effective_end=b.check_out
+                  AND s.operation_token=b.last_pricing_operation_token AND s.segment_version=b.pricing_version)
+            )
+          RETURNING operation_token`)
+          .bind(record.recovery.operationToken, record.recovery.payloadHash, record.id,
+            record.recovery.actorSubject, record.recovery.requestId, record.now, record.now,
+            operationToken, JSON.stringify(record.claimNights)),
+        this.database.prepare(`INSERT INTO reservation_creation_events
+          (id,operation_token,event_type,guest_id,booking_id,actor_subject,hotel_id,request_id,created_at)
+          SELECT ?1,o.operation_token,'BOOKING_CREATED',o.guest_id,o.booking_id,?3,o.hotel_id,?4,?5
+          FROM reservation_creation_operations o
+          WHERE o.operation_token=?2 AND o.stage='BOOKING_CREATED'
+            AND o.booking_created_by_subject=?3 AND o.booking_request_id=?4 AND o.booking_created_at=?5`)
+          .bind(`${record.recovery.operationToken}:BOOKING_CREATED`, record.recovery.operationToken,
+            record.recovery.actorSubject, record.recovery.requestId, record.now),
+      ] : []),
     ]);
     return results[0] as BookingUpdateResult;
   }
