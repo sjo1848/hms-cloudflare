@@ -8,6 +8,7 @@ describe("billing route contract", () => {
     const paths = [...source.matchAll(/app\.(?:get|post)\("([^"]+)"/g)].map(match => match[1]);
     expect(paths.filter(path => path.startsWith("/billing/") || path.includes("/payments") || path.includes("/extra-charges") || path.includes("/invoice") || path.includes("settle-payment"))).toEqual([
       "/bookings/:id/extra-charges",
+      "/bookings/:id/extra-charges/operations/:token",
       "/bookings/:id/extra-charges",
       "/bookings/:id/invoice",
       "/invoices",

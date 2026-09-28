@@ -10,6 +10,7 @@ export type BillingInvoice = {
   paid_at: string | null;
 };
 export type PriorPayment = { booking_id: string; amount_cents: number; payment_method: string; payment_reference: string | null; note: string | null };
+export type ExtraChargeIdentity = { booking_id: string; description: string; amount_cents: number; category: string };
 
 export type BillingAmounts = {
   remaining_cents: number;
@@ -84,4 +85,11 @@ export function reconciliationAudit(
 
 export function priorPaymentMatches(prior: PriorPayment, bookingId: string, amount: number, method: PaymentMethod, reference: string | null, note: string | null): boolean {
   return prior.booking_id === bookingId && prior.amount_cents === amount && prior.payment_method === method && prior.payment_reference === reference && prior.note === note;
+}
+
+export function extraChargeOperationMatches(prior: ExtraChargeIdentity, bookingId: string, description: string, amountCents: number, category: string): boolean {
+  return prior.booking_id === bookingId
+    && prior.description === description
+    && prior.amount_cents === amountCents
+    && prior.category === category;
 }

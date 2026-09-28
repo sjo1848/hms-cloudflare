@@ -1,0 +1,24 @@
+[
+  {
+    "results": [
+      {
+        "foreign_booking": 0
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 1
+    }
+  },
+  {
+    "results": [
+      {
+        "foreign_charges": 0
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  }
+]

@@ -76,6 +76,8 @@ describe("check-in exact-winner guard on executing D1", () => {
     await applyMigration(db, "../../../schema/hotel-migrations/0026_active_stay_pricing_bootstrap_shadow.sql");
     await applyMigration(db, "../../../schema/hotel-migrations/0027_active_stay_bootstrap_segment_snapshot_guard.sql");
     await applyMigration(db, "../../../schema/hotel-migrations/0028_checkout_settlement_guard.sql");
+    await applyMigration(db, "../../../schema/hotel-migrations/0029_reservation_creation_recovery.sql");
+    await applyMigration(db, "../../../schema/hotel-migrations/0030_extra_charge_operation_identity.sql");
     await db.prepare("UPDATE rooms SET housekeeping_state='READY',service_state='IN_SERVICE' WHERE id='room-1'").run();
     const repository = new D1LifecycleRepository(db);
     const stale = { id: "booking-1", room_id: "room-1", status: "CONFIRMED", check_in: "2026-09-26", check_out: "2026-09-27" } as const;
@@ -236,15 +238,15 @@ describe("check-in exact-winner guard on executing D1", () => {
     await addCheckedIn("charge-after-booking", "charge-after-room", 10000);
     expect((await repository.checkout(checkedInBooking("charge-after-booking", "charge-after-room"), "pending-approved", "approved-reference", { subject: "actor", requestId: "checkout-before-charge", hotelId: "hotel-a" })).ok).toBe(true);
     const invoiceBeforeCharge = await billing.findInvoice("charge-after-booking");
-    const chargeAfter = await billing.recordExtraCharge({ bookingId: "charge-after-booking", expectedTotalCents: 10000, description: "Post-checkout service", amountCents: 2500, category: "OTHER", actor: { subject: "actor", requestId: "charge-after", hotelId: "hotel-a" } }, invoiceBeforeCharge);
-    expect(chargeAfter).toBe(true);
+    const chargeAfter = await billing.recordExtraCharge({ bookingId: "charge-after-booking", operationToken: "charge-after-token", expectedTotalCents: 10000, description: "Post-checkout service", amountCents: 2500, category: "OTHER", actor: { subject: "actor", requestId: "charge-after", hotelId: "hotel-a" } }, invoiceBeforeCharge);
+    expect(chargeAfter.replayed).toBe(false);
     expect(await db.prepare("SELECT total_cents FROM bookings WHERE id='charge-after-booking'").first()).toEqual({ total_cents: 12500 });
     expect(await billing.findInvoice("charge-after-booking")).toMatchObject({ amount_cents: 12500, paid_amount_cents: 0, status: "PENDING" });
     const beforeChargeEvent = await db.prepare("SELECT details_json FROM lifecycle_events WHERE booking_id='charge-after-booking' AND event_type='CHECK_OUT'").first<{ details_json: string }>();
     expect(JSON.parse(beforeChargeEvent!.details_json)).toMatchObject({ booking_total_cents: 10000, invoice_amount_cents: 10000 });
 
     await addCheckedIn("charge-before-booking", "charge-before-room", 10000);
-    expect(await billing.recordExtraCharge({ bookingId: "charge-before-booking", expectedTotalCents: 10000, description: "Pre-checkout service", amountCents: 2500, category: "OTHER", actor: { subject: "actor", requestId: "charge-before", hotelId: "hotel-a" } }, null)).toBe(true);
+    expect((await billing.recordExtraCharge({ bookingId: "charge-before-booking", operationToken: "charge-before-token", expectedTotalCents: 10000, description: "Pre-checkout service", amountCents: 2500, category: "OTHER", actor: { subject: "actor", requestId: "charge-before", hotelId: "hotel-a" } }, null)).replayed).toBe(false);
     expect(await billing.recordPayment(paymentWrite("charge-before-booking", 12500, "charge-before-payment-token"), null)).toBe(true);
     expect((await repository.checkout(checkedInBooking("charge-before-booking", "charge-before-room"), "settled", null, { subject: "actor", requestId: "charge-before-checkout", hotelId: "hotel-a" })).ok).toBe(true);
     const afterChargeEvent = await db.prepare("SELECT details_json FROM lifecycle_events WHERE booking_id='charge-before-booking' AND event_type='CHECK_OUT'").first<{ details_json: string }>();
@@ -304,7 +306,7 @@ describe("check-in exact-winner guard on executing D1", () => {
       batch: async (statements: Parameters<D1Database["batch"]>[0]) => {
         if (!chargeCommittedBetweenReadAndBatch) {
           chargeCommittedBetweenReadAndBatch = true;
-          expect(await billing.recordExtraCharge({ bookingId: "stale-charge-booking", expectedTotalCents: 10000, description: "Interleaved charge", amountCents: 2500, category: "OTHER", actor: { subject: "actor", requestId: "stale-charge", hotelId: "hotel-a" } }, null)).toBe(true);
+          expect((await billing.recordExtraCharge({ bookingId: "stale-charge-booking", operationToken: "stale-charge-token", expectedTotalCents: 10000, description: "Interleaved charge", amountCents: 2500, category: "OTHER", actor: { subject: "actor", requestId: "stale-charge", hotelId: "hotel-a" } }, null)).replayed).toBe(false);
         }
         return db.batch(statements);
       },

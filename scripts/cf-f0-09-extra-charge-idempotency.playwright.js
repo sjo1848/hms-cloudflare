@@ -1,0 +1,154 @@
+(page) => (async () => {
+  const base = "http://127.0.0.1:4176";
+  const hotelA = "10000000-0000-0000-0000-000000000001";
+  const hotelB = "20000000-0000-0000-0000-000000000002";
+  const reception = {
+    "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000002",
+    "x-local-access-email": "leo-reception@migration.invalid",
+    "x-hotel-id": hotelA,
+  };
+  const housekeeping = {
+    "x-local-access-subject": "source-user:24000000-0000-0000-0000-000000000002",
+    "x-local-access-email": "max-housekeeping@migration.invalid",
+    "x-hotel-id": hotelA,
+  };
+  const hotelBOperations = {
+    "x-local-access-subject": "source-user:24000000-0000-0000-0000-000000000001",
+    "x-local-access-email": "sol-ops@migration.invalid",
+    "x-hotel-id": hotelB,
+  };
+  await page.addInitScript(() => {
+    localStorage.setItem("hms.locale", "en");
+    localStorage.setItem("hms-local-acceptance-profile", "1");
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  let firstPostCommitted;
+  const firstPostCommittedPromise = new Promise(resolve => { firstPostCommitted = resolve; });
+  let firstLookupAborted;
+  const firstLookupAbortedPromise = new Promise(resolve => { firstLookupAborted = resolve; });
+  let dropFirstResponse = true;
+  let abortFirstLookup = true;
+  await page.route("**/api/v1/bookings/f09-booking/extra-charges/operations/**", async route => {
+    if (abortFirstLookup && route.request().method() === "GET") {
+      abortFirstLookup = false;
+      await route.abort("failed");
+      firstLookupAborted();
+      return;
+    }
+    await route.continue();
+  });
+  await page.route("**/api/v1/bookings/f09-booking/extra-charges", async route => {
+    if (dropFirstResponse && route.request().method() === "POST") {
+      dropFirstResponse = false;
+      const committedResponse = await route.fetch();
+      const status = committedResponse.status();
+      await route.abort("failed");
+      firstPostCommitted({ status });
+      return;
+    }
+    await route.continue();
+  });
+
+  await page.goto(base + "/");
+  const account = page.getByLabel("Billing booking");
+  await account.waitFor();
+  await account.selectOption("f09-booking");
+  const chargeForm = page.getByRole("form", { name: "Billing extra charge" });
+  await chargeForm.getByLabel("Billing charge description").fill("Desktop response lost");
+  await chargeForm.getByLabel("Billing charge amount").fill("1250");
+  await page.screenshot({ path: "output/playwright/f0-09-billing-desktop-before.png", fullPage: true });
+  await chargeForm.getByRole("button", { name: "Add extra charge" }).click();
+  const committed = await firstPostCommittedPromise;
+  if (committed.status !== 201) throw new Error(`response-loss POST did not commit as new charge: ${JSON.stringify(committed)}`);
+  await firstLookupAbortedPromise;
+  const pendingRaw = await page.evaluate(({ hotel, booking }) => sessionStorage.getItem(`hms.billing.pending-extra-charge:${hotel}:${booking}`), { hotel: hotelA, booking: "f09-booking" });
+  if (!pendingRaw) throw new Error("pending token/payload was not persisted before response loss");
+  const pending = JSON.parse(pendingRaw);
+  if (pending.payload.description !== "Desktop response lost" || pending.payload.amount_cents !== 1250) throw new Error(`pending payload changed: ${pendingRaw}`);
+  const lookupPromise = page.waitForResponse(response => response.url().includes(`/bookings/f09-booking/extra-charges/operations/${pending.operationToken}`) && response.request().method() === "GET");
+  await page.reload();
+  await page.getByLabel("Billing booking").waitFor();
+  await page.getByLabel("Billing booking").selectOption("f09-booking");
+  const lookup = await lookupPromise;
+  if (lookup.status() !== 200) throw new Error(`post-reload operation lookup returned ${lookup.status()}`);
+  const persisted = await lookup.json();
+  if (persisted.charge.description !== "Desktop response lost" || persisted.charge.amount_cents !== 1250 || persisted.replayed !== true) throw new Error(`lookup did not return exact durable charge: ${JSON.stringify(persisted)}`);
+  await page.getByRole("status").filter({ hasText: "Extra charge recorded" }).waitFor();
+  await page.getByText("Desktop response lost", { exact: false }).waitFor();
+  await page.screenshot({ path: "output/playwright/f0-09-billing-desktop-recovered.png", fullPage: true });
+
+  const api = async (path, { hotel = hotelA, headers = reception, method = "GET", body } = {}) => {
+    const response = await page.evaluate(async ({ path, headers, method, body }) => {
+      const result = await fetch(path, { method, headers: { "content-type": "application/json", ...headers }, body: body ? JSON.stringify(body) : undefined });
+      return { status: result.status, body: await result.json().catch(() => null) };
+    }, { path: base + "/api/v1" + path, headers: { ...headers, "x-hotel-id": hotel }, method, body });
+    return response;
+  };
+  const sameReplay = await api(`/bookings/f09-booking/extra-charges`, { method: "POST", body: { operation_token: pending.operationToken, description: "Desktop response lost", amount_cents: 1250, category: "OTHER" } });
+  if (sameReplay.status !== 200 || sameReplay.body.charge.id !== persisted.charge.id || sameReplay.body.replayed !== true) throw new Error(`same-token replay failed: ${JSON.stringify(sameReplay)}`);
+  const changedPayload = await api(`/bookings/f09-booking/extra-charges`, { method: "POST", body: { operation_token: pending.operationToken, description: "Altered payload", amount_cents: 1250, category: "OTHER" } });
+  if (changedPayload.status !== 409) throw new Error(`changed payload should conflict, got ${JSON.stringify(changedPayload)}`);
+  const missing = await api(`/bookings/f09-booking/extra-charges/operations/f09-operation-absent-0001`);
+  if (missing.status !== 404) throw new Error(`missing operation should return 404, got ${JSON.stringify(missing)}`);
+  const invalid = await api(`/bookings/f09-booking/extra-charges/operations/x`);
+  if (invalid.status !== 400) throw new Error(`invalid token should return 400, got ${JSON.stringify(invalid)}`);
+  const foreign = await api(`/bookings/f09-booking/extra-charges/operations/${pending.operationToken}`, { hotel: hotelB, headers: hotelBOperations });
+  if (foreign.status !== 404) throw new Error(`same booking/token from another hotel must not resolve, got ${JSON.stringify(foreign)}`);
+  const foreignWrite = await api(`/bookings/f09-booking/extra-charges`, { hotel: hotelB, headers: hotelBOperations, method: "POST", body: { operation_token: pending.operationToken, description: "Cross-tenant attempt", amount_cents: 1250, category: "OTHER" } });
+  if (foreignWrite.status !== 404) throw new Error(`cross-tenant charge write must fail because booking is not in selected hotel's D1, got ${JSON.stringify(foreignWrite)}`);
+  const deniedRead = await api(`/bookings/f09-booking/extra-charges/operations/${pending.operationToken}`, { headers: housekeeping });
+  if (deniedRead.status !== 403) throw new Error(`housekeeping lookup must be denied by capability, got ${JSON.stringify(deniedRead)}`);
+  const deniedWrite = await api(`/bookings/f09-booking/extra-charges`, { headers: housekeeping, method: "POST", body: { operation_token: "f09-housekeeping-denied-001", description: "Denied", amount_cents: 500, category: "OTHER" } });
+  if (deniedWrite.status !== 403) throw new Error(`housekeeping charge write must be denied, got ${JSON.stringify(deniedWrite)}`);
+  const auditFailure = await api(`/bookings/f09-booking/extra-charges`, { method: "POST", headers: { ...reception, "x-test-fail-financial-write": "extra-charge" }, body: { operation_token: "f09-audit-fail-001", description: "Injected audit failure", amount_cents: 700, category: "OTHER" } });
+  if (auditFailure.status !== 409) throw new Error(`audit failure should fail as conflict, got ${JSON.stringify(auditFailure)}`);
+  const voided = await api(`/bookings/f09-voided/extra-charges`, { method: "POST", body: { operation_token: "f09-voided-api-001", description: "Blocked voided invoice", amount_cents: 100, category: "OTHER" } });
+  if (voided.status !== 409) throw new Error(`VOIDED invoice charge should conflict, got ${JSON.stringify(voided)}`);
+  const mismatch = await api(`/bookings/f09-mismatch/extra-charges`, { method: "POST", body: { operation_token: "f09-mismatch-api-001", description: "Blocked ledger mismatch", amount_cents: 100, category: "OTHER" } });
+  if (mismatch.status !== 409) throw new Error(`ledger mismatch charge should conflict, got ${JSON.stringify(mismatch)}`);
+  const corruptLookup = await api(`/bookings/f09-corrupt/extra-charges/operations/f09-corrupt-lookup-001`);
+  if (corruptLookup.status !== 409) throw new Error(`lookup with a missing durable event pair must fail closed, got ${JSON.stringify(corruptLookup)}`);
+  const corruptReplay = await api(`/bookings/f09-corrupt/extra-charges`, { method: "POST", body: { operation_token: "f09-corrupt-lookup-001", description: "Corrupt event pair fixture", amount_cents: 100, category: "OTHER" } });
+  if (corruptReplay.status !== 409) throw new Error(`replay with a missing durable event pair must fail closed, got ${JSON.stringify(corruptReplay)}`);
+
+  await page.setViewportSize({ width: 375, height: 844 });
+  await page.getByLabel("Billing booking").selectOption("f09-booking");
+  const mobileForm = page.getByRole("form", { name: "Billing extra charge" });
+  await mobileForm.getByLabel("Billing charge description").fill("Mobile same-token retry");
+  await mobileForm.getByLabel("Billing charge amount").fill("1500");
+  let abortBeforeCommit = true;
+  await page.route("**/api/v1/bookings/f09-booking/extra-charges", async route => {
+    if (abortBeforeCommit && route.request().method() === "POST") {
+      abortBeforeCommit = false;
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+  await mobileForm.getByRole("button", { name: "Add extra charge" }).click();
+  const safeRetryStatus = page.getByRole("status").filter({ hasText: "No saved charge was found" });
+  await safeRetryStatus.waitFor();
+  const statusBounds = await safeRetryStatus.boundingBox();
+  const retryBounds = await page.getByRole("button", { name: "Retry this charge" }).boundingBox();
+  if (!statusBounds || !retryBounds || statusBounds.x < 0 || statusBounds.x + statusBounds.width > 375 || retryBounds.x < 0 || retryBounds.x + retryBounds.width > 375) throw new Error(`mobile recovery content overflows 375px viewport: status=${JSON.stringify(statusBounds)} retry=${JSON.stringify(retryBounds)}`);
+  const mobilePendingRaw = await page.evaluate(({ hotel, booking }) => sessionStorage.getItem(`hms.billing.pending-extra-charge:${hotel}:${booking}`), { hotel: hotelA, booking: "f09-booking" });
+  const mobilePending = JSON.parse(mobilePendingRaw);
+  if (mobilePending.payload.description !== "Mobile same-token retry" || mobilePending.payload.amount_cents !== 1500) throw new Error(`safe retry did not retain exact mobile payload: ${mobilePendingRaw}`);
+  await page.screenshot({ path: "output/playwright/f0-09-billing-mobile-retry.png", fullPage: true });
+  const mobilePost = page.waitForResponse(response => response.url().endsWith("/bookings/f09-booking/extra-charges") && response.request().method() === "POST");
+  await page.getByRole("button", { name: "Retry this charge" }).click();
+  const mobileResult = await mobilePost;
+  if (mobileResult.status() !== 201) throw new Error(`safe mobile retry returned ${mobileResult.status()}`);
+  const mobileResultBody = await mobileResult.json();
+  if (mobileResultBody.operation_token !== mobilePending.operationToken || mobileResultBody.charge.description !== mobilePending.payload.description) throw new Error("retry minted a different operation or payload");
+  await page.getByRole("status").filter({ hasText: "Extra charge recorded" }).waitFor();
+  await page.getByText("Mobile same-token retry", { exact: false }).waitFor();
+  await page.screenshot({ path: "output/playwright/f0-09-billing-mobile-success.png", fullPage: true });
+
+  const authoritativeInvoice = await api("/bookings/f09-booking/invoice");
+  const chargeList = await api("/bookings/f09-booking/extra-charges");
+  if (authoritativeInvoice.status !== 200 || authoritativeInvoice.body.amount_cents !== 12750 || authoritativeInvoice.body.paid_amount_cents !== 2500 || authoritativeInvoice.body.remaining_cents !== 10250 || authoritativeInvoice.body.credit_cents !== 0 || authoritativeInvoice.body.status !== "PENDING" || authoritativeInvoice.body.payment_method !== "TRANSFER" || authoritativeInvoice.body.payment_reference !== "transfer-900") throw new Error(`authoritative invoice/D11 truth mismatch: ${JSON.stringify(authoritativeInvoice)}`);
+  if (chargeList.status !== 200 || chargeList.body.length !== 2 || !chargeList.body.some(item => item.id === persisted.charge.id) || !chargeList.body.some(item => item.id === mobileResultBody.charge.id)) throw new Error(`authoritative charge list mismatch: ${JSON.stringify(chargeList)}`);
+  console.log(JSON.stringify({ desktop: "1280x900", mobile: "375x844", committedThenDroppedPostStatus: committed.status, reloadLookupStatus: lookup.status(), sameTokenReplay: sameReplay.status, changedPayload: changedPayload.status, missingLookup: missing.status, invalidToken: invalid.status, crossTenant: { lookup: foreign.status, mutation: foreignWrite.status }, deniedCapability: { read: deniedRead.status, write: deniedWrite.status }, atomicAuditFailure: auditFailure.status, voidedInvoice: voided.status, ledgerMismatch: mismatch.status, corruptedEventPair: { lookup: corruptLookup.status, replay: corruptReplay.status }, mobileSafeRetry: mobileResult.status, sameRetryToken: mobileResultBody.operation_token === mobilePending.operationToken, authoritativeInvoice: authoritativeInvoice.body }));
+})()

@@ -4,8 +4,8 @@ import type { ApiVariables } from "../context";
 import { ApiError } from "../errors";
 import { jsonBody, requiredText } from "../validation";
 import { hasCapability } from "../auth/capabilities";
-import { D1PaymentRepository } from "../modules/billing/d1-payment-repository";
-import { integerCents, normalizePaymentMethod, paymentTarget, priorPaymentMatches, reconciliationProblem } from "../modules/billing/domain";
+import { D1PaymentRepository, ExtraChargeIntegrityError } from "../modules/billing/d1-payment-repository";
+import { extraChargeOperationMatches, integerCents, normalizePaymentMethod, paymentTarget, priorPaymentMatches, reconciliationProblem } from "../modules/billing/domain";
 
 type BillingApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
 type Db = ApiVariables["operationalDatabase"];
@@ -15,6 +15,15 @@ type Body = Record<string, unknown>;
 function requireCap(c: Ctx, capability: string) {
   const role = c.get("membership").role;
   if (!hasCapability(role, capability)) throw ApiError.forbidden();
+}
+
+async function verifiedChargeOperation(repository: D1PaymentRepository, bookingId: string, token: string, hotelId: string) {
+  try {
+    return await repository.findExtraChargeOperation(bookingId, token, hotelId);
+  } catch (error) {
+    if (error instanceof ExtraChargeIntegrityError) throw ApiError.conflict("Extra charge operation could not be verified");
+    throw error;
+  }
 }
 
 function cents(value: unknown, field: string, positive = false): number {
@@ -87,6 +96,16 @@ async function recordPayment(c: Ctx, id: string, body: Body, settle: boolean) {
 export function createBillingRoutes(): BillingApp {
   const app = new Hono<{ Bindings: Env; Variables: ApiVariables }>();
   app.get("/bookings/:id/extra-charges", async c => { requireCap(c, "bookings.extra_charges.read"); const rows = await c.get("operationalDatabase").prepare("SELECT id, booking_id, description, amount_cents, category, created_at FROM extra_charges WHERE booking_id = ?1 ORDER BY created_at, id").bind(c.req.param("id")).all(); return c.json(rows.results); });
+  app.get("/bookings/:id/extra-charges/operations/:token", async c => {
+    requireCap(c, "bookings.extra_charges.read");
+    const id = c.req.param("id");
+    const repository = new D1PaymentRepository(c.get("operationalDatabase"));
+    if (!await repository.findBooking(id)) throw ApiError.notFound("Booking not found");
+    const token = requiredText(c.req.param("token"), "operation_token", 8, 120);
+    const charge = await verifiedChargeOperation(repository, id, token, c.get("membership").hotelId);
+    if (!charge) throw ApiError.notFound("Extra charge operation not found");
+    return c.json({ ok: true, operation_token: token, charge, replayed: true, invoice: await repository.invoiceView(id) });
+  });
   app.post("/bookings/:id/extra-charges", async c => {
     requireCap(c, "bookings.extra_charges.write");
     const id = c.req.param("id");
@@ -97,6 +116,14 @@ export function createBillingRoutes(): BillingApp {
     const description = requiredText(body.description, "description", 1, 200);
     const amount = cents(body.amount_cents, "amount_cents", true);
     const category = body.category == null ? "OTHER" : requiredText(body.category, "category", 1, 40).toUpperCase();
+    const operationToken = body.operation_token == null ? crypto.randomUUID() : requiredText(body.operation_token, "operation_token", 8, 120);
+    const prior = await verifiedChargeOperation(repository, id, operationToken, c.get("membership").hotelId);
+    if (prior) {
+      if (!extraChargeOperationMatches(prior, id, description, amount, category)) {
+        throw ApiError.conflict("Extra charge operation token was reused with different details");
+      }
+      return c.json({ ok: true, operation_token: operationToken, charge: prior, replayed: true, invoice: await repository.invoiceView(id) }, 200);
+    }
     const invoice = await repository.findInvoice(id);
     const problem = reconciliationProblem(invoice);
     if (problem === "VOIDED") throw ApiError.conflict("Invoice is voided");
@@ -104,6 +131,7 @@ export function createBillingRoutes(): BillingApp {
     try {
       const won = await repository.recordExtraCharge({
         bookingId: id,
+        operationToken,
         expectedTotalCents: booking.total_cents,
         description,
         amountCents: amount,
@@ -111,11 +139,10 @@ export function createBillingRoutes(): BillingApp {
         actor: { subject: c.get("identity").subject, requestId: c.get("requestId"), hotelId: c.get("membership").hotelId },
         forceAuditFailure: String(c.env.LOCAL_DEV_AUTH) === "true" && c.req.header("x-test-fail-financial-write") === "extra-charge",
       }, invoice);
-      if (!won) throw new Error("priced mutation did not win");
+      return c.json({ ok: true, operation_token: operationToken, charge: won.charge, replayed: won.replayed, invoice: await repository.invoiceView(id) }, won.replayed ? 200 : 201);
     } catch {
       throw ApiError.conflict("Extra charge could not be recorded atomically");
     }
-    return c.json({ ok: true, amount_cents: amount, invoice: await repository.invoiceView(id) }, 201);
   });
   app.get("/bookings/:id/invoice", async c => { requireCap(c, "billing.invoice.read"); const repository = new D1PaymentRepository(c.get("operationalDatabase")); if (!await repository.findBooking(c.req.param("id"))) throw ApiError.notFound("Booking not found"); return c.json(await repository.invoiceView(c.req.param("id"))); });
   app.get("/invoices", async c => { requireCap(c, "billing.invoices.read"); const rows = await c.get("operationalDatabase").prepare("SELECT id, booking_id, amount_cents, paid_amount_cents, MAX(amount_cents-paid_amount_cents,0) AS remaining_cents, MAX(paid_amount_cents-amount_cents,0) AS credit_cents, status, payment_method, payment_reference, paid_at, created_at FROM invoices ORDER BY created_at DESC").all(); return c.json(rows.results); });

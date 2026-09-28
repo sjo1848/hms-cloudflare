@@ -1,0 +1,25 @@
+.billing-workspace .billing-charge-recovery {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1.45;
+}
+
+.billing-workspace .billing-charge-recovery > button {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 560px) {
+  .billing-workspace .billing-charge-recovery {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .billing-workspace .billing-charge-recovery > button {
+    width: 100%;
+    white-space: normal;
+  }
+}

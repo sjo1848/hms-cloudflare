@@ -136,15 +136,14 @@ describe("F0.3 synthetic room-state shadow rehearsal on executing D1", () => {
     const schemaRows = await db.prepare("SELECT type,name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type,name").all<{ type: string; name: string; sql: string | null }>();
     const schemaDigest = sha256(JSON.stringify(schemaRows.results));
     const input = { hotel_id: "hotel-synthetic-a", hotel_local_date: date, sellability_range: { start_date: "2026-10-01", end_date: "2026-10-03" }, source_schema_digest: schemaDigest, source_migration_digest: migrationDigest };
-    // Pinned against the complete current chain, including F0.8's additive
-    // reservation recovery schema; each digest is intentionally recomputed when
-    // the forward migration set changes.
-    expect(schemaDigest).toBe("e07f44d24dcb3c39b4f978078a9a6bbb870ced3e79f89a8c1b5ea8117eecfe89");
-    expect(migrationDigest).toBe("7d43cebbe52f9d186d90c256f5a03d222b217ea742ae27c9911436813c753d0b");
+    // Pinned against the complete current chain through F0.9; each digest is
+    // intentionally recomputed when the forward migration set changes.
+    expect(schemaDigest).toBe("9860115abc7026d395c4b41ad65330ac73fb112b3781d32d95eb495aff2f6a9c");
+    expect(migrationDigest).toBe("e17dfad84766271700b7c845e5a7e834a66360f5ce2ac9ad18fb36d1d3b7894d");
     const snapshot = await readLegacyRoomStateSnapshot(db, input);
     const report = await mapLegacyRoomState(snapshot);
-    expect(report.source_digest).toBe("a6eb2714a29767770ef5b9a30e16d5ac649ca3ddd604ad6d07749015a08269af");
-    expect(report.report_checksum).toBe("29cb0114519445ce9862036cd16887051754d2011619afd378518f3fc4e33059");
+    expect(report.source_digest).toBe("2793c1d9ef13dc08823afec83a0a9ac4bbe9325de37f8c84e5e56a2e72d2929f");
+    expect(report.report_checksum).toBe("65c051291483a531c2abd514cf41adbcc4b7e7af72c9897373b4f2631d14b914");
     expect(report).toMatchObject({ input_room_count: 2, output_room_count: 2, accounted_input_record_count: report.input_record_count });
     expect(report.rows.map(row => [row.room_id, row.classification, row.readiness.state, row.date_range_sellability])).toEqual([
       ["ready-room", "MAPPED", "READY_FOR_ARRIVAL", "SELLABLE"],
