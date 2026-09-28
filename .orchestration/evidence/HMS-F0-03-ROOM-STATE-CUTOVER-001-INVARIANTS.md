@@ -30,7 +30,7 @@ The deterministic two-room rehearsal applies every existing `apps/api/schema/hot
 
 The deterministic baseline has 2 input rooms and 2 output rooms; every input row is accounted (`input_record_count === accounted_input_record_count`). Row classes are `MAPPED: 1`, `REVIEW_REQUIRED: 1`; the mapped room is READY/SELLABLE from explicit independent dimensions, while the legacy AVAILABLE room with missing dimensions is `UNRESOLVED`/not sellable. The test fixes all four hashes as assertions and repeats mapping/replay to require an identical report checksum.
 
-Interruption evidence persists `INCOMPLETE/SOURCE_SNAPSHOT_CAPTURED` with zero rows, injects a failing statement after a shadow-row insert, and verifies transactional rollback leaves zero rows and the original checkpoint. Resume writes two rows and advances to `STAGING/SHADOW_ROWS_WRITTEN`; simulated process loss at that checkpoint is followed by a restart that verifies exact persisted rows and advances to `COMPLETE`. A further restart from `COMPLETE` keeps row count/checksum stable. A test-only activation request using the current digest is accepted into a test-only marker table; after deliberate synthetic service-state drift, a request against the prior digest is denied. Exact before/after snapshots prove the stale request changes no checkpoint, shadow row, simulated-approval marker, Housekeeping/lifecycle event, or canonical room state. The only canonical room difference is the deliberate source mutation before the stale request. A separate pair of synthetic hotel D1s with the same room ID but different room data has distinct digests and no cross-store data access. The activation helper/table exist only in this test and do not implement or claim production activation.
+Interruption evidence persists `INCOMPLETE/SOURCE_SNAPSHOT_CAPTURED` with zero rows and injects a failing statement after a shadow-row insert; transactional rollback leaves zero rows and the original checkpoint. The test then invokes `resumeSyntheticShadow()` while the run is still INCOMPLETE. That recovery branch writes two rows and advances to `STAGING/SHADOW_ROWS_WRITTEN`. Simulated process loss there is followed by a second invocation that verifies the exact persisted rows and advances to `COMPLETE`. A further restart from `COMPLETE` keeps row count/checksum stable. A test-only activation request using the current digest is accepted into a test-only marker table; after deliberate synthetic service-state drift, a request against the prior digest is denied. Exact before/after snapshots prove the stale request changes no checkpoint, shadow row, simulated-approval marker, Housekeeping/lifecycle event, or canonical room state. The only canonical room difference is the deliberate source mutation before the stale request. A separate pair of synthetic hotel D1s with the same room ID but different room data has distinct digests and no cross-store data access. The activation helper/table exist only in this test and do not implement or claim production activation.
 
 The D1 rehearsal creates only test-scoped `f03_shadow_runs` / `f03_shadow_rows` tables. These are not production migrations or an activation system. No schema migration file was added or modified.
 
@@ -81,7 +81,7 @@ The executing-D1 test applies the full existing hotel migration chain to fresh s
 | INV-EVID-001 | APPLIES | PASS | Every claim above maps to a named test, assertion, command or screenshot; mock/live-data claims excluded | — |
 | INV-LEGACY-001 | APPLIES | PASS | Ambiguous/foreign/orphan rows retain identifiers and quarantine class; exact D1 assertions show zero generated operational events/cases | No anonymous recovery record synthesized |
 | INV-MONEY-001 | N/A | N/A | No financial amount, invoice, payment, charge or settlement is read or changed | D1 browser audit confirms zero payment entries in fixture |
-| INV-STATE-001 | APPLIES | PASS | Rework will publish new immutable Artifact A2, then orchestration-only Boundary B2 recording exact A2 and requiring a fresh independent critic | Exact pair and prior REWORK preserved; no self-approval |
+| INV-STATE-001 | APPLIES | PASS | This rework will publish immutable Artifact A3, then orchestration-only Boundary B3 recording exact A3 and requiring a fresh independent critic | Prior A+B and A2+B2 REWORKs remain preserved; no self-approval |
 | INV-CF-I07-001 | N/A | N/A | No protected admin/network/audit route or capability authority changed | — |
 | INV-CF-I07-002 | N/A | N/A | No administrative mutation | — |
 | INV-CF-I07-003 | N/A | N/A | No role downgrade | — |
@@ -95,13 +95,14 @@ The executing-D1 test applies the full existing hotel migration chain to fresh s
 
 ## Initial Independent Critic findings and bounded rework
 
-The first exact A+B pair (`c4af224c0454b34ea2201db7f5726de446668aad` + `23de5ab46f68ce2a5c060bc9ff11c7c22ed6475d`) received `REWORK` from Pauli (fresh read-only GPT-6 Luna Medium). Both HIGH findings are addressed by the new executing-D1 assertions above; this is implementer evidence, not a new Critic verdict. The replacement A2+B2 must be reviewed as an exact pair before F0.4.
+The first exact A+B pair (`c4af224c0454b34ea2201db7f5726de446668aad` + `23de5ab46f68ce2a5c060bc9ff11c7c22ed6475d`) received `REWORK` from Pauli (fresh read-only GPT-6 Luna Medium). The second exact pair, A2 `3980ef3db3a4e0cb96f7102705d2719777d84f26` + B2 `80177b1a64aa993e983748366de74c4f49557084`, received `REWORK` from Lorentz (fresh read-only GPT-6 Luna Medium): the stale-request proof was accepted; a HIGH finding remained because the test bypassed the INCOMPLETE recovery helper branch; a MEDIUM finding identified the inaccurate `HUMAN_ACTION_REQUIRED` status for external review. The recovery test is repaired in the current artifact; orchestration now records Critic REWORK as technical rework in progress, not a human-only action. Neither review issued substantive PASS. This evidence is implementer-side only; the corrected exact A3+B3 pair requires another Independent Critic review before F0.4.
 
 | Critic finding | Repair/evidence |
 |---|---|
 | HIGH — stale-digest guard was only reconstructed as a local boolean; no activation request or exact zero-write proof | Test-only `requestSyntheticActivationSimulation()` now re-reads executing D1, checks digest/completion/checksum/checkpoint, records only accepted synthetic requests, and is invoked for both fresh and stale snapshots. The stale case snapshots all shadow/checkpoint/approval/event side effects and canonical room rows before and after; exact equality is asserted. |
-| HIGH — no staged checkpoint restart coverage | Executing-D1 test persists `SOURCE_SNAPSHOT_CAPTURED`, injects failure and verifies rollback, resumes through `SHADOW_ROWS_WRITTEN`, simulates process loss there, restarts by verifying persisted rows and completes, then replays from `COMPLETE` idempotently. |
-| Evidence overclaimed those cases | Exact identities, test behavior and scope limitations in this file and Pre-Critic record were updated; old hashes/claims are superseded, not treated as current evidence. |
+| HIGH — staged checkpoint restart coverage was absent | A2 added the staged-state test, but the A2 critic found its initial recovery path called the staging helper directly. The current test now starts `resumeSyntheticShadow()` from the persisted INCOMPLETE checkpoint and asserts it advances to STAGING; a second invocation resumes STAGING to COMPLETE; replay from COMPLETE is idempotent. |
+| MEDIUM — B2 classified an automated external review as HUMAN_ACTION_REQUIRED | Corrected in the orchestration-only boundary following the current Artifact A: critic REWORK is recorded as technical rework in progress (`RUNNING`, no Human Gate), and a new external-review-required state is set only when the corrected artifact is frozen for review. |
+| Evidence overclaimed checkpoint recovery | Evidence now states precisely that the recovery helper is invoked in the INCOMPLETE branch, followed by a separate invocation from STAGING; exact hashes/claims for each immutable pair are preserved above. |
 
 ## Pre-Critic findings and disposition
 
@@ -114,7 +115,7 @@ The first exact A+B pair (`c4af224c0454b34ea2201db7f5726de446668aad` + `23de5ab4
 | PC-F03-05 — browser runner retained successful fixture due relative/absolute path guard mismatch | Repaired: fixture root is absolute; rerun verified exact fixture deletion and owned-process termination |
 | Hilbert read-only DB/Data review — source completeness caveat | Closed within the contract boundary: all seven named mapping-relevant tables are read in one batch and every returned row is disposed; future source-schema additions must update the explicit query set and its manifest. No claim is made that the source D1 binding itself attests hotel identity or freezes live writes; those live-cutover policies remain explicitly prohibited and unresolved for the separate Human/data-risk gate. |
 
-No material contradiction with frozen Blueprint/Reconciliation/Final Disposition was found. Independent Critic review remains pending for the exact immutable A+B pair. This evidence is the implementer Pre-Critic record, not an Independent Critic verdict and not a Foundation 0 aggregate PASS.
+No material contradiction with frozen Blueprint/Reconciliation/Final Disposition was found. A fresh Independent Critic review remains required for the exact immutable A3+B3 pair. This evidence is the implementer Pre-Critic record, not an Independent Critic verdict and not a Foundation 0 aggregate PASS.
 
 ## Mandatory mutation inventory
 
@@ -129,5 +130,5 @@ No material contradiction with frozen Blueprint/Reconciliation/Final Disposition
 - [x] No applicable invariant is FAIL or UNPROVEN for the F0.3 artifact candidate.
 - [x] Full Task Contract validation passed against synthetic/local-only boundaries.
 - [x] Scope audit passed.
-- [x] Artifact A is followed by an orchestration-only Boundary B recording the exact A SHA.
+- [x] Artifact A3 is followed by an orchestration-only Boundary B3 recording the exact A3 SHA.
 - [x] External Independent Critic is required; Codex does not self-approve a substantive PASS.

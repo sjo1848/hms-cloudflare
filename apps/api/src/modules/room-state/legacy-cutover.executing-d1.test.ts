@@ -72,7 +72,7 @@ async function resumeSyntheticShadow(
   if (!run) throw new Error("Synthetic shadow run checkpoint is missing");
   if (run.status === "INCOMPLETE") {
     await stageSyntheticShadowRows(db, report);
-    return resumeSyntheticShadow(db, input);
+    return report;
   }
   const persistedRows = await db.prepare("SELECT room_id,classification,readiness,sellability FROM f03_shadow_rows WHERE hotel_id=?1 AND source_digest=?2 AND mapping_version=?3 ORDER BY room_id")
     .bind(report.hotel_id, report.source_digest, report.mapping_version).all();
@@ -160,11 +160,12 @@ describe("F0.3 synthetic room-state shadow rehearsal on executing D1", () => {
     expect((await db.prepare("SELECT * FROM f03_shadow_rows").all()).results).toEqual([]);
     expect(await db.prepare("SELECT status,checkpoint FROM f03_shadow_runs WHERE hotel_id=?1").bind(report.hotel_id).first()).toEqual({ status: "INCOMPLETE", checkpoint: "SOURCE_SNAPSHOT_CAPTURED" });
 
-    // Restart from SOURCE_SNAPSHOT_CAPTURED and durably commit the second checkpoint.
-    await stageSyntheticShadowRows(db, report);
+    // Restart through the recovery helper from SOURCE_SNAPSHOT_CAPTURED and durably commit the second checkpoint.
+    const resumedFromSnapshot = await resumeSyntheticShadow(db, input);
+    expect(resumedFromSnapshot.report_checksum).toBe(report.report_checksum);
     expect(await db.prepare("SELECT status,checkpoint FROM f03_shadow_runs WHERE hotel_id=?1").bind(report.hotel_id).first()).toEqual({ status: "STAGING", checkpoint: "SHADOW_ROWS_WRITTEN" });
     expect((await db.prepare("SELECT COUNT(*) AS count FROM f03_shadow_rows").first())).toEqual({ count: 2 });
-    const replay = await resumeSyntheticShadow(db, input); // process loss after SHADOW_ROWS_WRITTEN; restart verifies rows and advances to COMPLETE
+    const replay = await resumeSyntheticShadow(db, input); // process loss after SHADOW_ROWS_WRITTEN; a second restart verifies rows and advances to COMPLETE
     expect(replay.report_checksum).toBe(report.report_checksum);
     expect(await db.prepare("SELECT status,checkpoint,checksum FROM f03_shadow_runs WHERE hotel_id=?1").bind(report.hotel_id).first()).toEqual({ status: "COMPLETE", checkpoint: "COMPLETE", checksum: report.report_checksum });
 
