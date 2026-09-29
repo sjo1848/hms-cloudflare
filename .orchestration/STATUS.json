@@ -6,23 +6,23 @@
   "resume_authorized": false,
   "runtime_status": "RUNNING",
   "active_task": "HMS-F0-12-AGGREGATE-EVIDENCE-GATE-001-INDEPENDENT-CRITIC",
-  "last_completed_task": "F0.12 Artifact A frozen with synthetic aggregate manifest and final Pre-Critic; exact A+B Independent Critic is active; no F0.12 Development Gate or Foundation completion claimed",
-  "last_completed_head": "2d814a71c7a6e0d6cfc3e9dadb36eaabb84ee1c2",
+  "last_completed_task": "F0.12 replacement Artifact A2 frozen after repairing exact manifest/replay digest mismatch; exact A2+B2 Independent Critic is active; no F0.12 Development Gate or Foundation completion claimed",
+  "last_completed_head": "7c443474923827343f1ec719d70f0734c1920fa3",
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.12 ARTIFACT A FROZEN; INDEPENDENT CRITIC PENDING; FOUNDATION 0 INCOMPLETE",
-  "next_action": "OBTAIN_FRESH_INDEPENDENT_CRITIC_FOR_EXACT_F0_12_ARTIFACT_A_AND_BOUNDARY_B",
+  "status_label": "F0.12 ARTIFACT A2 FROZEN AFTER EVIDENCE REWORK; INDEPENDENT CRITIC PENDING; FOUNDATION 0 INCOMPLETE",
+  "next_action": "OBTAIN_FRESH_INDEPENDENT_CRITIC_FOR_EXACT_F0_12_ARTIFACT_A2_AND_BOUNDARY_B2",
   "stop_reason": null,
   "event": {
-    "seq": 224,
-    "id": "HMS-F0-12-ARTIFACT-A-FROZEN",
-    "type": "F0_12_ARTIFACT_FROZEN_AWAITING_EXACT_PAIR_INDEPENDENT_CRITIC"
+    "seq": 225,
+    "id": "HMS-F0-12-ARTIFACT-A2-FROZEN-AFTER-REWORK",
+    "type": "F0_12_REWORK_REPAIRED_A2_AWAITING_FRESH_EXACT_PAIR_CRITIC"
   },
   "external_review": {
-    "last_audited_head": "f7c8d28db1ce1dd6839f1f182260537f0e2d4898",
-    "artifact_head": "2d814a71c7a6e0d6cfc3e9dadb36eaabb84ee1c2",
-    "last_verdict": "PENDING: fresh independent review required for exact F0.12 Artifact A and orchestration-only Boundary B; no self-issued F0.12 PASS",
+    "last_audited_head": "4b5fd55aef69b68123b67352938445cab5f60e61",
+    "artifact_head": "7c443474923827343f1ec719d70f0734c1920fa3",
+    "last_verdict": "REWORK: Descartes, fresh read-only GPT-6 Luna Medium, exact prior A 2d814a71c7a6e0d6cfc3e9dadb36eaabb84ee1c2 + B 4b5fd55aef69b68123b67352938445cab5f60e61; IC-F0.12-01 replay digest mismatch repaired in replacement A2; fresh exact A2+B2 review required",
     "review_path": ".orchestration/evidence/HMS-F0-12-INDEPENDENT-CRITIC-A-B.md",
     "required": true,
     "prior_reviews_pending": [
