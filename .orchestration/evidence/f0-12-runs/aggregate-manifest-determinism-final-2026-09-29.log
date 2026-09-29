@@ -1,0 +1,12 @@
+F0.12 final aggregate report repeatability receipt
+Input index SHA-256: f47b482a3bd4a7a455ab8b43043db7e85d7ac018932eca149dcfe4ea3552ad75
+
+Generation 1: `node scripts/migration/f0-12-aggregate-evidence-manifest.mjs --output .orchestration/evidence/HMS-F0-12-AGGREGATE-EVIDENCE-MANIFEST-A2.json` — exit 0
+Generation 2: `node scripts/migration/f0-12-aggregate-evidence-manifest.mjs --output .orchestration/evidence/f0-12-runs/aggregate-manifest-A2-replay.json` — exit 0
+Byte comparison: `cmp -s` — exit 0 (identical)
+Generation 1 SHA-256: `26f6d2d42dab9b6ce028dcc454b9573cd34b2d3e70a2e322e87866486d3099e7`
+Generation 2 SHA-256: `26f6d2d42dab9b6ce028dcc454b9573cd34b2d3e70a2e322e87866486d3099e7`
+Published Artifact A2 report path: `.orchestration/evidence/HMS-F0-12-AGGREGATE-EVIDENCE-MANIFEST-A2.json`
+Published report SHA-256: `26f6d2d42dab9b6ce028dcc454b9573cd34b2d3e70a2e322e87866486d3099e7`
+
+The receipt is intentionally not an input to the generated manifest: it reports that manifest's digest, and including it in the input index would create a self-referential hash cycle. It is immutable within Artifact A2 and is directly verified by the Independent Critic against A2.

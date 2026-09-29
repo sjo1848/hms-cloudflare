@@ -44,6 +44,12 @@ All 24 registry invariants are classified in `HMS-F0-12-AGGREGATE-EVIDENCE-GATE-
 
 ## Disposition
 
-`PRE-CRITIC: PASS — READY TO FREEZE ARTIFACT A`
+## Bounded Independent Critic rework closure
 
-This permits only publication of the immutable F0.12 evidence artifact and its orchestration-only boundary, followed by a fresh Independent Critic. It does **not** close the F0.12 Development Gate or declare Foundation 0 complete. No F0.12 verdict may be represented as PASS until the Independent Critic reviews the exact frozen A+B pair.
+The first exact-pair Independent Critic (Descartes, fresh read-only GPT-6 Luna Medium) returned `REWORK` on IC-F0.12-01: the earlier replay receipt described a previous input-index generation and its digest did not match Artifact A's canonical report. The original finding is retained in `.orchestration/evidence/HMS-F0-12-INDEPENDENT-CRITIC-A-B.md`.
+
+Repair: separate the 7-test fail-closed receipt from the manifest-generation receipt; regenerate two reports from the final pinned input index SHA-256 `f47b482a3bd4a7a455ab8b43043db7e85d7ac018932eca149dcfe4ea3552ad75`; compare both outputs to each other and to the published A2 candidate. All three report digests are `26f6d2d42dab9b6ce028dcc454b9573cd34b2d3e70a2e322e87866486d3099e7`. The output-digest receipt is artifact-bound but excluded from its own input index, avoiding a circular hash. The learned evidence rule was added to `.orchestration/INVARIANTS.md` and mapped to INV-EVID-001 evidence above.
+
+`PRE-CRITIC: PASS — REWORK REPAIRED; READY TO FREEZE ARTIFACT A2`
+
+This permits only publication of the immutable F0.12 evidence Artifact A2 and its orchestration-only boundary, followed by a fresh Independent Critic. It does **not** close the F0.12 Development Gate or declare Foundation 0 complete. No F0.12 verdict may be represented as PASS until the Independent Critic reviews the exact frozen A2+B2 pair.

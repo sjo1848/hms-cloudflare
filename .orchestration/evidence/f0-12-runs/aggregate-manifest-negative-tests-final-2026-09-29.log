@@ -2,9 +2,3 @@ Command: node --test scripts/migration/f0-12-aggregate-evidence-manifest.node-sp
 Exit code: 0
 Result: 7 tests passed, 0 failed.
 Coverage: deterministic synthetic manifest output; unresolved rows excluded from activation; missing/tampered evidence fail closed; UNPROVEN criteria remain incomplete; non-synthetic and invalid command receipts rejected; reviewer/F0.1 disposition enforced; held room cannot be an activation candidate.
-
-Generation replay:
-- Two invocations of `node scripts/migration/f0-12-aggregate-evidence-manifest.mjs --output <fresh-path>` completed with exit code 0.
-- `cmp -s` returned 0 (byte-identical).
-- Both replay files and the canonical manifest SHA-256: `1df998f0f75db200e9d3bb5a32691a42acb85ed3825b3375974833061d5e4323`.
-- The report says `PASS_PENDING_INDEPENDENT_CRITIC`; it does not claim Foundation 0 complete or authorize activation.

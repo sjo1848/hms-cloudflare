@@ -135,7 +135,7 @@ When an Independent Critic finds a defect whose root cause can recur outside the
 
 **Applies to:** every substantive artifact.
 
-**Invariant:** documentation must state exactly what tests/scripts prove. Mock evidence cannot be described as integrated evidence; local state cannot be described as remote/canonical closure; a shell check cannot be described as full journey coverage.
+**Invariant:** documentation must state exactly what tests/scripts prove. Mock evidence cannot be described as integrated evidence; local state cannot be described as remote/canonical closure; a shell check cannot be described as full journey coverage. For generated aggregate evidence, final repeatability receipts must be produced from the same frozen input index as the published canonical report, and their digests must match that exact report; an earlier successful generation does not prove the final artifact.
 
 **Required evidence:** pre-Critic cross-check of every important evidence claim against a named executable test, DB assertion, browser script, or immutable source artifact.
 
