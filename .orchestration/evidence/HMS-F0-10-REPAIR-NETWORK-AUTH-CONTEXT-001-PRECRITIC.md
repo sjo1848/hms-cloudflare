@@ -10,3 +10,11 @@ Task Contract: `.orchestration/contracts/HMS-F0-10-REPAIR-NETWORK-AUTH-CONTEXT-0
 6. **Publication — REQUIRED.** Persist role×viewport response and assertion evidence, verify only runner/evidence changes, freeze A4+B4, then obtain a fresh Critic distinct from Tesla and Harvey. A3+B3 `REWORK` remains historical. No Foundation 0 completion claim.
 
 `PRE-CRITIC: PASS FOR BOUNDED EVIDENCE REPAIR ADMISSION`
+
+## Execution disposition
+
+- A prior runner pass mislabeled the unauthorized Network check as desktop while the viewport remained 375×844 after the authorized mobile check. The corrected runner explicitly restores and verifies 1280×900 before that case and then separately sets 375×844 for mobile.
+- Screenshot inspection exposed the local acceptance selector being reset to Admin on every document navigation even though Worker headers were Ops. The runner now seeds the default identity only once per browser tab session and asserts the visible local selector remains Ops (`value=2`) in each no-write viewport.
+- Fresh `bash scripts/cf-f0-10-capabilities-integrated.sh`: PASS. At each viewport, the App Shell first renders Hotel Sur; the browser then obtains an unmocked Worker `/api/v1/auth/me` response and asserts HTTP 200, exact subject, hotel, `ops`, `housekeeping.read`, and empty network capability array. It also asserts the visible selector is the Ops fixture before keyboard/DOM checks.
+- Both denied POSTs return 403; D1 `deniedNetworkHotelCount` is 0. Only the hotel-list GET for the selected-property no-write view is synthetic. Process-tree cleanup is verified; the isolated `mktemp` directory is retained and is not represented as deleted.
+- Result: `output/playwright/f0-10-capabilities-integrated-result.json`; logs and screenshots remain in the same directory. No product/schema changes.

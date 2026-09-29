@@ -131,6 +131,14 @@ for (const key of ["desktop", "mobile", "dualScope", "outOfOrderAuthMe", "networ
 for (const key of ["authorizedDesktop", "unauthorizedDesktop", "authorizedMobile", "unauthorizedMobile"]) if (browser.networkKeyboard[key] !== "PASS") throw new Error(`Network keyboard evidence missing ${key}: ${JSON.stringify(browser.networkKeyboard)}`);
 if (browser.networkKeyboard.deniedWriteDesktop !== 403 || browser.networkKeyboard.deniedWriteMobile !== 403
   || JSON.stringify(browser.networkKeyboard.unauthorizedViewports) !== JSON.stringify(["1280x900:PASS", "375x844:PASS"])) throw new Error(`Network viewport authorization evidence mismatch: ${JSON.stringify(browser.networkKeyboard)}`);
+for (const viewport of ["noWriteAuthMeDesktop", "noWriteAuthMeMobile"]) {
+  const auth = browser.networkKeyboard[viewport];
+  if (auth?.status !== 200 || auth.appContextApplied !== true || auth.localProfile !== "2" || auth.subject !== "source-user:24000000-0000-0000-0000-000000000001"
+    || auth.hotelId !== "20000000-0000-0000-0000-000000000002" || auth.role !== "ops"
+    || !auth.hotelCapabilities.includes("housekeeping.read") || auth.networkCapabilities.includes("saas.hotels.write")) {
+    throw new Error(`real /auth/me identity/capability context mismatch at ${viewport}: ${JSON.stringify(auth)}`);
+  }
+}
 if (browser.beforeDowngrade !== 201 || browser.afterDowngrade !== 403 || browser.unmemberedHotel !== 403 || browser.directDenied !== "PASS") throw new Error(`integrated browser authorization mismatch: ${JSON.stringify(browser)}`);
 const result = { browser, d1: { allowedRoomCount: roomRows[0].allowed_room, deniedRoomCount: roomRows[1].denied_room, finalRole: rows[0].role, roleAuditCount: rows[1].role_audits, deniedNetworkHotelCount: rows[2].denied_network_hotels }, cleanup: "owned Worker/Vite/Playwright processes verified stopped" };
 fs.writeFileSync("output/playwright/f0-10-capabilities-integrated-result.json", JSON.stringify(result, null, 2) + "\n");

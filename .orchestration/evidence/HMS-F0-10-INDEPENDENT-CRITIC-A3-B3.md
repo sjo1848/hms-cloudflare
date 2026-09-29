@@ -38,3 +38,12 @@ Reviewer: Harvey, fresh separate read-only GPT-6 Luna Medium; exact A3 `15835e28
 - No `ROADMAP_BLOCKER`; no architecture contradiction. Foundation 0 completion is not authorized.
 
 Repair contract/pre-critic are frozen in the following bounded increment. A3+B3 remain immutable with this verdict.
+
+## Bounded repair evidence (does not rewrite this verdict)
+
+- Contract `.orchestration/contracts/HMS-F0-10-REPAIR-NETWORK-AUTH-CONTEXT-001.md` and Pre-Critic were frozen before runner changes.
+- The runner waits for the App Shell to render the selected hotel context and performs a real, unmocked in-page `/api/v1/auth/me` request before treating no-write UI assertions as authorization evidence. At both 1280×900 and 375×844 it records HTTP 200, expected subject, HOTEL_SECOND_DB, role `ops`, `housekeeping.read`, and empty network capabilities.
+- A separate audit caught that the previous runner had not restored desktop viewport after the authorized mobile check. The replacement explicitly sets 1280×900 before the no-write desktop case, then separately runs 375×844 mobile.
+- Screenshot review caught the local acceptance selector resetting to Admin on each navigation despite Ops Worker headers. The runner now initializes its default profile only once per tab session and asserts visible profile value `2` (Ops) at both no-write viewports.
+- Fresh integrated local Worker/two-D1/Vite run passes both role×viewport cases, DOM absence, 40-tab exclusion, readable plan, 403 denied writes at both widths, zero denied hotel rows in D1 and owned process termination. The only mock is the selected-property hotel-list GET. The isolated `mktemp` directory remains; evidence claims process cleanup only.
+- A3+B3's `REWORK` remains historical and unchanged. Replacement A4+B4 needs a new independent Critic, distinct from Tesla and Harvey.

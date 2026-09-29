@@ -3,7 +3,10 @@
   const hotelB = "20000000-0000-0000-0000-000000000002";
   await page.addInitScript(() => {
     localStorage.setItem("hms.locale", "en");
-    localStorage.setItem("hms-local-acceptance-profile", "0");
+    if (sessionStorage.getItem("f0-10-profile-initialized") !== "true") {
+      localStorage.setItem("hms-local-acceptance-profile", "0");
+      sessionStorage.setItem("f0-10-profile-initialized", "true");
+    }
   });
   await page.setExtraHTTPHeaders({
     "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000001",
@@ -119,6 +122,7 @@
   });
   if (unmemberedContext.status !== 403) throw new Error(`unmembered hotel unexpectedly received auth context: ${JSON.stringify(unmemberedContext)}`);
 
+  await page.setViewportSize({ width: 1280, height: 900 });
   await profile.selectOption("2");
   await page.setExtraHTTPHeaders({
     "x-local-access-subject": "source-user:24000000-0000-0000-0000-000000000001",
@@ -217,6 +221,18 @@
     ]) });
   });
   await page.goto("http://127.0.0.1:4178/network");
+  const noWriteDesktopProfile = await profile.inputValue();
+  if (noWriteDesktopProfile !== "2") throw new Error(`desktop no-write UI profile selector is not the ops fixture: ${noWriteDesktopProfile}`);
+  await page.waitForFunction(() => document.querySelector(".header-context")?.textContent?.includes("Hotel Sur"));
+  const noWriteDesktopResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/v1/auth/me");
+    return { status: response.status, body: await response.json() };
+  });
+  const noWriteDesktopAuth = noWriteDesktopResponse.body;
+  if (noWriteDesktopResponse.status !== 200 || noWriteDesktopAuth.subject !== "source-user:24000000-0000-0000-0000-000000000001"
+    || noWriteDesktopAuth.hotel_id !== hotelB || noWriteDesktopAuth.role !== "ops"
+    || !noWriteDesktopAuth.capabilities.hotel.includes("housekeeping.read")
+    || noWriteDesktopAuth.capabilities.network.includes("saas.hotels.write")) throw new Error(`desktop no-write UI received unexpected /auth/me context: ${JSON.stringify(noWriteDesktopResponse)}`);
   await page.getByRole("button", { name: /Hotel Sur/ }).waitFor({ state: "visible" });
   await page.getByRole("button", { name: /Hotel Sur/ }).click();
   await page.locator(".network-detail").waitFor({ state: "visible" });
@@ -240,6 +256,18 @@
   if (deniedNetworkWrite !== 403) throw new Error(`hotel member without network write capability received network write: ${deniedNetworkWrite}`);
   await page.setViewportSize({ width: 375, height: 844 });
   await page.goto("http://127.0.0.1:4178/network");
+  const noWriteMobileProfile = await profile.inputValue();
+  if (noWriteMobileProfile !== "2") throw new Error(`mobile no-write UI profile selector is not the ops fixture: ${noWriteMobileProfile}`);
+  await page.waitForFunction(() => document.querySelector(".header-context")?.textContent?.includes("Hotel Sur"));
+  const noWriteMobileResponse = await page.evaluate(async () => {
+    const response = await fetch("/api/v1/auth/me");
+    return { status: response.status, body: await response.json() };
+  });
+  const noWriteMobileAuth = noWriteMobileResponse.body;
+  if (noWriteMobileResponse.status !== 200 || noWriteMobileAuth.subject !== "source-user:24000000-0000-0000-0000-000000000001"
+    || noWriteMobileAuth.hotel_id !== hotelB || noWriteMobileAuth.role !== "ops"
+    || !noWriteMobileAuth.capabilities.hotel.includes("housekeeping.read")
+    || noWriteMobileAuth.capabilities.network.includes("saas.hotels.write")) throw new Error(`mobile no-write UI received unexpected /auth/me context: ${JSON.stringify(noWriteMobileResponse)}`);
   await page.getByRole("button", { name: /Hotel Sur/ }).waitFor({ state: "visible" });
   await page.getByRole("button", { name: /Hotel Sur/ }).click();
   await page.locator(".network-detail").waitFor({ state: "visible" });
@@ -329,5 +357,5 @@
   if (!afterStaleResponse?.includes("bookings.read") || afterStaleResponse.includes("rooms.write")
     || await roomWrite.isVisible()) throw new Error(`out-of-order /auth/me response restored stale capabilities: ${afterStaleResponse}`);
   await page.unroute("**/api/v1/auth/me");
-  return { desktop: "1280x900", mobile: "375x844", dualScope: "PASS", adminRoomGuestUserControls: "visible", beforeDowngrade: allowedWrite.status, afterDowngrade: deniedWrite.status, roomActionHidden: true, userControlsHidden: true, cashCloseHidden: true, opsRoomWrite: false, housekeepingRoleAction: "visible", networkOnlyNavigation: "PASS", networkWriteAction: "visible-and-keyboard-reachable", networkDeniedWritesHidden: "PASS", networkKeyboard: { authorizedDesktop: "PASS", unauthorizedDesktop: "PASS", authorizedMobile: "PASS", unauthorizedMobile: "PASS", deniedWriteDesktop: deniedNetworkWrite, deniedWriteMobile: deniedNetworkWriteMobile, unauthorizedViewports: networkNoWriteViewportResults }, directDenied: "PASS", unmemberedHotel: unmemberedContext.status, outOfOrderAuthMe: "PASS" };
+  return { desktop: "1280x900", mobile: "375x844", dualScope: "PASS", adminRoomGuestUserControls: "visible", beforeDowngrade: allowedWrite.status, afterDowngrade: deniedWrite.status, roomActionHidden: true, userControlsHidden: true, cashCloseHidden: true, opsRoomWrite: false, housekeepingRoleAction: "visible", networkOnlyNavigation: "PASS", networkWriteAction: "visible-and-keyboard-reachable", networkDeniedWritesHidden: "PASS", networkKeyboard: { authorizedDesktop: "PASS", unauthorizedDesktop: "PASS", authorizedMobile: "PASS", unauthorizedMobile: "PASS", noWriteAuthMeDesktop: { localProfile: noWriteDesktopProfile, subject: noWriteDesktopAuth.subject, hotelId: noWriteDesktopAuth.hotel_id, role: noWriteDesktopAuth.role, hotelCapabilities: noWriteDesktopAuth.capabilities.hotel, networkCapabilities: noWriteDesktopAuth.capabilities.network, status: noWriteDesktopResponse.status, appContextApplied: true }, noWriteAuthMeMobile: { localProfile: noWriteMobileProfile, subject: noWriteMobileAuth.subject, hotelId: noWriteMobileAuth.hotel_id, role: noWriteMobileAuth.role, hotelCapabilities: noWriteMobileAuth.capabilities.hotel, networkCapabilities: noWriteMobileAuth.capabilities.network, status: noWriteMobileResponse.status, appContextApplied: true }, deniedWriteDesktop: deniedNetworkWrite, deniedWriteMobile: deniedNetworkWriteMobile, unauthorizedViewports: networkNoWriteViewportResults }, directDenied: "PASS", unmemberedHotel: unmemberedContext.status, outOfOrderAuthMe: "PASS" };
 })()

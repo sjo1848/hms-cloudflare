@@ -65,6 +65,7 @@
   "f0_10_mobile_repair_precritic": ".orchestration/evidence/HMS-F0-10-REPAIR-NETWORK-MOBILE-KEYBOARD-001-PRECRITIC.md; PASS for bounded evidence repair admission",
   "f0_10_auth_context_repair_contract": ".orchestration/contracts/HMS-F0-10-REPAIR-NETWORK-AUTH-CONTEXT-001.md; frozen before evidence change, all 24 invariants classified",
   "f0_10_auth_context_repair_precritic": ".orchestration/evidence/HMS-F0-10-REPAIR-NETWORK-AUTH-CONTEXT-001-PRECRITIC.md; PASS for bounded evidence repair admission",
+  "f0_10_auth_context_repair_validation": "PASS: integrated Worker/two-D1/Vite; actual no-write /auth/me context + Ops UI selector at 1280x900 and 375x844; keyboard/DOM, 403 denials, D1 denied hotel count 0; product/schema unchanged; process cleanup verified, tempdir retained",
   "f0_10_prior_a1_b1_critic": "REWORK: Lagrange, fresh separate read-only GPT-6 Luna Medium; A be92a5750c9be4b1b112bbd9980a8b34fc83d42a + B d224b69ac0c2fa0c8d427d6dab3dc8cd30ae4cbe; findings IC-01/02/03, no blocker; preserved in .orchestration/evidence/HMS-F0-10-INDEPENDENT-CRITIC-A-B.md",
   "f0_10_development_gate": "PENDING fresh Independent Critic on exact A2+B2; A1/B1 REWORK remains historical. F0.11 and F0.12 still outstanding; INV-STATE will be finalized in an orchestration-only follow-up after exact verdict",
   "f0_10_repair_contract": ".orchestration/contracts/HMS-F0-10-REPAIR-NETWORK-WRITES-KEYBOARD-001.md; all 24 invariants classified",
