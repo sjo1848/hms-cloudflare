@@ -8,7 +8,7 @@
   "runtime_status": "WAITING_HUMAN_GATE",
   "active_task": "HMS-B0-BUDGET-POLICY-REVIEW-001 — controller classification of integrated initial-load evidence",
   "last_completed_task": "B0 budget policy review evidence; condition 5 unresolved; no checker/budget/product changes",
-  "last_completed_head": "3d40b82353ce747d9b79100e0d28e7f9348764fc",
+  "last_completed_head": "5fa6289dfee2c165d6daa2d2ec360f73c0bc868f",
   "work_branch": "impl/hms-b0-bundle-headroom",
   "pr": null,
   "wave": "B0 — WEB BUNDLE HEADROOM (PRECONDITION ONLY; BLOCK B NOT STARTED)",
@@ -16,13 +16,13 @@
   "next_action": "CONTROLLER_CLASSIFY_LOCAL_INTEGRATED_INITIAL_LOAD_EVIDENCE_BEFORE_ANY_RAW_CEILING_CHANGE_OR_BLOCK_B_START",
   "stop_reason": "Condition 5 is not established: local Worker/D1 browser measured Reception queue readiness at 3605ms with concurrent ~2.4s API reads; no field CWV evidence. Provisional raw ceilings were not applied; Block B has not started.",
   "event": {
-    "seq": 234,
-    "id": "B0-BUDGET-POLICY-GATE-REQUIRED",
-    "type": "CONDITIONAL_POLICY_REVIEW_STOP_CONDITION_MET"
+    "seq": 235,
+    "id": "B0-BUDGET-POLICY-BOUNDARY-RECORDED",
+    "type": "ORCHESTRATION_BOUNDARY_RECORDS_EXACT_ARTIFACT_A"
   },
   "external_review": {
     "last_audited_head": null,
-    "artifact_head": null,
+    "artifact_head": "5fa6289dfee2c165d6daa2d2ec360f73c0bc868f",
     "last_verdict": "No Independent Critic verdict claimed. Controller review required for unresolved condition 5; raw budgets unchanged; Block B not started.",
     "review_path": ".orchestration/evidence/HMS-B0-BUDGET-POLICY-REVIEW-001-RESULT.md",
     "required": true,
