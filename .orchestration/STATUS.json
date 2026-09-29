@@ -2,29 +2,29 @@
   "schema_version": 1,
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "FOUNDATION_0_CONTROLLER_CHECKPOINT",
+  "phase": "BLOCK_A_IMPLEMENTATION",
   "resume_authorized": false,
-  "runtime_status": "HUMAN_ACTION_REQUIRED",
-  "active_task": "FOUNDATION_0_CONTROLLER_REVIEW",
+  "runtime_status": "RUNNING",
+  "active_task": "HMS-BLOCK-A-APP-SHELL-NAVIGATION-CONTEXT-001",
   "last_completed_task": "F0.12 Development Gate PASS after fresh exact A2+B2 Independent Critic PASS; Foundation 0 complete and awaiting Controller review; Blocks A-H not started",
   "last_completed_head": "7c443474923827343f1ec719d70f0734c1920fa3",
-  "work_branch": "impl/hms-foundation-0",
+  "work_branch": "impl/hms-block-a-shell",
   "pr": null,
-  "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "FOUNDATION_0_COMPLETE_AWAITING_CONTROLLER_REVIEW",
-  "next_action": "CONTROLLER_REVIEW_FOUNDATION_0; DO_NOT_BEGIN_BLOCK_A_H_WITHOUT_NEW_AUTHORIZATION",
-  "stop_reason": "FOUNDATION_0_COMPLETE_AWAITING_CONTROLLER_REVIEW; promotion/live-data gates remain blocked; Blocks A-H not authorized",
+  "wave": "BLOCK A — APP SHELL + NAVIGATION/CONTEXT",
+  "status_label": "BLOCK_A_CONTRACT_FROZEN_IMPLEMENTATION_RUNNING",
+  "next_action": "IMPLEMENT_FROZEN_BLOCK_A_TASK_CONTRACT; DO_NOT_START_BLOCKS_B_H",
+  "stop_reason": null,
   "event": {
-    "seq": 226,
-    "id": "FOUNDATION-0-COMPLETE-AWAITING-CONTROLLER-REVIEW",
-    "type": "F0_12_EXACT_PAIR_CRITIC_PASS_FOUNDATION_0_GATE_CLOSED"
+    "seq": 227,
+    "id": "BLOCK-A-AUTHORIZATION-014-CONTRACT-FROZEN",
+    "type": "BA1_BA7_APPROVED_TASK_CONTRACT_AND_ADMISSION_PRECRITIC_PASS"
   },
   "external_review": {
     "last_audited_head": "4968969def57324120b176e5359971612c197c9d",
     "artifact_head": "7c443474923827343f1ec719d70f0734c1920fa3",
     "last_verdict": "PASS: Parfit, fresh separate read-only/adversarial GPT-6 Luna Medium; exact A2 7c443474923827343f1ec719d70f0734c1920fa3 + B2 4968969def57324120b176e5359971612c197c9d; independently regenerated and matched both reports to canonical SHA; no live-data authorization or Foundation-overreach",
     "review_path": ".orchestration/evidence/HMS-F0-12-INDEPENDENT-CRITIC-A2-B2.md",
-    "required": true,
+    "required": false,
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
@@ -32,7 +32,7 @@
   },
   "human_gate": {
     "required": false,
-    "decision": "RG1-RG7 APPROVED FOR FOUNDATION 0 LOCAL/SYNTHETIC IMPLEMENTATION; SEPARATE HUMAN AUTHORIZATION REQUIRED BEFORE ANY REAL-DATA CUTOVER/BOOTSTRAP",
+    "decision": "BA1-BA7 APPROVED FOR BLOCK A ONLY; BLOCKS B-H, REAL DATA, PR, MERGE, MAIN, STAGING, DEPLOY AND PRODUCTION REMAIN PROHIBITED",
     "implementation_authorized": true
   },
   "f0_8_artifact_a": "abd9afdd7537ecef29ad4ae099d769c38b137f6d",

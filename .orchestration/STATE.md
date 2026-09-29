@@ -1,8 +1,10 @@
 # HMS Cloudflare — Orchestration State
 
-## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
+## ACTIVE TASK — BLOCK A APP SHELL + NAVIGATION/CONTEXT
 
-Active task: begin F0.12 aggregate evidence/activation gate after F0.11 Development Gate PASS. Exact F0.11 A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` was substantively examined by Euler on B4; Euler's two handoff-only `REWORK` findings were closed by Ohm's fresh PASS on exact A2+B5 `d7e4f700b05c37b32489422125eecc4faa2d6d1d`. Neither review changed A2. Full linked dispositions: `.orchestration/evidence/HMS-F0-11-INDEPENDENT-CRITIC-A2-B4.md` and `.orchestration/evidence/HMS-F0-11-INDEPENDENT-CRITIC-A2-B5.md`. F0.9 and F0.10 are PASS for their increments only. Foundation 0 is NOT complete; F0.12 is active. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
+Human Gate BA1–BA7 is approved by Drive authorization `HMS-BLOCK-A-AUTHORIZATION-014` (Drive `11Jei9hB2ubwQRzRGawisY7bIsTNVz-nuQCpG-GAVuV0`). The exact accepted Foundation 0 closure base is `1bfa20bb5f9bf1db421afbb88bf77b87a97f5d18`; dedicated clean worktree branch: `impl/hms-block-a-shell`. Task Contract `.orchestration/contracts/HMS-BLOCK-A-APP-SHELL-NAVIGATION-CONTEXT-001.md` is frozen before implementation; independent Contract Reviewer and admission Pre-Critic are recorded in `.orchestration/evidence/HMS-BLOCK-A-CONTRACT-REVIEW-001.md` and `.orchestration/evidence/HMS-BLOCK-A-APP-SHELL-NAVIGATION-CONTEXT-001-PRECRITIC.md`. Foundation 0 remains historically complete; this authorization starts Block A only. No Blocks B–H, real data, PR, merge, main, staging, deploy or production.
+
+The historical F0 progress below is retained as history and is not the active dispatch state. The previous exact Foundation 0 critic PASS is complete. Pending older P0.1/Wave 1.2 reviews remain separate promotion/integration records and do not expand or redefine this Block A task.
 
 ### F0.8 — Recoverable guest + reservation creation — implementation validated; handoff condition closed
 
