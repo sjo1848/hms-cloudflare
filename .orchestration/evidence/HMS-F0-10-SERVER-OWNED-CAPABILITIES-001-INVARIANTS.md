@@ -19,7 +19,7 @@ Evidence scope: synthetic local Worker, disposable CONTROL_DB/HOTEL_DEMO_DB/HOTE
 | INV-EVID-001 | APPLIES | PASS | A4's previous no-write desktop label was unsupported and remains documented as a historical REWORK. A5 replaces it with runtime-derived dimensions and PNG-header assertions; exact dimensions/digests are in `output/playwright/f0-10-capabilities-integrated-result.json`. Real `/auth/me`/POST and synthetic hotel-list GET remain distinguished. |
 | INV-LEGACY-001 | N/A | N/A | No historical source rows or identities are synthesized, merged or backfilled. |
 | INV-MONEY-001 | N/A | N/A | No amount, charge, invoice, payment, cash or settlement semantics changed. Billing controls are hidden by exact existing capability sets; backend guards remain authoritative. CF-I06 PASS. |
-| INV-STATE-001 | APPLIES | PASS AFTER A+B+INDEPENDENT CRITIC | Required publication is non-circular: substantive Artifact A, orchestration-only Boundary B naming its exact SHA, then a genuinely separate Critic. This row's final status is completed only after those exact commits and external review. |
+| INV-STATE-001 | APPLIES | PASS | Non-circular sequence completed: immutable A5 `2e0fb984022b48a7dbeca5f4417dd2fae895fc97`, orchestration-only B5 `132449cbf8ba622c693935f1b2d3bb8bb9494665`, and fresh independent Critic Gauss `PASS`; exact verdict in `HMS-F0-10-INDEPENDENT-CRITIC-A5-B5.md`. F0.10 only. |
 | INV-CF-I07-001 | APPLIES | PASS | Frontend consumes `/auth/me` capability arrays; it contains no second role-to-capability authority. Canonical `ROLE_CAPABILITIES`/`hasCapability` remain the API source of truth. `npm run test:cf-i07` PASS. |
 | INV-CF-I07-002 | N/A | N/A | No admin mutation implementation or no-op semantics changed. Synthetic role downgrade is pre-existing and tested solely to prove freshness. |
 | INV-CF-I07-003 | APPLIES | PASS | Browser creates a room as the same subject while admin (`201`), changes only its fixture membership role, repeats the identical room-create operation as receptionist (`403`); D1 shows one allowed room, zero denied rooms, final receptionist role and exactly two role audit events. |
@@ -59,4 +59,4 @@ Evidence scope: synthetic local Worker, disposable CONTROL_DB/HOTEL_DEMO_DB/HOTE
 ## Publication boundary
 
 - [x] All contract/invariant evidence and actual outputs are present; no applicable item is marked FAIL/UNPROVEN.
-- [ ] Freeze replacement Artifact A3, then orchestration-only Boundary B3 and receive fresh Independent Critic review. Codex does not self-declare substantive F0.10 PASS.
+- [x] Freeze replacement Artifact A5 `2e0fb984022b48a7dbeca5f4417dd2fae895fc97`, then orchestration-only Boundary B5 `132449cbf8ba622c693935f1b2d3bb8bb9494665`, and receive fresh Independent Critic Gauss `PASS` on exact pair. F0.10 only; no aggregate Foundation 0 PASS.

@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active task: fresh Independent Critic review of F0.10 Artifact A5 `2e0fb984022b48a7dbeca5f4417dd2fae895fc97` + this orchestration-only Boundary B5. Zeno's A4 `ba2ff62daf48616ad84700c684adf4cd5d70733e` + B4 `10ff54deaf2b2ae612544c7817f4ac8a67425099` `REWORK` is preserved: no-write cases were actually mobile despite desktop labels. A5 corrects this: explicit viewport immediately before each no-write check, runtime-derived viewport result, PNG header width/hash verification. Fresh integrated evidence records desktop 1280×1034 and mobile 375×1209 screenshots with different digests; actual Ops selector and `/auth/me` context, keyboard/DOM, POST 403, D1 zero effect all pass. The prior invariant/pre-critic overclaim is corrected; A4 remains immutable. No product/schema changes. Process trees stopped; temp directory retained. A5 is immutable; Critic must be fresh and distinct from Tesla, Harvey and Zeno. F0.10 remains open pending exact review. Foundation 0 remains incomplete: F0.10 review → F0.11 → F0.12. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
+Active task: begin F0.11 — Refresh/invalidation and authoritative UI continuity; F0.10 is closed at its own Development Gate. Fresh Independent Critic Gauss (GPT-6 Luna Medium, read-only) returned `PASS` on exact A5 `2e0fb984022b48a7dbeca5f4417dd2fae895fc97` + B5 `132449cbf8ba622c693935f1b2d3bb8bb9494665`; exact evidence `.orchestration/evidence/HMS-F0-10-INDEPENDENT-CRITIC-A5-B5.md`. Gauss verified actual 1280×900 and 375×844 no-write runs, distinct PNG widths/hashes, matching Ops UI/auth context, real 403/D1 zero effect, scope and corrected historical A4 overclaim; no blocker/architecture contradiction. A2/B2, A3/B3 and A4/B4 REWORK histories remain immutable. F0.10 Development Gate PASS; Foundation 0 is NOT complete: F0.11 → F0.12 remain. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
 
 ### F0.8 — Recoverable guest + reservation creation — implementation validated; handoff condition closed
 
@@ -257,7 +257,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-Obtain fresh Independent Critic verdict on exact A5 `2e0fb984022b48a7dbeca5f4417dd2fae895fc97` plus this orchestration-only B5. If that review closes F0.10, record it and finalize INV-STATE in an orchestration-only follow-up, then continue F0.11 and F0.12; Foundation 0 is NOT complete. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
+Create the F0.11 Task Contract and Pre-Critic before implementation. Implement only approved refresh/invalidation and authoritative continuity behavior; then F0.12 aggregate evidence gate. Foundation 0 is NOT complete. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
 
 ## MODEL ROUTING
 
