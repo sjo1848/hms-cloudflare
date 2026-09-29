@@ -268,13 +268,14 @@ this is an inspection limitation, not a production finding.
 - Budget binding remains unchanged: JS raw 299,982/300,000 bytes (18-byte margin), gzip 86,293; CSS raw 43,399/gzip 8,383. This narrow margin is a residual maintenance risk, not a waiver or failure.
 - A mistaken `npm run wrangler:dry-run` invocation exposed that the package script does not validate web/staging (it ends with `--help`). It was not counted; explicit three-config dry-runs passed. No package-script scope expansion.
 - Immutable F0.11 Artifact A is `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306`. It contains the scoped code, frozen contract, final Pre-Critic/invariant evidence, integrated/mock scripts and terminal browser artifacts. No product source changed after A.
-- Orchestration-only Boundary B is the next commit and will identify exact A `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306`, set `external_review.required=true`, and request a fresh Independent Critic. No Independent Critic verdict has been manufactured.
+- Initial orchestration-only boundary commit `58c4c6cdd563790b591d57119a0f09cbbe9e7059` set `external_review.required=true` and pointed at exact A, but its human-readable `f0_11_boundary_b` field incorrectly remained `PENDING`. It is retained as immutable history, not used as the final review boundary.
+- This orchestration-only B2 commit reconciles that metadata and requests a fresh Independent Critic on exact Artifact A `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306` plus this B2. No Independent Critic verdict has been manufactured.
 - Unrelated working-tree edits to historical F0.9/P0.1 evidence/harness and non-final F0.11 diagnostics remain uncommitted and excluded from A; they are preserved, not silently discarded.
 - Foundation 0 remains NOT complete. F0.12 is still required after F0.11 and must have its own Task Contract. No Blocks A–H, real data, PR/push/merge, main, staging mutation, deploy or production.
 
 ## NEXT ACTION
 
-Create orchestration-only Boundary B naming exact F0.11 Artifact A `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306`, then obtain fresh Independent Critic on A+B. After that exact-pair disposition, create F0.12 Task Contract/Pre-Critic and complete the aggregate evidence gate. Foundation 0 is NOT complete.
+Obtain fresh Independent Critic on exact F0.11 Artifact A `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306` plus this reconciled orchestration-only B2. After that exact-pair disposition, create F0.12 Task Contract/Pre-Critic and complete the aggregate evidence gate. Foundation 0 is NOT complete.
 
 ## MODEL ROUTING
 

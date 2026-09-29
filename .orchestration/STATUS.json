@@ -11,13 +11,13 @@
   "work_branch": "impl/hms-foundation-0",
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
-  "status_label": "F0.11 ARTIFACT A FROZEN; FRESH INDEPENDENT CRITIC PENDING",
-  "next_action": "CREATE_ORCHESTRATION_ONLY_F0_11_BOUNDARY_B_AND_OBTAIN_FRESH_INDEPENDENT_CRITIC_ON_EXACT_A_B",
+  "status_label": "F0.11 ARTIFACT A FROZEN; BOUNDARY B2 RECONCILES METADATA; FRESH CRITIC PENDING",
+  "next_action": "OBTAIN_FRESH_INDEPENDENT_CRITIC_ON_EXACT_F0_11_ARTIFACT_A_AND_RECONCILED_BOUNDARY_B2",
   "stop_reason": null,
   "event": {
-    "seq": 216,
-    "id": "HMS-F0-11-ARTIFACT-A-EF4D9EE",
-    "type": "F0_11_ARTIFACT_A_FROZEN_BOUNDARY_B_AND_CRITIC_NEXT"
+    "seq": 217,
+    "id": "HMS-F0-11-BOUNDARY-B2-METADATA-RECONCILIATION",
+    "type": "F0_11_BOUNDARY_METADATA_RECONCILED_FRESH_CRITIC_NEXT"
   },
   "external_review": {
     "required": true,
@@ -87,7 +87,7 @@
   "f0_11_integrated_evidence": ".orchestration/evidence/HMS-F0-11-AUTHORITATIVE-REFRESH-001-INTEGRATED.md",
   "f0_11_package_script_note": "npm run wrangler:dry-run is incomplete (API dry-run then web --help); not counted. Explicit Wrangler API/web/staging-SPA dry-runs passed.",
   "f0_11_artifact_a": "ef4d9ee39e04229fafcfdcc44fcfbf37977e0306",
-  "f0_11_boundary_b": "PENDING: orchestration-only Boundary B to name exact A and request fresh Independent Critic",
+  "f0_11_boundary_b": "INITIAL B 58c4c6cdd563790b591d57119a0f09cbbe9e7059 retained as historical transition; this orchestration-only B2 commit reconciles exact A reference and critic handoff",
   "f0_11_independent_critic": "PENDING: fresh independent reviewer on exact Artifact A + Boundary B; no self-approval",
   "f0_10_repair_contract": ".orchestration/contracts/HMS-F0-10-REPAIR-NETWORK-WRITES-KEYBOARD-001.md; all 24 invariants classified",
   "f0_10_repair_precritic": ".orchestration/evidence/HMS-F0-10-REPAIR-NETWORK-WRITES-KEYBOARD-001-PRECRITIC.md; PASS for bounded repair admission",
