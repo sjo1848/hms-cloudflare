@@ -11,20 +11,20 @@
   "work_branch": "impl/hms-block-a-shell",
   "pr": null,
   "wave": "BLOCK A — APP SHELL + NAVIGATION/CONTEXT",
-  "status_label": "BLOCK_A_CONTRACT_FROZEN_IMPLEMENTATION_RUNNING",
-  "next_action": "IMPLEMENT_FROZEN_BLOCK_A_TASK_CONTRACT; DO_NOT_START_BLOCKS_B_H",
+  "status_label": "BLOCK_A_ARTIFACT_A_FROZEN_BOUNDARY_B_AND_INDEPENDENT_CRITIC_IN_PROGRESS",
+  "next_action": "RECORD_ORCHESTRATION_ONLY_BOUNDARY_B; DISPATCH_FRESH_INDEPENDENT_CRITIC_ON_EXACT_A_PLUS_B; DO_NOT_START_BLOCKS_B_H",
   "stop_reason": null,
   "event": {
-    "seq": 227,
-    "id": "BLOCK-A-AUTHORIZATION-014-CONTRACT-FROZEN",
-    "type": "BA1_BA7_APPROVED_TASK_CONTRACT_AND_ADMISSION_PRECRITIC_PASS"
+    "seq": 228,
+    "id": "BLOCK-A-ARTIFACT-A-FROZEN-F49EA55",
+    "type": "IMMUTABLE_ARTIFACT_A_FROZEN_PRECRITIC_PASS_CRITIC_DISPATCH_NEXT"
   },
   "external_review": {
-    "last_audited_head": "4968969def57324120b176e5359971612c197c9d",
-    "artifact_head": "7c443474923827343f1ec719d70f0734c1920fa3",
-    "last_verdict": "PASS: Parfit, fresh separate read-only/adversarial GPT-6 Luna Medium; exact A2 7c443474923827343f1ec719d70f0734c1920fa3 + B2 4968969def57324120b176e5359971612c197c9d; independently regenerated and matched both reports to canonical SHA; no live-data authorization or Foundation-overreach",
-    "review_path": ".orchestration/evidence/HMS-F0-12-INDEPENDENT-CRITIC-A2-B2.md",
-    "required": false,
+    "last_audited_head": null,
+    "artifact_head": "f49ea5592dfb7e5e20e6c11ca4af5a7f8832f867",
+    "last_verdict": "PENDING: fresh Independent Critic must review exact Block A Artifact A plus orchestration Boundary B",
+    "review_path": ".orchestration/evidence/HMS-BLOCK-A-APP-SHELL-NAVIGATION-CONTEXT-001-INDEPENDENT-CRITIC.md",
+    "required": true,
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"

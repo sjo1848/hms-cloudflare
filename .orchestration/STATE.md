@@ -6,6 +6,8 @@ Human Gate BA1–BA7 is approved by Drive authorization `HMS-BLOCK-A-AUTHORIZATI
 
 The historical F0 progress below is retained as history and is not the active dispatch state. The previous exact Foundation 0 critic PASS is complete. Pending older P0.1/Wave 1.2 reviews remain separate promotion/integration records and do not expand or redefine this Block A task.
 
+**Current Block A dispatch:** bounded rework is complete; route/hash/accessibility defects are repaired. Immutable Artifact A is `f49ea5592dfb7e5e20e6c11ca4af5a7f8832f867`. Final local Worker + disposable D1 + Vite dev and production-minified browser evidence passes, as do serial tests (34 files / 171 tests), types, build, architecture/budgets, D1 plans and Wrangler dry-runs. Separate internal QA findings and their dispositions are in `.orchestration/evidence/HMS-BLOCK-A-APP-SHELL-NAVIGATION-CONTEXT-001-QA-REVIEW-001.md`; mandatory Pre-Critic and invariant evidence pass. Final JS raw budget is 299,976/300,000 bytes (24-byte headroom), explicitly retained as risk. No API/domain/schema/migration changes or real data. Boundary B is orchestration-only; a fresh Independent Critic is being dispatched against exact A+B. Stop at `BLOCK_A_COMPLETE_AWAITING_CONTROLLER_REVIEW`. No Blocks B–H or promotion actions.
+
 ### F0.8 — Recoverable guest + reservation creation — implementation validated; handoff condition closed
 
 - Frozen Task Contract: `.orchestration/contracts/HMS-F0-08-GUEST-RESERVATION-RECOVERY-001.md`; all 24 registry invariants are classified. Local/synthetic only; incomplete stages have no inferred expiry; no Blocks A–H or real-data action.
