@@ -1,0 +1,14 @@
+Command: npm run check
+Working directory: /home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare
+Started: 2026-09-29 02:45:15 (Vitest-reported start; local timezone America/Argentina/Buenos_Aires)
+Exit code: 0
+
+Result:
+- npm run typecheck: PASS (`tsc -b`)
+- npm run test: PASS
+- Test Files: 33 passed (33)
+- Tests: 168 passed (168)
+- Vitest duration: 117.00s
+- Includes the F0.12 manifest-validator test module in the repository-wide test suite.
+
+This is a concise evidence receipt of the completed command output. It is not a substitute for the command result; the terminal execution completed with exit code 0.

@@ -1,0 +1,17 @@
+▶ F0.12 aggregate evidence manifest
+  ✔ is deterministic and never treats unresolved synthetic rows as activation candidates (24.296449ms)
+  ✔ fails closed when a required evidence file is missing (4.100108ms)
+  ✔ fails closed when evidence content differs from its pinned SHA-256 (0.692182ms)
+  ✔ reports incomplete while any required criterion is UNPROVEN (0.673439ms)
+  ✔ rejects a non-synthetic row or a false PASS with a nonzero command exit (0.712212ms)
+  ✔ rejects unreviewed increments and prevents claiming a standalone F0.1 critic pass (0.778155ms)
+  ✔ fails closed if a held synthetic room is marked as an activation candidate (0.567641ms)
+✔ F0.12 aggregate evidence manifest (34.706535ms)
+ℹ tests 7
+ℹ suites 1
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 173.388034

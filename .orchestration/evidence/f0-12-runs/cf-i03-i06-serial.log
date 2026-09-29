@@ -1,0 +1,14 @@
+npm notice run test:cf-i03
+npm notice run bash scripts/cf-i03-regression.sh
+check-in race statuses: 200 409
+{"id":"78dc754a-be0f-45d4-b311-df95e186b736","status":"CheckedIn","room_status":"Occupied"}{"error":{"code":"CONFLICT","message":"Only confirmed bookings can be checked in","requestId":"1f7a9109-c179-4cab-818a-e43ff2e37055"}}CF-I03 + CF-I04 lifecycle D1/API regression PASS
+npm notice run test:cf-i04
+npm notice run bash scripts/cf-i04-regression.sh
+check-in race statuses: 200 409
+{"id":"50daf086-a15b-4e03-9da3-fe7486401274","status":"CheckedIn","room_status":"Occupied"}{"error":{"code":"CONFLICT","message":"Only confirmed bookings can be checked in","requestId":"7d2098d4-2d27-4c9c-bac3-2e85bf18e07a"}}CF-I03 + CF-I04 lifecycle D1/API regression PASS
+npm notice run test:cf-i05
+npm notice run bash scripts/cf-i05-regression.sh
+CF-I05 Housekeeping + Maintenance D1/API regression PASS
+npm notice run test:cf-i06
+npm notice run bash scripts/cf-i06-regression.sh
+CF-I06 billing/atomic cents/closure regression PASS

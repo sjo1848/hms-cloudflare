@@ -1,0 +1,36 @@
+npm notice run types:check
+npm notice run npm run types:api -- --check && npm run types:web -- --check
+npm notice run types:api
+npm notice run wrangler types apps/api/worker-configuration.d.ts -c apps/api/wrangler.jsonc --check
+
+ ⛅️ wrangler 4.125.0 (update available 4.143.0)
+───────────────────────────────────────────────
+✨ Types at apps/api/worker-configuration.d.ts are up to date.
+
+npm notice run types:web
+npm notice run wrangler types apps/web/worker-configuration.d.ts -c apps/web/wrangler.jsonc --check
+
+ ⛅️ wrangler 4.125.0 (update available 4.143.0)
+───────────────────────────────────────────────
+✨ Types at apps/web/worker-configuration.d.ts are up to date.
+
+npm notice run web:build
+npm notice run vite build --config apps/web/vite.config.ts
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 67 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.36 kB │ gzip:  0.26 kB
+dist/assets/index-DwrEwWl0.css   43.40 kB │ gzip:  8.38 kB
+dist/assets/index-Buur8WRS.js   299.99 kB │ gzip: 86.23 kB
+✓ built in 8.47s
+npm notice run architecture:fitness
+npm notice run node scripts/check-web-architecture.mjs && node scripts/check-architecture-fitness-ii.mjs && node scripts/check-i18n-coverage.mjs && node scripts/check-cloudflare-budgets.mjs
+{"architectureFitness":"PASS","boundaries":16,"clientNavigation":true,"billingBoundary":true,"sharedUiReuse":true}
+{"architectureFitnessII":"PASS","featureOrchestrationBoundaries":["reception","housekeeping"],"hexagonalBoundaries":["bookings+reservation-inventory","lifecycle","billing-payment"],"networkKpiSingleQueryBoundary":true,"reportingIndexContract":true}
+{"i18nCoverage":"PASS","files":25,"explicitTechnicalExceptions":["HMS","Elite","HMS Elite","Email","ADR","RevPAR","· ADR","· RevPAR","HOTEL_DEMO_DB","HOTEL_SECOND_DB","×","☰","→","·","STANDARD","18000","101","name@hotel.com","guest@example.com","+54 9…"]}
+{"cloudflareWebBudget":"PASS","actual":{"jsRaw":299990,"jsGzip":86226,"cssRaw":43399,"cssGzip":8383},"budgets":{"jsRaw":300000,"jsGzip":100000,"cssRaw":50000,"cssGzip":15000},"staticAssets":true}
+npm notice run test:d1-query-plan
+npm notice run bash scripts/cf-d1-query-plan-regression.sh
+{"d1QueryPlan":"PASS","arrivalIndex":"idx_bookings_status","checkoutIndex":"idx_bookings_status_checkout","inventoryKeyed":true}

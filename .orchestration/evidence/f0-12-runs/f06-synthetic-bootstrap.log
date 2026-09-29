@@ -1,0 +1,23 @@
+npm notice run npx
+npm notice run 'vitest' run apps/api/src/modules/billing/active-stay-pricing-bootstrap.executing-d1.test.ts --maxWorkers=1
+
+ RUN  v3.2.7 /home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare
+
+ ✓ apps/api/src/modules/billing/active-stay-pricing-bootstrap.executing-d1.test.ts (11 tests) 57011ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > classifies all five contract classes without inferring rates and is deterministic  5249ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > shadows and activates only exact traceable synthetic evidence; replay is idempotent and D11 truth stays byte-equivalent  6231ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > quarantines conflicting duplicate room snapshot identities instead of silently collapsing them  4501ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > holds an already segmented canonical stay without layering bootstrap segments over F0.5 pricing  5080ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > rejects a canonical segment set added after shadowing even when booking version fields are restored  4530ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > converges concurrent activation attempts without duplicate segments or financial drift  4659ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > isolates per-hotel checkpoints across independent operational D1 databases  8390ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > rolls back a partial shadow checkpoint and resumes from the same manifest  4354ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > rejects changed equal-count payment truth and source-digest supersession with zero activation drift  5013ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > rejects inventory ABA even when visible room-night keys are restored  4493ms
+   ✓ F0.6 active-stay bootstrap classifier and D1 shadow/activation > rolls back all activation writes when a later canonical segment insert fails  4507ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  02:12:04
+   Duration  58.28s (transform 220ms, setup 0ms, collect 793ms, tests 57.01s, environment 0ms, prepare 115ms)
+

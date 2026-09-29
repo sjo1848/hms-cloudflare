@@ -1,0 +1,14 @@
+npm notice run npx
+npm notice run 'vitest' run apps/api/src/modules/room-state/legacy-cutover.executing-d1.test.ts --maxWorkers=1
+
+ RUN  v3.2.7 /home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare
+
+ ✓ apps/api/src/modules/room-state/legacy-cutover.executing-d1.test.ts (2 tests) 6434ms
+   ✓ F0.3 synthetic room-state shadow rehearsal on executing D1 > accounts source rows, preserves canonical data, resumes interrupted shadow mapping, rejects drift, and replays idempotently  5481ms
+   ✓ F0.3 synthetic room-state shadow rehearsal on executing D1 > keeps separate synthetic hotel D1 checkpoints isolated  952ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  02:11:34
+   Duration  7.67s (transform 192ms, setup 0ms, collect 785ms, tests 6.43s, environment 0ms, prepare 115ms)
+
