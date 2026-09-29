@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active task: bounded evidence-only repair for fresh Critic finding F0.10-IC-05 under frozen `.orchestration/contracts/HMS-F0-10-REPAIR-NETWORK-AUTH-CONTEXT-001.md`; Pre-Critic `.orchestration/evidence/HMS-F0-10-REPAIR-NETWORK-AUTH-CONTEXT-001-PRECRITIC.md` is frozen. Harvey's fresh review of A3 `15835e28de8b6d3a7b069c65a197bd937a9596f5` + B3 `be82c603aa6a24a902be2039f7e72e26400508d9` returned `REWORK`: the no-write UI assertions did not explicitly verify that the UI received `/auth/me` with the intended authenticated subject/hotel/capabilities at both widths. During bounded repair, screenshot review also found the test selector reset to Admin on each navigation and a viewport mislabeled desktop; the runner now initializes identity once, asserts visible Ops profile and actual Worker `/auth/me` context at 1280×900 and 375×844, and explicitly sets each viewport. Latest real local Worker/two-D1/Vite run passes; denied POSTs are 403 and D1 denied hotel count is zero. No product/schema change. Process trees are verified stopped; temp directory is retained. A3+B3 remain immutable with `REWORK`; replacement pair needs a fresh critic distinct from Tesla and Harvey. Foundation 0 remains incomplete: F0.10 review → F0.11 → F0.12. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
+Active task: fresh Independent Critic review of exact F0.10 Artifact A4 `ba2ff62daf48616ad84700c684adf4cd5d70733e` + this orchestration-only Boundary B4. Harvey's A3+B3 `REWORK` findings are preserved in `.orchestration/evidence/HMS-F0-10-INDEPENDENT-CRITIC-A3-B3.md`; the evidence repair contract/Pre-Critic preceded runner edits. A4 now proves the no-write UI's visible Ops profile and real Worker `/auth/me` identity/capabilities at desktop 1280×900 and mobile 375×844, with exact per-viewport payloads; the earlier incorrect viewport label is corrected. Fresh integrated Worker/two-D1/Vite run passes; allowed/denied keyboard/DOM, 403, D1 denied hotel count zero. No product/schema change. Process trees are verified stopped; isolated temp directory retained. A4 is immutable; reviewer must be fresh and distinct from Tesla and Harvey. F0.10 remains open pending exact review. Foundation 0 remains incomplete: F0.10 review → F0.11 → F0.12. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
 
 ### F0.8 — Recoverable guest + reservation creation — implementation validated; handoff condition closed
 
@@ -257,7 +257,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-Freeze replacement A4 and orchestration-only B4 with the fresh role×viewport evidence and obtain a new Critic. If that exact review closes F0.10 without blocker/product-policy change, finalize INV-STATE in an orchestration-only follow-up and continue F0.11 then F0.12; Foundation 0 is NOT complete. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
+Obtain a fresh Independent Critic verdict on exact A4 `ba2ff62daf48616ad84700c684adf4cd5d70733e` plus this orchestration-only B4. If that exact review closes F0.10 without blocker/product-policy change, finalize INV-STATE in an orchestration-only follow-up and continue F0.11 then F0.12; Foundation 0 is NOT complete. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
 
 ## MODEL ROUTING
 
