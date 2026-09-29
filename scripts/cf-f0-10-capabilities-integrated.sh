@@ -122,6 +122,7 @@ NODE
 CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --persist-to "$persist_dir" --command "SELECT role FROM hotel_memberships WHERE access_subject='source-user:14000000-0000-0000-0000-000000000002' AND hotel_id='10000000-0000-0000-0000-000000000001'; SELECT COUNT(*) AS role_audits FROM control_audit_events WHERE target_id='source-user:14000000-0000-0000-0000-000000000002' AND action='USER_ROLE_CHANGE'; SELECT COUNT(*) AS denied_network_hotels FROM control_hotels WHERE id IN ('denied-hotel','denied-hotel-mobile');" --json >"$tmp_dir/downgrade.json"
 node - "$tmp_dir/downgrade.json" <<'NODE'
 const fs = require("node:fs");
+const crypto = require("node:crypto");
 const rows = JSON.parse(fs.readFileSync(process.argv[2], "utf8")).flatMap(item => item.results);
 if (rows[0]?.role !== "receptionist" || rows[1]?.role_audits !== 2 || rows[2]?.denied_network_hotels !== 0) throw new Error(`same-subject downgrade/network denial evidence mismatch: ${JSON.stringify(rows)}`);
 const roomRows = JSON.parse(fs.readFileSync(process.argv[2].replace("downgrade.json", "rooms.json"), "utf8")).flatMap(item => item.results);
@@ -140,7 +141,18 @@ for (const viewport of ["noWriteAuthMeDesktop", "noWriteAuthMeMobile"]) {
   }
 }
 if (browser.beforeDowngrade !== 201 || browser.afterDowngrade !== 403 || browser.unmemberedHotel !== 403 || browser.directDenied !== "PASS") throw new Error(`integrated browser authorization mismatch: ${JSON.stringify(browser)}`);
-const result = { browser, d1: { allowedRoomCount: roomRows[0].allowed_room, deniedRoomCount: roomRows[1].denied_room, finalRole: rows[0].role, roleAuditCount: rows[1].role_audits, deniedNetworkHotelCount: rows[2].denied_network_hotels }, cleanup: "owned Worker/Vite/Playwright processes verified stopped" };
+const pngDimensions = path => {
+  const image = fs.readFileSync(path);
+  if (image.toString("hex", 0, 8) !== "89504e470d0a1a0a") throw new Error(`invalid PNG signature: ${path}`);
+  return { width: image.readUInt32BE(16), height: image.readUInt32BE(20), sha256: crypto.createHash("sha256").update(image).digest("hex") };
+};
+const screenshots = {
+  noWriteDesktop: pngDimensions("output/playwright/f0-10-network-no-write-keyboard.png"),
+  noWriteMobile: pngDimensions("output/playwright/f0-10-network-no-write-mobile-keyboard.png"),
+};
+if (screenshots.noWriteDesktop.width !== 1280 || screenshots.noWriteMobile.width !== 375
+  || screenshots.noWriteDesktop.sha256 === screenshots.noWriteMobile.sha256) throw new Error(`Network no-write screenshots do not prove distinct desktop/mobile viewports: ${JSON.stringify(screenshots)}`);
+const result = { browser, screenshots, d1: { allowedRoomCount: roomRows[0].allowed_room, deniedRoomCount: roomRows[1].denied_room, finalRole: rows[0].role, roleAuditCount: rows[1].role_audits, deniedNetworkHotelCount: rows[2].denied_network_hotels }, cleanup: "owned Worker/Vite/Playwright processes verified stopped" };
 fs.writeFileSync("output/playwright/f0-10-capabilities-integrated-result.json", JSON.stringify(result, null, 2) + "\n");
 console.log(JSON.stringify(result));
 NODE

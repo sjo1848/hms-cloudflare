@@ -220,6 +220,10 @@
       { id: hotelB, slug: "hotel-sur", name: "Hotel Sur", address: "B Street", plan_tier: "BASIC", operational_binding: "HOTEL_SECOND_DB", active: 1 },
     ]) });
   });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const noWriteDesktopViewport = page.viewportSize();
+  if (noWriteDesktopViewport?.width !== 1280 || noWriteDesktopViewport?.height !== 900) throw new Error(`no-write desktop check has wrong viewport: ${JSON.stringify(noWriteDesktopViewport)}`);
+  const networkNoWriteViewportResults = [];
   await page.goto("http://127.0.0.1:4178/network");
   const noWriteDesktopProfile = await profile.inputValue();
   if (noWriteDesktopProfile !== "2") throw new Error(`desktop no-write UI profile selector is not the ops fixture: ${noWriteDesktopProfile}`);
@@ -241,20 +245,21 @@
   if (!(await page.getByRole("button", { name: /Hotel Sur/ }).innerText()).includes("Basic")
     || !(await page.locator(".network-detail").innerText()).includes("Basic")) throw new Error("read-only hotel plan is not legible without network write capability");
   await page.locator("body").click({ position: { x: 2, y: 2 } });
-  const networkNoWriteViewportResults = [];
   for (let i = 0; i < 40; i += 1) {
     await page.keyboard.press("Tab");
     const focusedWriteControl = await page.evaluate(() => document.activeElement?.matches("#hotel-id, #hotel-slug, #hotel-name, #hotel-binding, .network-detail select") ?? false);
     if (focusedWriteControl) throw new Error("keyboard traversal reached a network write control without saas.hotels.write");
   }
   await page.screenshot({ path: "output/playwright/f0-10-network-no-write-keyboard.png", fullPage: true });
-  networkNoWriteViewportResults.push("1280x900:PASS");
+  networkNoWriteViewportResults.push(`${noWriteDesktopViewport.width}x${noWriteDesktopViewport.height}:PASS`);
   const deniedNetworkWrite = await page.evaluate(async () => {
     const response = await fetch("/api/v1/hotels", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: "denied-hotel", slug: "denied", name: "Denied", operational_binding: "HOTEL_SECOND_DB", plan_tier: "BASIC" }) });
     return response.status;
   });
   if (deniedNetworkWrite !== 403) throw new Error(`hotel member without network write capability received network write: ${deniedNetworkWrite}`);
   await page.setViewportSize({ width: 375, height: 844 });
+  const noWriteMobileViewport = page.viewportSize();
+  if (noWriteMobileViewport?.width !== 375 || noWriteMobileViewport?.height !== 844) throw new Error(`no-write mobile check has wrong viewport: ${JSON.stringify(noWriteMobileViewport)}`);
   await page.goto("http://127.0.0.1:4178/network");
   const noWriteMobileProfile = await profile.inputValue();
   if (noWriteMobileProfile !== "2") throw new Error(`mobile no-write UI profile selector is not the ops fixture: ${noWriteMobileProfile}`);
@@ -282,7 +287,7 @@
   }
   if (await page.evaluate(() => document.documentElement.scrollWidth) > 375) throw new Error("unauthorized mobile Network surface overflows viewport");
   await page.screenshot({ path: "output/playwright/f0-10-network-no-write-mobile-keyboard.png", fullPage: true });
-  networkNoWriteViewportResults.push("375x844:PASS");
+  networkNoWriteViewportResults.push(`${noWriteMobileViewport.width}x${noWriteMobileViewport.height}:PASS`);
   const deniedNetworkWriteMobile = await page.evaluate(async () => {
     const response = await fetch("/api/v1/hotels", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: "denied-hotel-mobile", slug: "denied-mobile", name: "Denied Mobile", operational_binding: "HOTEL_SECOND_DB", plan_tier: "BASIC" }) });
     return response.status;

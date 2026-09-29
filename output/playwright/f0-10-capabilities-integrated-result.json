@@ -102,6 +102,18 @@
     "unmemberedHotel": 403,
     "outOfOrderAuthMe": "PASS"
   },
+  "screenshots": {
+    "noWriteDesktop": {
+      "width": 1280,
+      "height": 1034,
+      "sha256": "128972db71b2897aa201df92f73125dee33796eb20922c1fb5bb9950a59496a5"
+    },
+    "noWriteMobile": {
+      "width": 375,
+      "height": 1209,
+      "sha256": "d5b50bc418760b5530ef61198bd0fc603a67001afe995ecb95af0e95b3bc2f4b"
+    }
+  },
   "d1": {
     "allowedRoomCount": 1,
     "deniedRoomCount": 0,

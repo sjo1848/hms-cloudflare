@@ -35,3 +35,11 @@ Reviewer: Zeno, fresh separate read-only GPT-6 Luna Medium; exact A4 `ba2ff62daf
 - No `ROADMAP_BLOCKER`; no architecture contradiction. Foundation 0 completion is not authorized.
 
 Bounded viewport-evidence repair contract/Pre-Critic are frozen before repair. A4+B4 remain immutable with `REWORK`.
+
+## Bounded repair disposition (does not rewrite this verdict)
+
+- Contract `.orchestration/contracts/HMS-F0-10-REPAIR-NETWORK-VIEWPORT-ASSERTION-001.md` and Pre-Critic were frozen before runner changes.
+- The desktop viewport is now set immediately before the no-write desktop navigation and `page.viewportSize()` is asserted/recorded; mobile has a separate explicit 375×844 setup/assertion. The result does not hardcode width labels.
+- The integrated Node runner reads PNG headers: no-write desktop 1280×1034; mobile 375×1209; hashes differ. Actual local Worker/D1/Vite checks pass with correct Ops identity, `/auth/me`, DOM/tab, plan and denied writes.
+- Initial A5 runner attempts caught a duplicate declaration and then a `node:crypto` import in a different Node process; both were corrected before the final terminal PASS. Failed attempts are not counted as evidence.
+- The previous A4 responsive overclaim is corrected in A5 invariant evidence, but A4+B4 remain historical `REWORK`. Replacement A5+B5 requires a fresh Independent Critic distinct from Tesla, Harvey and Zeno.
