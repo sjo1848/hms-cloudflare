@@ -284,7 +284,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-Freeze the F0.12 aggregate evidence gate Task Contract and mandatory Pre-Critic before implementation/evidence consolidation. Complete only the approved F0.1–F0.11 aggregate verification and synthetic cutover/bootstrap readiness evidence; leave real-data execution prohibited. Foundation 0 is NOT complete until F0.12's aggregate evidence gate closes and its exact artifact is independently reviewed.
+F0.12 Task Contract and admission Pre-Critic are frozen after separate read-only Contract and DB/Data review. Build the row-level evidence crosswalk, run the required clean synthetic rehearsals and full authorized local validation, and keep any unsupported criterion UNPROVEN. Leave real-data execution prohibited. Foundation 0 is NOT complete until F0.12's aggregate evidence gate closes and its exact artifact is independently reviewed.
 
 ## MODEL ROUTING
 
