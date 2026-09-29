@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active task: F0.11 bounded critic-condition repair is packaged as replacement Artifact A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898`; its fresh Independent Critic review on orchestration Boundary B3 is the current blocking action. The prior A1+B2 verdict remains historical `PASS_WITH_CONDITIONS`, not transferred. F0.10 is closed at its own Development Gate: fresh Independent Critic Gauss (GPT-6 Luna Medium, read-only) returned `PASS` on exact A5 `2e0fb984022b48a7dbeca5f4417dd2fae895fc97` + B5 `132449cbf8ba622c693935f1b2d3bb8bb9494665`; evidence `.orchestration/evidence/HMS-F0-10-INDEPENDENT-CRITIC-A5-B5.md`. Foundation 0 is NOT complete: after F0.11 disposition, F0.12 remains. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
+Active task: F0.11 bounded critic-condition repair is packaged as replacement Artifact A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898`; its fresh Independent Critic review on orchestration Boundary B4 is the current blocking action. B3 was superseded only to reconcile the stale F0.10 `boundary_b` status field; A2 is unchanged. The prior A1+B2 verdict remains historical `PASS_WITH_CONDITIONS`, not transferred. F0.10 is closed at its own Development Gate: fresh Independent Critic Gauss (GPT-6 Luna Medium, read-only) returned `PASS` on exact A5 `2e0fb984022b48a7dbeca5f4417dd2fae895fc97` + B5 `132449cbf8ba622c693935f1b2d3bb8bb9494665`; evidence `.orchestration/evidence/HMS-F0-10-INDEPENDENT-CRITIC-A5-B5.md`. Foundation 0 is NOT complete: after F0.11 disposition, F0.12 remains. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
 
 ### F0.8 — Recoverable guest + reservation creation — implementation validated; handoff condition closed
 
@@ -278,7 +278,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-Obtain a fresh Independent Critic on exact F0.11 A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` plus orchestration-only Boundary B3. If no `ROADMAP_BLOCKER` or architecture contradiction appears, continue immediately to F0.12 by freezing its Task Contract and Pre-Critic, then complete the aggregate evidence gate. Foundation 0 is NOT complete.
+Obtain a fresh Independent Critic on exact F0.11 A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` plus orchestration-only Boundary B4. If no `ROADMAP_BLOCKER` or architecture contradiction appears, continue immediately to F0.12 by freezing its Task Contract and Pre-Critic, then complete the aggregate evidence gate. Foundation 0 is NOT complete.
 
 ## MODEL ROUTING
 

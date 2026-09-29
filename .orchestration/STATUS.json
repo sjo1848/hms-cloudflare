@@ -12,12 +12,12 @@
   "pr": null,
   "wave": "IMPLEMENTATION ROADMAP — FOUNDATION 0 + BLOCKS A–H",
   "status_label": "F0.11 REPLACEMENT A2 FROZEN; FRESH INDEPENDENT CRITIC REQUIRED",
-  "next_action": "REVIEW_EXACT_F0_11_A2_PLUS_B3_THEN_CONTINUE_TO_F0_12_IF_NO_BLOCKER",
-  "stop_reason": "AWAITING_FRESH_INDEPENDENT_CRITIC_ON_EXACT_F0_11_A2_B3_PAIR",
+  "next_action": "REVIEW_EXACT_F0_11_A2_PLUS_B4_THEN_CONTINUE_TO_F0_12_IF_NO_BLOCKER",
+  "stop_reason": "AWAITING_FRESH_INDEPENDENT_CRITIC_ON_EXACT_F0_11_A2_B4_PAIR",
   "event": {
-    "seq": 219,
-    "id": "HMS-F0-11-A2-B3-FROZEN",
-    "type": "F0_11_REPLACEMENT_ARTIFACT_FROZEN_FRESH_CRITIC_REQUIRED"
+    "seq": 220,
+    "id": "HMS-F0-11-A2-B4-FROZEN",
+    "type": "F0_11_ORCHESTRATION_BOUNDARY_RECONCILED_FRESH_CRITIC_REQUIRED"
   },
   "external_review": {
     "required": true,
@@ -54,7 +54,7 @@
   "f0_10_precritic": "PASS for implementation admission; not implementation validation or Independent Critic",
   "f0_10_contract_reviewer": "Fermat, read-only GPT-6 Luna Medium; reviewing approved F0.10 contract/current source surfaces; no implementation until Task Contract and Pre-Critic are frozen",
   "f0_10_artifact_a": "be92a5750c9be4b1b112bbd9980a8b34fc83d42a",
-  "f0_10_boundary_b": "PENDING: orchestration-only B2 to record exact A2 and fresh Independent Critic handoff",
+  "f0_10_boundary_b": "132449cbf8ba622c693935f1b2d3bb8bb9494665; current F0.10 A5/B5 Independent Critic PASS boundary",
   "f0_10_implementation_validation": "PASS: 33 files/168 tests; TypeScript; web build; architecture/i18n/budgets (JS raw 299947/300000, gzip 86258; CSS raw 43399); D1 query plans; API/Web Wrangler dry-runs; serial CF-I03-I07; local Worker/two-D1/Vite/browser desktop 1280x900 + mobile 375x844, network-write DOM/keyboard, scopes/RBAC/downgrade/out-of-order auth response; runner verifies owned process cleanup; selected-property no-write UI test uses labeled synthetic hotel-list GET only",
   "f0_10_artifact_a2": "3b4a9ea687e6ddc7a184b8cb3b13cc5e2f5d006f",
   "f0_10_a2_b2_critic": "REWORK: Tesla, fresh separate read-only GPT-6 Luna Medium; exact A2 3b4a9ea687e6ddc7a184b8cb3b13cc5e2f5d006f + B2 a6bdd79576d37de6b5f9ad78becc8ae806d85ef4; IC-04 mobile Network keyboard proof absent; no architecture contradiction or ROADMAP_BLOCKER",
@@ -88,8 +88,8 @@
   "f0_11_package_script_note": "npm run wrangler:dry-run is incomplete (API dry-run then web --help); not counted. Explicit Wrangler API/web/staging-SPA dry-runs passed.",
   "f0_11_artifact_a1": "ef4d9ee39e04229fafcfdcc44fcfbf37977e0306",
   "f0_11_artifact_a": "f7c8d28db1ce1dd6839f1f182260537f0e2d4898",
-  "f0_11_boundary_b": "THIS ORCHESTRATION-ONLY B3 commit records exact A2 and requires a fresh Independent Critic; no verdict transfers from A1+B2",
-  "f0_11_independent_critic": "PENDING: fresh separate read-only reviewer on exact A2 f7c8d28db1ce1dd6839f1f182260537f0e2d4898 + B3; previous A1+B2 PASS_WITH_CONDITIONS is historical only; four conditions have fresh executable evidence in A2; no self-approval",
+  "f0_11_boundary_b": "THIS ORCHESTRATION-ONLY B4 commit records exact A2 and requires a fresh Independent Critic; B3 was superseded only to reconcile a stale F0.10 historical boundary field; no verdict transfers from A1+B2",
+  "f0_11_independent_critic": "PENDING: fresh separate read-only reviewer on exact A2 f7c8d28db1ce1dd6839f1f182260537f0e2d4898 + B4; previous A1+B2 PASS_WITH_CONDITIONS is historical only; four conditions have fresh executable evidence in A2; no self-approval",
   "f0_11_development_gate": "PENDING fresh Independent Critic disposition; no F0.11 PASS or Foundation 0 completion declared",
   "f0_11_a2_precritic": ".orchestration/evidence/HMS-F0-11-CRITIC-CONDITIONS-EVIDENCE-REPAIR-001-PRECRITIC-FINAL.md; PASS for A2 publication eligibility, not Independent Critic verdict",
   "f0_11_a2_invariants": ".orchestration/evidence/HMS-F0-11-CRITIC-CONDITIONS-EVIDENCE-REPAIR-001-INVARIANTS.md; all 24 mapped with no applicable UNPROVEN",
