@@ -27,7 +27,14 @@ Tesla found mobile Network keyboard and DOM behavior unproven: prior Network key
 
 Verify the exact A3/B3 blobs and SHA relationship; all prior A2 findings remain historically distinguished; allowed `saas_admin` reaches registration and plan selector by keyboard at desktop and mobile; hotel member without network write has neither control in DOM, cannot tab to either at both viewports, and can still read the plan; `/auth/me` and forbidden POST are real local Worker/D1 while only the no-write hotel-list GET is synthetic; both denied POSTs return 403 and D1 records zero denied hotels; mobile screenshots are actually mobile; fixture, cleanup and scope claims are accurate; invariant and Pre-Critic records are complete; no product/schema changes, unsupported PASS or architecture blocker.
 
-## Verdict (reviewer fills after review)
+## Verdict
 
-`PENDING`
+`REWORK — Medium`
 
+Reviewer: Harvey, fresh separate read-only GPT-6 Luna Medium; exact A3 `15835e28de8b6d3a7b069c65a197bd937a9596f5` + B3 `be82c603aa6a24a902be2039f7e72e26400508d9`.
+
+- Finding F0.10-IC-05: the no-write browser check did not explicitly assert that the app's actual `/auth/me` response was HTTP 200 for the expected subject, hotel and capability context before treating the UI's missing controls as authorization evidence. Add this assertion at both desktop and mobile checks.
+- Other mobile keyboard/DOM behavior, screenshots, direct POST 403 and zero denied D1 rows were supported. The synthetic hotel-list GET is clearly scoped. Runner establishes owned process termination (not removal of its temporary directory).
+- No `ROADMAP_BLOCKER`; no architecture contradiction. Foundation 0 completion is not authorized.
+
+Repair contract/pre-critic are frozen in the following bounded increment. A3+B3 remain immutable with this verdict.

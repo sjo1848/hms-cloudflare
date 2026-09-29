@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active task: fresh Independent Critic review of F0.10 Artifact A3 `15835e28de8b6d3a7b069c65a197bd937a9596f5` + this orchestration-only Boundary B3. Tesla's prior A2 `3b4a9ea687e6ddc7a184b8cb3b13cc5e2f5d006f` + B2 `a6bdd79576d37de6b5f9ad78becc8ae806d85ef4` review returned `REWORK` only for missing mobile Network keyboard/DOM proof. A bounded evidence-only contract/Pre-Critic repaired that omission: real local Worker/two-D1/Vite browser now proves authorized and unauthorized keyboard/DOM behavior at desktop 1280×900 and mobile 375×844; denied POST is 403 and denied hotel rows remain zero. Initial runner race before `/auth/me` was awaited is documented; no product/schema changes. Exact output/screenshots and all 24 invariant dispositions are in A3. A3 is immutable; obtain a fresh Critic unrelated to Tesla/Lagrange and do not self-declare F0.10 PASS. F0.9/F0.7 critic PASS; F0.8 handoff closed. Foundation 0 remains incomplete: F0.10 review → F0.11 → F0.12. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
+Active task: bounded evidence-only repair for fresh Critic finding F0.10-IC-05 under frozen `.orchestration/contracts/HMS-F0-10-REPAIR-NETWORK-AUTH-CONTEXT-001.md`; Pre-Critic `.orchestration/evidence/HMS-F0-10-REPAIR-NETWORK-AUTH-CONTEXT-001-PRECRITIC.md` is frozen. Harvey's fresh review of A3 `15835e28de8b6d3a7b069c65a197bd937a9596f5` + B3 `be82c603aa6a24a902be2039f7e72e26400508d9` returned `REWORK`: the no-write UI assertions did not explicitly verify that the UI received `/auth/me` with the intended authenticated subject/hotel/capabilities at both widths. Harvey confirmed responsive keyboard evidence otherwise closes, exact A3/B3 separation, honest synthetic hotel-list GET, 403 denials/D1 zero effect and no architecture blocker. Add the real `/auth/me` response assertions at desktop 1280×900 and mobile 375×844, with no product/schema change. A3+B3 remain immutable with `REWORK`; next replacement pair requires a new critic distinct from Tesla and Harvey. Foundation 0 remains incomplete: F0.10 review → F0.11 → F0.12. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
 
 ### F0.8 — Recoverable guest + reservation creation — implementation validated; handoff condition closed
 
@@ -257,7 +257,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-Obtain a fresh Independent Critic verdict on exact A3 `15835e28de8b6d3a7b069c65a197bd937a9596f5` plus this orchestration-only B3. If no blocker/new product policy is found, record the verdict and finalize INV-STATE in an orchestration-only follow-up, then continue F0.11 and F0.12; Foundation 0 is NOT complete. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
+Assert the actual `/auth/me` response subject, hotel, role and capability arrays for the no-write UI at both desktop and mobile. Re-run the integrated Worker/D1/browser gate; publish A4+B4 and obtain a fresh Critic. If that exact review closes F0.10 without blocker/product-policy change, finalize INV-STATE in an orchestration-only follow-up and continue F0.11 then F0.12; Foundation 0 is NOT complete. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
 
 ## MODEL ROUTING
 
