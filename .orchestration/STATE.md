@@ -255,9 +255,26 @@ were unavailable. The local acceptance-runtime attempt did not reach the
 browser (`invalid maintenance resolve transition` during migration rehearsal);
 this is an inspection limitation, not a production finding.
 
+## F0.11 — Refresh/invalidation and authoritative UI continuity (active)
+
+- Frozen Task Contract: `.orchestration/contracts/HMS-F0-11-AUTHORITATIVE-REFRESH-001.md`; all 24 registry invariants classified before implementation.
+- Pre-implementation Contract Reviewer Laplace (separate read-only GPT-6 Luna Medium) returned eight bounded precision/evidence findings and no blocker; amendments and disposition are in `.orchestration/evidence/HMS-F0-11-AUTHORITATIVE-REFRESH-001-PRECRITIC.md`.
+- Implementation: Rooms latest-response guard; Billing booking/account identity guard and atomic account snapshot; Reception selected-booking detail GET fallback when absent from queue (clear only on authoritative 404). No backend/API contract or schema mutation. Existing Housekeeping sequencing retained and regression-tested.
+- Final mandatory Pre-Critic: PASS, `.orchestration/evidence/HMS-F0-11-AUTHORITATIVE-REFRESH-001-PRECRITIC-FINAL.md`; all 24 invariants mapped in `.orchestration/evidence/HMS-F0-11-AUTHORITATIVE-REFRESH-001-INVARIANTS.md`, with no applicable UNPROVEN entry.
+- Mock-only deferred response browser: PASS across Rooms, Billing (including every account subread failure), Reception (200/404/500 and late selection response), and Housekeeping recovery. Evidence `output/playwright/f0-11-refresh-races.log`; explicitly MOCK ONLY.
+- Integrated local Reception→check-in→Worker/D1→authoritative board read: PASS on fresh synthetic fixtures at mobile 375×812 and desktop 1280×900. Both returned mutation 200/read 200, CHECKED_IN, preserved arrivals lane/search, selected `z-priority`; read-only D1 checks prove one actor/hotel CHECK_IN event, room OCCUPIED, invoice unchanged at 36,000/PENDING, no payment entries. Evidence `.orchestration/evidence/HMS-F0-11-AUTHORITATIVE-REFRESH-001-INTEGRATED.md` and paired browser logs/screenshots.
+- Built/minified UI + local Worker/D1 Rooms mutation/read: PASS at 375×812 and 1280×900; search preserved. This executes the bundle produced with existing Terser compression settings `passes: 2`, `pure_getters: true`.
+- Fresh full suite: `npm run check` PASS, 33 files/168 tests; `npm run types:check` PASS; `npm run web:build` PASS; architecture fitness/i18n/Cloudflare budgets PASS; D1 query plans PASS; explicit API, web, staging-SPA Wrangler dry-runs PASS; CF-I03–CF-I06 regressions PASS; runner syntax/process cleanup PASS.
+- Budget binding remains unchanged: JS raw 299,982/300,000 bytes (18-byte margin), gzip 86,293; CSS raw 43,399/gzip 8,383. This narrow margin is a residual maintenance risk, not a waiver or failure.
+- A mistaken `npm run wrangler:dry-run` invocation exposed that the package script does not validate web/staging (it ends with `--help`). It was not counted; explicit three-config dry-runs passed. No package-script scope expansion.
+- Immutable F0.11 Artifact A is `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306`. It contains the scoped code, frozen contract, final Pre-Critic/invariant evidence, integrated/mock scripts and terminal browser artifacts. No product source changed after A.
+- Orchestration-only Boundary B is the next commit and will identify exact A `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306`, set `external_review.required=true`, and request a fresh Independent Critic. No Independent Critic verdict has been manufactured.
+- Unrelated working-tree edits to historical F0.9/P0.1 evidence/harness and non-final F0.11 diagnostics remain uncommitted and excluded from A; they are preserved, not silently discarded.
+- Foundation 0 remains NOT complete. F0.12 is still required after F0.11 and must have its own Task Contract. No Blocks A–H, real data, PR/push/merge, main, staging mutation, deploy or production.
+
 ## NEXT ACTION
 
-Create the F0.11 Task Contract and Pre-Critic before implementation. Implement only approved refresh/invalidation and authoritative continuity behavior; then F0.12 aggregate evidence gate. Foundation 0 is NOT complete. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
+Create orchestration-only Boundary B naming exact F0.11 Artifact A `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306`, then obtain fresh Independent Critic on A+B. After that exact-pair disposition, create F0.12 Task Contract/Pre-Critic and complete the aggregate evidence gate. Foundation 0 is NOT complete.
 
 ## MODEL ROUTING
 
