@@ -10,4 +10,10 @@ export const EMPTY_CAPABILITIES: EffectiveCapabilities = {
   network: [],
 };
 
+export const AUTHORIZATION_STALE_EVENT = "hms:authorization-stale";
+
+export function notifyAuthorizationStale() {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(AUTHORIZATION_STALE_EVENT));
+}
+
 export const CapabilitiesContext = createContext<EffectiveCapabilities>(EMPTY_CAPABILITIES);

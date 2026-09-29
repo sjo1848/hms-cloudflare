@@ -6,6 +6,7 @@ tmp_dir=$(mktemp -d)
 persist_dir="$tmp_dir/wrangler"
 api_pid=""
 web_pid=""
+preview_pid=""
 browser_session_open=0
 playwright_cli="/home/sjo1848/.codex/skills/playwright/scripts/playwright_cli.sh"
 
@@ -18,7 +19,7 @@ collect_tree() {
 stop_owned() {
   local root pid live
   local -a owned=()
-  for root in "$api_pid" "$web_pid"; do
+  for root in "$api_pid" "$web_pid" "$preview_pid"; do
     [[ -n "$root" ]] || continue
     while read -r pid; do owned+=("$pid"); done < <(collect_tree "$root")
   done
@@ -29,7 +30,8 @@ stop_owned() {
     if (( live == 0 )); then
       [[ -z "$api_pid" ]] || wait "$api_pid" 2>/dev/null || true
       [[ -z "$web_pid" ]] || wait "$web_pid" 2>/dev/null || true
-      api_pid=""; web_pid=""
+      [[ -z "$preview_pid" ]] || wait "$preview_pid" 2>/dev/null || true
+      api_pid=""; web_pid=""; preview_pid=""
       return 0
     fi
     sleep 0.1
@@ -41,7 +43,8 @@ stop_owned() {
     if (( live == 0 )); then
       [[ -z "$api_pid" ]] || wait "$api_pid" 2>/dev/null || true
       [[ -z "$web_pid" ]] || wait "$web_pid" 2>/dev/null || true
-      api_pid=""; web_pid=""
+      [[ -z "$preview_pid" ]] || wait "$preview_pid" 2>/dev/null || true
+      api_pid=""; web_pid=""; preview_pid=""
       return 0
     fi
     sleep 0.1
@@ -62,6 +65,7 @@ on_exit() {
 trap on_exit EXIT
 
 wrangler="$repo_dir/node_modules/.bin/wrangler"
+if ! npm run web:build >"$tmp_dir/build.log" 2>&1; then cat "$tmp_dir/build.log" >&2; exit 1; fi
 for database in CONTROL_DB HOTEL_DEMO_DB HOTEL_SECOND_DB; do
   CI=1 "$wrangler" d1 migrations apply "$database" --local -c apps/api/wrangler.jsonc --persist-to "$persist_dir" >"$tmp_dir/migrations.log" 2>&1
 done
@@ -100,14 +104,24 @@ if curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1; then echo "API port 8
 for _ in {1..40}; do curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1 && break; sleep 0.5; done
 curl -fsS http://127.0.0.1:8787/health >/dev/null
 if curl -fsS http://127.0.0.1:4178/ >/dev/null 2>&1; then echo "Web port 4178 already occupied" >&2; exit 1; fi
+if curl -fsS http://127.0.0.1:4179/ >/dev/null 2>&1; then echo "Web preview port 4179 already occupied" >&2; exit 1; fi
 VITE_LOCAL_ACCEPTANCE_AUTH=true "$repo_dir/node_modules/.bin/vite" --host 127.0.0.1 --port 4178 --config apps/web/vite.config.ts >"$tmp_dir/web.log" 2>&1 & web_pid=$!
 for _ in {1..40}; do curl -fsS http://127.0.0.1:4178/ >/dev/null 2>&1 && break; sleep 0.5; done
 curl -fsS http://127.0.0.1:4178/ >/dev/null
+"$repo_dir/node_modules/.bin/vite" preview --host 127.0.0.1 --port 4179 --config apps/web/vite.config.ts >"$tmp_dir/preview.log" 2>&1 & preview_pid=$!
+for _ in {1..40}; do curl -fsS http://127.0.0.1:4179/ >/dev/null 2>&1 && break; sleep 0.5; done
+curl -fsS http://127.0.0.1:4179/ >/dev/null
 
 mkdir -p output/playwright
 bash "$playwright_cli" -s f0-10-capabilities open about:blank >/dev/null
 browser_session_open=1
-bash "$playwright_cli" -s f0-10-capabilities run-code --filename scripts/cf-f0-10-capabilities.playwright.js --raw | tee output/playwright/f0-10-capabilities-integrated.log
+if [[ "${BLOCK_A_ONLY:-0}" == "1" ]]; then
+  bash "$playwright_cli" -s f0-10-capabilities run-code --filename scripts/cf-block-a-shell.playwright.js --raw | tee output/playwright/block-a-shell-integrated.log
+else
+  bash "$playwright_cli" -s f0-10-capabilities run-code --filename scripts/cf-f0-10-capabilities.playwright.js --raw | tee output/playwright/f0-10-capabilities-integrated.log
+  bash "$playwright_cli" -s f0-10-capabilities run-code --filename scripts/cf-block-a-shell.playwright.js --raw | tee output/playwright/block-a-shell-integrated.log
+fi
+bash "$playwright_cli" -s f0-10-capabilities run-code --filename scripts/cf-block-a-shell-built.playwright.js --raw | tee output/playwright/block-a-built-integrated.log
 bash "$playwright_cli" -s f0-10-capabilities close >/dev/null
 browser_session_open=0
 stop_owned
@@ -116,44 +130,59 @@ trap - EXIT
 CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --persist-to "$persist_dir" --command "SELECT COUNT(*) AS allowed_room FROM rooms WHERE room_number='F10-OK'; SELECT COUNT(*) AS denied_room FROM rooms WHERE room_number='F010-DENIED';" --json >"$tmp_dir/rooms.json"
 node - "$tmp_dir/rooms.json" <<'NODE'
 const fs = require("node:fs");
+const blockAOnly = process.env.BLOCK_A_ONLY === "1";
 const rows = JSON.parse(fs.readFileSync(process.argv[2], "utf8")).flatMap(item => item.results);
-if (rows[0]?.allowed_room !== 1 || rows[1]?.denied_room !== 0) throw new Error(`role downgrade D1 state mismatch: ${JSON.stringify(rows)}`);
+if (blockAOnly ? rows[0]?.allowed_room !== 0 || rows[1]?.denied_room !== 0 : rows[0]?.allowed_room !== 1 || rows[1]?.denied_room !== 0) throw new Error(`role downgrade D1 state mismatch: ${JSON.stringify(rows)}`);
 NODE
 CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --persist-to "$persist_dir" --command "SELECT role FROM hotel_memberships WHERE access_subject='source-user:14000000-0000-0000-0000-000000000002' AND hotel_id='10000000-0000-0000-0000-000000000001'; SELECT COUNT(*) AS role_audits FROM control_audit_events WHERE target_id='source-user:14000000-0000-0000-0000-000000000002' AND action='USER_ROLE_CHANGE'; SELECT COUNT(*) AS denied_network_hotels FROM control_hotels WHERE id IN ('denied-hotel','denied-hotel-mobile');" --json >"$tmp_dir/downgrade.json"
 node - "$tmp_dir/downgrade.json" <<'NODE'
 const fs = require("node:fs");
 const crypto = require("node:crypto");
+const blockAOnly = process.env.BLOCK_A_ONLY === "1";
 const rows = JSON.parse(fs.readFileSync(process.argv[2], "utf8")).flatMap(item => item.results);
-if (rows[0]?.role !== "receptionist" || rows[1]?.role_audits !== 2 || rows[2]?.denied_network_hotels !== 0) throw new Error(`same-subject downgrade/network denial evidence mismatch: ${JSON.stringify(rows)}`);
+const expectedRoleAudits = blockAOnly ? 3 : 5;
+if (rows[0]?.role !== "receptionist" || rows[1]?.role_audits !== expectedRoleAudits || rows[2]?.denied_network_hotels !== 0) throw new Error(`same-subject downgrade/network denial evidence mismatch: ${JSON.stringify(rows)}`);
 const roomRows = JSON.parse(fs.readFileSync(process.argv[2].replace("downgrade.json", "rooms.json"), "utf8")).flatMap(item => item.results);
-if (roomRows[0]?.allowed_room !== 1 || roomRows[1]?.denied_room !== 0) throw new Error(`allowed/denied room write state mismatch: ${JSON.stringify(roomRows)}`);
-const browser = JSON.parse(fs.readFileSync("output/playwright/f0-10-capabilities-integrated.log", "utf8"));
-for (const key of ["desktop", "mobile", "dualScope", "outOfOrderAuthMe", "networkDeniedWritesHidden", "networkKeyboard"]) if (!browser[key]) throw new Error(`integrated browser evidence missing ${key}: ${JSON.stringify(browser)}`);
-for (const key of ["authorizedDesktop", "unauthorizedDesktop", "authorizedMobile", "unauthorizedMobile"]) if (browser.networkKeyboard[key] !== "PASS") throw new Error(`Network keyboard evidence missing ${key}: ${JSON.stringify(browser.networkKeyboard)}`);
-if (browser.networkKeyboard.deniedWriteDesktop !== 403 || browser.networkKeyboard.deniedWriteMobile !== 403
-  || JSON.stringify(browser.networkKeyboard.unauthorizedViewports) !== JSON.stringify(["1280x900:PASS", "375x844:PASS"])) throw new Error(`Network viewport authorization evidence mismatch: ${JSON.stringify(browser.networkKeyboard)}`);
-for (const viewport of ["noWriteAuthMeDesktop", "noWriteAuthMeMobile"]) {
-  const auth = browser.networkKeyboard[viewport];
-  if (auth?.status !== 200 || auth.appContextApplied !== true || auth.localProfile !== "2" || auth.subject !== "source-user:24000000-0000-0000-0000-000000000001"
-    || auth.hotelId !== "20000000-0000-0000-0000-000000000002" || auth.role !== "ops"
-    || !auth.hotelCapabilities.includes("housekeeping.read") || auth.networkCapabilities.includes("saas.hotels.write")) {
-    throw new Error(`real /auth/me identity/capability context mismatch at ${viewport}: ${JSON.stringify(auth)}`);
+if (blockAOnly ? roomRows[0]?.allowed_room !== 0 || roomRows[1]?.denied_room !== 0 : roomRows[0]?.allowed_room !== 1 || roomRows[1]?.denied_room !== 0) throw new Error(`allowed/denied room write state mismatch: ${JSON.stringify(roomRows)}`);
+let browser = null;
+if (!blockAOnly) {
+  browser = JSON.parse(fs.readFileSync("output/playwright/f0-10-capabilities-integrated.log", "utf8"));
+  for (const key of ["desktop", "mobile", "dualScope", "outOfOrderAuthMe", "networkDeniedWritesHidden", "networkKeyboard"]) if (!browser[key]) throw new Error(`integrated browser evidence missing ${key}: ${JSON.stringify(browser)}`);
+  for (const key of ["authorizedDesktop", "unauthorizedDesktop", "authorizedMobile", "unauthorizedMobile"]) if (browser.networkKeyboard[key] !== "PASS") throw new Error(`Network keyboard evidence missing ${key}: ${JSON.stringify(browser.networkKeyboard)}`);
+  if (browser.networkKeyboard.deniedWriteDesktop !== 403 || browser.networkKeyboard.deniedWriteMobile !== 403
+    || JSON.stringify(browser.networkKeyboard.unauthorizedViewports) !== JSON.stringify(["1280x900:PASS", "375x844:PASS"])) throw new Error(`Network viewport authorization evidence mismatch: ${JSON.stringify(browser.networkKeyboard)}`);
+  for (const viewport of ["noWriteAuthMeDesktop", "noWriteAuthMeMobile"]) {
+    const auth = browser.networkKeyboard[viewport];
+    if (auth?.status !== 200 || auth.appContextApplied !== true || auth.localProfile !== "2" || auth.subject !== "source-user:24000000-0000-0000-0000-000000000001"
+      || auth.hotelId !== "20000000-0000-0000-0000-000000000002" || auth.role !== "ops"
+      || !auth.hotelCapabilities.includes("housekeeping.read") || auth.networkCapabilities.includes("saas.hotels.write")) {
+      throw new Error(`real /auth/me identity/capability context mismatch at ${viewport}: ${JSON.stringify(auth)}`);
+    }
   }
+  if (browser.beforeDowngrade !== 201 || browser.afterDowngrade !== 403 || browser.unmemberedHotel !== 403 || browser.directDenied !== "PASS") throw new Error(`integrated browser authorization mismatch: ${JSON.stringify(browser)}`);
 }
-if (browser.beforeDowngrade !== 201 || browser.afterDowngrade !== 403 || browser.unmemberedHotel !== 403 || browser.directDenied !== "PASS") throw new Error(`integrated browser authorization mismatch: ${JSON.stringify(browser)}`);
+const blockA = JSON.parse(fs.readFileSync("output/playwright/block-a-shell-integrated.log", "utf8"));
+if (blockA.directRoutes !== "7/7" || blockA.queryHashReloadBackForward !== "PASS" || blockA.historyFragment?.status !== "PASS"
+  || blockA.accessibleNavigation?.status !== "PASS" || blockA.identityHotelContext !== "Worker /auth/me authoritative PASS"
+  || blockA.mobileMoreKeyboardTouchTargets !== "PASS" || blockA.capabilityDowngrade?.allowedRead !== 200
+  || blockA.capabilityDowngrade?.deniedRead !== 403 || blockA.capabilityDowngrade?.noReplay !== true || blockA.scroll?.status !== "PASS") {
+  throw new Error(`Block A integrated browser evidence incomplete: ${JSON.stringify(blockA)}`);
+}
+const blockABuilt = JSON.parse(fs.readFileSync("output/playwright/block-a-built-integrated.log", "utf8"));
+for (const field of ["bundle", "worker", "desktop", "capabilityGuard", "mobile"]) if (!blockABuilt[field]) throw new Error(`Block A built-bundle browser evidence missing ${field}: ${JSON.stringify(blockABuilt)}`);
 const pngDimensions = path => {
   const image = fs.readFileSync(path);
   if (image.toString("hex", 0, 8) !== "89504e470d0a1a0a") throw new Error(`invalid PNG signature: ${path}`);
   return { width: image.readUInt32BE(16), height: image.readUInt32BE(20), sha256: crypto.createHash("sha256").update(image).digest("hex") };
 };
-const screenshots = {
+const screenshots = blockAOnly ? {} : {
   noWriteDesktop: pngDimensions("output/playwright/f0-10-network-no-write-keyboard.png"),
   noWriteMobile: pngDimensions("output/playwright/f0-10-network-no-write-mobile-keyboard.png"),
 };
-if (screenshots.noWriteDesktop.width !== 1280 || screenshots.noWriteMobile.width !== 375
-  || screenshots.noWriteDesktop.sha256 === screenshots.noWriteMobile.sha256) throw new Error(`Network no-write screenshots do not prove distinct desktop/mobile viewports: ${JSON.stringify(screenshots)}`);
-const result = { browser, screenshots, d1: { allowedRoomCount: roomRows[0].allowed_room, deniedRoomCount: roomRows[1].denied_room, finalRole: rows[0].role, roleAuditCount: rows[1].role_audits, deniedNetworkHotelCount: rows[2].denied_network_hotels }, cleanup: "owned Worker/Vite/Playwright processes verified stopped" };
-fs.writeFileSync("output/playwright/f0-10-capabilities-integrated-result.json", JSON.stringify(result, null, 2) + "\n");
+if (!blockAOnly && (screenshots.noWriteDesktop.width !== 1280 || screenshots.noWriteMobile.width !== 375
+  || screenshots.noWriteDesktop.sha256 === screenshots.noWriteMobile.sha256)) throw new Error(`Network denied-destination screenshots do not prove distinct desktop/mobile viewports: ${JSON.stringify(screenshots)}`);
+const result = { browser, blockA, blockABuilt, screenshots, d1: { allowedRoomCount: roomRows[0].allowed_room, deniedRoomCount: roomRows[1].denied_room, finalRole: rows[0].role, roleAuditCount: rows[1].role_audits, deniedNetworkHotelCount: rows[2].denied_network_hotels }, cleanup: "owned Worker/Vite dev/preview/Playwright processes verified stopped" };
+fs.writeFileSync(`output/playwright/${blockAOnly ? "block-a-shell" : "f0-10-capabilities"}-integrated-result.json`, JSON.stringify(result, null, 2) + "\n");
 console.log(JSON.stringify(result));
 NODE
-echo "F0.10 real local Worker/D1/Vite capability + downgrade browser regression PASS; owned process trees verified stopped."
+echo "Block A real local Worker/D1/Vite dev + minified-bundle browser regression PASS; owned process trees verified stopped."

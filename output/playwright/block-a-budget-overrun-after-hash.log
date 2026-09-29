@@ -1,0 +1,3 @@
+{"architectureFitness":"PASS","boundaries":16,"clientNavigation":true,"billingBoundary":true,"sharedUiReuse":true}
+{"architectureFitnessII":"PASS","featureOrchestrationBoundaries":["reception","housekeeping"],"hexagonalBoundaries":["bookings+reservation-inventory","lifecycle","billing-payment"],"networkKpiSingleQueryBoundary":true,"reportingIndexContract":true}
+{"i18nCoverage":"PASS","files":25,"explicitTechnicalExceptions":["HMS","Elite","HMS Elite","Email","ADR","RevPAR","· ADR","· RevPAR","HOTEL_DEMO_DB","HOTEL_SECOND_DB","×","☰","→","·","STANDARD","18000","101","name@hotel.com","guest@example.com","+54 9…"]}

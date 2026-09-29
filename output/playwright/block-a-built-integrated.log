@@ -1,0 +1,1 @@
+{"bundle":"Vite production/minified asset","worker":"local Worker with disposable D1; API traffic forwarded without mocks","desktop":"1440x900; grouped navigation, direct route, Back/query/hash PASS","capabilityGuard":"same local Worker /auth/me; Users denied for receptionist PASS","mobile":"390x844; primary + More + Escape/focus PASS"}

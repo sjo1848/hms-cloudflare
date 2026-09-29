@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { api } from "../api/client";
 import { GuestsPage } from "../features/guests/GuestsPage";
 import { HousekeepingPage } from "../features/housekeeping/HousekeepingPage";
@@ -9,55 +9,124 @@ import { ReportsPage } from "../features/reports/ReportsPage";
 import { RoomsPage } from "../features/rooms/RoomsPage";
 import { UsersPage } from "../features/users/UsersPage";
 import { LocalDevIdentitySelector } from "./LocalDevIdentitySelector";
-import { navigation, pageFromPath } from "./navigation";
+import { navigation, navigationGroups, isMobilePrimary, pageFromPath, visibleNavigation } from "./navigation";
+import type { NavigationItem, PageKey } from "./navigation";
 import { AppLink, useAppRouter } from "./router";
 import { useI18n } from "../i18n";
 import { LanguageSelector } from "./LanguageSelector";
-import { CapabilitiesContext, EMPTY_CAPABILITIES } from "./capabilities";
+import { AUTHORIZATION_STALE_EVENT, CapabilitiesContext, EMPTY_CAPABILITIES } from "./capabilities";
 import type { EffectiveCapabilities } from "./capabilities";
 
-type ActiveAuth = { hotel_id: string | null; hotel_name: string | null; capabilities: { hotel: string[]; network: string[] } };
-const hotelLabels: Record<string, string> = {
-  "10000000-0000-0000-0000-000000000001": "Hotel Norte",
-  "20000000-0000-0000-0000-000000000002": "Hotel Sur",
+type ActiveAuth = {
+  subject: string;
+  email: string;
+  hotel_id: string | null;
+  hotel_name: string | null;
+  capabilities: { hotel: string[]; network: string[] };
+};
+type AuthState = "loading" | "ready" | "error";
+type AuthFlight = { identityVersion: number; promise: Promise<void>; invalidated: boolean };
+
+function markAuthFlightInvalidated(ref: { current: AuthFlight | null }, promise: Promise<void>) {
+  const current = ref.current;
+  if (current?.promise === promise) current.invalidated = true;
+}
+
+const pageComponents: Record<PageKey, ReactNode> = {
+  bookings: <ReceptionPage />,
+  rooms: <RoomsPage />,
+  housekeeping: <HousekeepingPage />,
+  guests: <GuestsPage />,
+  reports: <ReportsPage />,
+  users: <UsersPage />,
+  network: <NetworkPage />,
 };
 
 export function AppShell() {
   const { t } = useI18n();
-  const { pathname } = useAppRouter();
+  const { pathname, search } = useAppRouter();
   const [identityVersion, setIdentityVersion] = useState(0);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [activeHotelLabel, setActiveHotelLabel] = useState(() => t("shell.loadingHotel"));
-  const [capabilities, setCapabilities] = useState<EffectiveCapabilities>(EMPTY_CAPABILITIES);
+  const [authState, setAuthState] = useState<AuthState>("loading");
+  const [activeAuth, setActiveAuth] = useState<ActiveAuth | null>(null);
+  const capabilities: EffectiveCapabilities = activeAuth?.capabilities ?? EMPTY_CAPABILITIES;
   const mobileNavRef = useRef<HTMLDialogElement | null>(null);
-  const mobileMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const activeHotelRequestRef = useRef(0);
-  const page = pageFromPath(pathname);
-  const activeLabel = t(navigation.find(([key]) => key === page)?.[2] ?? "nav.reception");
-  function closeMobileNav() { setMobileNavOpen(false); requestAnimationFrame(() => mobileMenuTriggerRef.current?.focus()); }
-  useEffect(() => {
-    const requestId = ++activeHotelRequestRef.current;
-    setActiveHotelLabel(t("shell.loadingHotel"));
-    setCapabilities(EMPTY_CAPABILITIES);
-    void api<ActiveAuth>("/auth/me").then(({ hotel_id, hotel_name, capabilities: effective }) => {
-      if (requestId !== activeHotelRequestRef.current) return;
-      setActiveHotelLabel(hotel_name ?? hotelLabels[hotel_id ?? ""] ?? "Hotel");
-      setCapabilities(effective);
+  const moreTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const requestGenerationRef = useRef(0);
+  const authFlightRef = useRef<AuthFlight | null>(null);
+
+  const refreshAuth = useCallback((clearCurrent = false): Promise<void> => {
+    const identityVersionForRequest = identityVersion;
+    if (clearCurrent) {
+      setActiveAuth(null);
+      setAuthState("loading");
+    }
+    if (authFlightRef.current?.identityVersion === identityVersionForRequest) return authFlightRef.current.promise;
+    const generation = ++requestGenerationRef.current;
+    const promise = api<ActiveAuth>("/auth/me").then(auth => {
+      if (generation !== requestGenerationRef.current) return;
+      setActiveAuth(auth);
+      setAuthState("ready");
     }).catch(() => {
-      if (requestId !== activeHotelRequestRef.current) return;
-      setActiveHotelLabel("Hotel");
-      setCapabilities({ hotel: [], network: [] });
+      if (generation !== requestGenerationRef.current) return;
+      setActiveAuth(null);
+      setAuthState("error");
+    }).finally(() => {
+      if (authFlightRef.current?.promise === promise) authFlightRef.current = null;
     });
-  }, [identityVersion, t]);
+    authFlightRef.current = { identityVersion: identityVersionForRequest, promise, invalidated: false };
+    return promise;
+  }, [identityVersion]);
+
+  useEffect(() => { void refreshAuth(true); }, [identityVersion, refreshAuth]);
+  useEffect(() => {
+    const refresh = () => {
+      if (authFlightRef.current?.invalidated) return;
+      setActiveAuth(null);
+      setAuthState("loading");
+      authFlightRef.current = null;
+      requestGenerationRef.current += 1;
+      const promise = refreshAuth();
+      markAuthFlightInvalidated(authFlightRef, promise);
+    };
+    window.addEventListener(AUTHORIZATION_STALE_EVENT, refresh);
+    return () => window.removeEventListener(AUTHORIZATION_STALE_EVENT, refresh);
+  }, [refreshAuth]);
+
+  const page = pageFromPath(pathname);
+  const nav = visibleNavigation(capabilities);
+  const selectedItem = page ? nav.find(item => item[0] === page) : undefined;
+  const activeLabel = t(selectedItem?.[2] ?? (page ? navigation.find(item => item[0] === page)?.[2] : "shell.notFoundTitle") ?? "shell.notFoundTitle");
+  const hotelLabel = activeAuth?.hotel_name ?? (activeAuth?.hotel_id ? "Hotel" : t("shell.noHotel"));
+  const userLabel = activeAuth?.email ?? activeAuth?.subject ?? "";
+
+  const closeMobileNav = useCallback(() => {
+    setMobileNavOpen(false);
+    requestAnimationFrame(() => {
+      const target = window.matchMedia("(max-width: 900px)").matches ? moreTriggerRef.current : document.querySelector<HTMLElement>(".desktop-sidebar a.active");
+      target?.focus();
+    });
+  }, []);
   useEffect(() => {
     if (!mobileNavOpen) return;
     const closeOnDesktop = () => { if (window.innerWidth > 900) closeMobileNav(); };
     window.addEventListener("resize", closeOnDesktop);
     return () => window.removeEventListener("resize", closeOnDesktop);
-  }, [mobileNavOpen]);
-  const content = page === "rooms" ? <RoomsPage /> : page === "guests" ? <GuestsPage /> : page === "housekeeping" ? <HousekeepingPage /> : page === "users" ? <UsersPage /> : page === "network" ? <NetworkPage /> : page === "reports" ? <ReportsPage /> : <ReceptionPage />;
-  const visibleNavigation = navigation.filter(([, , , , access]) => access.allOf.every(capability => (access.scope === "hotel" ? capabilities.hotel : capabilities.network).includes(capability)));
-  const navLinks = (close = false) => visibleNavigation.map(([key, href, label, description]) => <AppLink key={key} className={page === key ? "active" : ""} to={href} onNavigate={close ? closeMobileNav : undefined}><strong>{t(label)}</strong><small>{t(description)}</small></AppLink>);
+  }, [mobileNavOpen, closeMobileNav]);
+
+  const navLinks = (items: NavigationItem[], close = false) => items.map(([key, href, label]) =>
+    <AppLink key={key} className={page === key ? "active" : ""} aria-current={page === key ? "page" : undefined} to={href} onNavigate={close ? closeMobileNav : undefined}>
+      <strong>{t(label)}</strong>
+    </AppLink>,
+  );
+  const groupedNavigation = (items: NavigationItem[], close = false, includePrimary = true) => navigationGroups.map(group => {
+    const groupItems = items.filter(item => item[4] === group && (includePrimary || !isMobilePrimary(item[0])));
+    if (!groupItems.length) return null;
+    return <section className={`nav-group nav-group-${group}`} key={group} aria-label={t(`shell.group.${group}`)}>
+      <h2>{t(`shell.group.${group}`)}</h2><nav>{navLinks(groupItems, close)}</nav>
+    </section>;
+  });
+
   useLayoutEffect(() => {
     const dialog = mobileNavRef.current;
     if (!dialog) return;
@@ -69,14 +138,46 @@ export function AppShell() {
       return () => dialog.removeEventListener("cancel", onCancel);
     }
     if (dialog.open) dialog.close();
-  }, [mobileNavOpen]);
-  function trapMobileNavFocus(event: KeyboardEvent<HTMLDialogElement>) {
-    if (event.key !== "Tab") return;
-    const focusable = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("a, button")).filter(element => !element.hasAttribute("disabled"));
-    if (!focusable.length) return;
-    const first = focusable[0]; const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-  }
-  return <CapabilitiesContext.Provider value={capabilities}><div className="app-shell"><aside className="desktop-sidebar" aria-label={t("shell.mainNav")}><AppLink className="brand" to="/bookings"><span className="brand-mark">H</span><span><strong>HMS</strong><small>Elite</small></span></AppLink><p className="nav-label">{t("shell.operations")}</p><nav>{navLinks()}</nav><div className="sidebar-footer"><span className="status-dot" /> {t("shell.stagingAccess")}</div></aside><main className="app-main"><header className="app-header"><div className="mobile-heading"><button ref={mobileMenuTriggerRef} className="menu-trigger" type="button" aria-label={t("shell.openNav")} aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}>☰</button><div><p className="eyebrow">HMS Elite</p><h1>{activeLabel}</h1></div></div><div className="desktop-heading"><p className="eyebrow">{t("shell.hotelOperations")}</p><h1>{activeLabel}</h1></div><span className="header-context">{activeHotelLabel} · {t("shell.operations")}</span><LanguageSelector /></header><div className="app-content" data-hotel-capabilities={capabilities.hotel.join(" ")}><LocalDevIdentitySelector onChange={() => { setCapabilities(EMPTY_CAPABILITIES); setIdentityVersion(value => value + 1); }} /><div key={identityVersion}>{content}</div></div></main>{mobileNavOpen && <dialog ref={mobileNavRef} className="mobile-nav" aria-label={t("shell.mobileNav")} onKeyDown={trapMobileNavFocus} onClick={event => { if (event.target === event.currentTarget) closeMobileNav(); }}><div className="mobile-nav-heading"><AppLink className="brand" to="/bookings" onNavigate={closeMobileNav}><span className="brand-mark">H</span><span><strong>HMS</strong><small>Elite</small></span></AppLink><button type="button" className="close-nav" aria-label={t("shell.closeNav")} onClick={closeMobileNav}>×</button></div><LanguageSelector /><nav>{navLinks(true)}</nav><p className="sidebar-footer"><span className="status-dot" /> {activeHotelLabel} · {t("shell.accessActive")}</p></dialog>}</div></CapabilitiesContext.Provider>;
+  }, [mobileNavOpen, closeMobileNav]);
+
+  let routeContent: ReactNode;
+  if (authState === "loading") routeContent = <section className="shell-state" role="status"><h2>{t("shell.loadingContext")}</h2><p>{t("shell.loadingCapabilities")}</p></section>;
+  else if (authState === "error") routeContent = <section className="shell-state shell-state-error" role="alert"><h2>{t("shell.contextUnavailable")}</h2><p>{t("shell.contextUnavailableDescription")}</p><button type="button" onClick={() => void refreshAuth(true)}>{t("common.retry")}</button></section>;
+  else if (!page) routeContent = <section className="shell-state" role="status"><h2>{t("shell.notFoundTitle")}</h2><p>{t("shell.notFoundDescription")}</p>{nav.find(item => item[0] === "bookings") && <AppLink to="/bookings">{t("shell.returnReception")}</AppLink>}</section>;
+  else if (!selectedItem) routeContent = <section className="shell-state shell-state-denied" role="status"><h2>{t("shell.routeUnavailable")}</h2><p>{t("shell.routeUnavailableDescription")}</p><nav aria-label={t("shell.authorizedDestinations")}>{navLinks(nav)}</nav></section>;
+  else routeContent = pageComponents[page];
+
+  return <CapabilitiesContext.Provider value={capabilities}>
+    <div className="app-shell">
+      <aside className="desktop-sidebar" aria-label={t("shell.mainNav")}>
+        <AppLink className="brand" to="/bookings"><span className="brand-mark">H</span><span><strong>HMS</strong><small>Elite</small></span></AppLink>
+        {groupedNavigation(nav)}
+        <div className="sidebar-footer"><span className="status-dot" /> {hotelLabel}<small>{userLabel}</small></div>
+      </aside>
+      <main className="app-main">
+        <header className="app-header">
+          <div className="desktop-heading"><p className="eyebrow">{t("shell.hotelOperations")}</p><h1>{activeLabel}</h1></div>
+          <div className="mobile-heading"><div><p className="eyebrow">HMS Elite</p><h1>{activeLabel}</h1></div></div>
+          <div className="header-context" aria-live="polite"><strong>{hotelLabel}</strong>{userLabel && <small>{userLabel}</small>}</div>
+          <LanguageSelector />
+        </header>
+        <div className="app-content" data-hotel-capabilities={capabilities.hotel.join(" ")}>
+          <LocalDevIdentitySelector onChange={() => { setActiveAuth(null); setAuthState("loading"); setIdentityVersion(value => value + 1); }} />
+          <div key={identityVersion}>{routeContent}</div>
+        </div>
+      </main>
+      <nav className="mobile-primary-nav" aria-label={t("shell.mobilePrimaryNav")}>
+        {nav.filter(item => isMobilePrimary(item[0])).map(([key, href, label]) =>
+          <AppLink key={key} to={href} className={page === key ? "active" : ""} aria-current={page === key ? "page" : undefined}><span>{t(label)}</span></AppLink>,
+        )}
+        <button ref={moreTriggerRef} type="button" aria-expanded={mobileNavOpen} aria-controls="mobile-more-navigation" onClick={() => setMobileNavOpen(true)}>{t("shell.more")}</button>
+      </nav>
+      {mobileNavOpen && <dialog id="mobile-more-navigation" ref={mobileNavRef} className="mobile-nav" aria-label={t("shell.moreNavigation")} onClick={event => { if (event.target === event.currentTarget) closeMobileNav(); }}>
+        <div className="mobile-nav-heading"><div><p className="eyebrow">{t("shell.more")}</p><h2>{t("shell.moreNavigation")}</h2></div><button type="button" className="close-nav" aria-label={t("shell.closeNav")} onClick={closeMobileNav}>×</button></div>
+        {groupedNavigation(nav, true, false)}
+        {!nav.some(item => !isMobilePrimary(item[0])) && <p>{t("shell.noMoreDestinations")}</p>}
+        <p className="sidebar-footer">{hotelLabel}<small>{userLabel}</small></p>
+      </dialog>}
+    </div>
+  </CapabilitiesContext.Provider>;
 }

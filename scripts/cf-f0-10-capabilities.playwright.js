@@ -87,8 +87,8 @@
     if (await page.getByRole("link", { name: new RegExp(inaccessible) }).count()) throw new Error(`inaccessible navigation remained visible after downgrade: ${inaccessible}`);
   }
   await page.goto("http://127.0.0.1:4178/users");
-  await page.locator(".users-operational").waitFor();
-  await page.locator(".users-operational .workspace-heading-actions > button").waitFor({ state: "hidden" });
+  await page.getByRole("heading", { name: "Destination unavailable" }).waitFor();
+  if (await page.locator(".users-operational").count()) throw new Error("capability-denied direct route rendered Users content");
   await page.goto("http://127.0.0.1:4178/bookings");
   await page.locator(".billing-cash-workspace").waitFor();
   await page.locator(".billing-close-cash-form").waitFor({ state: "hidden" });
@@ -214,12 +214,6 @@
     "x-local-access-email": "sol-ops@migration.invalid",
     "x-hotel-id": hotelB,
   });
-  await page.route("**/api/v1/hotels", async route => {
-    if (route.request().method() !== "GET") return route.continue();
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([
-      { id: hotelB, slug: "hotel-sur", name: "Hotel Sur", address: "B Street", plan_tier: "BASIC", operational_binding: "HOTEL_SECOND_DB", active: 1 },
-    ]) });
-  });
   await page.setViewportSize({ width: 1280, height: 900 });
   const noWriteDesktopViewport = page.viewportSize();
   if (noWriteDesktopViewport?.width !== 1280 || noWriteDesktopViewport?.height !== 900) throw new Error(`no-write desktop check has wrong viewport: ${JSON.stringify(noWriteDesktopViewport)}`);
@@ -237,18 +231,14 @@
     || noWriteDesktopAuth.hotel_id !== hotelB || noWriteDesktopAuth.role !== "ops"
     || !noWriteDesktopAuth.capabilities.hotel.includes("housekeeping.read")
     || noWriteDesktopAuth.capabilities.network.includes("saas.hotels.write")) throw new Error(`desktop no-write UI received unexpected /auth/me context: ${JSON.stringify(noWriteDesktopResponse)}`);
-  await page.getByRole("button", { name: /Hotel Sur/ }).waitFor({ state: "visible" });
-  await page.getByRole("button", { name: /Hotel Sur/ }).click();
-  await page.locator(".network-detail").waitFor({ state: "visible" });
-  if (await page.locator(".admin-surface > details").count() !== 0
-    || await page.locator(".network-detail select").count() !== 0) throw new Error("network write affordances remained in DOM without saas.hotels.write");
-  if (!(await page.getByRole("button", { name: /Hotel Sur/ }).innerText()).includes("Basic")
-    || !(await page.locator(".network-detail").innerText()).includes("Basic")) throw new Error("read-only hotel plan is not legible without network write capability");
-  await page.locator("body").click({ position: { x: 2, y: 2 } });
+  await page.getByRole("heading", { name: "Destination unavailable" }).waitFor();
+  if (await page.getByRole("link", { name: /Network/ }).count() !== 0) throw new Error("network destination remained visible without saas.hotels.read");
+  const deniedNetworkRead = await page.evaluate(async () => (await fetch("/api/v1/hotels")).status);
+  if (deniedNetworkRead !== 403) throw new Error(`network read without server capability was not denied: ${deniedNetworkRead}`);
   for (let i = 0; i < 40; i += 1) {
     await page.keyboard.press("Tab");
     const focusedWriteControl = await page.evaluate(() => document.activeElement?.matches("#hotel-id, #hotel-slug, #hotel-name, #hotel-binding, .network-detail select") ?? false);
-    if (focusedWriteControl) throw new Error("keyboard traversal reached a network write control without saas.hotels.write");
+    if (focusedWriteControl) throw new Error("keyboard traversal reached a network control without saas.hotels.read");
   }
   await page.screenshot({ path: "output/playwright/f0-10-network-no-write-keyboard.png", fullPage: true });
   networkNoWriteViewportResults.push(`${noWriteDesktopViewport.width}x${noWriteDesktopViewport.height}:PASS`);
@@ -273,17 +263,14 @@
     || noWriteMobileAuth.hotel_id !== hotelB || noWriteMobileAuth.role !== "ops"
     || !noWriteMobileAuth.capabilities.hotel.includes("housekeeping.read")
     || noWriteMobileAuth.capabilities.network.includes("saas.hotels.write")) throw new Error(`mobile no-write UI received unexpected /auth/me context: ${JSON.stringify(noWriteMobileResponse)}`);
-  await page.getByRole("button", { name: /Hotel Sur/ }).waitFor({ state: "visible" });
-  await page.getByRole("button", { name: /Hotel Sur/ }).click();
-  await page.locator(".network-detail").waitFor({ state: "visible" });
-  if (await page.locator(".admin-surface > details").count() !== 0
-    || await page.locator(".network-detail select").count() !== 0) throw new Error("mobile network write affordances remained in DOM without saas.hotels.write");
-  if (!(await page.locator(".network-detail").innerText()).includes("Basic")) throw new Error("mobile read-only hotel plan is not legible without network write capability");
-  await page.locator("body").click({ position: { x: 2, y: 2 } });
+  await page.getByRole("heading", { name: "Destination unavailable" }).waitFor();
+  if (await page.getByRole("link", { name: /Network/ }).count() !== 0) throw new Error("mobile network destination remained visible without saas.hotels.read");
+  const deniedNetworkReadMobile = await page.evaluate(async () => (await fetch("/api/v1/hotels")).status);
+  if (deniedNetworkReadMobile !== 403) throw new Error(`mobile network read without server capability was not denied: ${deniedNetworkReadMobile}`);
   for (let i = 0; i < 40; i += 1) {
     await page.keyboard.press("Tab");
     const focusedWriteControl = await page.evaluate(() => document.activeElement?.matches("#hotel-id, #hotel-slug, #hotel-name, #hotel-binding, .network-detail select") ?? false);
-    if (focusedWriteControl) throw new Error("mobile keyboard traversal reached a network write control without saas.hotels.write");
+    if (focusedWriteControl) throw new Error("mobile keyboard traversal reached a network control without saas.hotels.read");
   }
   if (await page.evaluate(() => document.documentElement.scrollWidth) > 375) throw new Error("unauthorized mobile Network surface overflows viewport");
   await page.screenshot({ path: "output/playwright/f0-10-network-no-write-mobile-keyboard.png", fullPage: true });
@@ -303,9 +290,10 @@
   });
   await page.setViewportSize({ width: 375, height: 844 });
   await page.goto("http://127.0.0.1:4178/rooms");
-  await page.getByRole("button", { name: "Open navigation" }).click();
-  await page.getByRole("dialog", { name: "Mobile navigation" }).waitFor();
-  await page.getByRole("link", { name: /Rooms/ }).waitFor({ state: "visible" });
+  await page.getByRole("button", { name: "More" }).click();
+  await page.getByRole("dialog", { name: "More destinations" }).waitFor();
+  await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: /Rooms/ }).waitFor({ state: "visible" });
+  if (await page.getByRole("dialog", { name: "More destinations" }).getByRole("link", { name: /Rooms/ }).count()) throw new Error("primary Rooms route was duplicated inside More");
   await roomWrite.waitFor({ state: "hidden" });
   if (await page.evaluate(() => document.documentElement.scrollWidth) > 375) throw new Error("mobile capability navigation overflows viewport");
   await page.screenshot({ path: "output/playwright/f0-10-receptionist-mobile-navigation.png", fullPage: true });
@@ -362,5 +350,5 @@
   if (!afterStaleResponse?.includes("bookings.read") || afterStaleResponse.includes("rooms.write")
     || await roomWrite.isVisible()) throw new Error(`out-of-order /auth/me response restored stale capabilities: ${afterStaleResponse}`);
   await page.unroute("**/api/v1/auth/me");
-  return { desktop: "1280x900", mobile: "375x844", dualScope: "PASS", adminRoomGuestUserControls: "visible", beforeDowngrade: allowedWrite.status, afterDowngrade: deniedWrite.status, roomActionHidden: true, userControlsHidden: true, cashCloseHidden: true, opsRoomWrite: false, housekeepingRoleAction: "visible", networkOnlyNavigation: "PASS", networkWriteAction: "visible-and-keyboard-reachable", networkDeniedWritesHidden: "PASS", networkKeyboard: { authorizedDesktop: "PASS", unauthorizedDesktop: "PASS", authorizedMobile: "PASS", unauthorizedMobile: "PASS", noWriteAuthMeDesktop: { localProfile: noWriteDesktopProfile, subject: noWriteDesktopAuth.subject, hotelId: noWriteDesktopAuth.hotel_id, role: noWriteDesktopAuth.role, hotelCapabilities: noWriteDesktopAuth.capabilities.hotel, networkCapabilities: noWriteDesktopAuth.capabilities.network, status: noWriteDesktopResponse.status, appContextApplied: true }, noWriteAuthMeMobile: { localProfile: noWriteMobileProfile, subject: noWriteMobileAuth.subject, hotelId: noWriteMobileAuth.hotel_id, role: noWriteMobileAuth.role, hotelCapabilities: noWriteMobileAuth.capabilities.hotel, networkCapabilities: noWriteMobileAuth.capabilities.network, status: noWriteMobileResponse.status, appContextApplied: true }, deniedWriteDesktop: deniedNetworkWrite, deniedWriteMobile: deniedNetworkWriteMobile, unauthorizedViewports: networkNoWriteViewportResults }, directDenied: "PASS", unmemberedHotel: unmemberedContext.status, outOfOrderAuthMe: "PASS" };
+  return { desktop: "1280x900", mobile: "375x844", dualScope: "PASS", adminRoomGuestUserControls: "visible", beforeDowngrade: allowedWrite.status, afterDowngrade: deniedWrite.status, roomActionHidden: true, userControlsHidden: true, cashCloseHidden: true, opsRoomWrite: false, housekeepingRoleAction: "visible", networkOnlyNavigation: "PASS", networkWriteAction: "visible-and-keyboard-reachable", networkDeniedWritesHidden: "PASS", networkKeyboard: { authorizedDesktop: "PASS", unauthorizedDesktop: "PASS", authorizedMobile: "PASS", unauthorizedMobile: "PASS", noWriteAuthMeDesktop: { localProfile: noWriteDesktopProfile, subject: noWriteDesktopAuth.subject, hotelId: noWriteDesktopAuth.hotel_id, role: noWriteDesktopAuth.role, hotelCapabilities: noWriteDesktopAuth.capabilities.hotel, networkCapabilities: noWriteDesktopAuth.capabilities.network, status: noWriteDesktopResponse.status, appContextApplied: true, deniedRead: deniedNetworkRead }, noWriteAuthMeMobile: { localProfile: noWriteMobileProfile, subject: noWriteMobileAuth.subject, hotelId: noWriteMobileAuth.hotel_id, role: noWriteMobileAuth.role, hotelCapabilities: noWriteMobileAuth.capabilities.hotel, networkCapabilities: noWriteMobileAuth.capabilities.network, status: noWriteMobileResponse.status, appContextApplied: true, deniedRead: deniedNetworkReadMobile }, deniedWriteDesktop: deniedNetworkWrite, deniedWriteMobile: deniedNetworkWriteMobile, unauthorizedViewports: networkNoWriteViewportResults }, directDenied: "PASS", unmemberedHotel: unmemberedContext.status, outOfOrderAuthMe: "PASS" };
 })()

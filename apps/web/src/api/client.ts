@@ -38,8 +38,10 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { error?: { message?: string }; operation?: unknown; recovery_reason?: string } | null;
     const detail = payload?.operation ? { operation: payload.operation, recoveryReason: payload.recovery_reason } : null;
+    if (response.status === 403 && path !== "/auth/me") notifyAuthorizationStale();
     throw new ApiError(localizedHttpError(response.status, payload?.error?.message), response.status, detail);
   }
   return response.json();
 }
 import { localizedHttpError } from "../i18n";
+import { notifyAuthorizationStale } from "../app/capabilities";
