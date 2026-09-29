@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active task: F0.11 bounded critic-condition repair is packaged as replacement Artifact A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898`; its fresh Independent Critic review on orchestration Boundary B4 is the current blocking action. B3 was superseded only to reconcile the stale F0.10 `boundary_b` status field; A2 is unchanged. The prior A1+B2 verdict remains historical `PASS_WITH_CONDITIONS`, not transferred. F0.10 is closed at its own Development Gate: fresh Independent Critic Gauss (GPT-6 Luna Medium, read-only) returned `PASS` on exact A5 `2e0fb984022b48a7dbeca5f4417dd2fae895fc97` + B5 `132449cbf8ba622c693935f1b2d3bb8bb9494665`; evidence `.orchestration/evidence/HMS-F0-10-INDEPENDENT-CRITIC-A5-B5.md`. Foundation 0 is NOT complete: after F0.11 disposition, F0.12 remains. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
+Active task: reconcile the F0.11 critic handoff metadata after fresh Independent Critic Euler returned `REWORK` on exact Artifact A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` + Boundary B4 `173aed525d42198012d89d386ff60eafe3138e78`. Findings are handoff-only: stale `review_path` and historical B3 wording in immutable A2 evidence. The bounded reconciliation contract and Pre-Critic are frozen; A2 remains unchanged. B3 was superseded only to reconcile the stale F0.10 `boundary_b` status field. F0.9 is closed with exact-pair Independent Critic PASS; F0.10 is closed at its own Development Gate: fresh Independent Critic Gauss (GPT-6 Luna Medium, read-only) returned `PASS` on exact A5 `2e0fb984022b48a7dbeca5f4417dd2fae895fc97` + B5 `132449cbf8ba622c693935f1b2d3bb8bb9494665`; evidence `.orchestration/evidence/HMS-F0-10-INDEPENDENT-CRITIC-A5-B5.md`. Foundation 0 is NOT complete: F0.11 disposition and F0.12 remain. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
 
 ### F0.8 — Recoverable guest + reservation creation — implementation validated; handoff condition closed
 
@@ -276,9 +276,15 @@ this is an inspection limitation, not a production finding.
 - Unrelated working-tree edits to historical F0.9/P0.1 evidence/harness and non-final F0.11 diagnostics remain uncommitted and excluded from A; they are preserved, not silently discarded.
 - Foundation 0 remains NOT complete. F0.12 is still required after F0.11 and must have its own Task Contract. No Blocks A–H, real data, PR/push/merge, main, staging mutation, deploy or production.
 
+## F0.11 CRITIC HANDOFF RECONCILIATION
+
+- Fresh Independent Critic Euler reviewed exact A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` + B4 `173aed525d42198012d89d386ff60eafe3138e78`; verdict `REWORK` for two metadata/evidence-handoff findings only. No product defect, `ROADMAP_BLOCKER`, architecture contradiction, data-risk finding or scope issue. Full review: `.orchestration/evidence/HMS-F0-11-INDEPENDENT-CRITIC-A2-B4.md`.
+- Frozen bounded contract `.orchestration/contracts/HMS-F0-11-CRITIC-HANDOFF-RECONCILIATION-001.md` and Pre-Critic `.orchestration/evidence/HMS-F0-11-CRITIC-HANDOFF-RECONCILIATION-001-PRECRITIC.md`; all 24 invariants recorded in the matching `-INVARIANTS.md` file.
+- A2's B3 references remain immutable historical packaging text. B4 superseded B3 for the stale F0.10 field; the current orchestration-only B5 identifies exact A2, records B4 as the last actually audited boundary, preserves its `REWORK`, and points the fresh review at exact A2+B5. `external_review.required=true`; resume is disabled.
+
 ## NEXT ACTION
 
-Obtain a fresh Independent Critic on exact F0.11 A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` plus orchestration-only Boundary B4. If no `ROADMAP_BLOCKER` or architecture contradiction appears, continue immediately to F0.12 by freezing its Task Contract and Pre-Critic, then complete the aggregate evidence gate. Foundation 0 is NOT complete.
+Obtain a fresh Independent Critic on exact F0.11 A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` + current orchestration-only Boundary B5. If no `ROADMAP_BLOCKER` or architecture contradiction appears, continue immediately to F0.12 by freezing its Task Contract and Pre-Critic, then complete the aggregate evidence gate. Foundation 0 is NOT complete.
 
 ## MODEL ROUTING
 
