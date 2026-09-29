@@ -27,6 +27,10 @@ export function loadHotelContext() {
   return api<ActiveHotelContext>("/auth/me");
 }
 
+export function loadBooking(bookingId: string) {
+  return api<Booking>(`/bookings/${encodeURIComponent(bookingId)}`);
+}
+
 export function loadRoomMaintenanceCase(roomId: string) {
   return api<MaintenanceCase>(`/housekeeping/${roomId}/maintenance`);
 }

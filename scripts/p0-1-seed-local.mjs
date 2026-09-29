@@ -38,10 +38,10 @@ const afterDate = new Date(Date.parse(`${localDate}T00:00:00Z`) + 86400000).toIS
 const checkoutDate = new Date(Date.parse(`${localDate}T00:00:00Z`) + 3 * 86400000).toISOString().slice(0, 10);
 const hotel = database("HOTEL_DEMO_DB");
 hotel.exec(`
-  INSERT INTO rooms (id,room_number,room_type,status,price_cents) VALUES
-    ('p01-room-a','101','STANDARD','AVAILABLE',10000),
-    ('p01-room-b','102','STANDARD','AVAILABLE',12000),
-    ('p01-room-c','103','STANDARD','MAINTENANCE',9000);
+  INSERT INTO rooms (id,room_number,room_type,status,price_cents,housekeeping_state,service_state) VALUES
+    ('p01-room-a','101','STANDARD','AVAILABLE',10000,'READY','IN_SERVICE'),
+    ('p01-room-b','102','STANDARD','AVAILABLE',12000,'READY','IN_SERVICE'),
+    ('p01-room-c','103','STANDARD','MAINTENANCE',9000,'READY','IN_SERVICE');
   INSERT INTO guests (id,full_name,email,created_at) VALUES
     ('p01-guest-a','Priority Arrival','priority@example.test','2026-01-01'),
     ('p01-guest-b','Next Arrival','next@example.test','2026-01-01'),

@@ -62,6 +62,7 @@ export function RoomsPage() {
   const [editSaving, setEditSaving] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const holdsRequestIdRef = useRef(0);
+  const boardRequestIdRef = useRef(0);
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
   const [filter, setFilter] = useState("");
@@ -69,6 +70,7 @@ export function RoomsPage() {
   const [editForm, setEditForm] = useState<RoomEditForm>({ room_number: "", room_type: "", price_cents: "" });
 
   async function load() {
+    const requestId = ++boardRequestIdRef.current;
     setLoading(true);
     setError("");
     try {
@@ -76,12 +78,16 @@ export function RoomsPage() {
         api<Room[]>("/rooms"),
         api<Booking[]>("/bookings?limit=100"),
       ]);
+      if (requestId !== boardRequestIdRef.current) return;
       const displayRooms = nextRooms.map(room => ({ ...room, status: readinessLabel(room, t) }));
       setRooms(displayRooms);
       setBookings(nextBookings);
-      if (selected) setSelected(displayRooms.find(room => room.id === selected.id) ?? null);
-    } catch (e) { setError((e as Error).message); }
-    finally { setLoading(false); }
+      setSelected(current => current ? displayRooms.find(room => room.id === current.id) ?? null : null);
+    } catch (e) {
+      if (requestId === boardRequestIdRef.current) setError((e as Error).message);
+    } finally {
+      if (requestId === boardRequestIdRef.current) setLoading(false);
+    }
   }
 
   useEffect(() => { void load(); }, []);

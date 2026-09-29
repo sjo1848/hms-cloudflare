@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { ApiError, api } from "../../api/client";
 import type { ActiveHotelContext, Booking, ExtraCharge, Invoice, Payment } from "../../domain/types";
@@ -9,6 +9,8 @@ type ChargePayload = { description: string; amount_cents: number; category: stri
 type PendingCharge = { hotelId: string; bookingId: string; operationToken: string; payload: ChargePayload };
 type ExtraChargeOperation = ExtraCharge & { booking_id: string; operation_token: string };
 type ExtraChargeResult = { ok: true; operation_token: string; charge: ExtraChargeOperation; replayed: boolean; invoice: Invoice };
+type BookingAccount = { invoice: Invoice; payments: Payment[]; charges: ExtraCharge[] };
+const emptyBookingAccount: BookingAccount = { invoice: null, payments: [], charges: [] };
 
 function pendingChargeKey(hotelId: string, bookingId: string) {
   return "hms.billing.pending-extra-charge:" + hotelId + ":" + bookingId;
@@ -23,9 +25,7 @@ function BillingPanel() {
   const [items, setItems] = useState<Booking[]>([]);
   const [selected, setSelected] = useState<Booking | null>(null);
   const [hotelId, setHotelId] = useState<string | null>(null);
-  const [invoice, setInvoice] = useState<Invoice>(null);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [charges, setCharges] = useState<ExtraCharge[]>([]);
+  const [account, setAccount] = useState<BookingAccount>(emptyBookingAccount);
   const [charge, setCharge] = useState({ description: "", amount: "" });
   const [pendingCharge, setPendingCharge] = useState<PendingCharge | null>(null);
   const [chargeRecovery, setChargeRecovery] = useState<"checking" | "retry" | "unknown" | "conflict" | null>(null);
@@ -35,10 +35,16 @@ function BillingPanel() {
   const [error, setError] = useState("");
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [paymentOperationToken, setPaymentOperationToken] = useState<string | null>(null);
+  const accountRequestIdRef = useRef(0);
+  const [accountLoading, setAccountLoading] = useState(false);
 
   async function refresh(id?: string) {
+    const requestId = ++accountRequestIdRef.current;
+    setAccountLoading(true);
+    setError("");
     try {
       const next = await api<Booking[]>("/bookings?limit=100");
+      if (requestId !== accountRequestIdRef.current) return null;
       setItems(next);
       let savedId: string | null = null;
       if (hotelId) {
@@ -53,21 +59,30 @@ function BillingPanel() {
         ?? next.find(item => item.id === selected?.id)
         ?? next[0];
       if (!current) {
-        setSelected(null); setInvoice(null); setPayments([]); setCharges([]);
+        setSelected(null); setAccount(emptyBookingAccount);
         return null;
       }
       setSelected(current);
+      if (selected?.id !== current.id) {
+        setAccount(emptyBookingAccount);
+      }
       const bookingPath = "/bookings/" + encodeURIComponent(current.id);
       const [nextInvoice, nextPayments, nextCharges] = await Promise.all([
         api<Invoice>(bookingPath + "/invoice"),
         api<Payment[]>(bookingPath + "/payments"),
         api<ExtraCharge[]>(bookingPath + "/extra-charges"),
       ]);
-      setInvoice(nextInvoice); setPayments(nextPayments); setCharges(nextCharges);
+      if (requestId !== accountRequestIdRef.current) return null;
+      setAccount({ invoice: nextInvoice, payments: nextPayments, charges: nextCharges });
       return { invoice: nextInvoice, charges: nextCharges };
     } catch (e) {
-      setError((e as Error).message);
+      if (requestId === accountRequestIdRef.current) {
+        setAccount(emptyBookingAccount);
+        setError((e as Error).message);
+      }
       return null;
+    } finally {
+      if (requestId === accountRequestIdRef.current) setAccountLoading(false);
     }
   }
 
@@ -246,6 +261,9 @@ function BillingPanel() {
           value={selected?.id ?? ""}
           disabled={chargeLocked}
           onChange={event => {
+            const next = items.find(item => item.id === event.target.value) ?? null;
+            setSelected(next);
+            setAccount(emptyBookingAccount);
             if (hotelId) {
               try { window.sessionStorage.setItem(selectedBookingKey(hotelId), event.target.value); } catch { /* selection persistence is best-effort */ }
             }
@@ -259,11 +277,13 @@ function BillingPanel() {
       {selected && (
         <article className="case-panel">
           <h3>{selected.guest_name} · {t("billing.invoice")}</h3>
+          {accountLoading && <p className="muted" role="status">{t("common.loading")}</p>}
+          {!accountLoading && !error && <>
           <p className="muted">
-            {t("billing.total")} {formatCurrency(invoice?.amount_cents ?? selected.total_cents)} ·
-            {" "}{t("billing.paid")} {formatCurrency(invoice?.paid_amount_cents ?? 0)} ·
-            {" "}{t("billing.remaining")} {formatCurrency(Math.max(0, (invoice?.amount_cents ?? selected.total_cents) - (invoice?.paid_amount_cents ?? 0)))} ·
-            {" "}{statusLabel(invoice?.status ?? "PENDING")}
+            {t("billing.total")} {formatCurrency(account.invoice?.amount_cents ?? selected.total_cents)} ·
+            {" "}{t("billing.paid")} {formatCurrency(account.invoice?.paid_amount_cents ?? 0)} ·
+            {" "}{t("billing.remaining")} {formatCurrency(Math.max(0, (account.invoice?.amount_cents ?? selected.total_cents) - (account.invoice?.paid_amount_cents ?? 0)))} ·
+            {" "}{statusLabel(account.invoice?.status ?? "PENDING")}
           </p>
           <form className="billing-extra-charge-form" onSubmit={submitCharge} aria-label={t("billing.extraChargeAria")}>
             <input
@@ -306,8 +326,9 @@ function BillingPanel() {
             <input aria-label={t("billing.noteAria")} placeholder={t("billing.note")} value={payment.note} onChange={event => setPayment({ ...payment, note: event.target.value })} />
             <button type="submit" disabled={submittingPayment}>{submittingPayment ? t("billing.registering") : t("billing.registerPayment")}</button>
           </form>
-          {charges.map(item => <p className="muted" key={item.id}>{t("billing.charge")} · {item.description} · {formatCurrency(item.amount_cents)}</p>)}
-          {payments.map(item => <p className="muted" key={item.id}>{t("billing.payment")} · {formatCurrency(item.amount_cents)} · {paymentMethodLabel(item.payment_method)}</p>)}
+          {account.charges.map(item => <p className="muted" key={item.id}>{t("billing.charge")} · {item.description} · {formatCurrency(item.amount_cents)}</p>)}
+          {account.payments.map(item => <p className="muted" key={item.id}>{t("billing.payment")} · {formatCurrency(item.amount_cents)} · {paymentMethodLabel(item.payment_method)}</p>)}
+          </>}
         </article>
       )}
     </section>

@@ -1,0 +1,57 @@
+page => (async () => {
+  await page.context().route("**/api/v1/**", route => {
+    const source = new URL(route.request().url());
+    return route.continue({ url: `http://127.0.0.1:8787${source.pathname}${source.search}` });
+  });
+  await page.addInitScript(() => {
+    localStorage.setItem("hms.locale", "en");
+    localStorage.setItem("hms-local-acceptance-profile", "1");
+  });
+  const width = Number(await page.evaluate(() => window.name)) || 375;
+  const height = width < 500 ? 812 : 900;
+  await page.setViewportSize({ width, height });
+  await page.goto("http://127.0.0.1:4176/bookings?lane=arrivals");
+  await page.getByText("Loading booking queue…", { exact: true }).waitFor({ state: "hidden" });
+  await page.getByRole("button", { name: /^Arrivals / }).waitFor();
+  await page.getByLabel("Search this shift").fill("Arrival");
+  const row = page.locator('[data-booking-id="a-next"]');
+  try { await row.waitFor({ timeout: 5000 }); }
+  catch {
+    const dom = await page.evaluate(() => ({ body: document.body.innerText, queueDisplay: getComputedStyle(document.querySelector(".reception-queue-panel")).display, rowCount: document.querySelectorAll("[data-booking-id]").length, selectedFilter: [...document.querySelectorAll(".reception-queue-filters button")].map(button => ({ text: button.innerText, selected: button.classList.contains("selected") })) }));
+    await page.screenshot({ path: "output/playwright/f0-11-reception-debug.png", fullPage: true });
+    throw new Error(`synthetic arrival missing from visible queue; search=${await page.getByLabel("Search this shift").inputValue()}; queue=${await page.locator(".reception-case-queue").innerText()}; dom=${JSON.stringify(dom)}; url=${page.url()}`);
+  }
+  await row.click();
+  const task = page.getByRole("dialog", { name: "Next action: check-in verification" });
+  await task.waitFor();
+  const taskText = await task.innerText();
+  if (!/Room ready for arrival|Maintenance advisory/.test(taskText)) throw new Error(`synthetic NON_BLOCKING room did not expose an eligible check-in state: ${taskText}`);
+  await task.getByLabel("Final guest count").fill("2");
+  await task.getByLabel("Document verified").check();
+  await task.getByRole("button", { name: "Next step" }).click();
+  await task.getByLabel("Contact confirmed").check();
+  await task.getByLabel("Stay confirmed").check();
+  await task.getByRole("button", { name: "Next step" }).click();
+  await task.getByText("Room ready for arrival", { exact: true }).waitFor();
+  await task.getByRole("button", { name: "Next step" }).click();
+  const checkIn = page.waitForResponse(response => response.url().endsWith("/api/v1/bookings/a-next/check-in") && response.request().method() === "POST");
+  const refreshedBoard = page.waitForResponse(response => response.url().endsWith("/api/v1/front-desk/board") && response.status() === 200);
+  const submit = task.getByRole("button", { name: "Complete check-in" });
+  if (!(await submit.isEnabled())) throw new Error(`integrated check-in CTA is disabled after valid inputs: ${await task.innerText()}`);
+  await submit.click();
+  const mutation = await checkIn;
+  if (mutation.status() !== 200) throw new Error(`real local Reception check-in returned ${mutation.status()}`);
+  const board = await refreshedBoard;
+  const payload = await board.json();
+  const saved = payload.items.find(item => item.booking.id === "a-next")?.booking;
+  if (saved?.status !== "CheckedIn") throw new Error(`post-check-in Worker board did not return authoritative checked-in state: ${JSON.stringify(saved)}`);
+  await task.waitFor({ state: "hidden" });
+  await page.getByRole("status").filter({ hasText: "Check-in confirmed" }).waitFor();
+  if (await page.getByLabel("Search this shift").inputValue() !== "Arrival") throw new Error("Reception search was cleared after integrated successful check-in");
+  const currentUrl = new URL(page.url());
+  if (currentUrl.searchParams.get("lane") !== "arrivals" || currentUrl.searchParams.get("q") !== "Arrival") throw new Error("Reception lane/search URL was not preserved after authoritative refresh");
+  const nextCase = page.locator('[data-booking-id="z-priority"].selected');
+  await nextCase.waitFor();
+  await page.screenshot({ path: `output/playwright/f0-11-reception-integrated-${width < 500 ? "mobile" : "desktop"}-success.png`, fullPage: true });
+  return { integratedWorkerD1: true, mutation: mutation.status(), authoritativeBoardRead: board.status, bookingStatus: saved.status, nextPriorityCase: await nextCase.getAttribute("data-booking-id"), viewport: `${width}x${height}`, preservedLane: currentUrl.searchParams.get("lane"), preservedSearch: await page.getByLabel("Search this shift").inputValue() };
+})()

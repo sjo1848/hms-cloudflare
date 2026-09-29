@@ -7,6 +7,7 @@ import {
   checkoutBooking,
   createReservationOperation,
   loadAvailableRooms,
+  loadBooking,
   loadHotelContext,
   loadReceptionQueue,
   loadReassignmentQuote,
@@ -56,12 +57,15 @@ export function useReceptionWorkspace() {
   const [form, setForm] = useState<BookingForm>(emptyBookingForm);
   const [editForm, setEditForm] = useState<BookingEditForm>(emptyBookingForm);
   const loadEpoch = useRef(0);
+  const selectionEpoch = useRef(0);
   const checkInInFlight = useRef(false);
   const reassignQuoteEpoch = useRef(0);
   const reservationOperationToken = useRef(crypto.randomUUID());
 
   async function load() {
     const epoch = ++loadEpoch.current;
+    const selectionAtStart = selectionEpoch.current;
+    let selectedDetailRefreshFailed = false;
     if (frontDeskBoard) setRefreshing(true);
     else setLoading(true);
     setError("");
@@ -73,7 +77,28 @@ export function useReceptionWorkspace() {
       setRooms(next.rooms);
       setGuests(next.guests);
       setRecoverableOperations(next.recoverableOperations);
-      setSelected(current => current ? next.bookings.find(booking => booking.id === current.id) ?? current : null);
+      const selectedId = selectionEpoch.current === selectionAtStart ? selected?.id : undefined;
+      if (selectedId) {
+        const queuedBooking = next.bookings.find(booking => booking.id === selectedId);
+        if (queuedBooking) {
+          setSelected(current => current?.id === selectedId ? queuedBooking : current);
+        } else {
+          try {
+            const detail = await loadBooking(selectedId);
+            if (epoch === loadEpoch.current && selectionEpoch.current === selectionAtStart) setSelected(current => current?.id === selectedId ? detail : current);
+          } catch (detailError) {
+            if (epoch === loadEpoch.current && selectionEpoch.current === selectionAtStart) {
+              if (detailError instanceof ApiError && detailError.status === 404) {
+                setSelected(current => current?.id === selectedId ? null : current);
+              } else {
+                selectedDetailRefreshFailed = true;
+                setError((detailError as Error).message);
+              }
+            }
+          }
+        }
+      }
+      if (selectedDetailRefreshFailed) return null;
       return next.board;
     } catch (e) {
       if (epoch === loadEpoch.current) setError((e as Error).message);
@@ -119,6 +144,7 @@ export function useReceptionWorkspace() {
   }
 
   function closeCase() {
+    selectionEpoch.current += 1;
     setSelected(null);
     setEditAvailableRooms([]);
     setReassignAvailableIds(new Set());
@@ -134,6 +160,7 @@ export function useReceptionWorkspace() {
   }
 
   function selectCase(booking: Booking) {
+    selectionEpoch.current += 1;
     setSelected(booking);
     setEditForm({
       guest_id: booking.guest_id,
