@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active task: begin F0.11 — Refresh/invalidation and authoritative UI continuity; F0.10 is closed at its own Development Gate. Fresh Independent Critic Gauss (GPT-6 Luna Medium, read-only) returned `PASS` on exact A5 `2e0fb984022b48a7dbeca5f4417dd2fae895fc97` + B5 `132449cbf8ba622c693935f1b2d3bb8bb9494665`; exact evidence `.orchestration/evidence/HMS-F0-10-INDEPENDENT-CRITIC-A5-B5.md`. Gauss verified actual 1280×900 and 375×844 no-write runs, distinct PNG widths/hashes, matching Ops UI/auth context, real 403/D1 zero effect, scope and corrected historical A4 overclaim; no blocker/architecture contradiction. A2/B2, A3/B3 and A4/B4 REWORK histories remain immutable. F0.10 Development Gate PASS; Foundation 0 is NOT complete: F0.11 → F0.12 remain. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
+Active task: F0.11 bounded critic-condition repair is packaged as replacement Artifact A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898`; its fresh Independent Critic review on orchestration Boundary B3 is the current blocking action. The prior A1+B2 verdict remains historical `PASS_WITH_CONDITIONS`, not transferred. F0.10 is closed at its own Development Gate: fresh Independent Critic Gauss (GPT-6 Luna Medium, read-only) returned `PASS` on exact A5 `2e0fb984022b48a7dbeca5f4417dd2fae895fc97` + B5 `132449cbf8ba622c693935f1b2d3bb8bb9494665`; evidence `.orchestration/evidence/HMS-F0-10-INDEPENDENT-CRITIC-A5-B5.md`. Foundation 0 is NOT complete: after F0.11 disposition, F0.12 remains. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
 
 ### F0.8 — Recoverable guest + reservation creation — implementation validated; handoff condition closed
 
@@ -255,7 +255,7 @@ were unavailable. The local acceptance-runtime attempt did not reach the
 browser (`invalid maintenance resolve transition` during migration rehearsal);
 this is an inspection limitation, not a production finding.
 
-## F0.11 — Refresh/invalidation and authoritative UI continuity (active)
+## F0.11 — Refresh/invalidation and authoritative UI continuity (replacement artifact awaiting Critic)
 
 - Frozen Task Contract: `.orchestration/contracts/HMS-F0-11-AUTHORITATIVE-REFRESH-001.md`; all 24 registry invariants classified before implementation.
 - Pre-implementation Contract Reviewer Laplace (separate read-only GPT-6 Luna Medium) returned eight bounded precision/evidence findings and no blocker; amendments and disposition are in `.orchestration/evidence/HMS-F0-11-AUTHORITATIVE-REFRESH-001-PRECRITIC.md`.
@@ -263,19 +263,22 @@ this is an inspection limitation, not a production finding.
 - Final mandatory Pre-Critic: PASS, `.orchestration/evidence/HMS-F0-11-AUTHORITATIVE-REFRESH-001-PRECRITIC-FINAL.md`; all 24 invariants mapped in `.orchestration/evidence/HMS-F0-11-AUTHORITATIVE-REFRESH-001-INVARIANTS.md`, with no applicable UNPROVEN entry.
 - Mock-only deferred response browser: PASS across Rooms, Billing (including every account subread failure), Reception (200/404/500 and late selection response), and Housekeeping recovery. Evidence `output/playwright/f0-11-refresh-races.log`; explicitly MOCK ONLY.
 - Integrated local Reception→check-in→Worker/D1→authoritative board read: PASS on fresh synthetic fixtures at mobile 375×812 and desktop 1280×900. Both returned mutation 200/read 200, CHECKED_IN, preserved arrivals lane/search, selected `z-priority`; read-only D1 checks prove one actor/hotel CHECK_IN event, room OCCUPIED, invoice unchanged at 36,000/PENDING, no payment entries. Evidence `.orchestration/evidence/HMS-F0-11-AUTHORITATIVE-REFRESH-001-INTEGRATED.md` and paired browser logs/screenshots.
-- Built/minified UI + local Worker/D1 Rooms mutation/read: PASS at 375×812 and 1280×900; search preserved. This executes the bundle produced with existing Terser compression settings `passes: 2`, `pure_getters: true`.
-- Fresh full suite: `npm run check` PASS, 33 files/168 tests; `npm run types:check` PASS; `npm run web:build` PASS; architecture fitness/i18n/Cloudflare budgets PASS; D1 query plans PASS; explicit API, web, staging-SPA Wrangler dry-runs PASS; CF-I03–CF-I06 regressions PASS; runner syntax/process cleanup PASS.
-- Budget binding remains unchanged: JS raw 299,982/300,000 bytes (18-byte margin), gzip 86,293; CSS raw 43,399/gzip 8,383. This narrow margin is a residual maintenance risk, not a waiver or failure.
+- Bounded Critic evidence repair contract closed the four prior conditions. Its deterministic browser now proves Rooms retain/clear, Billing stale identity/failure recovery, Reception authoritative 200/404/500 behavior, and Housekeeping date/filter/search/selected room/scroll/Next behavior. A real `scrollY 600→0` defect discovered by that test was repaired under separate frozen contract `HMS-F0-11-HOUSEKEEPING-REFRESH-CONTINUITY-002`; loaded board stays visible during refresh and task/mutation actions are disabled until the authoritative read completes.
+- Built/minified UI + local Worker/D1 Rooms mutation/read: fresh fixture PASS at 375×812 and 1280×900; create 201, authoritative read 200, search preserved. Final bundle uses existing Terser compression settings `passes: 4`, `pure_getters: true`.
+- Fresh final validation: `npm run check` PASS, 33 files/168 tests; `npm run types:check` PASS; `npm run web:build` PASS; architecture fitness/i18n/Cloudflare budgets PASS; D1 query plans PASS; explicit API/Web/staging-SPA Wrangler dry-runs PASS; CF-I03–CF-I06 regressions PASS; syntax/process cleanup PASS. Detailed logs are in the replacement A2.
+- Final budget binding unchanged: JS raw 299,990/300,000 bytes, gzip 86,226; CSS raw 43,399/50,000, gzip 8,383/15,000. The 10-byte raw-JS headroom is recorded as a maintenance risk, not a waiver.
 - A mistaken `npm run wrangler:dry-run` invocation exposed that the package script does not validate web/staging (it ends with `--help`). It was not counted; explicit three-config dry-runs passed. No package-script scope expansion.
-- Immutable F0.11 Artifact A is `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306`. It contains the scoped code, frozen contract, final Pre-Critic/invariant evidence, integrated/mock scripts and terminal browser artifacts. No product source changed after A.
-- Initial orchestration-only boundary commit `58c4c6cdd563790b591d57119a0f09cbbe9e7059` set `external_review.required=true` and pointed at exact A, but its human-readable `f0_11_boundary_b` field incorrectly remained `PENDING`. It is retained as immutable history, not used as the final review boundary.
-- This orchestration-only B2 commit reconciles that metadata and requests a fresh Independent Critic on exact Artifact A `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306` plus this B2. No Independent Critic verdict has been manufactured.
+- Original immutable F0.11 Artifact A1 is `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306`; its reviewed boundary B2 is `d7b2067a9e891607f4860c07916559a0782eb041`. The A1+B2 Critic conditions are preserved as history and do not carry to A2.
+- Initial orchestration-only boundary commit `58c4c6cdd563790b591d57119a0f09cbbe9e7059` set `external_review.required=true` and pointed at exact A, but its human-readable `f0_11_boundary_b` field incorrectly remained `PENDING`. It is retained as immutable history.
+- Reconciled orchestration-only B2 `d7b2067a9e891607f4860c07916559a0782eb041` names exact Artifact A `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306`. Fresh Independent Critic Lorentz (`gpt-6-luna`, medium, read-only) returned `PASS_WITH_CONDITIONS`: four bounded evidence gaps, no demonstrated product defect/blocker. Full finding is `.orchestration/evidence/HMS-F0-11-INDEPENDENT-CRITIC-A-B2.md`.
+- Bounded evidence and Housekeeping repair contracts, admission/final Pre-Critic and all-24 invariant evidence are frozen in `.orchestration/contracts/` and `.orchestration/evidence/`. The four findings are technically evidenced as repaired; no Independent Critic PASS for A2 is claimed.
+- Replacement immutable Artifact A2 is `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` (commit `test: close F0.11 critic evidence conditions`); it contains the scoped Housekeeping refresh correction, exact budget/browser/regression output, scripts and Pre-Critic evidence. Unrelated working-tree changes are excluded.
 - Unrelated working-tree edits to historical F0.9/P0.1 evidence/harness and non-final F0.11 diagnostics remain uncommitted and excluded from A; they are preserved, not silently discarded.
 - Foundation 0 remains NOT complete. F0.12 is still required after F0.11 and must have its own Task Contract. No Blocks A–H, real data, PR/push/merge, main, staging mutation, deploy or production.
 
 ## NEXT ACTION
 
-Obtain fresh Independent Critic on exact F0.11 Artifact A `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306` plus this reconciled orchestration-only B2. After that exact-pair disposition, create F0.12 Task Contract/Pre-Critic and complete the aggregate evidence gate. Foundation 0 is NOT complete.
+Obtain a fresh Independent Critic on exact F0.11 A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` plus orchestration-only Boundary B3. If no `ROADMAP_BLOCKER` or architecture contradiction appears, continue immediately to F0.12 by freezing its Task Contract and Pre-Critic, then complete the aggregate evidence gate. Foundation 0 is NOT complete.
 
 ## MODEL ROUTING
 
