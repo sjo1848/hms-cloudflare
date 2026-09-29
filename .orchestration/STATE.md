@@ -292,3 +292,13 @@ F0.12 Task Contract and admission Pre-Critic are frozen after separate read-only
 - Browser investigation/QA: Luna MEDIUM.
 - Repair: Luna LOW or MEDIUM according to demonstrated complexity.
 - Sol MEDIUM only after a substantive Luna MEDIUM investigation is insufficient.
+
+## F0.12 ARTIFACT A / CRITIC BOUNDARY
+
+- F0.1–F0.11 remain individually closed as recorded above. Foundation 0 is **NOT COMPLETE**.
+- F0.12 immutable Artifact A: `2d814a71c7a6e0d6cfc3e9dadb36eaabb84ee1c2` (`docs: assemble F0.12 aggregate evidence artifact`). It contains the exact input/evidence index, row-level cutover/bootstrap crosswalk, deterministic manifest validator and tests, generated aggregate report, invariant evidence, final Pre-Critic, DB/Data review, and fresh validation receipts.
+- Aggregate report: `.orchestration/evidence/HMS-F0-12-AGGREGATE-EVIDENCE-MANIFEST-A.json`; SHA-256 `6dfab6de24a2f20bba784967549a34f413374a57201f6f239a581228f59511d0`. It records 24 criteria, 16 validation receipts, 7 synthetic records and 64 hash-pinned evidence files; candidate `PASS_PENDING_INDEPENDENT_CRITIC`, no aggregate blockers, `foundation0Complete=false`. `stay-a` is the only synthetic activation candidate; held/unresolved rows stay excluded.
+- Final evidence: repository check 33 files/168 tests PASS; types, web build, architecture/i18n/budgets, D1 query plans PASS; strict serial CF-I03–I06 PASS; F0.3 clean synthetic D1 rehearsal twice PASS; F0.6 executing-D1 11/11 PASS; Wrangler API/Web/staging-SPA dry-runs PASS. Two final report generations are byte-identical. The final Pre-Critic is internal only.
+- Bounded evidence limits are preserved in the crosswalk and DB/Data review; no universal legacy-corpus, real-data readiness, production routing, or full-paid/overpaid activation-preservation claim is made.
+- No real/customer data was read or mutated. No product source or migration changed; no Blocks A–H, PR, push, merge, main, staging mutation, deploy or production action occurred.
+- Orchestration-only Boundary B names exact Artifact A above and requires a fresh Independent Critic on exact A+B. Current F0.12 state is awaiting that review; no F0.12 Development Gate PASS and no Foundation 0 completion are declared. After review, technical REWORK remains autonomous; if exact-pair Critic passes and all aggregate acceptance rows remain satisfied, record a separate orchestration closure boundary and stop at `FOUNDATION_0_COMPLETE_AWAITING_CONTROLLER_REVIEW`.
