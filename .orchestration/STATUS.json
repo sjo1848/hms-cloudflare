@@ -3,34 +3,36 @@
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-a-shell",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "BLOCK_A_REWORK_STATUS_WAIT",
+  "phase": "BLOCK_A_COMPLETE_AWAITING_CONTROLLER_REVIEW",
   "resume_authorized": false,
-  "runtime_status": "WAITING_EXTERNAL_REVIEW",
-  "active_task": "HMS-BLOCK-A-REPAIR-STATUS-WAIT-001",
-  "last_completed_task": "F0.12 Development Gate PASS after fresh exact A2+B2 Independent Critic PASS; Foundation 0 complete and awaiting Controller review; Blocks A-H not started",
-  "last_completed_head": "7c443474923827343f1ec719d70f0734c1920fa3",
+  "runtime_status": "COMPLETE",
+  "active_task": null,
+  "last_completed_task": "Block A App Shell + Navigation/Context; exact Artifact A+B4 Independent Critic PASS; awaiting Controller review; Blocks B-H not started",
+  "last_completed_head": "059044abf4478d624d52a7a412aabf306a1ccfce",
   "work_branch": "impl/hms-block-a-shell",
   "pr": null,
   "wave": "BLOCK A — APP SHELL + NAVIGATION/CONTEXT",
-  "status_label": "BLOCK_A_AWAITING_INDEPENDENT_CRITIC_FOLLOWUP",
-  "next_action": "AWAIT_INDEPENDENT_CRITIC_FOLLOWUP_ON_EXACT_A_F49EA559_PLUS_CURRENT_ORCHESTRATION_BOUNDARY; DO_NOT_START_BLOCKS_B_H",
-  "stop_reason": null,
+  "status_label": "BLOCK_A_COMPLETE_AWAITING_CONTROLLER_REVIEW",
+  "next_action": "CONTROLLER_REVIEW_EXACT_ARTIFACT_A_AND_BOUNDARY_B4; DO_NOT_START_BLOCKS_B_H_OR_PROMOTE",
+  "stop_reason": "BLOCK_A_COMPLETE_AWAITING_CONTROLLER_REVIEW",
   "event": {
-    "seq": 230,
-    "id": "BLOCK-A-CRITIC-FOLLOWUP-REWORK-MEITNER-B3",
-    "type": "INDEPENDENT_CRITIC_FOLLOWUP_REWORK_MEDIUM_STALE_NEXT_ACTION_AND_RUNTIME"
+    "seq": 231,
+    "id": "BLOCK-A-CRITIC-PASS-MEITNER-A-B4",
+    "type": "INDEPENDENT_CRITIC_PASS_EXACT_ARTIFACT_A_AND_BOUNDARY_B4_CONTROLLER_CHECKPOINT"
   },
   "external_review": {
-    "last_audited_head": "d9ae9ba2f90e1c1f1c6a2ac09009ccc9cf82b252",
+    "last_audited_head": "059044abf4478d624d52a7a412aabf306a1ccfce",
     "artifact_head": "f49ea5592dfb7e5e20e6c11ca4af5a7f8832f867",
-    "last_verdict": "REWORK: Meitner follow-up, exact unchanged A f49ea5592dfb7e5e20e6c11ca4af5a7f8832f867 + B3 d9ae9ba2f90e1c1f1c6a2ac09009ccc9cf82b252; stale create-boundary next_action and RUNNING instead of external-review wait; no product finding, ROADMAP_BLOCKER or architecture contradiction",
-    "review_path": ".orchestration/evidence/HMS-BLOCK-A-APP-SHELL-NAVIGATION-CONTEXT-001-INDEPENDENT-CRITIC-A-B3-FOLLOWUP.md",
-    "required": true,
+    "last_verdict": "PASS: Meitner, separate read-only GPT-6 Luna Medium; exact A f49ea5592dfb7e5e20e6c11ca4af5a7f8832f867 + B4 059044abf4478d624d52a7a412aabf306a1ccfce; no remaining handoff finding, product finding, ROADMAP_BLOCKER or architecture contradiction",
+    "review_path": ".orchestration/evidence/HMS-BLOCK-A-APP-SHELL-NAVIGATION-CONTEXT-001-INDEPENDENT-CRITIC-A-B4-FINAL.md",
+    "required": false,
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
     ]
   },
+  "block_a_development_gate": "PASS; exact Artifact A+B4 received Independent Critic PASS; awaiting Controller review",
+  "promotion_gate": "BLOCKED; no PR, merge, main, staging, deploy or production action authorized",
   "human_gate": {
     "required": false,
     "decision": "BA1-BA7 APPROVED FOR BLOCK A ONLY; BLOCKS B-H, REAL DATA, PR, MERGE, MAIN, STAGING, DEPLOY AND PRODUCTION REMAIN PROHIBITED",
@@ -122,19 +124,21 @@
     "attribution": "EXTERNAL_FINDINGS_NOT_REOPENED_BY_THIS_TASK"
   },
   "authorization": {
-    "scope": "HMS_FOUNDATION_0_F0_1_THROUGH_F0_12_LOCAL_SYNTHETIC_ONLY",
+    "scope": "BLOCK_A_APP_SHELL_NAVIGATION_CONTEXT_ONLY; NO_BLOCKS_B_H_OR_PROMOTION",
     "production": false,
     "acceptance_staging": false,
     "main": false,
     "merge": false,
     "deploy": false,
     "wave_1_1a": false,
-    "development_continuation": true,
-    "ui_implementation": false,
-    "backend_implementation": true,
+    "development_continuation": false,
+    "ui_implementation": true,
+    "backend_implementation": false,
     "real_data_cutover": false,
     "active_stay_pricing_bootstrap_real_data": false,
-    "blocks_a_h": false
+    "blocks_a_h": false,
+    "block_a_completed": true,
+    "blocks_b_h": false
   },
   "validated": {
     "f0_1_task": "CLOSED_INTERNAL_EVIDENCE_GATE; NO_STANDALONE_ARTIFACT_OR_EXTERNAL_CRITIC_VERDICT",
