@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active task: fresh Independent Critic review of exact F0.10 Artifact A4 `ba2ff62daf48616ad84700c684adf4cd5d70733e` + this orchestration-only Boundary B4. Harvey's A3+B3 `REWORK` findings are preserved in `.orchestration/evidence/HMS-F0-10-INDEPENDENT-CRITIC-A3-B3.md`; the evidence repair contract/Pre-Critic preceded runner edits. A4 now proves the no-write UI's visible Ops profile and real Worker `/auth/me` identity/capabilities at desktop 1280×900 and mobile 375×844, with exact per-viewport payloads; the earlier incorrect viewport label is corrected. Fresh integrated Worker/two-D1/Vite run passes; allowed/denied keyboard/DOM, 403, D1 denied hotel count zero. No product/schema change. Process trees are verified stopped; isolated temp directory retained. A4 is immutable; reviewer must be fresh and distinct from Tesla and Harvey. F0.10 remains open pending exact review. Foundation 0 remains incomplete: F0.10 review → F0.11 → F0.12. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
+Active task: bounded evidence-only repair for fresh Critic finding F0.10-IC-06 under frozen `.orchestration/contracts/HMS-F0-10-REPAIR-NETWORK-VIEWPORT-ASSERTION-001.md` and Pre-Critic `.orchestration/evidence/HMS-F0-10-REPAIR-NETWORK-VIEWPORT-ASSERTION-001-PRECRITIC.md`. Zeno's fresh review of A4 `ba2ff62daf48616ad84700c684adf4cd5d70733e` + B4 `10ff54deaf2b2ae612544c7817f4ac8a67425099` returned `REWORK`: no-write checks remained at 375×844 because desktop restoration was placed before the authorized mobile case; screenshot hashes/dimensions proved both no-write captures were mobile. Auth-context and local Ops identity proof did pass. Correct the viewport immediately before the desktop no-write navigation, derive viewport result from `page.viewportSize()` rather than labels, and assert captured PNG dimensions/hash differ for desktop/mobile. Correct the prior Pre-Critic/invariant overclaim. No product/schema changes. A4+B4 remain immutable; next pair needs a fresh critic distinct from Tesla, Harvey and Zeno. Foundation 0 remains incomplete: F0.10 → F0.11 → F0.12. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
 
 ### F0.8 — Recoverable guest + reservation creation — implementation validated; handoff condition closed
 
@@ -257,7 +257,7 @@ this is an inspection limitation, not a production finding.
 
 ## NEXT ACTION
 
-Obtain a fresh Independent Critic verdict on exact A4 `ba2ff62daf48616ad84700c684adf4cd5d70733e` plus this orchestration-only B4. If that exact review closes F0.10 without blocker/product-policy change, finalize INV-STATE in an orchestration-only follow-up and continue F0.11 then F0.12; Foundation 0 is NOT complete. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
+Freeze the viewport evidence repair contract + Pre-Critic, put the 1280×900 restoration immediately at the desktop no-write case, derive actual viewport evidence, and validate screenshot dimensions/hashes in the runner. Correct invariant/Pre-Critic claims, run the integrated Worker/D1/browser gate, then freeze replacement A5+B5 for a fresh Critic. If that review closes F0.10, finalize INV-STATE and continue F0.11 then F0.12; Foundation 0 is NOT complete. Do not begin Blocks A–H or touch real data; no PR, push, merge, main, staging mutation, deploy or production.
 
 ## MODEL ROUTING
 

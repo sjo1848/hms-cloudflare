@@ -26,5 +26,12 @@ Verify both Network viewports are truthful and distinct: desktop 1280×900 is ex
 
 ## Verdict
 
-`PENDING`
+`REWORK — Medium`
 
+Reviewer: Zeno, fresh separate read-only GPT-6 Luna Medium; exact A4 `ba2ff62daf48616ad84700c684adf4cd5d70733e` + B4 `10ff54deaf2b2ae612544c7817f4ac8a67425099`.
+
+- No-write desktop checks and screenshot were actually at 375px: viewport restoration had been placed before the authorized mobile case, not immediately before the no-write desktop case. The runner hardcoded `1280x900:PASS`; both no-write image hashes matched and both image widths were 375. Therefore responsive no-write evidence was incomplete and the Pre-Critic/invariant statement claiming both passed was incorrect.
+- Auth context was properly asserted and other identity, synthetic GET scope, 403/D1 zero-effect, authorized writer viewports, process-termination claim, no-product scope, A4/B4 relationship, and prior verdict histories were supported.
+- No `ROADMAP_BLOCKER`; no architecture contradiction. Foundation 0 completion is not authorized.
+
+Bounded viewport-evidence repair contract/Pre-Critic are frozen before repair. A4+B4 remain immutable with `REWORK`.
