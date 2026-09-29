@@ -1,0 +1,3 @@
+npm notice run test:d1-query-plan
+npm notice run bash scripts/cf-d1-query-plan-regression.sh
+{"d1QueryPlan":"PASS","arrivalIndex":"idx_bookings_status","checkoutIndex":"idx_bookings_status_checkout","inventoryKeyed":true}

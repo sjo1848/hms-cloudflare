@@ -1,4 +1,8 @@
 page => (async () => {
+  const consoleMessages = [];
+  const pageErrors = [];
+  page.on("console", message => consoleMessages.push({ type: message.type(), text: message.text() }));
+  page.on("pageerror", error => pageErrors.push(error.message));
   await page.context().route("**/api/v1/**", route => {
     const source = new URL(route.request().url());
     return route.continue({ url: `http://127.0.0.1:8787${source.pathname}${source.search}` });
@@ -52,6 +56,9 @@ page => (async () => {
   if (currentUrl.searchParams.get("lane") !== "arrivals" || currentUrl.searchParams.get("q") !== "Arrival") throw new Error("Reception lane/search URL was not preserved after authoritative refresh");
   const nextCase = page.locator('[data-booking-id="z-priority"].selected');
   await nextCase.waitFor();
+  if (pageErrors.length) throw new Error(`integrated Reception raised page errors: ${JSON.stringify(pageErrors)}`);
+  const consoleErrors = consoleMessages.filter(message => message.type === "error");
+  if (consoleErrors.length) throw new Error(`integrated Reception raised console errors: ${JSON.stringify(consoleErrors)}`);
   await page.screenshot({ path: `output/playwright/f0-11-reception-integrated-${width < 500 ? "mobile" : "desktop"}-success.png`, fullPage: true });
-  return { integratedWorkerD1: true, mutation: mutation.status(), authoritativeBoardRead: board.status, bookingStatus: saved.status, nextPriorityCase: await nextCase.getAttribute("data-booking-id"), viewport: `${width}x${height}`, preservedLane: currentUrl.searchParams.get("lane"), preservedSearch: await page.getByLabel("Search this shift").inputValue() };
+  return { integratedWorkerD1: true, mutation: mutation.status(), authoritativeBoardRead: board.status, bookingStatus: saved.status, nextPriorityCase: await nextCase.getAttribute("data-booking-id"), viewport: `${width}x${height}`, preservedLane: currentUrl.searchParams.get("lane"), preservedSearch: await page.getByLabel("Search this shift").inputValue(), consoleMessages, pageErrors };
 })()

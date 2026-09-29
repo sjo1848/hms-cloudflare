@@ -1,0 +1,3 @@
+npm notice run test:cf-i05
+npm notice run bash scripts/cf-i05-regression.sh
+CF-I05 Housekeeping + Maintenance D1/API regression PASS

@@ -3,6 +3,7 @@
   const hotelId = "10000000-0000-0000-0000-000000000001";
   const guest = { id: "f011-guest", guest_name: "Refresh Guest", full_name: "Refresh Guest", email: "refresh@example.test", phone: null };
   const room = { id: "f011-room", room_number: "711", room_type: "STANDARD", status: "AVAILABLE", price_cents: 10000, operational_state: { readiness: { state: "READY_FOR_ARRIVAL" } } };
+  let roomList = [{ ...room }];
   const bookingA = { id: "f011-booking-a", guest_id: guest.id, guest_name: "Account A", room_id: room.id, room_number: room.room_number, check_in: "2026-10-01", check_out: "2026-10-03", status: "Confirmed", total_cents: 10000, notes: null };
   const bookingB = { ...bookingA, id: "f011-booking-b", guest_name: "Account B", total_cents: 20000 };
   let roomPrice = room.price_cents;
@@ -33,6 +34,11 @@
   let housekeepingScenario = false;
   let failNextHousekeepingBoardRead = false;
   let housekeepingStatus = "Cleaning";
+  const housekeepingRooms = [
+    { room_id: "f011-hk-a", room_number: "712", room_type: "STANDARD", room_status: "Cleaning", turnover_today: true },
+    { room_id: "f011-hk-b", room_number: "713", room_type: "STANDARD", room_status: "Dirty", turnover_today: true },
+    ...Array.from({ length: 14 }, (_, index) => ({ room_id: `f011-hk-ready-${index}`, room_number: String(800 + index), room_type: "STANDARD", room_status: "Available", turnover_today: false })),
+  ];
   const json = (route, body, status = 200) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
 
   await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
@@ -50,16 +56,14 @@
     if (path === "/housekeeping/board") {
       if (!housekeepingScenario) return json(route, { date: "2026-09-28", rooms: [], departures_today: [] });
       if (failNextHousekeepingBoardRead) { failNextHousekeepingBoardRead = false; return json(route, { error: { code: "INTERNAL", message: "Synthetic refresh read failure" } }, 500); }
-      return json(route, { date: "2026-09-28", rooms: [
-        { room_id: "f011-hk-a", room_number: "712", room_type: "STANDARD", room_status: housekeepingStatus, turnover_today: true },
-        { room_id: "f011-hk-b", room_number: "713", room_type: "STANDARD", room_status: "Dirty", turnover_today: true },
-      ], departures_today: [] });
+      const requestedDate = new URL(request.url()).searchParams.get("date") || "2026-09-28";
+      return json(route, { date: requestedDate, rooms: housekeepingRooms.map(item => item.room_id === "f011-hk-a" ? { ...item, room_status: housekeepingStatus } : item), departures_today: [] });
     }
     if (path === "/billing/balance") return json(route, { total_amount_cents: 0, cash_amount_cents: 0, card_amount_cents: 0, non_cash_amount_cents: 0, payment_count: 0, pending_amount_cents: 0, opening_time: "2026-09-28T00:00:00Z" });
     if (path === "/bookings" && request.method() === "GET") return json(route, [bookingA, bookingB]);
     if (path === "/rooms" && request.method() === "GET") {
       const read = ++roomReads;
-      const body = [{ ...room, price_cents: roomPrice }];
+      const body = roomList.map(item => ({ ...item, price_cents: item.id === room.id ? roomPrice : item.price_cents }));
       if (read === 3) { staleRoomsStarted(); await staleRoomsGate; }
       return json(route, body);
     }
@@ -119,6 +123,13 @@
   await waitForSavedPrice();
   const selectedRoomDetails = await page.locator(".rooms-detail").innerText();
   if (!/200[.,]00/.test(selectedRoomDetails)) throw new Error(`an older Rooms response overwrote the latest saved room price: ${selectedRoomDetails}`);
+  if (!(await page.locator(".rooms-detail h3").getByText("Room 711").count())) throw new Error("Rooms lost the selected room although its identity remained in the authoritative list");
+  roomList = [];
+  const removedRoomsRead = page.waitForResponse(response => response.url().endsWith("/api/v1/rooms") && response.request().method() === "GET" && response.status() === 200);
+  await page.getByRole("button", { name: "Refresh", exact: true }).click();
+  await removedRoomsRead;
+  await page.locator(".rooms-operational-layout").waitFor({ state: "hidden" });
+  if (await page.locator(".rooms-detail h3").count()) throw new Error("Rooms kept a selected detail after the authoritative list removed that room");
 
   await page.goto(`${base}/`);
   await page.waitForFunction(() => document.querySelector(".app-content")?.getAttribute("data-hotel-capabilities")?.includes("billing.invoice.read"), null, { timeout: 10000 });
@@ -186,15 +197,43 @@
   if (await page.getByRole("heading", { name: "Authoritatively Updated Account A" }).count()) throw new Error("late selected-booking detail response overwrote a newer booking selection");
 
   housekeepingScenario = true;
-  await page.goto(`${base}/housekeeping`);
+  await page.goto(`${base}/housekeeping?date=2026-09-28`);
   await page.locator(".housekeeping-room-workspace").waitFor();
-  await page.locator(".housekeeping-queue").getByRole("button", { name: /Room 712/ }).click();
+  const boardDate = page.getByLabel("Board date");
+  const hkSearch = page.getByLabel("Search housekeeping");
+  await hkSearch.fill("STANDARD");
+  const availableFilter = page.locator(".housekeeping-status-controls button").filter({ hasText: "Ready" });
+  await availableFilter.click();
+  const selectedReadyRoom = page.locator(".housekeeping-queue").getByRole("button", { name: /Room 800/ });
+  await selectedReadyRoom.click();
+  await page.evaluate(() => window.scrollTo(0, 600));
+  await page.waitForFunction(() => window.scrollY > 0);
+  const scrollBeforeRefresh = await page.evaluate(() => window.scrollY);
+  const housekeepingRefresh = page.waitForResponse(response => response.url().includes("/api/v1/housekeeping/board?date=2026-09-28") && response.request().method() === "GET");
+  await page.getByRole("button", { name: "Refresh housekeeping board" }).evaluate(element => element.click());
+  await housekeepingRefresh;
+  await page.locator(".housekeeping-room-workspace").getByRole("heading", { name: /Room 800/ }).waitFor();
+  if (await boardDate.inputValue() !== "2026-09-28" || await hkSearch.inputValue() !== "STANDARD") throw new Error("Housekeeping date/search context changed on same-board refresh");
+  if (await availableFilter.getAttribute("aria-pressed") !== "true") throw new Error("Housekeeping non-default status filter was not preserved after refresh");
+  if (await page.evaluate(() => window.scrollY) !== scrollBeforeRefresh) throw new Error(`Housekeeping page scroll changed on in-place refresh: ${scrollBeforeRefresh} -> ${await page.evaluate(() => window.scrollY)}`);
+
+  await page.locator(".housekeeping-status-controls button").filter({ hasText: "Shift" }).click();
+  await page.locator(".housekeeping-queue").getByRole("button", { name: /Room 713/ }).click();
+  await page.getByRole("heading", { name: /Room 713/ }).waitFor();
+  await page.getByRole("button", { name: "Next task" }).click();
   await page.getByRole("heading", { name: /Room 712/ }).waitFor();
   await page.getByRole("button", { name: "Finish cleaning" }).click();
   await page.getByRole("alert").waitFor();
   if (!(await page.getByRole("heading", { name: /Room 712/ }).count())) throw new Error("Housekeeping advanced selection after its post-mutation authoritative read failed");
-  await page.getByRole("button", { name: "Refresh housekeeping board" }).click();
+  if (await boardDate.inputValue() !== "2026-09-28" || await hkSearch.inputValue() !== "STANDARD") throw new Error("Housekeeping date/search context changed after failed mutation refresh");
+  const retryBoard = page.waitForResponse(response => response.url().includes("/api/v1/housekeeping/board?date=2026-09-28") && response.request().method() === "GET");
+  await page.getByRole("button", { name: "Refresh housekeeping board" }).evaluate(element => element.click());
+  await retryBoard;
   await page.locator(".housekeeping-room-workspace").getByText("Available", { exact: true }).waitFor();
   if (!(await page.getByRole("heading", { name: /Room 712/ }).count())) throw new Error("Housekeeping explicit refresh lost the selected room context");
-  return { mockRaceEvidence: true, rooms: "late pre-mutation read discarded after saved-price reread", billing: "late prior-booking snapshot discarded; invoice/payments/extra-charges subread failures clear snapshot, surface error, and recover", reception: "queue omission GET 200 updates, 404 clears, 500 retains selection/error and recovers; late detail cannot replace newer selection", housekeeping: "failed post-action reread exposed error, retained selected task; explicit refresh reconciled state", viewport: "1280x900", integrated: false };
+  const nextAfterRecovery = page.locator(".housekeeping-status-controls button").filter({ hasText: "Shift" });
+  if (await nextAfterRecovery.getAttribute("aria-pressed") !== "true") throw new Error("Housekeeping status filter changed after post-action recovery");
+  await page.getByRole("button", { name: "Next task" }).click();
+  await page.getByRole("heading", { name: /Room 713/ }).waitFor();
+  return { mockRaceEvidence: true, rooms: "late pre-mutation read discarded; selected Room 711 retained while present and cleared after authoritative removal", billing: "late prior-booking snapshot discarded; invoice/payments/extra-charges subread failures clear snapshot, surface error, and recover", reception: "queue omission GET 200 updates, 404 clears, 500 retains selection/error and recovers; late detail cannot replace newer selection", housekeeping: "date/filter/search STANDARD/selected Room 800/scroll preserved; Next task Room 713→712; failed post-action read did not advance; explicit refresh retained context", viewport: "1280x900", integrated: false };
 })()

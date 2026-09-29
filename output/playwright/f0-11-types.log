@@ -1,0 +1,15 @@
+npm notice run types:check
+npm notice run npm run types:api -- --check && npm run types:web -- --check
+npm notice run types:api
+npm notice run wrangler types apps/api/worker-configuration.d.ts -c apps/api/wrangler.jsonc --check
+
+ ⛅️ wrangler 4.125.0 (update available 4.143.0)
+───────────────────────────────────────────────
+✨ Types at apps/api/worker-configuration.d.ts are up to date.
+
+npm notice run types:web
+npm notice run wrangler types apps/web/worker-configuration.d.ts -c apps/web/wrangler.jsonc --check
+
+ ⛅️ wrangler 4.125.0 (update available 4.143.0)
+───────────────────────────────────────────────
+✨ Types at apps/web/worker-configuration.d.ts are up to date.

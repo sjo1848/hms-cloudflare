@@ -1,0 +1,6 @@
+npm notice run architecture:fitness
+npm notice run node scripts/check-web-architecture.mjs && node scripts/check-architecture-fitness-ii.mjs && node scripts/check-i18n-coverage.mjs && node scripts/check-cloudflare-budgets.mjs
+{"architectureFitness":"PASS","boundaries":16,"clientNavigation":true,"billingBoundary":true,"sharedUiReuse":true}
+{"architectureFitnessII":"PASS","featureOrchestrationBoundaries":["reception","housekeeping"],"hexagonalBoundaries":["bookings+reservation-inventory","lifecycle","billing-payment"],"networkKpiSingleQueryBoundary":true,"reportingIndexContract":true}
+{"i18nCoverage":"PASS","files":25,"explicitTechnicalExceptions":["HMS","Elite","HMS Elite","Email","ADR","RevPAR","· ADR","· RevPAR","HOTEL_DEMO_DB","HOTEL_SECOND_DB","×","☰","→","·","STANDARD","18000","101","name@hotel.com","guest@example.com","+54 9…"]}
+{"cloudflareWebBudget":"PASS","actual":{"jsRaw":299990,"jsGzip":86226,"cssRaw":43399,"cssGzip":8383},"budgets":{"jsRaw":300000,"jsGzip":100000,"cssRaw":50000,"cssGzip":15000},"staticAssets":true}

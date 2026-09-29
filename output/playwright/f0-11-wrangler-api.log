@@ -1,0 +1,17 @@
+npm notice run npx
+npm notice run 'wrangler' deploy --dry-run -c apps/api/wrangler.jsonc
+
+ ⛅️ wrangler 4.125.0 (update available 4.143.0)
+───────────────────────────────────────────────
+Total Upload: 312.95 KiB / gzip: 64.69 KiB
+Your Worker has access to the following bindings:
+Binding                                                              Resource
+env.CONTROL_DB (hms-control-local)                                   D1 Database
+env.HOTEL_DEMO_DB (hms-hotel-demo-local)                             D1 Database
+env.HOTEL_SECOND_DB (hms-hotel-second-local)                         D1 Database
+env.ENVIRONMENT ("development")                                      Environment Variable
+env.ACCESS_TEAM_DOMAIN ("https://example.cloudflareaccess.com")      Environment Variable
+env.ACCESS_AUDIENCE ("local-development")                            Environment Variable
+env.LOCAL_DEV_AUTH ("false")                                         Environment Variable
+
+--dry-run: exiting now.
