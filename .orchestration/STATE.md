@@ -2,7 +2,7 @@
 
 ## ACTIVE TASK — HMS FOUNDATION 0 IMPLEMENTATION
 
-Active task: reconcile the F0.11 critic handoff metadata after fresh Independent Critic Euler returned `REWORK` on exact Artifact A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` + Boundary B4 `173aed525d42198012d89d386ff60eafe3138e78`. Findings are handoff-only: stale `review_path` and historical B3 wording in immutable A2 evidence. The bounded reconciliation contract and Pre-Critic are frozen; A2 remains unchanged. B3 was superseded only to reconcile the stale F0.10 `boundary_b` status field. F0.9 is closed with exact-pair Independent Critic PASS; F0.10 is closed at its own Development Gate: fresh Independent Critic Gauss (GPT-6 Luna Medium, read-only) returned `PASS` on exact A5 `2e0fb984022b48a7dbeca5f4417dd2fae895fc97` + B5 `132449cbf8ba622c693935f1b2d3bb8bb9494665`; evidence `.orchestration/evidence/HMS-F0-10-INDEPENDENT-CRITIC-A5-B5.md`. Foundation 0 is NOT complete: F0.11 disposition and F0.12 remain. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
+Active task: begin F0.12 aggregate evidence/activation gate after F0.11 Development Gate PASS. Exact F0.11 A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` was substantively examined by Euler on B4; Euler's two handoff-only `REWORK` findings were closed by Ohm's fresh PASS on exact A2+B5 `d7e4f700b05c37b32489422125eecc4faa2d6d1d`. Neither review changed A2. Full linked dispositions: `.orchestration/evidence/HMS-F0-11-INDEPENDENT-CRITIC-A2-B4.md` and `.orchestration/evidence/HMS-F0-11-INDEPENDENT-CRITIC-A2-B5.md`. F0.9 and F0.10 are PASS for their increments only. Foundation 0 is NOT complete; F0.12 is active. No real data/cutover/bootstrap, Blocks A–H, PR/push/merge, main, staging, deploy or production.
 
 ### F0.8 — Recoverable guest + reservation creation — implementation validated; handoff condition closed
 
@@ -255,7 +255,7 @@ were unavailable. The local acceptance-runtime attempt did not reach the
 browser (`invalid maintenance resolve transition` during migration rehearsal);
 this is an inspection limitation, not a production finding.
 
-## F0.11 — Refresh/invalidation and authoritative UI continuity (replacement artifact awaiting Critic)
+## F0.11 — Refresh/invalidation and authoritative UI continuity (Development Gate PASS)
 
 - Frozen Task Contract: `.orchestration/contracts/HMS-F0-11-AUTHORITATIVE-REFRESH-001.md`; all 24 registry invariants classified before implementation.
 - Pre-implementation Contract Reviewer Laplace (separate read-only GPT-6 Luna Medium) returned eight bounded precision/evidence findings and no blocker; amendments and disposition are in `.orchestration/evidence/HMS-F0-11-AUTHORITATIVE-REFRESH-001-PRECRITIC.md`.
@@ -271,7 +271,7 @@ this is an inspection limitation, not a production finding.
 - Original immutable F0.11 Artifact A1 is `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306`; its reviewed boundary B2 is `d7b2067a9e891607f4860c07916559a0782eb041`. The A1+B2 Critic conditions are preserved as history and do not carry to A2.
 - Initial orchestration-only boundary commit `58c4c6cdd563790b591d57119a0f09cbbe9e7059` set `external_review.required=true` and pointed at exact A, but its human-readable `f0_11_boundary_b` field incorrectly remained `PENDING`. It is retained as immutable history.
 - Reconciled orchestration-only B2 `d7b2067a9e891607f4860c07916559a0782eb041` names exact Artifact A `ef4d9ee39e04229fafcfdcc44fcfbf37977e0306`. Fresh Independent Critic Lorentz (`gpt-6-luna`, medium, read-only) returned `PASS_WITH_CONDITIONS`: four bounded evidence gaps, no demonstrated product defect/blocker. Full finding is `.orchestration/evidence/HMS-F0-11-INDEPENDENT-CRITIC-A-B2.md`.
-- Bounded evidence and Housekeeping repair contracts, admission/final Pre-Critic and all-24 invariant evidence are frozen in `.orchestration/contracts/` and `.orchestration/evidence/`. The four findings are technically evidenced as repaired; no Independent Critic PASS for A2 is claimed.
+- Bounded evidence and Housekeeping repair contracts, admission/final Pre-Critic and all-24 invariant evidence are frozen in `.orchestration/contracts/` and `.orchestration/evidence/`. Euler's fresh A2+B4 `REWORK` was limited to the stale review pointer and immutable historical B3 wording; Euler also verified the prior substantive evidence conditions and found no product defect or blocker. Ohm's separate fresh read-only review of exact A2+B5 returned `PASS`, closing those handoff conditions. The reports are linked above; this combined disposition closes F0.11 only and is not a Foundation 0 aggregate verdict.
 - Replacement immutable Artifact A2 is `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` (commit `test: close F0.11 critic evidence conditions`); it contains the scoped Housekeeping refresh correction, exact budget/browser/regression output, scripts and Pre-Critic evidence. Unrelated working-tree changes are excluded.
 - Unrelated working-tree edits to historical F0.9/P0.1 evidence/harness and non-final F0.11 diagnostics remain uncommitted and excluded from A; they are preserved, not silently discarded.
 - Foundation 0 remains NOT complete. F0.12 is still required after F0.11 and must have its own Task Contract. No Blocks A–H, real data, PR/push/merge, main, staging mutation, deploy or production.
@@ -280,11 +280,11 @@ this is an inspection limitation, not a production finding.
 
 - Fresh Independent Critic Euler reviewed exact A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` + B4 `173aed525d42198012d89d386ff60eafe3138e78`; verdict `REWORK` for two metadata/evidence-handoff findings only. No product defect, `ROADMAP_BLOCKER`, architecture contradiction, data-risk finding or scope issue. Full review: `.orchestration/evidence/HMS-F0-11-INDEPENDENT-CRITIC-A2-B4.md`.
 - Frozen bounded contract `.orchestration/contracts/HMS-F0-11-CRITIC-HANDOFF-RECONCILIATION-001.md` and Pre-Critic `.orchestration/evidence/HMS-F0-11-CRITIC-HANDOFF-RECONCILIATION-001-PRECRITIC.md`; all 24 invariants recorded in the matching `-INVARIANTS.md` file.
-- A2's B3 references remain immutable historical packaging text. B4 superseded B3 for the stale F0.10 field; the current orchestration-only B5 identifies exact A2, records B4 as the last actually audited boundary, preserves its `REWORK`, and points the fresh review at exact A2+B5. `external_review.required=true`; resume is disabled.
+- A2's B3 references remain immutable historical packaging text. B4 superseded B3 for the stale F0.10 field; orchestration-only B5 identified exact A2 and recorded the B4 `REWORK`; Ohm reviewed that exact A2+B5 pair and passed the handoff reconciliation. The review record is `.orchestration/evidence/HMS-F0-11-INDEPENDENT-CRITIC-A2-B5.md`. No product artifact changed after A2.
 
 ## NEXT ACTION
 
-Obtain a fresh Independent Critic on exact F0.11 A2 `f7c8d28db1ce1dd6839f1f182260537f0e2d4898` + current orchestration-only Boundary B5. If no `ROADMAP_BLOCKER` or architecture contradiction appears, continue immediately to F0.12 by freezing its Task Contract and Pre-Critic, then complete the aggregate evidence gate. Foundation 0 is NOT complete.
+Freeze the F0.12 aggregate evidence gate Task Contract and mandatory Pre-Critic before implementation/evidence consolidation. Complete only the approved F0.1–F0.11 aggregate verification and synthetic cutover/bootstrap readiness evidence; leave real-data execution prohibited. Foundation 0 is NOT complete until F0.12's aggregate evidence gate closes and its exact artifact is independently reviewed.
 
 ## MODEL ROUTING
 
