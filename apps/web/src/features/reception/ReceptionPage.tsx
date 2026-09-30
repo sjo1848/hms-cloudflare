@@ -120,7 +120,7 @@ function Bookings() {
     if (!focusedTask) return;
     const frame = window.requestAnimationFrame(() => document.querySelector<HTMLElement>(".reception-focused-task .reception-task-fields h4, .reception-focused-task .reception-task-review h4, .reception-focused-task .reception-task-form h4")?.focus());
     return () => window.cancelAnimationFrame(frame);
-  }, [focusedTask, createStep, editStep]);
+  }, [focusedTask, createStep, editStep, selected?.id]);
 
   useEffect(() => {
     if (previousFocusedTask.current && !focusedTask) {
@@ -163,6 +163,22 @@ function Bookings() {
     if (typeof y === "number" && queueElement) queueElement.scrollTop = y;
   }, [router.search, selected?.id, queueElement]);
 
+  useEffect(() => {
+    const state = window.history.state;
+    const destination = state?.__hmsReceptionFocusTarget;
+    if (destination !== "task" && destination !== "case" && destination !== "queue") return;
+    const bookingId = typeof state.__hmsReceptionFocusBookingId === "string" ? state.__hmsReceptionFocusBookingId : null;
+    const frame = window.requestAnimationFrame(() => {
+      const selector = destination === "task"
+        ? ".reception-focused-task .reception-task-form > h4, .reception-focused-task .reception-task-fields h4, .reception-focused-task .reception-task-review h4, .reception-focused-task h3[tabindex='-1']"
+        : destination === "case"
+          ? ".reception-case-title"
+          : (bookingId ? `[data-booking-id='${CSS.escape(bookingId)}']` : ".reception-queue-search input");
+      document.querySelector<HTMLElement>(selector)?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [focusedTask, frontDeskBoard, loading, router.search, selected?.id]);
+
   function updateLocation(changes: Record<string, string | null>, mode: "push" | "replace" = "replace") {
     const url = new URL(window.location.href);
     for (const [key, value] of Object.entries(changes)) {
@@ -172,12 +188,19 @@ function Bookings() {
     router.navigate(url.pathname + url.search + url.hash, { replace: mode === "replace" });
   }
 
+  function markReceptionHistoryFocus(target: "task" | "case" | "queue" | "check-in", bookingId?: string) {
+    window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionFocusTarget: target, __hmsReceptionFocusBookingId: bookingId }, "", window.location.href);
+  }
+
   function openTask(task: Exclude<FocusedTask, null>) {
     if (actionBusy || (task !== "new-reservation" && !selected)) return;
     setFocusedTask(task);
     setCreateStep(0);
     setEditStep(0);
+    if (selected) markReceptionHistoryFocus("case", selected.id);
     updateLocation({ task, booking_id: selected?.id ?? null }, "push");
+    markReceptionHistoryFocus("task", selected?.id);
+    window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionTaskEntry: true }, "", window.location.href);
     window.requestAnimationFrame(() => document.querySelector<HTMLElement>(".reception-focused-task h4")?.focus());
   }
 
@@ -209,7 +232,8 @@ function Bookings() {
     discardFocusedTaskDraft();
     setFocusedTask(null);
     setCreateStep(0);
-    updateLocation({ task: null, booking_id: selected?.id ?? null }, "push");
+    if (window.history.state?.__hmsReceptionTaskEntry === true) window.history.back();
+    else updateLocation({ task: null, booking_id: selected?.id ?? null }, "replace");
     window.requestAnimationFrame(() => document.querySelector<HTMLElement>(selected ? ".reception-case-title" : ".reception-create-trigger, .reception-queue-search input")?.focus());
   }
 
@@ -260,7 +284,7 @@ function Bookings() {
       if (focusedTask && nextFocusedTask !== focusedTask && focusedTaskIsDirty() && !allowDirtyPop.current) {
         if (!showDiscardConfirm) requestDiscard(() => { allowDirtyPop.current = true; window.history.back(); });
         const currentTaskUrl = `${router.pathname}${router.search}${router.hash}`;
-        window.history.pushState(window.history.state ?? {}, "", currentTaskUrl);
+        window.history.pushState({ ...(window.history.state ?? {}), __hmsReceptionTaskEntry: true }, "", currentTaskUrl);
         window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
         return;
       }
@@ -297,9 +321,10 @@ function Bookings() {
     discardFocusedTaskDraft();
     setFocusedTask(null);
     if (queueElement) window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionQueueScroll: queueElement.scrollTop }, "", window.location.href);
+    markReceptionHistoryFocus("queue", booking.id);
     selectCase(booking);
     updateLocation({ task: null, booking_id: booking.id }, "push");
-    window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionCase: true }, "", window.location.href);
+    window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionCase: true, __hmsReceptionFocusTarget: "case", __hmsReceptionFocusBookingId: booking.id }, "", window.location.href);
   }
 
   function clearSelectedCase() {
@@ -310,10 +335,11 @@ function Bookings() {
   function openCheckIn(booking: typeof bookings[number]) {
     setFocusedTask(null);
     if (queueElement) window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionQueueScroll: queueElement.scrollTop }, "", window.location.href);
+    markReceptionHistoryFocus("case", booking.id);
     selectCase(booking);
     setCheckInSuccess("");
     updateLocation({ task: "check-in", booking_id: booking.id }, "push");
-    window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionCase: true, __hmsReceptionCheckInTask: true }, "", window.location.href);
+    window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionCase: true, __hmsReceptionCheckInTask: true, __hmsReceptionFocusTarget: "check-in", __hmsReceptionFocusBookingId: booking.id }, "", window.location.href);
     setCheckInTaskId(booking.id);
   }
 
@@ -486,7 +512,7 @@ function Bookings() {
         {selected.status === "CheckedIn" && canWriteBookings && <div className="reception-case-actions">
           {focusedTask === null && <><button type="button" className="secondary-button" onClick={() => openTask("reassign")}>{t("reception.nextReassign")}</button><button type="button" className="secondary-button" onClick={() => openTask("checkout")}>{t("reception.nextCheckout")}</button></>}
           {focusedTask === "reassign" && <form onSubmit={event => { void reassign(event).then(ok => { if (ok) returnToCase(true); }); }} aria-label={t("reception.reassignAria")} className="reassign-surface reception-task-form">
-            <div className="reassign-surface-heading"><div><p className="eyebrow">{t("reception.reassignContext")}</p><h4>{t("reception.nextReassign")}</h4><p className="muted">{t("reception.reassignStayContext", { room: selected.room_number, checkout: formatDate(selected.check_out) })}</p></div><span className="reassign-date-chip">{effectiveDate ? formatDate(effectiveDate) : t("common.loading")}</span></div>
+            <div className="reassign-surface-heading"><div><p className="eyebrow">{t("reception.reassignContext")}</p><h4 tabIndex={-1}>{t("reception.nextReassign")}</h4><p className="muted">{t("reception.reassignStayContext", { room: selected.room_number, checkout: formatDate(selected.check_out) })}</p></div><span className="reassign-date-chip">{effectiveDate ? formatDate(effectiveDate) : t("common.loading")}</span></div>
             <div className="reassign-room-summary"><div><span className="muted">{t("reception.reassignCurrentRoom")}</span><strong>{selected.room_number}</strong></div><span aria-hidden="true">→</span><div><span className="muted">{t("reception.reassignDestinationRoom")}</span><strong>{t("reception.reassignChooseRoom")}</strong></div></div>
             <label>{t("reception.selectDestination")} <select name="room_id" required disabled={!reassignBoard || actionBusy} value={reassignTargetId} onChange={event => { setReassignTargetId(event.target.value); void selectReassignDestination(event.target.value); }} aria-describedby="reassign-room-help"><option value="">{t("reception.selectDestination")}</option>{reassignRooms.map(room => {
               const boardRoom = boardByRoom.get(room.id);
@@ -514,7 +540,7 @@ function Bookings() {
           </form>
           }
           {focusedTask === "checkout" && <form onSubmit={event => { void checkout(event).then(ok => { if (ok) returnToCase(true); }); }} aria-label={t("reception.checkoutAria")} className="reception-task-form">
-            <h4>{t("reception.nextCheckout")}</h4>
+            <h4 tabIndex={-1}>{t("reception.nextCheckout")}</h4>
             <label>{t("reception.paymentPolicy")} <select name="policy" required><option value="settled">{t("reception.settled")}</option>{hotel.includes("bookings.checkout.override") && <option value="pending-approved">{t("reception.pendingApproved")}</option>}</select></label>
             <label>{t("reception.closingReference")} <input name="reference" minLength={6} placeholder={t("reception.referenceHint")} /></label>
             {([["charges", "reception.chargesReviewed"], ["release", "reception.roomReleaseConfirmed"], ["handoff", "reception.housekeepingHandoffConfirmed"]] as const satisfies ReadonlyArray<readonly [string, MessageKey]>).map(([name, label]) => <label key={name}><input type="checkbox" name={name} required />{t(label)}</label>)}

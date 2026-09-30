@@ -1,5 +1,3 @@
-integrated fixture API: [{"id":"e2e-booking-success","hotel_id":"10000000-0000-0000-0000-000000000001","guest_id":"e2e-guest-success","guest_name":"Integrated Reassignment Guest","guest_email":"integrated-success@example.test","room_id":"e2e-room-a","room_number":"101","room_type":"STANDARD","check_in":"2026-09-29","check_out":"2026-10-02","status":"CheckedIn","total_cents":30000,"notes":null,"created_at":"2026-01-01","updated_at":"2026-01-01"},{"id":"e2e-booking-stale","hotel_id":"10000000-0000-0000-0000-000000000001","guest_id":"e2e-guest-stale","guest_name":"Stale Reassignment Guest","guest_email":"integrated-stale@example.test","room_id":"e2e-room-c","room_number":"103","room_type":"STANDARD","check_in":"2026-09-29","check_out":"2026-10-02","status":"CheckedIn","total_cents":30000,"notes":null,"created_at":"2026-01-01","updated_at":"2026-01-01"}]
-integrated availability API: [{"id":"e2e-room-a","hotel_id":"10000000-0000-0000-0000-000000000001","room_number":"101","room_type":"STANDARD","status":"Occupied","price_cents":10000,"operational_state":{"occupancy":"OCCUPIED","housekeeping":"READY","maintenanceImpact":"NONE","serviceState":"IN_SERVICE","readiness":{"state":"NOT_READY","reasons":["ROOM_OCCUPIED"]}},"date_range_sellability":{"state":"UNRESOLVED","reason":"LEGACY_FILTER_NOT_CANONICAL"}},{"id":"e2e-room-b","hotel_id":"10000000-0000-0000-0000-000000000001","room_number":"102","room_type":"STANDARD","status":"Available","price_cents":12000,"operational_state":{"occupancy":"VACANT","housekeeping":"READY","maintenanceImpact":"NON_BLOCKING","serviceState":"IN_SERVICE","readiness":{"state":"READY_FOR_ARRIVAL","reasons":[]}},"date_range_sellability":{"state":"UNRESOLVED","reason":"LEGACY_FILTER_NOT_CANONICAL"}},{"id":"e2e-room-e","hotel_id":"10000000-0000-0000-0000-000000000001","room_number":"105","room_type":"STANDARD","status":"Available","price_cents":15000,"operational_state":{"occupancy":"VACANT","housekeeping":"READY","maintenanceImpact":"NONE","serviceState":"IN_SERVICE","readiness":{"state":"READY_FOR_ARRIVAL","reasons":[]}},"date_range_sellability":{"state":"UNRESOLVED","reason":"LEGACY_FILTER_NOT_CANONICAL"}}]
 ### Ran Playwright code
 ```js
 await ((page) => (async () => {
@@ -34,7 +32,9 @@ await ((page) => (async () => {
     }
     await page.getByText("Selected case").waitFor();
     await page.getByRole("button", { name: "Next action: room reassignment" }).click();
-    await page.locator('form[aria-label="Reassign room"]').waitFor();
+    const reassignTask = page.locator('form[aria-label="Reassign room"]');
+    await reassignTask.waitFor();
+    if (!(await reassignTask.locator("h4").first().evaluate(element => element === document.activeElement))) throw new Error("Reassignment task did not receive initial keyboard focus");
     const [hotelResponse, availabilityResponse] = await Promise.all([hotelResponsePromise, availabilityResponsePromise]);
     const hotel = await hotelResponse.json();
     const availabilityUrl = availabilityResponse.url();
@@ -151,13 +151,47 @@ await ((page) => (async () => {
   const failed = responses.filter(item => item.status >= 500);
   if (failed.length) throw new Error(`integrated server failures: ${JSON.stringify(failed)}`);
   await page.screenshot({ path: "output/playwright/f04-reassignment-mobile-conflict.png", fullPage: true });
-  console.log("F0.4 integrated reassignment PASS: real Worker/D1 success, hotel-local remaining interval, BLOCKING/NON_BLOCKING, reason, stale 409/recovery, authoritative refresh; desktop success + mobile conflict");
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("http://127.0.0.1:4176/bookings?lane=in-house&q=Integrated");
+  const successQueueRow = page.locator('.reception-queue-row[data-booking-id="e2e-booking-success"]');
+  await successQueueRow.waitFor();
+  await successQueueRow.click();
+  await page.waitForFunction(() => new URL(location.href).searchParams.get("booking_id") === "e2e-booking-success");
+  const caseUrl = page.url();
+  await page.getByRole("button", { name: "Next action: room reassignment" }).click();
+  const historyTask = page.locator('form[aria-label="Reassign room"]');
+  await historyTask.waitFor();
+  if (!(await historyTask.locator("h4").first().evaluate(element => element === document.activeElement))) throw new Error("app-opened Reassignment task lost initial focus");
+  await historyTask.getByRole("button", { name: "Return to case" }).click();
+  await historyTask.waitFor({ state: "hidden" });
+  await page.waitForFunction(expected => location.href === expected, caseUrl);
+  await page.goBack();
+  await page.waitForFunction(() => !new URL(location.href).searchParams.has("booking_id"));
+  if (new URL(page.url()).searchParams.has("task")) throw new Error("browser Back reopened the cancelled Reassignment task");
+  await page.goForward();
+  await page.waitForFunction(() => new URL(location.href).searchParams.get("booking_id") === "e2e-booking-success");
+  await page.waitForFunction(() => document.activeElement?.classList.contains("reception-case-title"));
+  if (new URL(page.url()).searchParams.has("task")) throw new Error("browser Forward restored a task instead of the Case");
+  const directTaskUrl = new URL(page.url());
+  directTaskUrl.searchParams.set("task", "reassign");
+  await page.goto(directTaskUrl.toString());
+  await historyTask.waitFor();
+  await page.waitForFunction(() => {
+    const heading = document.querySelector('form[aria-label="Reassign room"] h4');
+    return !!heading && heading === document.activeElement;
+  });
+  await historyTask.getByRole("button", { name: "Return to case" }).click();
+  await historyTask.waitFor({ state: "hidden" });
+  await page.waitForFunction(() => !new URL(location.href).searchParams.has("task"));
+  if (new URL(page.url()).searchParams.get("booking_id") !== "e2e-booking-success") throw new Error("closing a direct Reassignment link did not preserve its Case");
+  console.log("Block C reassignment PASS: Worker/D1 success + stale 409, initial task focus, cancel→Case, browser Back/Forward without task reopen and Case focus, direct deep-link close/context");
 })()
 )(page);
 ```
 ### Page
-- Page URL: http://127.0.0.1:4176/bookings?booking_id=e2e-booking-stale&task=reassign
+- Page URL: http://127.0.0.1:4176/bookings?lane=in-house&q=Integrated&booking_id=e2e-booking-success
 - Page Title: HMS Elite
-- Console: 3 errors, 0 warnings
 ### Events
-- New console entries: .playwright-cli/console-2026-09-30T17-35-53-852Z.log#L1-L6
+- New console entries: .playwright-cli/console-2026-09-30T20-42-29-173Z.log#L1-L8
+Block C integrated reassignment PASS: Worker/D1 mutation and 409 assertions, task entry focus, cancel/back/forward history, Case focus restoration and direct deep-link return; owned Worker/Vite/browser cleanup verified.

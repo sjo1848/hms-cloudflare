@@ -43,3 +43,17 @@ Evaluated against the frozen Task Contract, evidence matrix and all 24 frozen in
 - Out-of-scope audit: no Worker endpoint, backend/domain contract, schema, capability model, lifecycle semantics or non-Reception module changed. Extension, No-show and Late Arrival remain deferred. No Block D–H, real data, PR, push, merge, main, staging, deploy or production action occurred.
 
 **Gate result: PASS for immutable Artifact A.** Artifact A is not self-approved as a substantive PASS. Freeze A; make Boundary B orchestration/evidence-only and identity-bound to A; then request a fresh, separate read-only Independent Critic. Continue no further product work before that exact-pair review.
+
+
+## Bounded REWORK Pre-Critic Gate — PASS for replacement Artifact A2 publication
+
+Task: `HMS-BLOCK-C-REPAIR-HISTORY-FOCUS-001` (including Case focus restoration on browser Forward as recorded in the frozen contract addendum). The initial exact-pair Independent Critic returned two MEDIUM findings; the detailed report preserves that verdict and repair disposition. No product policy, API, backend, schema, capability, lifecycle or budget change was introduced.
+
+- **History:** app task entry carries a task-entry marker; cancel/success traverses that entry; direct task deep links replace task URL and retain the Case; dirty-pop recovery restores the task entry marker. Fresh browser assertions prove cancel → Case → browser Back → Queue (task does not reopen) → Forward → Case.
+- **Focus:** Reassignment/Checkout headings are focusable; direct-link Case restore retriggers task focus. History entries identify Queue row, Case heading, or task heading for restoration. Browser proof confirms focused Reassignment entry, focused Case after Forward, and direct task close retains `booking_id`. Fresh local Worker/D1 integrated run exit 0; no mock-only claim.
+- **Full test and gates on current product source:** `npm run check` 35 files / 175 tests PASS; `npm run types:check`, `npm run web:build`, `npm run architecture:fitness`, `npm run test:i18n` (4/4), `npm run test:d1-query-plan`, and API/Web `npm run wrangler:dry-run` PASS. `git diff --check` PASS. Integrated reassignment runner also PASS and verifies owned process cleanup.
+- **Checkout evidence limit:** checkout task focus assertion completed; POST returned 200 and authoritative CheckedOut refresh, but post-mutation local Wrangler room/invoice reads disconnected on rerun. This incomplete rerun is not called PASS. Initial Artifact A contains a complete prior Worker/D1 checkout success and final settlement code is unchanged; final full Vitest repeats executing-D1 settlement coverage. The limit is explicitly stated in Results.
+- **Budget:** baseline remains JS 306,733 raw / 88,540 gzip and CSS 52,127 / 9,664. Final result JS 321,619 / 91,486; CSS 54,937 / 10,119. Aggregate raw 376,556 (+17,696, +4.931%); gzip 101,605 (+3,401, +3.463%). All existing per-asset budgets pass unchanged (JS 330,000/100,000; CSS 55,000/15,000).
+- **Scope:** diff is restricted to Reception task history/focus, relevant browser regression/evidence and orchestration evidence. Blocks D–H, real data, promotion and unrelated modules remain untouched.
+
+**Gate result: PASS for replacement Artifact A2 publication only.** Freeze substantive A2, write orchestration-only Boundary B2 with exact A2 SHA and external review required/resume disabled, then obtain a fresh separate read-only Independent Critic on exact A2+B2. This gate is not an Independent Critic PASS.

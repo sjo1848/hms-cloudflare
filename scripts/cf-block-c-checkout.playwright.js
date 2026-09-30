@@ -4,8 +4,10 @@ async page => {
   page.on("console", message => { if (message.type() === "error") consoleErrors.push(message.text()); });
   page.on("pageerror", error => pageErrors.push(error.message));
   await page.addInitScript(() => {
-    localStorage.setItem("hms.locale", "en");
-    localStorage.setItem("hms-local-acceptance-profile", "0");
+    try {
+      localStorage.setItem("hms.locale", "en");
+      localStorage.setItem("hms-local-acceptance-profile", "0");
+    } catch { /* initial about:blank has an opaque origin during browser Back traversal */ }
   });
   await page.context().route("**/api/v1/**", route => {
     const source = new URL(route.request().url());
@@ -15,6 +17,7 @@ async page => {
   await page.goto("http://127.0.0.1:4176/bookings?lane=in-house&q=Next&booking_id=a-next&task=checkout");
   const task = page.locator('form[aria-label="Checkout"]');
   await task.waitFor();
+  if (!(await task.locator("h4").first().evaluate(element => element === document.activeElement))) throw new Error("Checkout deep-linked task did not receive initial keyboard focus");
   const context = await page.evaluate(async () => {
     const headers = { "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000001", "x-local-access-email": "ana-admin@migration.invalid", "x-hotel-id": "10000000-0000-0000-0000-000000000001" };
     const [authResponse, boardResponse] = await Promise.all([fetch("/api/v1/auth/me", { headers }), fetch("/api/v1/front-desk/board", { headers })]);
@@ -51,10 +54,26 @@ async page => {
   await task.getByRole("button", { name: "Return to case" }).click();
   await page.getByRole("alertdialog", { name: "Discard changes?" }).getByRole("button", { name: "Discard changes" }).click();
   await task.waitFor({ state: "hidden" });
+  const caseUrl = new URL(page.url());
+  caseUrl.searchParams.delete("task");
+  await page.goto(caseUrl.toString());
+  await page.getByRole("button", { name: "Next action: checkout" }).waitFor();
+  const preTaskUrl = page.url();
+  await page.getByRole("button", { name: "Next action: checkout" }).click();
+  await task.waitFor();
+  if (!(await task.locator("h4").first().evaluate(element => element === document.activeElement))) throw new Error("Checkout task opened from its Case without receiving initial focus");
+  await task.getByRole("button", { name: "Return to case" }).click();
+  await task.waitFor({ state: "hidden" });
+  await page.waitForFunction(expected => location.href === expected, preTaskUrl);
+  await page.goBack();
+  if (new URL(page.url()).searchParams.get("task") === "checkout") throw new Error("Browser Back reopened the task after it had been cancelled");
+  await page.goForward();
+  if (new URL(page.url()).searchParams.get("task") !== null) throw new Error("Browser Forward restored a stale cancelled task entry");
   const checkoutUrl = new URL(page.url());
   checkoutUrl.searchParams.set("task", "checkout");
   await page.goto(checkoutUrl.toString());
   await task.waitFor();
+  if (!(await task.locator("h4").first().evaluate(element => element === document.activeElement))) throw new Error("Checkout deep-linked task did not receive initial focus after reload");
   await policy.selectOption("pending-approved");
   await task.locator('input[name="reference"]').fill("synthetic-approved-001");
   await task.getByLabel("Charges reviewed").check();

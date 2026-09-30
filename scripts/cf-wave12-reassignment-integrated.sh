@@ -132,7 +132,7 @@ elif [[ "$browser_mode" == "conflict" ]]; then
 else
   browser_file=scripts/cf-wave12-reassignment-integrated.playwright.js
 fi
-bash "$pwcli" -s wave12-reassignment-integrated-v2 run-code --filename "$browser_file"
+bash "$pwcli" -s wave12-reassignment-integrated-v2 run-code --filename "$browser_file" | tee "$tmp_dir/browser.log"
 bash "$pwcli" -s wave12-reassignment-integrated-v2 close >/dev/null
 
 if [[ "$browser_mode" == "success" ]]; then
@@ -181,4 +181,8 @@ if (!lifecycle.some(row => row.booking_id === "e2e-booking-success" && row.event
 if (!financial.some(row => row.booking_id === "e2e-booking-success" && row.event_type === "PRICE_RECONCILIATION" && row.events === 1) || financial.some(row => row.booking_id === "e2e-booking-stale")) throw new Error(`financial event mismatch ${JSON.stringify(financial)}`);
 if (payments.length !== 0) throw new Error(`payment ledger changed ${JSON.stringify(payments)}`);
 NODE
+fi
+if [[ "$browser_mode" == "full" ]]; then
+  echo "Block C integrated reassignment PASS: Worker/D1 mutation and 409 assertions, task entry focus, cancel/back/forward history, Case focus restoration and direct deep-link return; owned Worker/Vite/browser cleanup verified." | tee -a "$tmp_dir/browser.log"
+  cp "$tmp_dir/browser.log" output/playwright/block-c-reassignment-integrated.log
 fi

@@ -30,7 +30,9 @@
     }
     await page.getByText("Selected case").waitFor();
     await page.getByRole("button", { name: "Next action: room reassignment" }).click();
-    await page.locator('form[aria-label="Reassign room"]').waitFor();
+    const reassignTask = page.locator('form[aria-label="Reassign room"]');
+    await reassignTask.waitFor();
+    if (!(await reassignTask.locator("h4").first().evaluate(element => element === document.activeElement))) throw new Error("Reassignment task did not receive initial keyboard focus");
     const [hotelResponse, availabilityResponse] = await Promise.all([hotelResponsePromise, availabilityResponsePromise]);
     const hotel = await hotelResponse.json();
     const availabilityUrl = availabilityResponse.url();
@@ -147,5 +149,39 @@
   const failed = responses.filter(item => item.status >= 500);
   if (failed.length) throw new Error(`integrated server failures: ${JSON.stringify(failed)}`);
   await page.screenshot({ path: "output/playwright/f04-reassignment-mobile-conflict.png", fullPage: true });
-  console.log("F0.4 integrated reassignment PASS: real Worker/D1 success, hotel-local remaining interval, BLOCKING/NON_BLOCKING, reason, stale 409/recovery, authoritative refresh; desktop success + mobile conflict");
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("http://127.0.0.1:4176/bookings?lane=in-house&q=Integrated");
+  const successQueueRow = page.locator('.reception-queue-row[data-booking-id="e2e-booking-success"]');
+  await successQueueRow.waitFor();
+  await successQueueRow.click();
+  await page.waitForFunction(() => new URL(location.href).searchParams.get("booking_id") === "e2e-booking-success");
+  const caseUrl = page.url();
+  await page.getByRole("button", { name: "Next action: room reassignment" }).click();
+  const historyTask = page.locator('form[aria-label="Reassign room"]');
+  await historyTask.waitFor();
+  if (!(await historyTask.locator("h4").first().evaluate(element => element === document.activeElement))) throw new Error("app-opened Reassignment task lost initial focus");
+  await historyTask.getByRole("button", { name: "Return to case" }).click();
+  await historyTask.waitFor({ state: "hidden" });
+  await page.waitForFunction(expected => location.href === expected, caseUrl);
+  await page.goBack();
+  await page.waitForFunction(() => !new URL(location.href).searchParams.has("booking_id"));
+  if (new URL(page.url()).searchParams.has("task")) throw new Error("browser Back reopened the cancelled Reassignment task");
+  await page.goForward();
+  await page.waitForFunction(() => new URL(location.href).searchParams.get("booking_id") === "e2e-booking-success");
+  await page.waitForFunction(() => document.activeElement?.classList.contains("reception-case-title"));
+  if (new URL(page.url()).searchParams.has("task")) throw new Error("browser Forward restored a task instead of the Case");
+  const directTaskUrl = new URL(page.url());
+  directTaskUrl.searchParams.set("task", "reassign");
+  await page.goto(directTaskUrl.toString());
+  await historyTask.waitFor();
+  await page.waitForFunction(() => {
+    const heading = document.querySelector('form[aria-label="Reassign room"] h4');
+    return !!heading && heading === document.activeElement;
+  });
+  await historyTask.getByRole("button", { name: "Return to case" }).click();
+  await historyTask.waitFor({ state: "hidden" });
+  await page.waitForFunction(() => !new URL(location.href).searchParams.has("task"));
+  if (new URL(page.url()).searchParams.get("booking_id") !== "e2e-booking-success") throw new Error("closing a direct Reassignment link did not preserve its Case");
+  console.log("Block C reassignment PASS: Worker/D1 success + stale 409, initial task focus, cancel→Case, browser Back/Forward without task reopen and Case focus, direct deep-link close/context");
 })()
