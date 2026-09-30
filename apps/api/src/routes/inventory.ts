@@ -5,6 +5,7 @@ import { ApiError } from "../errors";
 import { dateRange, email, integerCents, jsonBody, requiredText } from "../validation";
 import { hasCapability } from "../auth/capabilities";
 import { ADVANCE_RESERVABLE_ROOM_SQL } from "../room-availability";
+import { deriveDateRangeSellability } from "../modules/room-state/domain";
 import { ROOM_DIMENSION_SELECT, roomOperationalReadModel, unresolvedSellability, type RoomDimensionRow } from "../modules/room-state/read-model";
 
 type InventoryApp = Hono<{ Bindings: Env; Variables: ApiVariables }>;
@@ -15,6 +16,8 @@ type RoomRow = RoomDimensionRow & {
   room_type: string;
   status: string;
   price_cents: number;
+  has_overlapping_inventory?: number;
+  has_overlapping_hold?: number;
 };
 
 type GuestRow = {
@@ -80,11 +83,49 @@ export function createInventoryRoutes(): InventoryApp {
 
   app.get("/rooms", async (context) => {
     requireCapability(context, "rooms.read");
-    const rows = await context.get("operationalDatabase").prepare(
-      `SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents, ${ROOM_DIMENSION_SELECT}
-       FROM rooms AS r ORDER BY r.room_number`,
-    ).all<RoomRow>();
-    return context.json(rows.results.map((row) => roomView(row, context.get("membership").hotelId)));
+    const startInput = context.req.query("start");
+    const endInput = context.req.query("end");
+    const range = startInput != null || endInput != null ? dateRange(startInput, endInput) : null;
+    if (range) requireCapability(context, "rooms.search");
+    const statement = range
+      ? context.get("operationalDatabase").prepare(
+          `SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents, ${ROOM_DIMENSION_SELECT},
+                  EXISTS (SELECT 1 FROM room_inventory_nights n
+                          WHERE n.room_id = r.id AND n.stay_date >= ?1 AND n.stay_date < ?2) AS has_overlapping_inventory,
+                  EXISTS (SELECT 1 FROM room_holds h
+                          WHERE h.room_id = r.id AND h.start_date < ?2 AND h.end_date > ?1) AS has_overlapping_hold
+           FROM rooms AS r ORDER BY r.room_number`,
+        ).bind(range.start, range.end)
+      : context.get("operationalDatabase").prepare(
+          `SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents, ${ROOM_DIMENSION_SELECT}
+           FROM rooms AS r ORDER BY r.room_number`,
+        );
+    const rows = await statement.all<RoomRow>();
+    return context.json(rows.results.map((row) => {
+      const room = roomView(row, context.get("membership").hotelId);
+      if (!range) return room;
+      const maintenanceImpactUnresolved = room.operational_state.maintenanceImpact === "UNRESOLVED";
+      const serviceState = row.service_state === "IN_SERVICE" || row.service_state === "OUT_OF_ORDER"
+        ? maintenanceImpactUnresolved ? "UNRESOLVED" : row.service_state
+        : "UNRESOLVED";
+      const hasBlockingMaintenance = row.blocking_maintenance_count > 0;
+      const state = deriveDateRangeSellability({
+        intervalValid: true,
+        serviceState,
+        hasOverlappingInventory: row.has_overlapping_inventory === 1,
+        hasOverlappingHold: row.has_overlapping_hold === 1,
+        hasBlockingMaintenance,
+      });
+      const reason = state === "SELLABLE" ? "INTERVAL_CLEAR"
+        : maintenanceImpactUnresolved ? "MAINTENANCE_IMPACT_UNRESOLVED"
+          : serviceState === "UNRESOLVED" ? "SERVICE_STATE_UNRESOLVED"
+          : serviceState === "OUT_OF_ORDER" ? "SERVICE_OUT_OF_ORDER"
+            : hasBlockingMaintenance ? "BLOCKING_MAINTENANCE"
+              : row.has_overlapping_hold === 1 ? "OVERLAPPING_HOLD"
+                : row.has_overlapping_inventory === 1 ? "OVERLAPPING_ROOM_NIGHT"
+                  : "RANGE_EVIDENCE_UNRESOLVED";
+      return { ...room, date_range_sellability: { state, reason } };
+    }));
   });
 
   app.post("/rooms", async (context) => {
