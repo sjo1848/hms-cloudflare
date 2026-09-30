@@ -6,24 +6,24 @@
   "phase": "BLOCK_B_BOUNDED_REWORK_IN_PROGRESS",
   "resume_authorized": false,
   "runtime_status": "RUNNING",
-  "active_task": "HMS-BLOCK-B-REPAIR-WIDE-QUEUE-FILTERS-001 \u2014 resolve independent critic MEDIUM finding within parent contract",
-  "last_completed_task": "Independent Critic reviewed exact A c373511a5fef56d0f1d3a42bc262f14b84c3cbf0 + B 903436fcb69e3e412db7a41aeaacde3a8cfa1504; MEDIUM WIDE 1280x600 filter overlap finding persisted",
-  "last_completed_head": "903436fcb69e3e412db7a41aeaacde3a8cfa1504",
+  "active_task": "HMS-BLOCK-B-REPAIR-WIDE-QUEUE-FILTERS-001 + HMS-BLOCK-B-REPAIR-REASSIGN-SUCCESS-NOTICE-001 \u2014 complete bounded presentation regressions",
+  "last_completed_task": "WIDE 1280x600 filter repair passes integrated assertions; required inherited regressions surfaced existing reassignment success notice being cleared by queue refresh",
+  "last_completed_head": "1d806c8fa1e0c38734dd4d8aa068f1f60cb15de0",
   "work_branch": "impl/hms-block-b-reception",
   "pr": null,
   "wave": "BLOCK B \u2014 RECEPTION + BOOKING/STAY CASE",
   "status_label": "BLOCK_B_IMPLEMENTATION_IN_PROGRESS",
-  "next_action": "FREEZE_BOUNDED_REPAIR_CONTRACT_THEN_FIX_WIDE_QUEUE_FILTER_LEGIBILITY_AND_ADD_1280X600_ASSERTION",
+  "next_action": "FREEZE_REASSIGNMENT_NOTICE_REPAIR_CONTRACT_THEN_FIX_NOTICE_ORDER_AND_RERUN_WAVE12",
   "stop_reason": "",
   "event": {
-    "seq": 241,
-    "id": "BLOCK-B-INDEPENDENT-CRITIC-REWORK",
-    "type": "BOUNDED_RESPONSIVE_USABILITY_REPAIR_AUTHORIZED"
+    "seq": 242,
+    "id": "BLOCK-B-REASSIGNMENT_REGRESSION_FOUND",
+    "type": "FREEZE_BOUNDED_USER_FEEDBACK_REPAIR"
   },
   "external_review": {
     "last_audited_head": "903436fcb69e3e412db7a41aeaacde3a8cfa1504",
     "artifact_head": "c373511a5fef56d0f1d3a42bc262f14b84c3cbf0",
-    "last_verdict": "REWORK: MEDIUM WIDE 1280x600 Queue filters collide; bounded repair contract frozen before source edits.",
+    "last_verdict": "Prior A+B returned routine REWORK; repair contracts frozen; no current artifact awaiting review.",
     "review_path": ".orchestration/evidence/HMS-BLOCK-B-RECEPTION-BOOKING-STAY-001-INDEPENDENT-CRITIC-A-B.md",
     "required": false,
     "prior_reviews_pending": [
