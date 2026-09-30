@@ -8,7 +8,15 @@
 - **Target:** `Booking/Stay Case → Focused Task → authoritative result → Case/Queue` with context preservation. Preserve existing backend/API/capability/lifecycle/idempotency contracts; no new domain semantics or schema/backend work unless strictly necessary under an already approved contract.
 - **Extension/no-show/late arrival:** implement only if source-backed API, capability and lifecycle contracts exist; otherwise record `DEFERRED_CAPABILITY_OR_CONTRACT_NOT_PRESENT`.
 - **Budget baseline:** JS raw 306,733 B / gzip 88,540 B; CSS raw 52,127 B / gzip 9,664 B. Existing ceilings remain JS 330,000/100,000 B and CSS 55,000/15,000 B; no ceiling increase is authorized.
-- **Current phase:** Block C implementation and required local validation are complete; immutable Artifact A is being frozen. The next steps are an orchestration-only Boundary B and a fresh separate read-only Independent Critic. No Block D–H work or promotion is authorized.
+- **Current phase:** Block C implementation, required local validation and final Pre-Critic are complete. Immutable Artifact A is `3e0ea41a53b471993cc60f1f0421b0237ef54055`. Boundary B is orchestration-only and records this exact Artifact A. A fresh separate read-only Independent Critic must review the exact A+B pair before Controller handoff. Blocks D–H and promotion remain unauthorized.
+
+### Block C — Artifact A frozen; exact-pair Independent Critic required
+
+- Artifact A: `3e0ea41a53b471993cc60f1f0421b0237ef54055` (`feat: deliver Block C Reception workflows`).
+- Boundary B: orchestration-only commit immediately following A; it records the exact A identity. No product/test/runtime/evidence blobs may change in B.
+- Implementation, validation and Pre-Critic are complete; results and invariant evidence are in the Block C contract/evidence files referenced above.
+- Blocks D–H remain NOT AUTHORIZED. Promotion is BLOCKED; no PR, push, merge, main, staging, deploy, production or real-data operation.
+- Resume is disabled and external review is required until a fresh separate read-only Independent Critic reports on the exact A+B pair.
 
 ### Historical Block B handoffs (superseded)
 
