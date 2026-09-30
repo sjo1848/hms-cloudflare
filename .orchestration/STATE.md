@@ -343,3 +343,8 @@ A required Wave12 reassignment run initially timed out waiting for the success s
 - A2 changes only the Queue filter presentation and adds the missing exact viewport assertions, plus evidence. Wave12's first success-status timeout did not reproduce; immutable A1 source already had correct notice ordering and A2 adds no source change for that verification.
 - Boundary B2 is orchestration-only, records exact A2 and requires a fresh separate read-only Critic. `resume_authorized=false`. Do not modify A2 during review.
 - No C–H, real data, PR, push, merge, main, staging, deploy or production.
+
+
+### Independent Critic condition on A2+B2
+
+Fresh separate read-only Critic reviewed exact A2 `c11e3d667cdd2f54834ad07a06c4485755b0cfc0` + B2 `c2c418628effc0af848090fe303eedecc4b0abc9`, verdict `PASS_WITH_CONDITIONS`: the prior MEDIUM WIDE filter finding is closed; one LOW traceability condition asks to clarify that the Wave12 success-status timeout was not a Critic finding and no code defect/source repair was confirmed. Full review is `.orchestration/evidence/HMS-BLOCK-B-RECEPTION-BOOKING-STAY-001-INDEPENDENT-CRITIC-A2-B2.md`. Repair is documentation-only in the Pre-Critic copy; A2 and B2 remain immutable. Boundary B3 requests bounded read-only confirmation of exact A2+B3.
