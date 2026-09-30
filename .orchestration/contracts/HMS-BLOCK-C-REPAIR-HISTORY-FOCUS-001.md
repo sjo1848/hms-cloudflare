@@ -9,6 +9,7 @@ Mode: ordinary technical REWORK within the already authorized Block C contract.
 
 1. `returnToCase()` pushes a duplicate Case/Queue history entry when a focused task is cancelled or completed. Application Back then browser Back can reopen the discarded task.
 2. The shared initial-focus selector attempts to focus task headings, but Reassignment and Checkout headings lack `tabIndex`; focus remains on the body after their trigger disappears.
+3. The targeted browser regression also found that browser Forward restores the Case URL/content but leaves focus on `body`. This is within the same frozen focus/context requirement and is included in this bounded repair.
 
 No `ROADMAP_BLOCKER` or new product policy was found. No API, capability, lifecycle, backend, schema, budget, or domain behavior changes are authorized by this repair.
 
@@ -16,8 +17,8 @@ No `ROADMAP_BLOCKER` or new product policy was found. No API, capability, lifecy
 
 | Requirement | Surface | Acceptance | Evidence |
 |---|---|---|---|
-| Task closes without duplicate history | Reception `openTask`, cancel/complete `returnToCase`, popstate | App-opened task closes by traversing its own history entry; a direct task deep link falls back to replacing task URL with Case/Queue; browser Back/Forward remains coherent; dirty discard guard is preserved | Focused browser automation: open → cancel/discard → browser Back must not reopen task; Forward restores the expected task; direct deep-link cancel remains in Reception; existing Queue/Case context retained |
-| Reassignment and Checkout focus | Reception focused-task heading DOM | Both task headings are programmatically focusable and receive focus after render; focus returns to Case after close | Browser `document.activeElement` assertions on task entry and close; keyboard smoke for both tasks |
+| Task closes without duplicate history | Reception `openTask`, cancel/complete `returnToCase`, popstate | App-opened task closes by traversing its own history entry; a direct task deep link falls back to replacing task URL with Case/Queue; browser Back/Forward restores URL, Case focus and context coherently; dirty discard guard is preserved | Focused browser automation: open → cancel/discard → browser Back must not reopen task; Forward restores the expected Case and Case focus; direct deep-link cancel remains in Reception; existing Queue/Case context retained |
+| Reassignment and Checkout focus | Reception focused-task heading DOM | Both task headings are programmatically focusable and receive focus after Case restoration/render; focus returns to Case after close and history traversal | Browser `document.activeElement` assertions on task entry, close and Back/Forward; keyboard smoke for both tasks |
 | Original Block C semantics remain | Existing transactional workflows | No mutation/API semantics change; keep Task Contract validations and all applicable invariant evidence valid | TypeScript, targeted UI tests, integrated Worker/D1 reassignment and checkout regressions; diff/scope audit |
 
 ## Registry invariant classification for this repair

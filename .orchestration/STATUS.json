@@ -6,25 +6,25 @@
   "phase": "BLOCK_C_BOUNDED_REWORK_HISTORY_FOCUS",
   "resume_authorized": false,
   "runtime_status": "RUNNING",
-  "active_task": "HMS-BLOCK-C-REPAIR-HISTORY-FOCUS-001 — repair Critic findings in task browser history and Reassignment/Checkout initial focus",
+  "active_task": "HMS-BLOCK-C-REPAIR-HISTORY-FOCUS-001 — repair duplicate task history, task entry focus and focus restoration on browser Forward",
   "last_completed_task": "Block C implementation, full local validation, final Pre-Critic gate and immutable Artifact A freeze passed",
   "last_completed_head": "3e0ea41a53b471993cc60f1f0421b0237ef54055",
   "work_branch": "impl/hms-block-c-reception-workflows",
   "pr": null,
   "wave": "BLOCK C — RECEPTION TRANSACTIONAL WORKFLOWS",
   "status_label": "BLOCK_C_REWORK_AUTHORIZED_WITHIN_EXISTING_CONTRACT",
-  "next_action": "IMPLEMENT_BOUNDED_TASK_HISTORY_AND_FOCUS_REPAIR_THEN_RUN_TARGETED_VALIDATION",
+  "next_action": "IMPLEMENT_CASE_FOCUS_RESTORATION_ON_POPSTATE_THEN_RUN_BOUNDED_BROWSER_AND_FULL_VALIDATION",
   "stop_reason": "Independent Critic returned ordinary technical REWORK; bounded Block C repairs are authorized and in progress; no Human Gate or ROADMAP_BLOCKER.",
   "event": {
-    "seq": 252,
-    "id": "BLOCK-C-CRITIC-REWORK-RECEIVED",
-    "type": "BOUNDED_TECHNICAL_REWORK_IN_PROGRESS"
+    "seq": 253,
+    "id": "BLOCK-C-REPAIR-ACCEPTANCE-EXPANDED",
+    "type": "CASE_FOCUS_HISTORY_RESTORATION_ADDED_TO_BOUNDED_REPAIR"
   },
   "external_review": {
     "last_audited_head": "3e0ea41a53b471993cc60f1f0421b0237ef54055",
     "artifact_head": "3e0ea41a53b471993cc60f1f0421b0237ef54055",
     "boundary_head": "This orchestration-only commit (Boundary B), immediately following Artifact A",
-    "last_verdict": "REWORK: two MEDIUM findings on duplicate task-close browser history and initial focus for Reassignment/Checkout; repaired autonomously under HMS-BLOCK-C-REPAIR-HISTORY-FOCUS-001.",
+    "last_verdict": "Independent Critic REWORK: two MEDIUM findings; bounded QA also found Case focus is not restored on browser Forward. All are covered by the same frozen continuity/focus contract; no new domain/product semantics.",
     "review_path": "Local collaboration Independent Critic, exact pair recorded in .orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INDEPENDENT-CRITIC.md",
     "required": false,
     "prior_reviews_pending": [

@@ -14,7 +14,7 @@
 
 - Artifact A: `3e0ea41a53b471993cc60f1f0421b0237ef54055` (`feat: deliver Block C Reception workflows`).
 - Boundary B: `e83154dfd0e549fa494e8c90754afe70acd0f9f4`; orchestration-only; exact A identity recorded.
-- Independent Critic returned `REWORK` with two MEDIUM findings: duplicate browser-history entry on task close and ineffective initial focus on Reassignment/Checkout headings. Exact record: `.orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INDEPENDENT-CRITIC-A-B.md`. No ROADMAP_BLOCKER.
+- Independent Critic returned `REWORK` with two MEDIUM findings: duplicate browser-history entry on task close and ineffective initial focus on Reassignment/Checkout headings. Bounded QA also found browser Forward restores Case content without returning focus to the Case heading; this was added to the same frozen continuity/focus repair contract before this follow-up change. Exact record: `.orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INDEPENDENT-CRITIC-A-B.md`. No ROADMAP_BLOCKER.
 - Bounded repair contract `.orchestration/contracts/HMS-BLOCK-C-REPAIR-HISTORY-FOCUS-001.md` is frozen before changes. Implementation is in progress; a replacement Artifact A + Boundary B and fresh Critic are required.
 - Blocks D–H remain NOT AUTHORIZED. Promotion is BLOCKED; no PR, push, merge, main, staging, deploy, production or real-data operation.
 
