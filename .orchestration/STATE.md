@@ -8,7 +8,7 @@
 - **Target:** `Booking/Stay Case → Focused Task → authoritative result → Case/Queue` with context preservation. Preserve existing backend/API/capability/lifecycle/idempotency contracts; no new domain semantics or schema/backend work unless strictly necessary under an already approved contract.
 - **Extension/no-show/late arrival:** implement only if source-backed API, capability and lifecycle contracts exist; otherwise record `DEFERRED_CAPABILITY_OR_CONTRACT_NOT_PRESENT`.
 - **Budget baseline:** JS raw 306,733 B / gzip 88,540 B; CSS raw 52,127 B / gzip 9,664 B. Existing ceilings remain JS 330,000/100,000 B and CSS 55,000/15,000 B; no ceiling increase is authorized.
-- **Current phase:** bounded repair for the initial Independent Critic REWORK is implemented and locally revalidated; the replacement Artifact A2 is ready to freeze. Initial A1/B1 and its `REWORK` remain historical. The new A2 must contain the task-history/focus repair and updated functional, invariant and Pre-Critic evidence; then create orchestration-only Boundary B2 and obtain a fresh separate read-only Independent Critic on exact A2+B2. Blocks D–H and promotion remain unauthorized.
+- **Current phase:** replacement Artifact A2 `56e8680b11c6770d409b1d68de2e65924e37e808` is frozen with bounded history/focus repair and updated evidence. Boundary B2 is this orchestration-only commit immediately following A2. A fresh separate read-only Independent Critic must review exact A2+B2 before any further Block C implementation. Initial A1/B1 `REWORK` remains historical. Blocks D–H and promotion remain unauthorized.
 
 ### Block C — initial Artifact A review returned bounded REWORK
 
@@ -16,6 +16,7 @@
 - Boundary B: `e83154dfd0e549fa494e8c90754afe70acd0f9f4`; orchestration-only; exact A identity recorded.
 - Independent Critic returned `REWORK` with two MEDIUM findings: duplicate browser-history entry on task close and ineffective initial focus on Reassignment/Checkout headings. Bounded QA also found browser Forward restores Case content without returning focus to the Case heading; this was added to the same frozen continuity/focus repair contract before this follow-up change. Exact record: `.orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INDEPENDENT-CRITIC-A-B.md`. No ROADMAP_BLOCKER.
 - Bounded repair contract `.orchestration/contracts/HMS-BLOCK-C-REPAIR-HISTORY-FOCUS-001.md` was frozen before changes. Repair is validated. A replacement Artifact A2 + Boundary B2 and fresh Critic are required. Checkout's bounded rerun reached HTTP 200 and authoritative refresh but its later synthetic local Wrangler reads disconnected; this rerun is explicitly incomplete, while the complete initial Worker/D1 checkout evidence remains and checkout mutation code did not change.
+- Replacement Artifact A2: `56e8680b11c6770d409b1d68de2e65924e37e808`. Boundary B2 is the immediately following orchestration-only commit and records exact A2. Fresh exact-pair Independent Critic is required; substantive continuation is held pending that review. Its eventual verdict must not overwrite the historical A1+B1 `REWORK`.
 - Blocks D–H remain NOT AUTHORIZED. Promotion is BLOCKED; no PR, push, merge, main, staging, deploy, production or real-data operation.
 
 ### Historical Block B handoffs (superseded)
