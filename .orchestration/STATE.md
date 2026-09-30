@@ -1,26 +1,19 @@
 # HMS Cloudflare — Orchestration State
 
-## ACTIVE TASK — BLOCK B RECEPTION + BOOKING/STAY CASE
+## CANONICAL HANDOFF — BLOCK_B_METADATA_RECONCILED_AWAITING_CONTROLLER_CONFIRMATION
 
-B0 is closed on the exact clean checkpoint `5a42c5e1a62191843335f3fd217fead62b3ef0b2`, with Artifact A `fa43cfb242cf6f94f29ad785b336ea55d74adf17`. The accepted runtime evidence identifies Reception critical-path coupling: Queue-ready ~2,928 ms, `/front-desk/board` ~1,085 ms, and concurrent `/rooms`, `/guests`, `/reservation-creation-operations` ~2,866 ms. Raw JS/CSS guardrails are 330,000/55,000 B; gzip ceilings remain 100,000/15,000 B; checker remains active. No further B0 work is needed.
+- **Block B status:** COMPLETE; awaiting Controller confirmation of metadata-only repair CTRL-B-01.
+- **Artifact A2:** `c11e3d667cdd2f54834ad07a06c4485755b0cfc0` (immutable product/evidence artifact).
+- **Boundary B3:** `35c4d71704632aa13a008bac20f90e337971a1ba` (orchestration/evidence boundary).
+- **Historical Block B closure B4:** `d3472df3ed3442dd689be5aa15826a0c27d78821`; this is the reviewed closure checkpoint and parent of metadata-only B5.
+- **Critic disposition:** exact A2+B2 retains historical `PASS_WITH_CONDITIONS`; its sole LOW traceability condition was discharged by the separate exact A2+B3 follow-up `PASS`. Neither verdict is rewritten.
+- **Authorization:** Block B was authorized and completed. Blocks C–H are NOT AUTHORIZED. Promotion is BLOCKED. `resume_authorized=false`; `external_review.required=true` pending Controller confirmation.
+- **Scope of CTRL-B-01/B5:** only `.orchestration/STATE.md` and `.orchestration/STATUS.json`; no product, tests, styles, budgets, or functional evidence changes. No tests rerun.
+- **Branch:** `impl/hms-block-b-reception`, based on B0 clean checkpoint `5a42c5e1a62191843335f3fd217fead62b3ef0b2`; recovery snapshot `e9112f7e2289fda91dc1762a9d6c659c0de62a74` remains a non-promotable local recovery source.
 
-Block B continues in clean worktree `/home/sjo1848/dev/hms-elite-cloudflare/hms-block-b-reception`, branch `impl/hms-block-b-reception`, based exactly on the B0 boundary above. Frozen Task Contract `.orchestration/contracts/HMS-BLOCK-B-RECEPTION-BOOKING-STAY-001.md` has SHA-256 recorded in `.orchestration/evidence/HMS-BLOCK-B-RECOVERY-ADDENDUM-001.md`; the contract is byte-for-byte preserved from the pre-implementation recovery snapshot. The addendum records the original freeze-time base label and the recovered execution branch/base; it does not alter acceptance or scope. Contract reviews and admission Pre-Critic are also restored.
+### Historical Block B handoffs (superseded)
 
-Implementation/test/evidence changes were selectively restored from recovery snapshot `e9112f7e2289fda91dc1762a9d6c659c0de62a74`; see the recovery addendum for inclusions/exclusions. The mixed snapshot remains intact on local-only branch `recovery/hms-b0-block-b-mixed-state`; it is not promotable. Block B product changes and required integrated evidence have passed local validation. Artifact A is frozen at `c373511a5fef56d0f1d3a42bc262f14b84c3cbf0`. It contains the product, tests, integrated/browser evidence, Task Contract, invariant evidence and passing internal Pre-Critic. Boundary B is the current orchestration-only handoff and records this exact A SHA. A fresh separate read-only Independent Critic is being dispatched; no verdict is self-declared. Further continuation is blocked on that review. Do not begin C–H. No PR, merge, main, staging, deploy, production or real-data action.
-
-### Block B — frozen Artifact A / Independent Critic handoff
-
-- Artifact A: `c373511a5fef56d0f1d3a42bc262f14b84c3cbf0`; base/checkpoint: B0 clean closure `5a42c5e1a62191843335f3fd217fead62b3ef0b2`.
-- Task Contract `HMS-BLOCK-B-RECEPTION-BOOKING-STAY-001` is frozen; internal Pre-Critic and all current registry invariant evidence are in Artifact A. Product/integration/runtime/bundle evidence is frozen with it.
-- Boundary B is orchestration-only, records exact A and sets `external_review.required=true`, `resume_authorized=false`. A fresh separate read-only Independent Critic is the next required action. Do not alter Artifact A during review; any substantive finding requires a new bounded repair artifact.
-- No PR, merge, push, main, staging, deploy, production, real data or Blocks C–H.
-
-**Prior completed checkpoint (history):**### Block B — frozen Artifact A / Independent Critic handoff
-
-- Artifact A: `c373511a5fef56d0f1d3a42bc262f14b84c3cbf0`; base/checkpoint: B0 clean closure `5a42c5e1a62191843335f3fd217fead62b3ef0b2`.
-- Task Contract `HMS-BLOCK-B-RECEPTION-BOOKING-STAY-001` is frozen; internal Pre-Critic and all current registry invariant evidence are in Artifact A. Product/integration/runtime/bundle evidence is frozen with it.
-- Boundary B is orchestration-only, records exact A and sets `external_review.required=true`, `resume_authorized=false`. A fresh separate read-only Independent Critic is the next required action. Do not alter Artifact A during review; any substantive finding requires a new bounded repair artifact.
-- No PR, merge, push, main, staging, deploy, production, real data or Blocks C–H.
+Artifact A1 `c373511a5fef56d0f1d3a42bc262f14b84c3cbf0` + B1 `903436fcb69e3e412db7a41aeaacde3a8cfa1504` received Independent Critic `REWORK` for the WIDE 1280×600 Queue filter collision. That handoff and its pending-review language are historical only; A1 was replaced by A2, and the finding was repaired. A2+B2 later received `PASS_WITH_CONDITIONS`; the LOW documentation condition was discharged by A2+B3 follow-up `PASS`. B4 is the historical Block B closure; B5 reconciles handoff metadata only. See the exact review records below.
 
 **Prior completed checkpoint (history):** Block A Artifact A `f49ea5592dfb7e5e20e6c11ca4af5a7f8832f867` + Boundary B4 `059044abf4478d624d52a7a412aabf306a1ccfce` received Independent Critic PASS. Historical F0 progress below remains historical and does not change current B0 dispatch state. Pending older P0.1/Wave 1.2 reviews remain separate promotion/integration records.
 
