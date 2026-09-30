@@ -1,31 +1,31 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-b0-bundle-headroom",
+  "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-b0-clean-close",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "BUNDLE_BUDGET_POLICY_GATE_REQUIRED",
+  "phase": "B0_CLOSED_BLOCK_B_BRANCH_REQUIRED",
   "resume_authorized": false,
-  "runtime_status": "WAITING_HUMAN_GATE",
-  "active_task": "HMS-B0-BUDGET-POLICY-REVIEW-001 — controller classification of integrated initial-load evidence",
-  "last_completed_task": "B0 budget policy review evidence; condition 5 unresolved; no checker/budget/product changes",
-  "last_completed_head": "5fa6289dfee2c165d6daa2d2ec360f73c0bc868f",
-  "work_branch": "impl/hms-b0-bundle-headroom",
+  "runtime_status": "COMPLETE",
+  "active_task": "B0 closure complete; create clean Block B worktree and selectively recover its frozen contract/evidence",
+  "last_completed_task": "HMS-B0-CLOSE-RAW-GROWTH-GUARDRAILS-001; runtime coupling accepted; raw guardrails updated; checker retained",
+  "last_completed_head": null,
+  "work_branch": "recovery/hms-b0-clean-close",
   "pr": null,
-  "wave": "B0 — WEB BUNDLE HEADROOM (PRECONDITION ONLY; BLOCK B NOT STARTED)",
-  "status_label": "BUNDLE_BUDGET_POLICY_GATE_REQUIRED",
-  "next_action": "CONTROLLER_CLASSIFY_LOCAL_INTEGRATED_INITIAL_LOAD_EVIDENCE_BEFORE_ANY_RAW_CEILING_CHANGE_OR_BLOCK_B_START",
-  "stop_reason": "Condition 5 is not established: local Worker/D1 browser measured Reception queue readiness at 3605ms with concurrent ~2.4s API reads; no field CWV evidence. Provisional raw ceilings were not applied; Block B has not started.",
+  "wave": "B0 CLOSED — BLOCK B NOT STARTED IN THIS CHECKPOINT",
+  "status_label": "B0_CLOSED_BLOCK_B_BRANCH_REQUIRED",
+  "next_action": "RECORD_B0_CLOSURE_ARTIFACT_AND_ORCHESTRATION_BOUNDARY_THEN_CREATE_IMPL_HMS_BLOCK_B_RECEPTION_WORKTREE",
+  "stop_reason": "B0 closure validated. The next B0 checkpoint commit will be recorded by an orchestration-only boundary before creating the dedicated Block B worktree.",
   "event": {
-    "seq": 235,
-    "id": "B0-BUDGET-POLICY-BOUNDARY-RECORDED",
-    "type": "ORCHESTRATION_BOUNDARY_RECORDS_EXACT_ARTIFACT_A"
+    "seq": 236,
+    "id": "B0-RUNTIME-AND-POLICY-CLOSED",
+    "type": "B0_CLOSED_BLOCK_B_NOT_STARTED"
   },
   "external_review": {
     "last_audited_head": null,
-    "artifact_head": "5fa6289dfee2c165d6daa2d2ec360f73c0bc868f",
-    "last_verdict": "No Independent Critic verdict claimed. Controller review required for unresolved condition 5; raw budgets unchanged; Block B not started.",
-    "review_path": ".orchestration/evidence/HMS-B0-BUDGET-POLICY-REVIEW-001-RESULT.md",
-    "required": true,
+    "artifact_head": "0a2b809097d73fd59865e75bb562eb3b6da4fea7",
+    "last_verdict": "Controller accepted B0 runtime diagnosis and authorized exact raw growth guardrail update; no Independent Critic PASS claimed for Block B.",
+    "review_path": ".orchestration/evidence/HMS-B0-CLOSE-RAW-GROWTH-GUARDRAILS-001.md",
+    "required": false,
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
@@ -34,8 +34,8 @@
   "block_a_development_gate": "PASS; exact Artifact A+B4 received Independent Critic PASS; awaiting Controller review",
   "promotion_gate": "BLOCKED; no PR, merge, main, staging, deploy or production action authorized",
   "human_gate": {
-    "required": true,
-    "decision": "Controller classification required: local integrated initial-load condition 5 remains unproven with concerning queue-ready evidence; do not alter budgets or begin Block B until resolved",
+    "required": false,
+    "decision": "B0 runtime classification and raw growth policy explicitly accepted; no unresolved Human Gate for this closure",
     "implementation_authorized": true
   },
   "f0_8_artifact_a": "abd9afdd7537ecef29ad4ae099d769c38b137f6d",
@@ -186,7 +186,7 @@
     "f0_4_read_only_review": "PASS: Contract Reviewer + DB/Concurrency Reviewer, GPT-6 Luna Medium, read-only; source-claim races/event-correlated room versions/two race modes incorporated; not Independent Critic",
     "f0_4_implementation": "Critic REWORK repaired; exact claim-date-set validation plus same-count substitution and visible-state ABA adversarial cases; clean Wrangler migration chain 0001-0024; 9/9 reassignment executing-D1; npm run check 30 files/125 tests; types/build/architecture/budgets/query plans/Wrangler dry-runs/CF-I03-CF-I04 PASS; real Worker+D1 desktop/mobile exit 0 with interval preview, success, RBAC 403, cross-tenant 404, and stale 409 recovery; replacement exact A/B plus fresh Independent Critic pending",
     "f0_4_migration_finding": "F0.4-MIG-01: scalar CASE expressions inside Wrangler-local D1 trigger predicates parsed as incomplete input; equivalent boolean predicates + independently fail-closed triggers applied cleanly, no semantic contract change",
-    "f0_4_integrated_browser": "PASS exit 0: scripts/cf-wave12-reassignment-integrated.sh applied clean local Wrangler migrations 0001-0024 on isolated persistence, then Worker+D1+Vite browser at desktop 1280x900/mobile 375x812; candidate/search/preview/mutation share remaining interval; authoritative refresh; expected 409 retained visibly",
+    "f0_4_integrated_browser": "PASS exit 0: scripts/cf-wave12-reassignment-integrated.sh; real local Worker/D1/Vite/Playwright; availability, preview/quote and mutation share remaining-stay interval; desktop success refresh + mobile stale 409 recovery",
     "f0_4_security": "PASS: housekeeping membership reassign denied 403 with zero D1 drift; foreign booking stored only in HOTEL_SECOND_DB returns 404 under hotel A with second-D1 booking/claims/events unchanged",
     "f0_4_regression_runner_safety": "PASS: CF-I03 and D1 query-plan scripts use disposable Wrangler persistence; repository .wrangler/state is not targeted",
     "f0_4_artifact_state": "A=69bd08b8fd194a9565b426b66f03ff638993304f; B=a5326be2695b7a4cff0ad24cff784d5fc4c516cc; DALTON REWORK REPAIRED; CURIE PASS_WITH_CONDITIONS; MAXWELL SEPARATE INTEGRATED QA EXIT 0; CURIE FOLLOW-UP PASS; CONDITION RESOLVED",
@@ -209,7 +209,7 @@
     "f0_5_development_gate": "PASS; F0.5 only; Foundation 0 remains open",
     "f0_6_task_contract": "FROZEN BEFORE IMPLEMENTATION: .orchestration/contracts/HMS-F0-06-SYNTHETIC-ACTIVE-STAY-PRICING-BOOTSTRAP-001.md; all 24 registry invariants classified; synthetic/local only",
     "f0_6_db_data_inventory": "Peirce, read-only GPT-6 Luna Medium: no existing F0.6 classifier/replay checkpoint; pricing segments are operational quote input; shadow state must be separate; no migration/data access run",
-    "f0_6_real_data": "PROHIBITED: source-history/currency completeness unknown; no real active-stay inventory or bootstrap performed",
+    "f0_6_real_data": "NONE: no real active-stay reads/writes, no production/customer D1, no cutover/bootstrap",
     "f0_6_classifier_executing_d1": "PASS 11/11: five classes, deterministic manifest, shadow quote isolation, exact D11 preservation, duplicate room and canonical pricing segment identity quarantine, existing canonical segment hold, isolated late segment-set stale guard, concurrent activation, two-hotel D1 isolation, injected stage rollback/recovery, stale ledger/digest, inventory ABA, activation rollback",
     "f0_6_finding_r1": "REPAIRED: duplicate room IDs now classify ORPHAN_OR_CONFLICT; activation trigger compares persisted rooms/inventory/charges/payments cardinality against source JSON arrays",
     "f0_6_critic_rework_01": "REPAIR REQUIRED: F0.6-IC-01 HIGH — exact canonical booking_pricing_segments set absent from snapshot and activation guard; repair contract HMS-F0-06-REPAIR-CANONICAL-PRICING-SNAPSHOT-001.md",
@@ -228,9 +228,7 @@
     "cf_i04_regression": "PASS: sequential (composes CF-I03), isolated temporary Wrangler state",
     "cf_i05_regression": "PASS: sequential, isolated temporary Wrangler state",
     "cf_i06_regression": "PASS",
-    "f0_4_integrated_browser": "PASS exit 0: scripts/cf-wave12-reassignment-integrated.sh; real local Worker/D1/Vite/Playwright; availability, preview/quote and mutation share remaining-stay interval; desktop success refresh + mobile stale 409 recovery",
     "f0_6_precritic": "PASS: all 24 registry invariants mapped; includes F0.6-IC-01 repair and migration 0027; exact claims in .orchestration/evidence/HMS-F0-06-SYNTHETIC-ACTIVE-STAY-PRICING-BOOTSTRAP-001-PRECRITIC.md, -INVARIANTS.md and HMS-F0-06-REPAIR-CANONICAL-PRICING-SNAPSHOT-001.md; not Independent Critic verdict",
-    "f0_6_real_data": "NONE: no real active-stay reads/writes, no production/customer D1, no cutover/bootstrap",
     "f0_6_repair_validation": "PASS: npm run check 32/144; F0.6 11/11; F0.3 2/2; clean Wrangler 0001-0027 on 3 local D1 bindings; types/build/budgets/architecture/query plans/Wrangler and staging SPA dry-runs; CF-I03-I06 sequential; integrated Worker/D1/Vite/browser exit 0; exact evidence in repair record",
     "f0_6_artifact_a2": "1b83cc1a6832e8fb4f95dfdfa7b134021075775d",
     "f0_6_artifact_boundary": "A2+B3 received fresh Independent Critic PASS_WITH_CONDITIONS; B4 dispositions were confirmed satisfied; B5 corrects a stale STATE sentence; bounded final consistency confirmation on exact A2+B5 requested before F0.7",
@@ -338,5 +336,13 @@
     "technical_rework_autonomous": true,
     "independent_critic_before_merge": true,
     "model_policy": "Luna LOW orchestrator; Luna MEDIUM engineering, UX review and QA; Sol MEDIUM only after demonstrated insufficient Luna MEDIUM"
+  },
+  "runtime_load_investigation": {
+    "evidence": ".orchestration/evidence/HMS-B0-RUNTIME-LOAD-INVESTIGATION-001.md",
+    "browser": "Chrome DevTools MCP navigate_page + performance_start_trace; 1440x900 local production Vite + Wrangler synthetic D1",
+    "assets": "JS 299976 decoded / 86915 encoded; CSS 48615 decoded / 9193 encoded; bundle not identified as material cause; separate V8 parse/evaluation CPU total unavailable",
+    "timing": "FCP 260ms; trace LCP 758ms; queue-ready 2928ms; /front-desk/board about 1085ms; /rooms, /guests, /reservation-creation-operations each about 2866ms concurrently",
+    "classification": "ACCEPTED_MATERIAL_RECEPTION_CRITICAL_PATH_COUPLING_LOCAL_SYNTHETIC_RUNTIME; production CWV unknown",
+    "policy": "B0 closed; JS raw ceiling 330000, CSS raw ceiling 55000; JS gzip 100000 and CSS gzip 15000 unchanged; raw ceilings are development growth guardrails; Block B implementation starts only in its own clean branch"
   }
 }
