@@ -1,6 +1,6 @@
 # HMS Cloudflare — Orchestration State
 
-## ACTIVE TASK — BLOCK C RECEPTION TRANSACTIONAL WORKFLOWS
+## COMPLETED HANDOFF — BLOCK C RECEPTION TRANSACTIONAL WORKFLOWS
 
 - **Authorization:** Human explicitly authorized only Block C from B5 `fc2daa783b8ef361e39e6945dbdfe2bfe6345b98`. Blocks D–H remain NOT AUTHORIZED. No PR, merge, main, staging, deploy, production or real data.
 - **Branch/worktree:** `impl/hms-block-c-reception-workflows`, `/home/sjo1848/dev/hms-elite-cloudflare/hms-block-c-reception-workflows`; exact base is published/accepted B5 `fc2daa783b8ef361e39e6945dbdfe2bfe6345b98`. The Block B worktree is separate and untouched.
@@ -8,14 +8,14 @@
 - **Target:** `Booking/Stay Case → Focused Task → authoritative result → Case/Queue` with context preservation. Preserve existing backend/API/capability/lifecycle/idempotency contracts; no new domain semantics or schema/backend work unless strictly necessary under an already approved contract.
 - **Extension/no-show/late arrival:** implement only if source-backed API, capability and lifecycle contracts exist; otherwise record `DEFERRED_CAPABILITY_OR_CONTRACT_NOT_PRESENT`.
 - **Budget baseline:** JS raw 306,733 B / gzip 88,540 B; CSS raw 52,127 B / gzip 9,664 B. Existing ceilings remain JS 330,000/100,000 B and CSS 55,000/15,000 B; no ceiling increase is authorized.
-- **Current phase:** `BLOCK_C_COMPLETE_AWAITING_CONTROLLER_REVIEW`. Artifact A2 `56e8680b11c6770d409b1d68de2e65924e37e808` and orchestration-only Boundary B2 `091bc86eb31290dc6d18dd7496b7bfe2e96e2d9b` received a fresh separate read-only Independent Critic `PASS`. The closure checkpoint is this orchestration-only commit recording that exact result. No further Block C work is pending. Blocks D–H and promotion remain unauthorized.
+- **Current phase:** Block C is **COMPLETE**, awaiting Controller confirmation. Artifact A2 `56e8680b11c6770d409b1d68de2e65924e37e808` and orchestration-only Boundary B2 `091bc86eb31290dc6d18dd7496b7bfe2e96e2d9b` received a fresh separate read-only Independent Critic `PASS`. Historical closure checkpoint: `215e7889f112373ae9b1904b8b557ffb888a1e14`; this metadata reconciliation follows that closure. `block_c_authorized=true`, `block_c_completed=true`, `development_continuation=false`, and `resume_authorized=false`. Blocks D–H remain unauthorized; promotion is blocked.
 
 ### Block C — initial Artifact A review returned bounded REWORK
 
 - Artifact A: `3e0ea41a53b471993cc60f1f0421b0237ef54055` (`feat: deliver Block C Reception workflows`).
 - Boundary B: `e83154dfd0e549fa494e8c90754afe70acd0f9f4`; orchestration-only; exact A identity recorded.
 - Independent Critic returned `REWORK` with two MEDIUM findings: duplicate browser-history entry on task close and ineffective initial focus on Reassignment/Checkout headings. Bounded QA also found browser Forward restores Case content without returning focus to the Case heading; this was added to the same frozen continuity/focus repair contract before this follow-up change. Exact record: `.orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INDEPENDENT-CRITIC-A-B.md`. No ROADMAP_BLOCKER.
-- Bounded repair contract `.orchestration/contracts/HMS-BLOCK-C-REPAIR-HISTORY-FOCUS-001.md` was frozen before changes. Repair is validated. A replacement Artifact A2 + Boundary B2 and fresh Critic are required. Checkout's bounded rerun reached HTTP 200 and authoritative refresh but its later synthetic local Wrangler reads disconnected; this rerun is explicitly incomplete, while the complete initial Worker/D1 checkout evidence remains and checkout mutation code did not change.
+- Bounded repair contract `.orchestration/contracts/HMS-BLOCK-C-REPAIR-HISTORY-FOCUS-001.md` was frozen before changes. Repair is validated in replacement Artifact A2. Checkout's bounded rerun reached HTTP 200 and authoritative refresh but its later synthetic local Wrangler reads disconnected; this rerun is explicitly incomplete, while the complete initial Worker/D1 checkout evidence remains and checkout mutation code did not change.
 - Replacement Artifact A2 `56e8680b11c6770d409b1d68de2e65924e37e808` + Boundary B2 `091bc86eb31290dc6d18dd7496b7bfe2e96e2d9b` received Independent Critic `PASS`. Exact read-only verdict and closure of the two prior findings: `.orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INDEPENDENT-CRITIC-A2-B2.md`. The initial A1+B1 `REWORK` remains historical and is not overwritten. Block C is complete and awaits Controller review; this closeout is orchestration/evidence-only.
 - Blocks D–H remain NOT AUTHORIZED. Promotion is BLOCKED; no PR, push, merge, main, staging, deploy, production or real-data operation.
 
@@ -360,12 +360,12 @@ The fresh separate read-only Independent Critic returned `PASS` for the bounded 
 
 Block B is complete and awaits external Controller Review. This is not Human Product Acceptance. `resume_authorized=false`, `external_review.required=true`; no C–H work is started or authorized. No PR, push, merge, main, staging, deploy, production or real-data action occurred.
 
-### Block C implementation validated — Artifact A freeze and Independent Critic boundary
+### Block C completion record — Artifact A2 and Boundary B2
 
 - Block C implementation is complete under frozen Task Contract `.orchestration/contracts/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001.md`; frozen inventories, evidence matrix, invariant map and admission Pre-Critic are retained. Final implementation evidence and limitations: `.orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-RESULTS.md`.
 - New Reservation, Edit Reservation, Check-in, Reassignment and Checkout are validated as focused Case tasks against current contracts. Extension, No-show and Late Arrival are `DEFERRED_CAPABILITY_OR_CONTRACT_NOT_PRESENT`; no new backend/domain/API contract was introduced.
 - Full validation: Vitest 35 files / 175 tests; TypeScript/API/Web generated types; production build; architecture/i18n/budgets; D1 query plans; Worker/Web Wrangler dry-runs; integrated local synthetic Worker/D1/browser flows, responsive states, keyboard/focus, navigation, stale/partial reads, conflicts and context restoration. All PASS. Exact receipts/screenshots are listed in the results report.
 - Critical-path regression proves Queue visible at 2,601 ms and screenshot at 2,728 ms while `/rooms`, `/guests` and `/reservation-creation-operations` remain pending through 5,293/6,297/6,397 ms. This verifies causal independence; localhost timing is not a performance target. No after FCP/LCP measurement is claimed.
-- Bundle baseline/result/delta is in the results report; all current ceilings pass and remain unchanged. CSS raw is 54,937/55,000 B (63 B headroom); JS raw 320,330/330,000 B. Raw ceilings remain development growth guardrails.
-- The next boundary is a substantive immutable Artifact A, followed only by evidence/orchestration changes in Boundary B. A fresh, separate, read-only Independent Critic must audit exact A+B before Controller review. No self-approved substantive PASS is recorded here.
+- Bundle baseline/result/delta is in the results report; all current ceilings pass and remain unchanged. A2 JS raw/gzip is 321,619/91,486 B and CSS raw/gzip is 54,937/10,119 B. Raw ceilings remain development growth guardrails.
+- Fresh separate read-only Independent Critic returned PASS on exact A2 `56e8680b11c6770d409b1d68de2e65924e37e808` + B2 `091bc86eb31290dc6d18dd7496b7bfe2e96e2d9b`. Initial A1+B1 REWORK remains historical; the exact verdict is recorded in `.orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INDEPENDENT-CRITIC-A2-B2.md`. Block C is complete and awaits Controller review.
 - Blocks D–H remain NOT AUTHORIZED; promotion remains blocked; `resume_authorized=false`. No PR, push, merge, main, staging, deploy, production or real-data action occurred.
