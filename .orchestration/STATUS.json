@@ -3,29 +3,29 @@
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-c-reception-workflows",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "BLOCK_C_ARTIFACT_A2_AWAITING_INDEPENDENT_CRITIC",
+  "phase": "BLOCK_C_COMPLETE_AWAITING_CONTROLLER_REVIEW",
   "resume_authorized": false,
-  "runtime_status": "READY_TO_RESUME",
-  "active_task": "Fresh separate read-only Independent Critic review of exact Block C Artifact A2 + Boundary B2",
-  "last_completed_task": "Bounded Block C history/focus REWORK repaired; full local validation and Pre-Critic passed; replacement Artifact A2 frozen",
+  "runtime_status": "COMPLETE",
+  "active_task": "Block C complete; awaiting Controller review",
+  "last_completed_task": "Block C transactional workflows, required local validation, Pre-Critic, Artifact A2, Boundary B2 and fresh exact-pair Independent Critic PASS",
   "last_completed_head": "56e8680b11c6770d409b1d68de2e65924e37e808",
   "work_branch": "impl/hms-block-c-reception-workflows",
   "pr": null,
   "wave": "BLOCK C — RECEPTION TRANSACTIONAL WORKFLOWS",
   "status_label": "BLOCK_C_REWORK_AUTHORIZED_WITHIN_EXISTING_CONTRACT",
-  "next_action": "RUN_FRESH_SEPARATE_READ_ONLY_INDEPENDENT_CRITIC_ON_EXACT_A2_56e8680b11c6770d409b1d68de2e65924e37e808_AND_THIS_ORCHESTRATION_ONLY_BOUNDARY_B2",
-  "stop_reason": "Substantive Artifact A2 is immutable and awaits required external Independent Critic; no further implementation until exact-pair review. Blocks D–H remain unauthorized.",
+  "next_action": "AWAIT_CONTROLLER_REVIEW; NO_BLOCK_D_H_AUTHORIZATION_OR_FURTHER_EXECUTION",
+  "stop_reason": "BLOCK_C_COMPLETE_AWAITING_CONTROLLER_REVIEW; Blocks D–H are not authorized and promotion is blocked.",
   "event": {
-    "seq": 255,
-    "id": "BLOCK-C-ARTIFACT-A2-FROZEN",
-    "type": "AWAITING_FRESH_EXACT_PAIR_INDEPENDENT_CRITIC"
+    "seq": 256,
+    "id": "BLOCK-C-COMPLETE",
+    "type": "EXACT_A2_B2_INDEPENDENT_CRITIC_PASS_AWAITING_CONTROLLER_REVIEW"
   },
   "external_review": {
     "last_audited_head": "56e8680b11c6770d409b1d68de2e65924e37e808",
     "artifact_head": "56e8680b11c6770d409b1d68de2e65924e37e808",
-    "boundary_head": "This orchestration-only commit (Boundary B2), immediately following Artifact A2",
-    "last_verdict": "Initial Artifact A+B: REWORK, historical; bounded findings repaired in replacement A2. Fresh exact A2+B2 review pending.",
-    "review_path": "Local collaboration; fresh separate read-only Independent Critic to record exact pair and verdict in Block C evidence.",
+    "boundary_head": "091bc86eb31290dc6d18dd7496b7bfe2e96e2d9b",
+    "last_verdict": "Independent Critic PASS on exact Artifact A2 + Boundary B2; prior A1+B1 REWORK remains historical. Controller review is now the pending project boundary.",
+    "review_path": ".orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INDEPENDENT-CRITIC-A2-B2.md",
     "required": true,
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
@@ -359,6 +359,7 @@
   "block_c_runtime": "PASS causal separation: board starts 801ms, ends 2289ms; Queue visible 2601ms; screenshot 2728ms with rooms/guests/creation-operations still pending through 5293/6297/6397ms; no absolute localhost target",
   "block_c_deferred": "Extension, No-show, Late Arrival: DEFERRED_CAPABILITY_OR_CONTRACT_NOT_PRESENT",
   "block_c_artifact_a": "56e8680b11c6770d409b1d68de2e65924e37e808",
-  "block_c_independent_critic": "Initial A1 3e0ea41a53b471993cc60f1f0421b0237ef54055 + B1 e83154dfd0e549fa494e8c90754afe70acd0f9f4: REWORK (historical). Fresh review of exact A2 56e8680b11c6770d409b1d68de2e65924e37e808 + immediately following orchestration-only Boundary B2 pending.",
-  "block_c_promotion_gate": "BLOCKED; Blocks D–H NOT AUTHORIZED; no PR, push, merge, main, staging, deploy, production or real-data action"
+  "block_c_independent_critic": "PASS: fresh separate read-only Independent Critic reviewed exact A2 56e8680b11c6770d409b1d68de2e65924e37e808 + B2 091bc86eb31290dc6d18dd7496b7bfe2e96e2d9b. Two historical A1+B1 findings closed; Checkout rerun disconnect disclosed and judged non-blocking. Full verdict: .orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INDEPENDENT-CRITIC-A2-B2.md",
+  "block_c_promotion_gate": "BLOCKED; Blocks D–H NOT AUTHORIZED; no PR, push, merge, main, staging, deploy, production or real-data action",
+  "block_c_closure": "This orchestration/evidence-only closeout commit immediately following Boundary B2; records BLOCK_C_COMPLETE_AWAITING_CONTROLLER_REVIEW."
 }
