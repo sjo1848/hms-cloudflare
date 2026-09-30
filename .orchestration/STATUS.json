@@ -3,30 +3,30 @@
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-c-reception-workflows",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "BLOCK_C_ARTIFACT_A_FROZEN_AWAITING_INDEPENDENT_CRITIC",
+  "phase": "BLOCK_C_BOUNDED_REWORK_HISTORY_FOCUS",
   "resume_authorized": false,
-  "runtime_status": "COMPLETE",
-  "active_task": "HMS-BLOCK-C-RECEPTION-WORKFLOWS-001 — exact Artifact A + Boundary B frozen; awaiting fresh separate read-only Independent Critic",
+  "runtime_status": "RUNNING",
+  "active_task": "HMS-BLOCK-C-REPAIR-HISTORY-FOCUS-001 — repair Critic findings in task browser history and Reassignment/Checkout initial focus",
   "last_completed_task": "Block C implementation, full local validation, final Pre-Critic gate and immutable Artifact A freeze passed",
   "last_completed_head": "3e0ea41a53b471993cc60f1f0421b0237ef54055",
   "work_branch": "impl/hms-block-c-reception-workflows",
   "pr": null,
   "wave": "BLOCK C — RECEPTION TRANSACTIONAL WORKFLOWS",
-  "status_label": "BLOCK_C_ARTIFACT_A_BOUNDARY_B_FROZEN_AWAITING_INDEPENDENT_CRITIC",
-  "next_action": "RUN_FRESH_SEPARATE_READ_ONLY_INDEPENDENT_CRITIC_ON_EXACT_ARTIFACT_A_3e0ea41a53b471993cc60f1f0421b0237ef54055_AND_BOUNDARY_B",
-  "stop_reason": "Substantive Block C artifact is frozen and awaits exact-pair Independent Critic review before Controller handoff.",
+  "status_label": "BLOCK_C_REWORK_AUTHORIZED_WITHIN_EXISTING_CONTRACT",
+  "next_action": "IMPLEMENT_BOUNDED_TASK_HISTORY_AND_FOCUS_REPAIR_THEN_RUN_TARGETED_VALIDATION",
+  "stop_reason": "Independent Critic returned ordinary technical REWORK; bounded Block C repairs are authorized and in progress; no Human Gate or ROADMAP_BLOCKER.",
   "event": {
-    "seq": 251,
-    "id": "BLOCK-C-ARTIFACT-A-BOUNDARY-B-FROZEN",
-    "type": "EXACT_PAIR_INDEPENDENT_CRITIC_REQUIRED"
+    "seq": 252,
+    "id": "BLOCK-C-CRITIC-REWORK-RECEIVED",
+    "type": "BOUNDED_TECHNICAL_REWORK_IN_PROGRESS"
   },
   "external_review": {
     "last_audited_head": "3e0ea41a53b471993cc60f1f0421b0237ef54055",
     "artifact_head": "3e0ea41a53b471993cc60f1f0421b0237ef54055",
     "boundary_head": "This orchestration-only commit (Boundary B), immediately following Artifact A",
-    "last_verdict": "Fresh separate read-only Independent Critic required for exact Block C Artifact A + Boundary B; no self-approval.",
+    "last_verdict": "REWORK: two MEDIUM findings on duplicate task-close browser history and initial focus for Reassignment/Checkout; repaired autonomously under HMS-BLOCK-C-REPAIR-HISTORY-FOCUS-001.",
     "review_path": "Local collaboration Independent Critic, exact pair recorded in .orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INDEPENDENT-CRITIC.md",
-    "required": true,
+    "required": false,
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
@@ -359,6 +359,6 @@
   "block_c_runtime": "PASS causal separation: board starts 801ms, ends 2289ms; Queue visible 2601ms; screenshot 2728ms with rooms/guests/creation-operations still pending through 5293/6297/6397ms; no absolute localhost target",
   "block_c_deferred": "Extension, No-show, Late Arrival: DEFERRED_CAPABILITY_OR_CONTRACT_NOT_PRESENT",
   "block_c_artifact_a": "3e0ea41a53b471993cc60f1f0421b0237ef54055",
-  "block_c_independent_critic": "REQUIRED: fresh separate read-only review of exact Artifact A 3e0ea41a53b471993cc60f1f0421b0237ef54055 + Boundary B; not yet run",
+  "block_c_independent_critic": "REWORK: exact initial A 3e0ea41a53b471993cc60f1f0421b0237ef54055 + B e83154dfd0e549fa494e8c90754afe70acd0f9f4; two MEDIUM findings; see .orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INDEPENDENT-CRITIC-A-B.md",
   "block_c_promotion_gate": "BLOCKED; Blocks D–H NOT AUTHORIZED; no PR, push, merge, main, staging, deploy, production or real-data action"
 }
