@@ -1,14 +1,13 @@
 # HMS Cloudflare — Orchestration State
 
-## COMPLETED HANDOFF — BLOCK C RECEPTION TRANSACTIONAL WORKFLOWS
+## ACTIVE TASK — BLOCK D ROOMS OPERATIONAL WORKSPACE
 
-- **Authorization:** Human explicitly authorized only Block C from B5 `fc2daa783b8ef361e39e6945dbdfe2bfe6345b98`. Blocks D–H remain NOT AUTHORIZED. No PR, merge, main, staging, deploy, production or real data.
-- **Branch/worktree:** `impl/hms-block-c-reception-workflows`, `/home/sjo1848/dev/hms-elite-cloudflare/hms-block-c-reception-workflows`; exact base is published/accepted B5 `fc2daa783b8ef361e39e6945dbdfe2bfe6345b98`. The Block B worktree is separate and untouched.
-- **Frozen pre-code package:** Task Contract, exact workflow/API/capability inventory, 24-invariant map, evidence matrix, reviewer record and admission Pre-Critic are committed together before product code. See the files under `.orchestration/contracts/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001.md` and `.orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-*`.
-- **Target:** `Booking/Stay Case → Focused Task → authoritative result → Case/Queue` with context preservation. Preserve existing backend/API/capability/lifecycle/idempotency contracts; no new domain semantics or schema/backend work unless strictly necessary under an already approved contract.
-- **Extension/no-show/late arrival:** implement only if source-backed API, capability and lifecycle contracts exist; otherwise record `DEFERRED_CAPABILITY_OR_CONTRACT_NOT_PRESENT`.
-- **Budget baseline:** JS raw 306,733 B / gzip 88,540 B; CSS raw 52,127 B / gzip 9,664 B. Existing ceilings remain JS 330,000/100,000 B and CSS 55,000/15,000 B; no ceiling increase is authorized.
-- **Current phase:** Block C is **COMPLETE**, awaiting Controller confirmation. Artifact A2 `56e8680b11c6770d409b1d68de2e65924e37e808` and orchestration-only Boundary B2 `091bc86eb31290dc6d18dd7496b7bfe2e96e2d9b` received a fresh separate read-only Independent Critic `PASS`. Historical closure checkpoint: `215e7889f112373ae9b1904b8b557ffb888a1e14`; this metadata reconciliation follows that closure. `block_c_authorized=true`, `block_c_completed=true`, `development_continuation=false`, and `resume_authorized=false`. Blocks D–H remain unauthorized; promotion is blocked.
+- **Authorization:** Human authorized Block D — Rooms from reconciled/published Block C checkpoint `044ad756b0081d2a54083ea89c782557e97a351f`. Blocks E–H remain NOT AUTHORIZED. No PR, merge, main, staging, deploy, production or real data.
+- **Branch/worktree:** `impl/hms-block-d-rooms`, `/home/sjo1848/dev/hms-elite-cloudflare/hms-block-d-rooms`; exact base is `044ad756b0081d2a54083ea89c782557e97a351f`. Dedicated worktree; other branches/worktrees were not modified.
+- **Frozen pre-code package:** `.orchestration/contracts/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001.md` plus exact UI/API/capability inventory, 24-invariant classification, requirement/evidence matrix and pre-implementation Pre-Critic are committed before product code.
+- **Target:** Room board and selected-room workspace expose independent Occupancy, Housekeeping, Maintenance Impact and Service; derived readiness; canonical explicit-interval sellability; holds and navigable context. Reuse only approved F0 semantics and existing room/hold commands. No Housekeeping/Maintenance workflows or state mutation.
+- **Budget baseline:** JS 321,619 raw / 91,486 gzip; CSS 54,937 raw / 10,119 gzip. Ceilings remain JS 330,000/100,000 and CSS 55,000/15,000; CSS raw headroom is 63 B. No ceiling increase is authorized.
+- **Current phase:** contract package and admission Pre-Critic are frozen; product code has not started. Continue autonomously inside Block D. `development_continuation=true`; `resume_authorized=false` while runtime is RUNNING. E–H and promotion remain unauthorized.
 
 ### Block C — initial Artifact A review returned bounded REWORK
 

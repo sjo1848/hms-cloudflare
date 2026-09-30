@@ -3,37 +3,37 @@
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-c-reception-workflows",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "BLOCK_C_METADATA_RECONCILED_AWAITING_CONTROLLER_CONFIRMATION",
+  "phase": "BLOCK_D_CONTRACT_FROZEN_READY_TO_IMPLEMENT",
   "resume_authorized": false,
-  "runtime_status": "COMPLETE",
-  "active_task": "Controller confirmation of reconciled Block C completion handoff",
-  "last_completed_task": "Block C COMPLETE: Artifact A2 + Boundary B2 Independent Critic PASS; historical closure checkpoint recorded",
-  "last_completed_head": "215e7889f112373ae9b1904b8b557ffb888a1e14",
-  "work_branch": "impl/hms-block-c-reception-workflows",
+  "runtime_status": "RUNNING",
+  "active_task": "HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001 — implement frozen Room operational workspace",
+  "last_completed_task": "Block C closure checkpoint 044ad756b0081d2a54083ea89c782557e97a351f; Block D inventory, Task Contract, 24-invariant map, evidence matrix and pre-implementation Pre-Critic frozen before product code",
+  "last_completed_head": "044ad756b0081d2a54083ea89c782557e97a351f",
+  "work_branch": "impl/hms-block-d-rooms",
   "pr": null,
-  "wave": "BLOCK C — RECEPTION TRANSACTIONAL WORKFLOWS",
-  "status_label": "BLOCK_C_METADATA_RECONCILED_AWAITING_CONTROLLER_CONFIRMATION",
-  "next_action": "AWAIT_CONTROLLER_CONFIRMATION; NO_DEVELOPMENT_CONTINUATION_OR_BLOCK_D_H_AUTHORIZATION",
-  "stop_reason": "CTRL-C-01 metadata-only reconciliation complete; Block C is COMPLETE. Await Controller confirmation. Blocks D–H remain unauthorized and promotion is blocked.",
+  "wave": "BLOCK D — ROOMS OPERATIONAL WORKSPACE",
+  "status_label": "BLOCK_D_IMPLEMENTATION_AUTHORIZED",
+  "next_action": "IMPLEMENT_BLOCK_D_ROOMS_WORKSPACE_WITHIN_FROZEN_CONTRACT; RUN_REQUIRED_VALIDATION_AND_FINAL_PRECRITIC",
+  "stop_reason": "Block D is explicitly authorized; Task Contract and pre-code gate are frozen. Continue routine implementation autonomously. Stop only at the user-defined Block D gates.",
   "event": {
-    "seq": 257,
-    "id": "CTRL-C-01-METADATA-RECONCILED",
-    "type": "BLOCK_C_COMPLETE_AWAITING_CONTROLLER_CONFIRMATION"
+    "seq": 258,
+    "id": "BLOCK-D-CONTRACT-FROZEN",
+    "type": "PRE_IMPLEMENTATION_PRECRITIC_PASS_READY_FOR_CODE"
   },
   "external_review": {
-    "last_audited_head": "56e8680b11c6770d409b1d68de2e65924e37e808",
-    "artifact_head": "56e8680b11c6770d409b1d68de2e65924e37e808",
-    "boundary_head": "091bc86eb31290dc6d18dd7496b7bfe2e96e2d9b",
-    "last_verdict": "Historical A1+B1 Independent Critic REWORK preserved. Exact A2+B2 Independent Critic PASS preserved. Block C is COMPLETE; Controller confirmation is pending.",
-    "review_path": ".orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INDEPENDENT-CRITIC-A2-B2.md",
-    "required": true,
+    "last_audited_head": null,
+    "artifact_head": null,
+    "boundary_head": null,
+    "last_verdict": "No Block D artifact submitted. Block C A2+B2 PASS is historical and the authorized base is closure 044ad756b0081d2a54083ea89c782557e97a351f.",
+    "review_path": null,
+    "required": false,
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
     ]
   },
   "block_a_development_gate": "PASS; exact Artifact A+B4 received Independent Critic PASS; awaiting Controller review",
-  "promotion_gate": "BLOCKED; Blocks D–H not authorized; no PR, merge, main, staging, deploy or production action authorized",
+  "promotion_gate": "BLOCKED; Blocks E–H not authorized; no PR, merge, main, staging, deploy or production action authorized",
   "human_gate": {
     "required": false,
     "decision": "B0 runtime classification and raw growth policy explicitly accepted; no unresolved Human Gate for this closure",
@@ -125,14 +125,14 @@
     "attribution": "EXTERNAL_FINDINGS_NOT_REOPENED_BY_THIS_TASK"
   },
   "authorization": {
-    "scope": "BLOCK_C_RECEPTION_TRANSACTIONAL_WORKFLOWS_ONLY; BLOCKS_D_H_NOT_AUTHORIZED; NO_PROMOTION",
+    "scope": "BLOCK_D_ROOMS_OPERATIONAL_WORKSPACE_ONLY; BLOCKS_E_H_NOT_AUTHORIZED; NO_PROMOTION",
     "production": false,
     "acceptance_staging": false,
     "main": false,
     "merge": false,
     "deploy": false,
     "wave_1_1a": false,
-    "development_continuation": false,
+    "development_continuation": true,
     "ui_implementation": false,
     "backend_implementation": false,
     "real_data_cutover": false,
@@ -145,7 +145,10 @@
     "blocks_c_h": false,
     "block_c_authorized": true,
     "block_c_completed": true,
-    "blocks_d_h": false
+    "blocks_d_h": false,
+    "block_d_authorized": true,
+    "block_d_completed": false,
+    "blocks_e_h": false
   },
   "validated": {
     "f0_1_task": "CLOSED_INTERNAL_EVIDENCE_GATE; NO_STANDALONE_ARTIFACT_OR_EXTERNAL_CRITIC_VERDICT",
@@ -364,5 +367,13 @@
   "block_c_promotion_gate": "BLOCKED; Blocks D–H NOT AUTHORIZED; no PR, push, merge, main, staging, deploy, production or real-data action",
   "block_c_closure": "Historical Block C closure checkpoint: 215e7889f112373ae9b1904b8b557ffb888a1e14. This CTRL-C-01 metadata-only reconciliation commit follows the closure.",
   "block_c_boundary_b2": "091bc86eb31290dc6d18dd7496b7bfe2e96e2d9b",
-  "block_c_prior_independent_critic": "REWORK: initial Artifact A1 3e0ea41a53b471993cc60f1f0421b0237ef54055 + Boundary B1 e83154dfd0e549fa494e8c90754afe70acd0f9f4; historical; bounded findings repaired in A2."
+  "block_c_prior_independent_critic": "REWORK: initial Artifact A1 3e0ea41a53b471993cc60f1f0421b0237ef54055 + Boundary B1 e83154dfd0e549fa494e8c90754afe70acd0f9f4; historical; bounded findings repaired in A2.",
+  "block_d_task_contract": ".orchestration/contracts/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001.md; frozen before code",
+  "block_d_inventory": ".orchestration/evidence/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001-INVENTORY.md; exact current UI/API/capability/workflow inventory",
+  "block_d_evidence_matrix": ".orchestration/evidence/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001-EVIDENCE-MATRIX.md; requirements D-01..D-12 frozen before code",
+  "block_d_invariants": ".orchestration/evidence/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001-INVARIANTS.md; all 24 registry entries classified before code",
+  "block_d_precritic": ".orchestration/evidence/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001-PRECRITIC.md; pre-implementation admission PASS only, not implementation PASS",
+  "block_d_base": "044ad756b0081d2a54083ea89c782557e97a351f",
+  "block_d_budget_baseline": "JS 321619 raw/91486 gzip; CSS 54937 raw/10119 gzip; ceilings unchanged: JS 330000/100000, CSS 55000/15000",
+  "block_d_status": "AUTHORIZED; implementation not yet started; E–H unauthorized"
 }
