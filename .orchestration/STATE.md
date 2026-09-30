@@ -352,3 +352,9 @@ Fresh separate read-only Critic reviewed exact A2 `c11e3d667cdd2f54834ad07a06c44
 ### Boundary B3 — A2+B2 traceability condition correction
 
 The A2+B2 Critic verdict remains historically `PASS_WITH_CONDITIONS`; its sole LOW condition identified inaccurate Pre-Critic wording that called the separate, non-reproduced Wave12 timeout a Critic finding. The Pre-Critic and invariant evidence now distinguish the closed A1+B1 MEDIUM filter finding from that regression-runner observation. Immutable A2 and B2 are unchanged; no product code or tests changed. Boundary B3 requests fresh bounded, read-only confirmation of exact A2 + B3. `resume_authorized=false`; external review remains required.
+
+### BLOCK_B_COMPLETE_AWAITING_CONTROLLER_REVIEW — Boundary B4
+
+The fresh separate read-only Independent Critic returned `PASS` for the bounded condition follow-up on exact Artifact A2 `c11e3d667cdd2f54834ad07a06c4485755b0cfc0` + Boundary B3 `35c4d71704632aa13a008bac20f90e337971a1ba`. The sole LOW wording condition from A2+B2 is discharged; the historical `PASS_WITH_CONDITIONS` verdict is preserved. Follow-up report: `.orchestration/evidence/HMS-BLOCK-B-RECEPTION-BOOKING-STAY-001-INDEPENDENT-CRITIC-A2-B3-FOLLOWUP.md`.
+
+Block B is complete and awaits external Controller Review. This is not Human Product Acceptance. `resume_authorized=false`, `external_review.required=true`; no C–H work is started or authorized. No PR, push, merge, main, staging, deploy, production or real-data action occurred.
