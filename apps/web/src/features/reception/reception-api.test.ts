@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { loadReceptionBoard, loadReceptionGuests, loadReceptionRooms, loadRecoverableReservationOperations } from "./reception-api";
+import { loadReceptionBoard, loadReceptionGuests, loadReceptionRooms, loadRecoverableReservationOperations, loadReservationOperation } from "./reception-api";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -45,5 +45,13 @@ describe("Reception progressive reads", () => {
     await expect(boardRequest).resolves.toMatchObject({ items: [{ booking: { id: "known" } }] });
     resolve.get("/api/v1/rooms")!(new Response(JSON.stringify({ error: { message: "rooms unavailable" } }), { status: 503 }));
     await expect(roomsRequest).rejects.toThrow();
+  });
+
+  it("recovers a reservation operation by its exact operation identity", async () => {
+    const operationToken = "op/with space";
+    const fetcher = vi.fn(async () => new Response(JSON.stringify({ operation: { operation_token: operationToken }, booking: null }), { status: 200 }));
+    vi.stubGlobal("fetch", fetcher);
+    await expect(loadReservationOperation(operationToken)).resolves.toMatchObject({ operation: { operation_token: operationToken }, booking: null });
+    expect(fetcher).toHaveBeenCalledWith("/api/v1/reservation-creation-operations/op%2Fwith%20space", expect.anything());
   });
 });

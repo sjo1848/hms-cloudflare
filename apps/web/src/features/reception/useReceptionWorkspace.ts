@@ -15,6 +15,7 @@ import {
   loadReceptionRooms,
   loadReceptionGuests,
   loadRecoverableReservationOperations,
+  loadReservationOperation,
   loadReassignmentQuote,
   loadRoomMaintenanceCase,
   reassignBooking,
@@ -77,6 +78,9 @@ export function useReceptionWorkspace() {
   const recoveryEpoch = useRef(0);
   const accountEpoch = useRef(0);
   const selectionEpoch = useRef(0);
+  const editAvailabilityEpoch = useRef(0);
+  const availabilityEpoch = useRef(0);
+  const reassignContextEpoch = useRef(0);
   const checkInInFlight = useRef(false);
   const reassignQuoteEpoch = useRef(0);
   const reservationOperationToken = useRef(crypto.randomUUID());
@@ -211,18 +215,21 @@ export function useReceptionWorkspace() {
       setEditAvailableRooms([]);
       return;
     }
+    const epoch = ++editAvailabilityEpoch.current;
     const timeout = window.setTimeout(() => {
       void loadAvailableRooms(editForm.check_in, editForm.check_out, selected.id)
         .then(items => {
+          if (epoch !== editAvailabilityEpoch.current) return;
           setEditAvailableRooms(items);
           if (!items.some(room => room.id === editForm.room_id)) setEditForm(current => ({ ...current, room_id: "" }));
         })
         .catch(e => {
+          if (epoch !== editAvailabilityEpoch.current) return;
           setEditAvailableRooms([]);
           setError((e as Error).message);
         });
     }, 120);
-    return () => window.clearTimeout(timeout);
+    return () => { window.clearTimeout(timeout); editAvailabilityEpoch.current += 1; };
   }, [selected?.id, selected?.status, editForm.check_in, editForm.check_out]);
 
   useEffect(() => {
@@ -237,6 +244,8 @@ export function useReceptionWorkspace() {
 
   function closeCase() {
     selectionEpoch.current += 1;
+    reassignContextEpoch.current += 1;
+    editAvailabilityEpoch.current += 1;
     setSelected(null);
     setEditAvailableRooms([]);
     setReassignAvailableIds(new Set());
@@ -253,6 +262,7 @@ export function useReceptionWorkspace() {
 
   function selectCase(booking: Booking) {
     selectionEpoch.current += 1;
+    reassignContextEpoch.current += 1;
     setSelected(booking);
     setEditForm({
       guest_id: booking.guest_id,
@@ -297,12 +307,14 @@ export function useReceptionWorkspace() {
   }
 
   async function loadReassignmentContext(booking: Booking) {
+    const epoch = ++reassignContextEpoch.current;
     try {
       const hotelContext = await loadHotelContext();
       const effectiveDate = hotelContext.hotel_local_date > booking.check_in ? hotelContext.hotel_local_date : booking.check_in;
       const available = hotelContext.hotel_local_date < booking.check_out
         ? await loadAvailableRooms(effectiveDate, booking.check_out, booking.id)
         : [];
+      if (epoch !== reassignContextEpoch.current) return;
       const board: HousekeepingBoard = {
         date: hotelContext.hotel_local_date,
         rooms: available.map((room, index) => ({
@@ -316,6 +328,7 @@ export function useReceptionWorkspace() {
       setReassignAvailableIds(new Set(available.map(room => room.id)));
       setReassignBoard(board);
     } catch (e) {
+      if (epoch !== reassignContextEpoch.current) return;
       setReassignAvailableIds(new Set());
       setReassignBoard(null);
       setError((e as Error).message);
@@ -345,24 +358,27 @@ export function useReceptionWorkspace() {
     }
   }
 
-  async function refreshAvailability() {
-    if (!form.check_in || !form.check_out) {
+  async function refreshAvailability(checkIn = form.check_in, checkOut = form.check_out) {
+    const epoch = ++availabilityEpoch.current;
+    if (!checkIn || !checkOut) {
       setAvailableRooms([]);
       return;
     }
     try {
-      const items = await loadAvailableRooms(form.check_in, form.check_out);
+      const items = await loadAvailableRooms(checkIn, checkOut);
+      if (epoch !== availabilityEpoch.current) return;
       setAvailableRooms(items);
       if (!items.some(room => room.id === form.room_id)) setForm(current => ({ ...current, room_id: "" }));
     } catch (e) {
+      if (epoch !== availabilityEpoch.current) return;
       setAvailableRooms([]);
       setError((e as Error).message);
     }
   }
 
-  async function submit(event: FormEvent) {
+  async function submit(event: FormEvent): Promise<string | null> {
     event.preventDefault();
-    if (actionBusy) return;
+    if (actionBusy) return null;
     setActionBusy(true);
     setError("");
     setNotice("");
@@ -374,7 +390,21 @@ export function useReceptionWorkspace() {
           : { guest_id: form.guest_id }),
         booking: { room_id: form.room_id, check_in: form.check_in, check_out: form.check_out, notes: form.notes },
       });
-      if (!result.booking) throw new Error(t("reception.recoveryGuestSaved"));
+      if (!result.booking) {
+        setNotice(t("reception.recoveryGuestSaved"));
+        return null;
+      }
+      const bookingId = result.booking.id;
+      const board = await load();
+      if (!board) {
+        setError(t("reception.taskRefreshRequired"));
+        return null;
+      }
+      const restored = await restoreCase(bookingId);
+      if (!restored) {
+        setError(t("reception.taskRefreshRequired"));
+        return null;
+      }
       reservationOperationToken.current = crypto.randomUUID();
       setNewGuest({ full_name: "", email: "", phone: "" });
       setNewGuestMode(false);
@@ -382,7 +412,7 @@ export function useReceptionWorkspace() {
       setForm(emptyBookingForm());
       setAvailableRooms([]);
       setNotice(t("reception.reservationCreated"));
-      await load();
+      return bookingId;
     } catch (e) {
       if (e instanceof ApiError && e.status === 409 && e.detail && typeof e.detail === "object") {
         const detail = e.detail as { operation?: ReservationCreationOperation; recoveryReason?: string };
@@ -392,8 +422,28 @@ export function useReceptionWorkspace() {
         else if (detail.recoveryReason === "PAYLOAD_MISMATCH") setError(t("reception.recoveryPayloadConflict"));
         else setError((e as Error).message);
       } else {
-        setError((e as Error).message);
+        try {
+          const recovered = await loadReservationOperation(reservationOperationToken.current);
+          if (recovered.booking) {
+            const board = await load();
+            if (board && await restoreCase(recovered.booking.id)) {
+              reservationOperationToken.current = crypto.randomUUID();
+              setForm(emptyBookingForm());
+              setNewGuest({ full_name: "", email: "", phone: "" });
+              setNewGuestMode(false);
+              setNotice(t("reception.reservationCreated"));
+              return recovered.booking.id;
+            }
+            setError(t("reception.taskRefreshRequired"));
+            return null;
+          }
+          setRecoverableOperations(current => [recovered.operation, ...current.filter(item => item.operation_token !== recovered.operation.operation_token)]);
+          setError(t("reception.reservationOutcomeUncertain"));
+        } catch {
+          setError(t("reception.reservationOutcomeUncertain"));
+        }
       }
+      return null;
     } finally {
       setActionBusy(false);
     }
@@ -402,24 +452,55 @@ export function useReceptionWorkspace() {
   function useRecoveredGuest(operation: ReservationCreationOperation) {
     setNewGuestMode(false);
     setForm(current => ({ ...current, guest_id: operation.guest_id, room_id: operation.room_id, check_in: operation.check_in, check_out: operation.check_out }));
+    void refreshAvailability(operation.check_in, operation.check_out);
     setNewGuest({ full_name: "", email: "", phone: "" });
     reservationOperationToken.current = crypto.randomUUID();
     setError("");
     setNotice(`${operation.guest_name} · ${t("guests.selected")}`);
   }
 
-  async function runLifecycle(action: () => Promise<unknown>) {
-    if (actionBusy) return;
+  function discardReservationDraft() {
+    reservationOperationToken.current = crypto.randomUUID();
+    setForm(emptyBookingForm());
+    setNewGuestMode(false);
+    setNewGuest({ full_name: "", email: "", phone: "" });
+    setAvailableRooms([]);
+  }
+
+  async function runLifecycle(action: () => Promise<unknown>, expectedStatus: Booking["status"]): Promise<boolean> {
+    if (actionBusy || !selected) return false;
+    const bookingId = selected.id;
     setActionBusy(true);
     try {
       await action();
-      closeCase();
-      await load();
+      const board = await load();
+      if (!board) {
+        setError(t("reception.taskRefreshRequired"));
+        return false;
+      }
+      const refreshed = board.items.find(item => item.booking.id === bookingId)?.booking
+        ?? await loadBooking(bookingId).catch(() => null);
+      if (refreshed?.status !== expectedStatus) {
+        setError(t("reception.taskRefreshRequired"));
+        return false;
+      }
+      setNotice(t("reception.lifecycleTaskComplete"));
+      return true;
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) {
         await load();
         setError(t("reception.checkoutConflict"));
-      } else setError((e as Error).message);
+      } else {
+        const board = await load();
+        const latest = board?.items.find(item => item.booking.id === bookingId)?.booking
+          ?? await loadBooking(bookingId).catch(() => null);
+        if (latest?.status === expectedStatus) {
+          setNotice(t("reception.lifecycleTaskComplete"));
+          return true;
+        }
+        setError(t("reception.reservationOutcomeUncertain"));
+      }
+      return false;
     } finally {
       setActionBusy(false);
     }
@@ -451,7 +532,11 @@ export function useReceptionWorkspace() {
         if (!board) setCheckInNeedsRefresh(true);
         setCheckInStep(2);
         setCheckInConflict(board ? t("reception.checkInConflict") : t("reception.checkInConflictRefreshFailed"));
-      } else setError((e as Error).message);
+      } else {
+        const board = await load();
+        if (board?.items.find(item => item.booking.id === bookingId)?.booking.status === "CheckedIn") return board;
+        setError(t("reception.reservationOutcomeUncertain"));
+      }
       return null;
     } finally {
       checkInInFlight.current = false;
@@ -465,28 +550,41 @@ export function useReceptionWorkspace() {
     return board;
   }
 
-  async function reassign(event: FormEvent) {
+  async function reassign(event: FormEvent): Promise<boolean> {
     event.preventDefault();
-    if (!selected || actionBusy) return;
+    if (!selected || actionBusy) return false;
     const data = new FormData(event.currentTarget as HTMLFormElement);
     if (!reassignQuote || reassignQuote.destination_room_id !== data.get("room_id")) {
       setError(t("reception.reassignQuoteLoading"));
-      return;
+      return false;
     }
+    const bookingId = selected.id;
+    const originalRoomId = selected.room_id;
+    const targetRoomId = String(data.get("room_id") ?? "");
     setActionBusy(true);
     setError("");
     try {
-      await reassignBooking(selected.id, data.get("room_id"), String(data.get("reason") ?? "").trim(), reassignQuote.quote_token);
-      closeCase();
-      await load();
+      await reassignBooking(bookingId, targetRoomId, String(data.get("reason") ?? "").trim(), reassignQuote.quote_token);
+      const board = await load();
+      if (!board) {
+        setError(t("reception.taskRefreshRequired"));
+        return false;
+      }
+      const refreshed = board.items.find(item => item.booking.id === bookingId)?.booking
+        ?? await loadBooking(bookingId).catch(() => null);
+      if (refreshed?.room_id !== targetRoomId) {
+        setError(t("reception.taskRefreshRequired"));
+        return false;
+      }
       setNotice(t("reception.reassignSuccess"));
+      return true;
     } catch (e) {
       setNotice("");
       const conflict = e instanceof ApiError && e.status === 409;
       if (conflict) {
         setReassignQuote(null);
         const board = await load();
-        const latest = board?.items.find(item => item.booking.id === selected.id)?.booking;
+        const latest = board?.items.find(item => item.booking.id === bookingId)?.booking;
         if (latest?.status === "CheckedIn") {
           await loadReassignmentContext(latest);
           const roomId = String(data.get("room_id") ?? "");
@@ -495,28 +593,64 @@ export function useReceptionWorkspace() {
         // load() clears stale errors while refreshing. Reassert the actionable
         // conflict after authoritative booking/room context has been restored.
         setError(t("reception.reassignConflict"));
-      } else setError((e as Error).message);
+      } else {
+        const board = await load();
+        const latest = board?.items.find(item => item.booking.id === bookingId)?.booking
+          ?? await loadBooking(bookingId).catch(() => null);
+        if (latest && latest.room_id === targetRoomId && latest.room_id !== originalRoomId) {
+          setNotice(t("reception.reassignSuccess"));
+          return true;
+        }
+        setError(t("reception.reservationOutcomeUncertain"));
+      }
+      return false;
     } finally {
       setActionBusy(false);
     }
   }
 
-  async function checkout(event: FormEvent) {
+  async function checkout(event: FormEvent): Promise<boolean> {
     event.preventDefault();
-    if (!selected) return;
+    if (!selected) return false;
     const data = new FormData(event.currentTarget as HTMLFormElement);
-    await runLifecycle(() => checkoutBooking(selected.id, data));
+    return runLifecycle(() => checkoutBooking(selected.id, data), "CheckedOut");
   }
 
-  async function saveEdit(event: FormEvent) {
+  async function saveEdit(event: FormEvent): Promise<boolean> {
     event.preventDefault();
-    if (!selected || selected.status !== "Confirmed") return;
+    if (!selected || selected.status !== "Confirmed" || actionBusy) return false;
+    const bookingId = selected.id;
+    setActionBusy(true);
+    setError("");
     try {
       await updateBooking(selected.id, editForm);
-      closeCase();
-      await load();
+      const board = await load();
+      if (!board) { setError(t("reception.taskRefreshRequired")); return false; }
+      const refreshed = board.items.find(item => item.booking.id === bookingId)?.booking
+        ?? await loadBooking(bookingId).catch(() => null);
+      if (!refreshed || refreshed.status !== "Confirmed" || refreshed.guest_id !== editForm.guest_id
+        || refreshed.room_id !== editForm.room_id || refreshed.check_in !== editForm.check_in
+        || refreshed.check_out !== editForm.check_out || (refreshed.notes ?? "") !== editForm.notes) {
+        setError(t("reception.taskRefreshRequired"));
+        return false;
+      }
+      setNotice(t("reception.reservationUpdated"));
+      return true;
     } catch (e) {
-      setError((e as Error).message);
+      const board = await load();
+      const latest = board?.items.find(item => item.booking.id === bookingId)?.booking
+        ?? await loadBooking(bookingId).catch(() => null);
+      if (latest && latest.status === "Confirmed"
+        && latest.guest_id === editForm.guest_id && latest.room_id === editForm.room_id
+        && latest.check_in === editForm.check_in && latest.check_out === editForm.check_out
+        && (latest.notes ?? "") === editForm.notes) {
+        setNotice(t("reception.reservationUpdated"));
+        return true;
+      }
+      setError(e instanceof ApiError && e.status === 409 ? t("reception.editConflict") : t("reception.reservationOutcomeUncertain"));
+      return false;
+    } finally {
+      setActionBusy(false);
     }
   }
 
@@ -537,6 +671,6 @@ export function useReceptionWorkspace() {
     checkInStep, checkInData, form, editForm,
     setCheckInStep, setCheckInData, setForm, setEditForm, setNewGuestMode, setNewGuest,
     selectCase, restoreCase, closeCase, refreshQueue: load, retryRooms: loadRooms, retryGuests: loadGuests, retryRecovery: loadRecovery, retryAccountSummary: () => selected ? loadAccountSummary(selected.id) : Promise.resolve(), refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
-    saveEdit, cancelBooking, useRecoveredGuest,
+    saveEdit, cancelBooking, useRecoveredGuest, discardReservationDraft,
   };
 }

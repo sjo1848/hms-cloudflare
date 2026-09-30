@@ -24,6 +24,6 @@ await (page => (async () => {
 ### Page
 - Page URL: http://127.0.0.1:4181/bookings?lane=arrivals&q=Priority&origin=block-b#queue
 - Page Title: HMS Elite
-- Console: 2 errors, 0 warnings
+- Console: 1 errors, 0 warnings
 ### Events
-- New console entries: .playwright-cli/console-2026-09-30T06-57-34-403Z.log#L1-L2
+- New console entries: .playwright-cli/console-2026-09-30T19-32-34-610Z.log#L1

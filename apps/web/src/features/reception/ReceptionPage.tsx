@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { DropdownMenu, DropdownMenuItem } from "../../components/ui/dropdown-menu";
+import { DialogContent } from "../../components/ui/dialog";
 import { useReceptionWorkspace } from "./useReceptionWorkspace";
 import { useI18n } from "../../i18n";
 import { CapabilitiesContext } from "../../app/capabilities";
@@ -49,21 +50,31 @@ function Bookings() {
     checkInStep, checkInData, form, editForm,
     setCheckInStep, setCheckInData, setForm, setEditForm, setNewGuestMode, setNewGuest,
     selectCase, restoreCase, closeCase, refreshQueue, refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
-    saveEdit, cancelBooking, useRecoveredGuest,
+    saveEdit, cancelBooking, useRecoveredGuest, discardReservationDraft,
   } = useReceptionWorkspace();
   const [queueFilter, setQueueFilter] = useState<QueueFilter>(() => {
     const value = new URLSearchParams(window.location.search).get("lane");
     return queueFilters.find(filter => filter === value) ?? "attention";
   });
   const [queueSearch, setQueueSearch] = useState(() => new URLSearchParams(window.location.search).get("q") ?? "");
-  const [showCreate, setShowCreate] = useState(false);
-  const [showArrivalEdit, setShowArrivalEdit] = useState(false);
+  type FocusedTask = "new-reservation" | "edit" | "reassign" | "checkout" | null;
+  const [focusedTask, setFocusedTask] = useState<FocusedTask>(() => {
+    const task = new URLSearchParams(window.location.search).get("task");
+    return task === "new-reservation" || task === "edit" || task === "reassign" || task === "checkout" ? task : null;
+  });
+  const [createStep, setCreateStep] = useState(0);
+  const [editStep, setEditStep] = useState(0);
+  const [guestSearch, setGuestSearch] = useState("");
   const [reassignTargetId, setReassignTargetId] = useState("");
   const [checkInTaskId, setCheckInTaskId] = useState<string | null>(null);
   const [discardRequest, setDiscardRequest] = useState(0);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [checkInSuccess, setCheckInSuccess] = useState("");
   const [queueElement, setQueueElement] = useState<HTMLDivElement | null>(null);
   const pendingQueueFocusId = useRef<string | null>(null);
+  const pendingDiscardAction = useRef<(() => void) | null>(null);
+  const allowDirtyPop = useRef(false);
+  const previousFocusedTask = useRef<FocusedTask>(focusedTask);
   const queue = frontDeskBoard?.items ?? [];
   const counts = queueCounts(queue);
   const visibleQueue = filterQueue(queue, queueFilter, queueSearch);
@@ -77,8 +88,51 @@ function Bookings() {
   const reassignRooms = selected?.status === "CheckedIn" ? rooms.filter(room => room.id !== selected.room_id) : [];
   const boardByRoom = new Map((reassignBoard?.rooms ?? []).map(room => [room.room_id, room]));
   const effectiveDate = selected ? (reassignHotelDate && reassignHotelDate > selected.check_in ? reassignHotelDate : selected.check_in) : "";
+  const createGuestReady = newGuestMode
+    ? !!newGuest.full_name.trim() && !!newGuest.email.trim()
+    : !!form.guest_id || (!recoveryLoading && recoverableOperations.length > 0);
+  const createStepReady = createStep === 0
+    ? createGuestReady && !!form.check_in && !!form.check_out
+    : !!form.room_id;
+  const editStepReady = !!editForm.guest_id && !!editForm.room_id && !!editForm.check_in && !!editForm.check_out
+    && editForm.check_in < editForm.check_out && editAvailableRooms.some(room => room.id === editForm.room_id);
   useEffect(() => { setReassignTargetId(""); }, [selected?.id]);
-  useEffect(() => { setShowArrivalEdit(false); }, [selected?.id]);
+  useEffect(() => {
+    if (focusedTask !== "new-reservation") setCreateStep(0);
+    if (focusedTask !== "edit") setEditStep(0);
+  }, [focusedTask, selected?.id]);
+
+  useEffect(() => {
+    const authorized = focusedTask === "new-reservation"
+      ? canWriteBookings
+      : focusedTask === "edit"
+        ? canWriteBookings && selected?.status === "Confirmed"
+        : focusedTask === "reassign" || focusedTask === "checkout"
+          ? canWriteBookings && selected?.status === "CheckedIn"
+          : true;
+    if (focusedTask && !authorized && (focusedTask === "new-reservation" || selected)) {
+      setFocusedTask(null);
+      updateLocation({ task: null, booking_id: selected?.id ?? null }, "replace");
+    }
+  }, [focusedTask, selected?.id, selected?.status, canWriteBookings]);
+
+  useEffect(() => {
+    if (!focusedTask) return;
+    const frame = window.requestAnimationFrame(() => document.querySelector<HTMLElement>(".reception-focused-task .reception-task-fields h4, .reception-focused-task .reception-task-review h4, .reception-focused-task .reception-task-form h4")?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [focusedTask, createStep, editStep]);
+
+  useEffect(() => {
+    if (previousFocusedTask.current && !focusedTask) {
+      const frame = window.requestAnimationFrame(() => {
+        if (selected) document.querySelector<HTMLElement>(".reception-case-title")?.focus();
+        else document.querySelector<HTMLElement>(".reception-create-trigger, .reception-queue-search input")?.focus();
+      });
+      previousFocusedTask.current = focusedTask;
+      return () => window.cancelAnimationFrame(frame);
+    }
+    previousFocusedTask.current = focusedTask;
+  }, [focusedTask, selected?.id]);
 
   useEffect(() => {
     if (!frontDeskBoard || loading) return;
@@ -118,9 +172,69 @@ function Bookings() {
     router.navigate(url.pathname + url.search + url.hash, { replace: mode === "replace" });
   }
 
+  function openTask(task: Exclude<FocusedTask, null>) {
+    if (actionBusy || (task !== "new-reservation" && !selected)) return;
+    setFocusedTask(task);
+    setCreateStep(0);
+    setEditStep(0);
+    updateLocation({ task, booking_id: selected?.id ?? null }, "push");
+    window.requestAnimationFrame(() => document.querySelector<HTMLElement>(".reception-focused-task h4")?.focus());
+  }
+
+  function focusedTaskIsDirty() {
+    if (focusedTask === "new-reservation") return !!form.guest_id || !!form.room_id || !!form.check_in || !!form.check_out || !!form.notes.trim() || newGuestMode || !!newGuest.full_name.trim() || !!newGuest.email.trim() || !!newGuest.phone.trim();
+    if (focusedTask === "edit" && selected) return editForm.guest_id !== selected.guest_id || editForm.room_id !== selected.room_id || editForm.check_in !== selected.check_in || editForm.check_out !== selected.check_out || editForm.notes !== (selected.notes ?? "");
+    if (focusedTask === "reassign") return !!reassignTargetId || !!document.querySelector<HTMLInputElement>(".reassign-surface input[name=reason]")?.value.trim();
+    if (focusedTask === "checkout") {
+      const policy = (document.querySelector('.reception-task-form select[name="policy"]') as HTMLSelectElement | null)?.value;
+      return (!!policy && policy !== "settled") || !!document.querySelector<HTMLInputElement>('.reception-task-form input[name="reference"]')?.value.trim() || [...document.querySelectorAll<HTMLInputElement>('.reception-task-form input[type="checkbox"]')].some(input => input.checked);
+    }
+    return false;
+  }
+
+  function discardFocusedTaskDraft() {
+    if (focusedTask === "new-reservation") {
+      discardReservationDraft();
+      setGuestSearch("");
+      setCreateStep(0);
+    }
+    if (focusedTask === "edit" && selected) setEditForm({ guest_id: selected.guest_id, room_id: selected.room_id, check_in: selected.check_in, check_out: selected.check_out, notes: selected.notes ?? "" });
+    if (focusedTask === "reassign") setReassignTargetId("");
+    setEditStep(0);
+  }
+
+  function returnToCase(discardConfirmed = false) {
+    if (actionBusy && !discardConfirmed) return;
+    if (focusedTaskIsDirty() && !discardConfirmed) { requestDiscard(() => returnToCase(true)); return; }
+    discardFocusedTaskDraft();
+    setFocusedTask(null);
+    setCreateStep(0);
+    updateLocation({ task: null, booking_id: selected?.id ?? null }, "push");
+    window.requestAnimationFrame(() => document.querySelector<HTMLElement>(selected ? ".reception-case-title" : ".reception-create-trigger, .reception-queue-search input")?.focus());
+  }
+
+  function requestDiscard(action: () => void) {
+    pendingDiscardAction.current = action;
+    setShowDiscardConfirm(true);
+  }
+
+  function cancelDiscard() {
+    pendingDiscardAction.current = null;
+    setShowDiscardConfirm(false);
+  }
+
+  function confirmDiscard() {
+    const action = pendingDiscardAction.current;
+    pendingDiscardAction.current = null;
+    setShowDiscardConfirm(false);
+    action?.();
+  }
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const bookingId = params.get("booking_id");
+    const urlTask = params.get("task");
+    setFocusedTask(urlTask === "new-reservation" || urlTask === "edit" || urlTask === "reassign" || urlTask === "checkout" ? urlTask : null);
     const taskId = params.get("task") === "check-in" ? bookingId : null;
     if (bookingId && selected?.id !== bookingId) {
       if (selected) closeCase();
@@ -141,6 +255,18 @@ function Bookings() {
       setQueueFilter(queueFilters.find(filter => filter === lane) ?? "attention");
       setQueueSearch(params.get("q") ?? "");
       const taskId = params.get("task") === "check-in" ? params.get("booking_id") : null;
+      const routeTask = params.get("task");
+      const nextFocusedTask = routeTask === "new-reservation" || routeTask === "edit" || routeTask === "reassign" || routeTask === "checkout" ? routeTask : null;
+      if (focusedTask && nextFocusedTask !== focusedTask && focusedTaskIsDirty() && !allowDirtyPop.current) {
+        if (!showDiscardConfirm) requestDiscard(() => { allowDirtyPop.current = true; window.history.back(); });
+        const currentTaskUrl = `${router.pathname}${router.search}${router.hash}`;
+        window.history.pushState(window.history.state ?? {}, "", currentTaskUrl);
+        window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
+        return;
+      }
+      allowDirtyPop.current = false;
+      if (focusedTask && nextFocusedTask !== focusedTask && focusedTaskIsDirty()) discardFocusedTaskDraft();
+      setFocusedTask(nextFocusedTask);
       if (checkInTaskId && taskId !== checkInTaskId) {
         const dirty = checkInData.count !== "1" || checkInData.document || checkInData.contact || checkInData.stay;
         if (dirty) {
@@ -156,16 +282,20 @@ function Bookings() {
     }
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, [checkInTaskId, checkInData, frontDeskBoard, router.search, selected?.id]);
+  }, [checkInTaskId, checkInData, editForm, focusedTask, form, frontDeskBoard, newGuest, newGuestMode, reassignTargetId, router.hash, router.pathname, router.search, selected?.id, selected?.guest_id, selected?.room_id, selected?.check_in, selected?.check_out, selected?.notes, showDiscardConfirm, t]);
 
   function closeCheckIn() {
     const currentId = checkInTaskId;
-    updateLocation({ task: null, booking_id: selected?.id ?? null });
+    if (window.history.state?.__hmsReceptionCheckInTask === true) window.history.back();
+    else updateLocation({ task: null, booking_id: selected?.id ?? null });
     setCheckInTaskId(null);
-    window.requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(`[data-booking-id="${currentId}"]`)?.focus());
+    window.requestAnimationFrame(() => document.querySelector<HTMLElement>(selected ? ".reception-case-title" : `[data-booking-id="${currentId}"]`)?.focus());
   }
 
-  function openNonArrivalCase(booking: typeof bookings[number]) {
+  function openNonArrivalCase(booking: typeof bookings[number], discardConfirmed = false) {
+    if (focusedTaskIsDirty() && !discardConfirmed) { requestDiscard(() => openNonArrivalCase(booking, true)); return; }
+    discardFocusedTaskDraft();
+    setFocusedTask(null);
     if (queueElement) window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionQueueScroll: queueElement.scrollTop }, "", window.location.href);
     selectCase(booking);
     updateLocation({ task: null, booking_id: booking.id }, "push");
@@ -178,16 +308,17 @@ function Bookings() {
   }
 
   function openCheckIn(booking: typeof bookings[number]) {
+    setFocusedTask(null);
     if (queueElement) window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionQueueScroll: queueElement.scrollTop }, "", window.location.href);
     selectCase(booking);
-    setShowArrivalEdit(false);
     setCheckInSuccess("");
     updateLocation({ task: "check-in", booking_id: booking.id }, "push");
-    window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionCase: true }, "", window.location.href);
+    window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionCase: true, __hmsReceptionCheckInTask: true }, "", window.location.href);
     setCheckInTaskId(booking.id);
   }
 
   function applicationBack() {
+    if (focusedTask) { returnToCase(); return; }
     const row = selected?.id;
     if (window.history.state?.__hmsReceptionCase) {
       if (row) pendingQueueFocusId.current = row;
@@ -226,41 +357,15 @@ function Bookings() {
     if (checkInAccepted && checkInTaskId && updated?.items.find(item => item.booking.id === checkInTaskId)?.booking.status === "CheckedIn") finishCheckIn(updated, checkInTaskId);
   }
 
-  return <section className="reception-workspace">
+  return <section className={`reception-workspace ${focusedTask ? "task-open" : ""}`}>
+    <DialogContent open={showDiscardConfirm} onOpenChange={open => { if (!open) cancelDiscard(); }} onKeyDown={event => { if (event.key !== "Tab") return; const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>("button"); const first = buttons[0], last = buttons[buttons.length - 1]; if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); } else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); } }} className="checkin-discard" style={{ width: "min(440px,calc(100vw - 32px))", height: "auto", minHeight: 0, maxHeight: "calc(100dvh - 32px)", borderRadius: 16 }} role="alertdialog" aria-modal="true" aria-labelledby="reception-discard-title" aria-describedby="reception-discard-body"><h3 id="reception-discard-title">{t("reception.discardTaskTitle")}</h3><p id="reception-discard-body">{t("reception.discardTaskConfirm")}</p><div className="reception-task-actions"><button type="button" className="secondary-button" data-discard-cancel autoFocus onClick={cancelDiscard}>{t("reception.keepEditing")}</button><button type="button" onClick={confirmDiscard}>{t("reception.discardTask")}</button></div></DialogContent>
     <div className="workspace-heading reception-workspace-heading">
       <div><p className="eyebrow">{t("reception.eyebrow")}</p><h2>{t("reception.title")}</h2><p className="muted">{t("reception.subtitle")}</p></div>
       <div className="reception-heading-actions">
         <span className="case-count">{t("reception.queueSummary", { attention: counts.attention, all: counts.all })}</span>
-        {canWriteBookings && <button type="button" className="secondary-button reception-create-trigger" onClick={() => setShowCreate(current => !current)}>{showCreate ? t("common.close") : t("reception.createBooking")}</button>}
+        {canWriteBookings && <button type="button" className="secondary-button reception-create-trigger" disabled={actionBusy} onClick={() => openTask("new-reservation")}>{t("reception.createBooking")}</button>}
       </div>
     </div>
-
-    {showCreate && canWriteBookings ? <form onSubmit={submit} aria-label={t("reception.createAria")} className="case-create reception-create-panel">
-      <h3>{t("reception.openCase")}</h3>
-      {canCreateGuest && <label><input type="checkbox" checked={newGuestMode} onChange={event => setNewGuestMode(event.target.checked)} />{t("guests.add")}</label>}
-      {newGuestMode && canCreateGuest ? <>
-        <input required autoComplete="name" aria-label={t("guests.fullName")} placeholder={t("guests.namePlaceholder")} value={newGuest.full_name} onChange={event => setNewGuest({ ...newGuest, full_name: event.target.value })} />
-        <input required type="email" autoComplete="email" aria-label={t("reception.guestEmail")} placeholder={t("reception.guestEmail")} value={newGuest.email} onChange={event => setNewGuest({ ...newGuest, email: event.target.value })} />
-        <input type="tel" autoComplete="tel" aria-label={t("guests.phone")} placeholder={t("guests.phone")} value={newGuest.phone} onChange={event => setNewGuest({ ...newGuest, phone: event.target.value })} />
-      </> : <select required aria-label={t("common.guest")} value={form.guest_id} onChange={e => setForm({ ...form, guest_id: e.target.value })}>
-        <option value="">{t("reception.selectGuest")}</option>{guests.map(guest => <option key={guest.id} value={guest.id}>{guest.full_name}</option>)}
-      </select>}
-      <select required aria-label={t("common.room")} value={form.room_id} onChange={e => setForm({ ...form, room_id: e.target.value })}>
-        <option value="">{t("reception.selectAvailableRoom")}</option>{availableRooms.map(room => <option key={room.id} value={room.id}>{room.room_number} · {room.room_type}</option>)}
-      </select>
-      <label>{t("reception.checkIn")} <input required type="date" value={form.check_in} onChange={e => setForm({ ...form, check_in: e.target.value })} /></label>
-      <label>{t("reception.checkOut")} <input required type="date" value={form.check_out} onChange={e => setForm({ ...form, check_out: e.target.value })} /></label>
-      <button type="button" onClick={() => void refreshAvailability()}>{t("reception.findRooms")}</button>
-      <input placeholder={t("reception.notesOptional")} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
-      <button>{t("reception.createBooking")}</button>
-      {recoverableOperations.length > 0 && <section aria-label={t("reception.openCase")} className="reception-recovery-list">
-        <h4>{t("reception.recoveryPendingTitle")}</h4>
-        {recoverableOperations.map(operation => <div key={operation.operation_token} className="reception-recovery-item">
-          <span><strong>{operation.guest_name}</strong><small>{formatDate(operation.check_in)} → {formatDate(operation.check_out)}</small></span>
-          <button type="button" onClick={() => useRecoveredGuest(operation)}>{t("reception.recoverGuest")}</button>
-        </div>)}
-      </section>}
-    </form> : null}
 
     {error && <p className="error" role="alert">{error}</p>}
     {notice && <p className="success" role="status">{notice}</p>}
@@ -274,7 +379,7 @@ function Bookings() {
       {(recoveryLoading || recoveryError) && <span>{recoveryError ? <>{recoveryError} <button type="button" onClick={() => void retryRecovery()}>{t("common.retry")}</button></> : t("reception.recoveryLoading")}</span>}
     </div>
 
-    <div className={`case-layout reception-case-layout ${selected ? "case-open" : "queue-open"}`}>
+    <div className={`case-layout reception-case-layout ${selected || focusedTask === "new-reservation" ? "case-open" : "queue-open"}`}>
       <aside className="reception-queue-panel" aria-label={t("reception.queueAria")}>
         <div className="reception-queue-heading">
           <div><h3>{t("reception.caseQueue")}</h3><p className="muted">{t("reception.queueNow")}{frontDeskBoard && ` · ${formatDate(frontDeskBoard.date)}`}</p></div>
@@ -291,8 +396,8 @@ function Bookings() {
           {visibleQueue.map(item => {
             const booking = item.booking;
             const readiness = roomReadinessState(booking.room_id);
-            const actionKey: MessageKey = item.lane === "arrival" ? "reception.queueActionCheckIn" : item.lane === "departure" ? "reception.queueActionCheckout" : "reception.queueActionOpen";
-            return <button type="button" data-booking-id={booking.id} className={`reception-queue-row lane-${item.lane} ${selected?.id === booking.id ? "selected" : ""}`} key={booking.id} onClick={() => item.lane === "arrival" ? openCheckIn(booking) : openNonArrivalCase(booking)}>
+            const actionKey: MessageKey = "reception.queueActionOpen";
+            return <button type="button" disabled={actionBusy} data-booking-id={booking.id} className={`reception-queue-row lane-${item.lane} ${selected?.id === booking.id ? "selected" : ""}`} key={booking.id} onClick={() => openNonArrivalCase(booking)}>
               <span className="reception-row-primary">
                 <strong className="reception-guest-name">{booking.guest_name}</strong>
                 <strong className="reception-room-number">{t("common.room")} {booking.room_number}</strong>
@@ -312,8 +417,25 @@ function Bookings() {
         </div>
       </aside>
 
-      {selected ? <article className="case-panel reception-booking-case">
-        <button type="button" className="secondary-button reception-case-back" onClick={applicationBack}>← {t("reception.back")}</button>
+      {selected || focusedTask === "new-reservation" ? <article className={`case-panel reception-booking-case ${focusedTask ? "reception-focused-task" : ""}`}>
+        <button type="button" className="secondary-button reception-case-back" onClick={() => focusedTask ? returnToCase() : applicationBack()}>← {focusedTask ? t("reception.taskCancel") : t("reception.back")}</button>
+        {focusedTask && error && <p className="error" role="alert">{error}</p>}
+        {focusedTask && notice && <p className="success" role="status">{notice}</p>}
+        {focusedTask === "new-reservation" ? <>
+          <div className="reception-task-heading"><p className="eyebrow">{t(createStep === 0 ? "reception.taskStepGuestDates" : createStep === 1 ? "reception.taskStepRoom" : "reception.taskStepReview")} · {createStep + 1}/3</p><h3 tabIndex={-1}>{t("reception.taskTitleCreate")}</h3><p className="muted">{t("reception.availabilitySnapshot")}</p></div>
+          <form onSubmit={event => { event.preventDefault(); if (createStep !== 2 || actionBusy) return; void submit(event).then(id => { if (id) { setFocusedTask(null); setCreateStep(0); updateLocation({ task: null, booking_id: id }, "replace"); } }); }} aria-label={t("reception.createAria")} className="reception-task-form">
+            {createStep === 0 && <section className="reception-task-fields"><h4 tabIndex={-1}>{t("reception.taskStepGuestDates")}</h4>
+              {guestsLoading && <p role="status">{t("reception.guestsLoading")}</p>}{!form.guest_id && !newGuestMode && recoveryLoading && <p role="status">{t("reception.recoveryLoading")}</p>}{guestsError && <p role="alert">{guestsError} <button type="button" onClick={() => void retryGuests()}>{t("common.retry")}</button></p>}
+          <label>{t("reception.guestSearch")} {!newGuestMode && <><input type="search" value={guestSearch} onChange={event => setGuestSearch(event.target.value)} aria-label={t("reception.guestSearch")} placeholder={t("guests.searchPlaceholder")} /><select required aria-label={t("common.guest")} value={form.guest_id} onChange={e => setForm({ ...form, guest_id: e.target.value })}><option value="">{t("reception.selectGuest")}</option>{guests.filter(guest => guest.full_name.toLocaleLowerCase().includes(guestSearch.toLocaleLowerCase())).map(guest => <option key={guest.id} value={guest.id}>{guest.full_name}</option>)}</select></>}</label>
+              {canCreateGuest && <label><input type="checkbox" checked={newGuestMode} onChange={event => setNewGuestMode(event.target.checked)} />{t("guests.add")}</label>}
+              {newGuestMode && canCreateGuest && <><input required autoComplete="name" aria-label={t("guests.fullName")} placeholder={t("guests.namePlaceholder")} value={newGuest.full_name} onChange={event => setNewGuest({ ...newGuest, full_name: event.target.value })} /><input required type="email" autoComplete="email" aria-label={t("reception.guestEmail")} placeholder={t("reception.guestEmail")} value={newGuest.email} onChange={event => setNewGuest({ ...newGuest, email: event.target.value })} /><input type="tel" autoComplete="tel" aria-label={t("guests.phone")} placeholder={t("guests.phone")} value={newGuest.phone} onChange={event => setNewGuest({ ...newGuest, phone: event.target.value })} /></>}
+              <label>{t("reception.checkIn")} <input required type="date" value={form.check_in} onChange={e => setForm({ ...form, check_in: e.target.value })} /></label><label>{t("reception.checkOut")} <input required type="date" value={form.check_out} onChange={e => setForm({ ...form, check_out: e.target.value })} /></label>
+            </section>}
+            {createStep === 1 && <section className="reception-task-fields"><h4 tabIndex={-1}>{t("reception.taskStepRoom")}</h4>{roomsLoading && <p role="status">{t("reception.roomsLoading")}</p>}{recoveryLoading && <p role="status">{t("reception.recoveryLoading")}</p>}{recoveryError && <p role="alert">{recoveryError} <button type="button" onClick={() => void retryRecovery()}>{t("common.retry")}</button></p>}<button type="button" onClick={() => void refreshAvailability()}>{t("reception.findRooms")}</button><select required aria-label={t("common.room")} value={form.room_id} onChange={e => setForm({ ...form, room_id: e.target.value })}><option value="">{t("reception.selectAvailableRoom")}</option>{availableRooms.map(room => <option key={room.id} value={room.id}>{room.room_number} · {room.room_type} · {formatCurrency(room.price_cents)}</option>)}</select><label>{t("common.notes")} <input placeholder={t("reception.notesOptional")} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></label>{recoverableOperations.length > 0 && <section className="reception-recovery-list"><h4>{t("reception.recoveryPendingTitle")}</h4>{recoverableOperations.map(operation => <div key={operation.operation_token} className="reception-recovery-item"><span><strong>{operation.guest_name}</strong><small>{formatDate(operation.check_in)} → {formatDate(operation.check_out)}</small></span><button type="button" onClick={() => useRecoveredGuest(operation)}>{t("reception.recoverGuest")}</button></div>)}</section>}</section>}
+            {createStep === 2 && <section className="reception-task-review"><h4 tabIndex={-1}>{t("reception.taskStepReview")}</h4><p>{newGuestMode ? newGuest.full_name : guests.find(guest => guest.id === form.guest_id)?.full_name}</p><p>{formatDate(form.check_in)} → {formatDate(form.check_out)}</p><p>{t("common.room")} {availableRooms.find(room => room.id === form.room_id)?.room_number}</p><p>{form.notes || t("common.noAdditionalContext")}</p></section>}
+            <footer className="reception-task-actions">{createStep > 0 && <button type="button" className="secondary-button" onClick={() => setCreateStep(step => step - 1)}>{t("reception.back")}</button>}<button type="button" className="secondary-button" onClick={() => returnToCase()}>{t("reception.taskCancel")}</button>{createStep < 2 ? <button type="button" disabled={!createStepReady} onClick={event => { event.preventDefault(); if (!createStepReady) return; if (createStep === 0) { setCreateStep(1); void refreshAvailability(); } else setCreateStep(2); }}>{t("reception.taskContinue")}</button> : <button type="submit" disabled={actionBusy}>{actionBusy ? t("common.saving") : t("reception.createBooking")}</button>}</footer>
+          </form>
+        </> : selected && <>
         <div className="case-panel-heading reception-case-title" tabIndex={-1}>
           <div><p className="eyebrow">{t("reception.selectedCase")}</p><h3>{selected.guest_name}</h3><p className="muted">{formatDate(selected.check_in)} → {formatDate(selected.check_out)} · {t("common.room")} {selected.room_number}</p></div>
         </div>
@@ -333,24 +455,37 @@ function Bookings() {
             <div><dt>{t("billing.credit")}</dt><dd>{formatCurrency(Math.max(accountSummary.paid_amount_cents - accountSummary.amount_cents, 0))}</dd></div>
           </dl> : <p className="muted">{t("reception.noAccountSummary")}</p>}
         </section>}
-        {selected.status === "Confirmed" && selectedBoardItem?.lane === "arrival" && <div className="reception-arrival-actions">{canWriteBookings && <button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button>}<DropdownMenu label={t("reception.moreActions")}>{canWriteBookings && <DropdownMenuItem onClick={() => setShowArrivalEdit(current => !current)}>{showArrivalEdit ? t("common.close") : t("reception.editAria")}</DropdownMenuItem>}<DropdownMenuItem onClick={clearSelectedCase}>{t("reception.closeCase")}</DropdownMenuItem></DropdownMenu></div>}
+        {selected.status === "Confirmed" && selectedBoardItem?.lane === "arrival" && <div className="reception-arrival-actions">{canWriteBookings && <button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button>}<DropdownMenu label={t("reception.moreActions")}>{canWriteBookings && <><DropdownMenuItem onClick={() => openTask("edit")}>{t("reception.editAria")}</DropdownMenuItem><DropdownMenuItem onClick={() => void cancelBooking()}>{t("reception.cancelBooking")}</DropdownMenuItem></>}<DropdownMenuItem onClick={clearSelectedCase}>{t("reception.closeCase")}</DropdownMenuItem></DropdownMenu></div>}
 
-        {selected.status === "Confirmed" && canWriteBookings && (selectedBoardItem?.lane !== "arrival" || showArrivalEdit) ? <form onSubmit={saveEdit} aria-label={t("reception.editAria")}>
-          <h4>{t("reception.stayDetails")}</h4>
-          <label>{t("common.guest")} <select aria-label={t("reception.editGuest")} value={editForm.guest_id} onChange={e => setEditForm({ ...editForm, guest_id: e.target.value })} required>{guests.map(guest => <option key={guest.id} value={guest.id}>{guest.full_name}</option>)}</select></label>
-          <label>{t("common.room")} <select aria-label={t("reception.editRoom")} value={editForm.room_id} onChange={e => setEditForm({ ...editForm, room_id: e.target.value })} required><option value="">{t("reception.selectRoomDates")}</option>{editAvailableRooms.map(room => <option key={room.id} value={room.id}>{room.room_number} · {room.room_type}</option>)}</select></label>
-          <label>{t("reception.checkIn")} <input aria-label={t("reception.editCheckIn")} type="date" value={editForm.check_in} onChange={e => setEditForm({ ...editForm, check_in: e.target.value })} required /></label>
-          <label>{t("reception.checkOut")} <input aria-label={t("reception.editCheckOut")} type="date" value={editForm.check_out} onChange={e => setEditForm({ ...editForm, check_out: e.target.value })} required /></label>
-          <label>{t("common.notes")} <input aria-label={t("reception.editNotes")} value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} placeholder={t("reception.notesOptional")} /></label>
-          <button>{t("reception.saveChanges")}</button>
-          <button type="button" onClick={() => void cancelBooking()}>{t("reception.cancelBooking")}</button>
-          <button type="button" onClick={clearSelectedCase}>{t("reception.closeCase")}</button>
+        {selected.status === "Confirmed" && canWriteBookings && focusedTask === "edit" ? <form onSubmit={event => { event.preventDefault(); if (editStep !== 1 || actionBusy) return; void saveEdit(event).then(ok => { if (ok) returnToCase(true); }); }} aria-label={t("reception.editAria")} className="reception-task-form">
+          <h4 tabIndex={-1}>{t("reception.taskTitleEdit")}</h4><p className="eyebrow">{editStep === 0 ? `1/2 · ${t("reception.stayDetails")}` : `2/2 · ${t("reception.editReview")}`}</p>
+          {guestsError && <p role="alert">{guestsError} <button type="button" onClick={() => void retryGuests()}>{t("common.retry")}</button></p>}
+          {editStep === 0 ? <>
+            <h4>{t("reception.stayDetails")}</h4>
+            <label>{t("common.guest")} <select aria-label={t("reception.editGuest")} value={editForm.guest_id} onChange={e => setEditForm({ ...editForm, guest_id: e.target.value })} required>{guests.map(guest => <option key={guest.id} value={guest.id}>{guest.full_name}</option>)}</select></label>
+            <label>{t("common.room")} <select aria-label={t("reception.editRoom")} value={editForm.room_id} onChange={e => setEditForm({ ...editForm, room_id: e.target.value })} required><option value="">{t("reception.selectRoomDates")}</option>{editAvailableRooms.map(room => <option key={room.id} value={room.id}>{room.room_number} · {room.room_type}</option>)}</select></label>
+            <label>{t("reception.checkIn")} <input aria-label={t("reception.editCheckIn")} type="date" value={editForm.check_in} onChange={e => setEditForm({ ...editForm, check_in: e.target.value })} required /></label>
+            <label>{t("reception.checkOut")} <input aria-label={t("reception.editCheckOut")} type="date" value={editForm.check_out} onChange={e => setEditForm({ ...editForm, check_out: e.target.value })} required /></label>
+            <label>{t("common.notes")} <input aria-label={t("reception.editNotes")} value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} placeholder={t("reception.notesOptional")} /></label>
+            <p className="muted" role="status">{t("reception.availabilitySnapshot")}</p>
+            <footer className="reception-task-actions"><button type="button" className="secondary-button" onClick={() => returnToCase()}>{t("reception.taskCancel")}</button><button type="button" disabled={!editStepReady} onClick={() => setEditStep(1)}>{t("reception.taskContinue")}</button></footer>
+          </> : <>
+            <section className="reception-task-review"><h4 tabIndex={-1}>{t("reception.editReview")}</h4>
+              <p><strong>{t("common.guest")}</strong> · {guests.find(guest => guest.id === editForm.guest_id)?.full_name ?? editForm.guest_id}</p>
+              <p><strong>{t("common.room")}</strong> · {editAvailableRooms.find(room => room.id === editForm.room_id)?.room_number ?? editForm.room_id}</p>
+              <p><strong>{t("reception.stayDetails")}</strong> · {formatDate(editForm.check_in)} → {formatDate(editForm.check_out)}</p>
+              <p><strong>{t("common.notes")}</strong> · {editForm.notes || t("common.noAdditionalContext")}</p>
+              <p className="muted">{t("reception.editReviewAuthoritative")}</p>
+            </section>
+            <footer className="reception-task-actions"><button type="button" className="secondary-button" onClick={() => setEditStep(0)}>{t("reception.back")}</button><button type="button" className="secondary-button" onClick={() => returnToCase()}>{t("reception.taskCancel")}</button><button disabled={actionBusy}>{actionBusy ? t("common.saving") : t("reception.saveChanges")}</button></footer>
+          </>}
         </form> : selected.status !== "Confirmed" ? <div className="locked-stay-details"><h4>{t("reception.stayDetails")}</h4><p className="muted">{t("reception.assignmentLocked")}</p></div> : null}
 
-        {selected.status === "Confirmed" && selectedBoardItem?.lane !== "arrival" && canWriteBookings && <button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button>}
+        {selected.status === "Confirmed" && selectedBoardItem?.lane !== "arrival" && canWriteBookings && <div className="reception-arrival-actions"><button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button><button type="button" className="secondary-button" onClick={() => openTask("edit")}>{t("reception.editAria")}</button><DropdownMenu label={t("reception.moreActions")}><DropdownMenuItem onClick={() => void cancelBooking()}>{t("reception.cancelBooking")}</DropdownMenuItem></DropdownMenu></div>}
 
-        {selected.status === "CheckedIn" && canWriteBookings && <>
-          <form onSubmit={reassign} aria-label={t("reception.reassignAria")} className="reassign-surface">
+        {selected.status === "CheckedIn" && canWriteBookings && <div className="reception-case-actions">
+          {focusedTask === null && <><button type="button" className="secondary-button" onClick={() => openTask("reassign")}>{t("reception.nextReassign")}</button><button type="button" className="secondary-button" onClick={() => openTask("checkout")}>{t("reception.nextCheckout")}</button></>}
+          {focusedTask === "reassign" && <form onSubmit={event => { void reassign(event).then(ok => { if (ok) returnToCase(true); }); }} aria-label={t("reception.reassignAria")} className="reassign-surface reception-task-form">
             <div className="reassign-surface-heading"><div><p className="eyebrow">{t("reception.reassignContext")}</p><h4>{t("reception.nextReassign")}</h4><p className="muted">{t("reception.reassignStayContext", { room: selected.room_number, checkout: formatDate(selected.check_out) })}</p></div><span className="reassign-date-chip">{effectiveDate ? formatDate(effectiveDate) : t("common.loading")}</span></div>
             <div className="reassign-room-summary"><div><span className="muted">{t("reception.reassignCurrentRoom")}</span><strong>{selected.room_number}</strong></div><span aria-hidden="true">→</span><div><span className="muted">{t("reception.reassignDestinationRoom")}</span><strong>{t("reception.reassignChooseRoom")}</strong></div></div>
             <label>{t("reception.selectDestination")} <select name="room_id" required disabled={!reassignBoard || actionBusy} value={reassignTargetId} onChange={event => { setReassignTargetId(event.target.value); void selectReassignDestination(event.target.value); }} aria-describedby="reassign-room-help"><option value="">{t("reception.selectDestination")}</option>{reassignRooms.map(room => {
@@ -375,15 +510,18 @@ function Bookings() {
               </> : <p className="muted" role="status">{t("reception.reassignQuoteLoading")}</p>}
             </section>}
             <label>{t("common.reason")} <input name="reason" minLength={6} maxLength={250} required aria-describedby="reassign-reason-help" disabled={actionBusy} /><span id="reassign-reason-help" className="field-hint">{t("reception.reassignReasonHint")}</span></label>
-            <button disabled={actionBusy || !reassignBoard || !reassignQuote || reassignQuote.destination_room_id !== reassignTargetId}>{actionBusy ? t("reception.reassignSubmitting") : t("reception.reassignRoom")}</button>
+            <footer className="reception-task-actions"><button type="button" className="secondary-button" onClick={() => returnToCase()}>{t("reception.taskCancel")}</button><button disabled={actionBusy || !reassignBoard || !reassignQuote || reassignQuote.destination_room_id !== reassignTargetId}>{actionBusy ? t("reception.reassignSubmitting") : t("reception.reassignRoom")}</button></footer>
           </form>
-          <form onSubmit={checkout} aria-label={t("reception.checkoutAria")}>
+          }
+          {focusedTask === "checkout" && <form onSubmit={event => { void checkout(event).then(ok => { if (ok) returnToCase(true); }); }} aria-label={t("reception.checkoutAria")} className="reception-task-form">
             <h4>{t("reception.nextCheckout")}</h4>
-            <label>{t("reception.paymentPolicy")} <select name="policy" required><option value="settled">{t("reception.settled")}</option><option value="pending-approved">{t("reception.pendingApproved")}</option></select></label>
+            <label>{t("reception.paymentPolicy")} <select name="policy" required><option value="settled">{t("reception.settled")}</option>{hotel.includes("bookings.checkout.override") && <option value="pending-approved">{t("reception.pendingApproved")}</option>}</select></label>
             <label>{t("reception.closingReference")} <input name="reference" minLength={6} placeholder={t("reception.referenceHint")} /></label>
             {([["charges", "reception.chargesReviewed"], ["release", "reception.roomReleaseConfirmed"], ["handoff", "reception.housekeepingHandoffConfirmed"]] as const satisfies ReadonlyArray<readonly [string, MessageKey]>).map(([name, label]) => <label key={name}><input type="checkbox" name={name} required />{t(label)}</label>)}
-            <button>{t("reception.completeCheckout")}</button>
+            <footer className="reception-task-actions"><button type="button" className="secondary-button" onClick={() => returnToCase()}>{t("reception.taskCancel")}</button><button disabled={actionBusy}>{t("reception.completeCheckout")}</button></footer>
           </form>
+          }
+        </div>}
         </>}
       </article> : <div className="empty-case"><h3>{t("reception.selectCase")}</h3><p className="muted">{t("reception.selectCaseHint")}</p></div>}
     </div>

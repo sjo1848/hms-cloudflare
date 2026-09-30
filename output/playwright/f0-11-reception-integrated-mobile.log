@@ -1,5 +1,5 @@
 ### Result
-{"integratedWorkerD1":true,"mutation":200,"bookingStatus":"CheckedIn","nextPriorityCase":"z-priority","nextCaseContext":"z-priority","viewport":"375x812","preservedLane":"arrivals","preservedSearch":"Arrival","consoleMessages":[{"type":"debug","text":"[vite] connecting..."},{"type":"debug","text":"[vite] connected."},{"type":"info","text":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}],"pageErrors":[]}
+{"integratedWorkerD1":true,"mutation":200,"bookingStatus":"CheckedIn","nextPriorityCase":"z-priority","nextCaseContext":"z-priority","viewport":"375x812","preservedLane":"arrivals","preservedSearch":"Arrival","consoleMessages":[{"type":"debug","text":"[vite] connecting..."},{"type":"debug","text":"[vite] connected."},{"type":"info","text":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"},{"type":"debug","text":"[vite] connecting..."},{"type":"debug","text":"[vite] connected."},{"type":"info","text":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}],"pageErrors":[]}
 ### Ran Playwright code
 ```js
 await (page => (async () => {
@@ -30,6 +30,48 @@ await (page => (async () => {
     throw new Error(`synthetic arrival missing from visible queue; search=${await page.getByLabel("Search this shift").inputValue()}; queue=${await page.locator(".reception-case-queue").innerText()}; dom=${JSON.stringify(dom)}; url=${page.url()}`);
   }
   await row.click();
+  const taskDeepLink = new URL(page.url());
+  taskDeepLink.searchParams.set("task", "edit");
+  await page.goto(taskDeepLink.toString());
+  await page.locator(".reception-focused-task .reception-task-form").waitFor();
+  if (new URL(page.url()).searchParams.get("booking_id") !== "a-next" || new URL(page.url()).searchParams.get("lane") !== "arrivals" || new URL(page.url()).searchParams.get("q") !== "Arrival") throw new Error(`Edit deep link lost selected booking or Queue context: ${page.url()}`);
+  await page.screenshot({ path: `output/playwright/block-c-edit-${width}x${height}.png`, fullPage: false });
+  const editForm = page.locator('form[aria-label="Edit booking"]');
+  await editForm.getByLabel("Edit notes").fill("Discard this draft");
+  await editForm.getByRole("button", { name: "Return to case" }).click();
+  const discardDialog = page.getByRole("alertdialog", { name: "Discard changes?" });
+  await discardDialog.waitFor();
+  if (!(await page.evaluate(() => document.activeElement?.matches("[data-discard-cancel]")))) throw new Error("dirty-task Alert Dialog did not initially focus Keep editing");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  if (!(await page.evaluate(() => document.activeElement?.matches("[data-discard-cancel]")))) throw new Error("Alert Dialog keyboard focus did not wrap to its first action");
+  await discardDialog.getByRole("button", { name: "Keep editing" }).click();
+  await editForm.waitFor({ state: "visible" });
+  if (await editForm.getByLabel("Edit notes").inputValue() !== "Discard this draft") throw new Error("dismissing dirty-task confirmation discarded the edit draft");
+  await editForm.getByRole("button", { name: "Return to case" }).click();
+  await page.getByRole("alertdialog", { name: "Discard changes?" }).getByRole("button", { name: "Discard changes" }).click();
+  await editForm.waitFor({ state: "hidden" });
+  await page.getByRole("heading", { name: /Next Arrival/ }).waitFor();
+  await page.goBack();
+  await editForm.waitFor({ state: "visible" });
+  await editForm.waitFor({ state: "visible" });
+  await editForm.getByLabel("Edit notes").fill("Synthetic Block C edit verified");
+  await page.waitForFunction(() => document.querySelector('form[aria-label="Edit booking"]')?.checkValidity() === true);
+  await page.waitForFunction(() => [...document.querySelectorAll('form[aria-label="Edit booking"] button')].some(button => button.textContent.trim() === "Continue" && !button.disabled));
+  await editForm.getByRole("button", { name: "Continue" }).click();
+  await editForm.getByText(/Synthetic Block C edit verified/).waitFor();
+  await editForm.getByText(/server revalidates/i).waitFor();
+  const editResponsePromise = page.waitForResponse(response => response.url().endsWith("/api/v1/bookings/a-next") && response.request().method() === "PATCH");
+  const editBoardPromise = page.waitForResponse(response => response.url().endsWith("/api/v1/front-desk/board") && response.request().method() === "GET");
+  await editForm.getByRole("button", { name: "Save changes" }).click();
+  const editResponse = await editResponsePromise;
+  if (editResponse.status() !== 200) throw new Error(`Worker edit did not save: ${editResponse.status()} ${await editResponse.text()}`);
+  const editBoard = await editBoardPromise;
+  const savedEdit = (await editBoard.json()).items.find(item => item.booking.id === "a-next")?.booking;
+  if (savedEdit?.notes !== "Synthetic Block C edit verified") throw new Error(`authoritative Worker board did not refresh the saved edit: ${JSON.stringify(savedEdit)}`);
+  await editForm.waitFor({ state: "hidden" });
+  await page.getByRole("heading", { name: /Next Arrival/ }).waitFor();
+  await page.getByRole("button", { name: /Check in/ }).click();
   const task = page.getByRole("dialog", { name: "Next action: check-in verification" });
   await task.waitFor();
   const taskText = await task.innerText();
@@ -77,4 +119,4 @@ await (page => (async () => {
 - Page URL: http://127.0.0.1:4176/bookings?lane=arrivals&q=Arrival&booking_id=z-priority
 - Page Title: HMS Elite
 ### Events
-- New console entries: .playwright-cli/console-2026-09-30T06-44-20-800Z.log#L1
+- New console entries: .playwright-cli/console-2026-09-30T19-29-17-578Z.log#L1-L2

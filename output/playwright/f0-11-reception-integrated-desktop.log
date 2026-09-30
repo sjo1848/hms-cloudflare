@@ -1,5 +1,5 @@
 ### Result
-{"integratedWorkerD1":true,"mutation":200,"bookingStatus":"CheckedIn","nextPriorityCase":"z-priority","viewport":"1280x900","preservedLane":"arrivals","preservedSearch":"Arrival","consoleMessages":[{"type":"debug","text":"[vite] connecting..."},{"type":"debug","text":"[vite] connected."},{"type":"info","text":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}],"pageErrors":[]}
+{"integratedWorkerD1":true,"mutation":200,"bookingStatus":"CheckedIn","nextPriorityCase":"z-priority","nextCaseContext":"visible-in-queue","viewport":"1280x900","preservedLane":"arrivals","preservedSearch":"Arrival","consoleMessages":[{"type":"debug","text":"[vite] connecting..."},{"type":"debug","text":"[vite] connected."},{"type":"info","text":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"},{"type":"debug","text":"[vite] connecting..."},{"type":"debug","text":"[vite] connected."},{"type":"info","text":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}],"pageErrors":[]}
 ### Ran Playwright code
 ```js
 await (page => (async () => {
@@ -30,6 +30,42 @@ await (page => (async () => {
     throw new Error(`synthetic arrival missing from visible queue; search=${await page.getByLabel("Search this shift").inputValue()}; queue=${await page.locator(".reception-case-queue").innerText()}; dom=${JSON.stringify(dom)}; url=${page.url()}`);
   }
   await row.click();
+  const taskDeepLink = new URL(page.url());
+  taskDeepLink.searchParams.set("task", "edit");
+  await page.goto(taskDeepLink.toString());
+  await page.locator(".reception-focused-task .reception-task-form").waitFor();
+  if (new URL(page.url()).searchParams.get("booking_id") !== "a-next" || new URL(page.url()).searchParams.get("lane") !== "arrivals" || new URL(page.url()).searchParams.get("q") !== "Arrival") throw new Error(`Edit deep link lost selected booking or Queue context: ${page.url()}`);
+  await page.screenshot({ path: `output/playwright/block-c-edit-${width}x${height}.png`, fullPage: false });
+  const editForm = page.locator('form[aria-label="Edit booking"]');
+  await editForm.getByLabel("Edit notes").fill("Discard this draft");
+  await editForm.getByRole("button", { name: "Return to case" }).click();
+  await page.getByRole("alertdialog", { name: "Discard changes?" }).getByRole("button", { name: "Keep editing" }).click();
+  await editForm.waitFor({ state: "visible" });
+  if (await editForm.getByLabel("Edit notes").inputValue() !== "Discard this draft") throw new Error("dismissing dirty-task confirmation discarded the edit draft");
+  await editForm.getByRole("button", { name: "Return to case" }).click();
+  await page.getByRole("alertdialog", { name: "Discard changes?" }).getByRole("button", { name: "Discard changes" }).click();
+  await editForm.waitFor({ state: "hidden" });
+  await page.getByRole("heading", { name: /Next Arrival/ }).waitFor();
+  await page.goBack();
+  await editForm.waitFor({ state: "visible" });
+  await editForm.waitFor({ state: "visible" });
+  await editForm.getByLabel("Edit notes").fill("Synthetic Block C edit verified");
+  await page.waitForFunction(() => document.querySelector('form[aria-label="Edit booking"]')?.checkValidity() === true);
+  await page.waitForFunction(() => [...document.querySelectorAll('form[aria-label="Edit booking"] button')].some(button => button.textContent.trim() === "Continue" && !button.disabled));
+  await editForm.getByRole("button", { name: "Continue" }).click();
+  await editForm.getByText(/Synthetic Block C edit verified/).waitFor();
+  await editForm.getByText(/server revalidates/i).waitFor();
+  const editResponsePromise = page.waitForResponse(response => response.url().endsWith("/api/v1/bookings/a-next") && response.request().method() === "PATCH");
+  const editBoardPromise = page.waitForResponse(response => response.url().endsWith("/api/v1/front-desk/board") && response.request().method() === "GET");
+  await editForm.getByRole("button", { name: "Save changes" }).click();
+  const editResponse = await editResponsePromise;
+  if (editResponse.status() !== 200) throw new Error(`Worker edit did not save: ${editResponse.status()} ${await editResponse.text()}`);
+  const editBoard = await editBoardPromise;
+  const savedEdit = (await editBoard.json()).items.find(item => item.booking.id === "a-next")?.booking;
+  if (savedEdit?.notes !== "Synthetic Block C edit verified") throw new Error(`authoritative Worker board did not refresh the saved edit: ${JSON.stringify(savedEdit)}`);
+  await editForm.waitFor({ state: "hidden" });
+  await page.getByRole("heading", { name: /Next Arrival/ }).waitFor();
+  await page.getByRole("button", { name: /Check in/ }).click();
   const task = page.getByRole("dialog", { name: "Next action: check-in verification" });
   await task.waitFor();
   const taskText = await task.innerText();
@@ -59,12 +95,17 @@ await (page => (async () => {
   const currentUrl = new URL(page.url());
   if (currentUrl.searchParams.get("lane") !== "arrivals" || currentUrl.searchParams.get("q") !== "Arrival") throw new Error("Reception lane/search URL was not preserved after authoritative refresh");
   const nextCase = page.locator('[data-booking-id="z-priority"].selected');
-  await nextCase.waitFor();
+  if (width < 500) {
+    await page.waitForFunction(() => new URL(location.href).searchParams.get("booking_id") === "z-priority");
+    await page.getByRole("heading", { name: /Priority Arrival/ }).waitFor({ state: "visible" });
+  } else {
+    await nextCase.waitFor({ state: "visible" });
+  }
   if (pageErrors.length) throw new Error(`integrated Reception raised page errors: ${JSON.stringify(pageErrors)}`);
   const consoleErrors = consoleMessages.filter(message => message.type === "error");
   if (consoleErrors.length) throw new Error(`integrated Reception raised console errors: ${JSON.stringify(consoleErrors)}`);
   await page.screenshot({ path: `output/playwright/f0-11-reception-integrated-${width < 500 ? "mobile" : "desktop"}-success.png`, fullPage: true });
-  return { integratedWorkerD1: true, mutation: mutation.status(), authoritativeBoardRead: board.status, bookingStatus: saved.status, nextPriorityCase: await nextCase.getAttribute("data-booking-id"), viewport: `${width}x${height}`, preservedLane: currentUrl.searchParams.get("lane"), preservedSearch: await page.getByLabel("Search this shift").inputValue(), consoleMessages, pageErrors };
+  return { integratedWorkerD1: true, mutation: mutation.status(), authoritativeBoardRead: board.status, bookingStatus: saved.status, nextPriorityCase: await nextCase.getAttribute("data-booking-id"), nextCaseContext: width < 500 ? new URL(page.url()).searchParams.get("booking_id") : "visible-in-queue", viewport: `${width}x${height}`, preservedLane: currentUrl.searchParams.get("lane"), preservedSearch: await page.getByLabel("Search this shift").inputValue(), consoleMessages, pageErrors };
 })()
 )(page);
 ```
@@ -72,4 +113,4 @@ await (page => (async () => {
 - Page URL: http://127.0.0.1:4176/bookings?lane=arrivals&q=Arrival&booking_id=z-priority
 - Page Title: HMS Elite
 ### Events
-- New console entries: .playwright-cli/console-2026-09-29T04-02-56-065Z.log#L1
+- New console entries: .playwright-cli/console-2026-09-30T19-09-21-309Z.log#L1-L2

@@ -8,7 +8,7 @@
 - **Target:** `Booking/Stay Case → Focused Task → authoritative result → Case/Queue` with context preservation. Preserve existing backend/API/capability/lifecycle/idempotency contracts; no new domain semantics or schema/backend work unless strictly necessary under an already approved contract.
 - **Extension/no-show/late arrival:** implement only if source-backed API, capability and lifecycle contracts exist; otherwise record `DEFERRED_CAPABILITY_OR_CONTRACT_NOT_PRESENT`.
 - **Budget baseline:** JS raw 306,733 B / gzip 88,540 B; CSS raw 52,127 B / gzip 9,664 B. Existing ceilings remain JS 330,000/100,000 B and CSS 55,000/15,000 B; no ceiling increase is authorized.
-- **Current phase:** frozen-contract admission complete; Block C UI implementation authorized to proceed. No product code has been changed yet.
+- **Current phase:** Block C implementation and required local validation are complete; immutable Artifact A is being frozen. The next steps are an orchestration-only Boundary B and a fresh separate read-only Independent Critic. No Block D–H work or promotion is authorized.
 
 ### Historical Block B handoffs (superseded)
 
@@ -350,3 +350,13 @@ The A2+B2 Critic verdict remains historically `PASS_WITH_CONDITIONS`; its sole L
 The fresh separate read-only Independent Critic returned `PASS` for the bounded condition follow-up on exact Artifact A2 `c11e3d667cdd2f54834ad07a06c4485755b0cfc0` + Boundary B3 `35c4d71704632aa13a008bac20f90e337971a1ba`. The sole LOW wording condition from A2+B2 is discharged; the historical `PASS_WITH_CONDITIONS` verdict is preserved. Follow-up report: `.orchestration/evidence/HMS-BLOCK-B-RECEPTION-BOOKING-STAY-001-INDEPENDENT-CRITIC-A2-B3-FOLLOWUP.md`.
 
 Block B is complete and awaits external Controller Review. This is not Human Product Acceptance. `resume_authorized=false`, `external_review.required=true`; no C–H work is started or authorized. No PR, push, merge, main, staging, deploy, production or real-data action occurred.
+
+### Block C implementation validated — Artifact A freeze and Independent Critic boundary
+
+- Block C implementation is complete under frozen Task Contract `.orchestration/contracts/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001.md`; frozen inventories, evidence matrix, invariant map and admission Pre-Critic are retained. Final implementation evidence and limitations: `.orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-RESULTS.md`.
+- New Reservation, Edit Reservation, Check-in, Reassignment and Checkout are validated as focused Case tasks against current contracts. Extension, No-show and Late Arrival are `DEFERRED_CAPABILITY_OR_CONTRACT_NOT_PRESENT`; no new backend/domain/API contract was introduced.
+- Full validation: Vitest 35 files / 175 tests; TypeScript/API/Web generated types; production build; architecture/i18n/budgets; D1 query plans; Worker/Web Wrangler dry-runs; integrated local synthetic Worker/D1/browser flows, responsive states, keyboard/focus, navigation, stale/partial reads, conflicts and context restoration. All PASS. Exact receipts/screenshots are listed in the results report.
+- Critical-path regression proves Queue visible at 2,601 ms and screenshot at 2,728 ms while `/rooms`, `/guests` and `/reservation-creation-operations` remain pending through 5,293/6,297/6,397 ms. This verifies causal independence; localhost timing is not a performance target. No after FCP/LCP measurement is claimed.
+- Bundle baseline/result/delta is in the results report; all current ceilings pass and remain unchanged. CSS raw is 54,937/55,000 B (63 B headroom); JS raw 320,330/330,000 B. Raw ceilings remain development growth guardrails.
+- The next boundary is a substantive immutable Artifact A, followed only by evidence/orchestration changes in Boundary B. A fresh, separate, read-only Independent Critic must audit exact A+B before Controller review. No self-approved substantive PASS is recorded here.
+- Blocks D–H remain NOT AUTHORIZED; promotion remains blocked; `resume_authorized=false`. No PR, push, merge, main, staging, deploy, production or real-data action occurred.

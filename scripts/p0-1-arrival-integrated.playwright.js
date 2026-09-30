@@ -41,6 +41,7 @@ page => (async () => {
   const rows = page.locator(".reception-queue-row");
   if ((await rows.first().getAttribute("data-booking-id")) !== "z-priority") throw new Error("Real board priority mismatch");
   await rows.first().click();
+  await page.locator(".reception-checkin-trigger").click();
   const task = page.getByRole("dialog", { name: "Next action: check-in verification" });
   await task.waitFor();
   if (!(await task.evaluate(element => element.classList.contains("ui-drawer-popup") && !element.classList.contains("ui-dialog-content")))) throw new Error("Mobile check-in did not select the Drawer surface");
@@ -66,6 +67,7 @@ page => (async () => {
   await task.waitFor({ state: "hidden" });
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-booking-id") === "z-priority");
   await page.locator('[data-booking-id="z-priority"]').click();
+  await page.locator(".reception-checkin-trigger").click();
   await task.waitFor();
   await page.waitForFunction(() => document.activeElement?.classList.contains("checkin-step-heading"));
   await enterCheckIn(task);
@@ -131,6 +133,7 @@ page => (async () => {
     await setupPage(desktop, 1280);
     await desktop.screenshot({ path: "output/playwright/ux-ui-checkin-desktop-reception.png" });
     await desktop.locator('[data-booking-id="a-next"]').click();
+    await desktop.locator(".reception-checkin-trigger").click();
     const desktopTask = desktop.getByRole("dialog", { name: "Next action: check-in verification" });
     await desktopTask.waitFor();
     const desktopBounds = await desktopTask.evaluate(element => { const rect = element.getBoundingClientRect(); const header = element.querySelector(".checkin-task-header").getBoundingClientRect(); const footer = element.querySelector(".checkin-task-actions").getBoundingClientRect(); const body = element.querySelector(".checkin-task-body"); return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height, viewport: innerWidth, viewportHeight: innerHeight, centerX: rect.left + rect.width / 2, centerY: rect.top + rect.height / 2, headerTop: header.top, footerBottom: footer.bottom, bodyOverflow: getComputedStyle(body).overflowY, backdrop: getComputedStyle(element, "::backdrop").backgroundColor, dialogSlot: element.getAttribute("data-slot"), side: element.getAttribute("data-side"), classes: element.className }; });

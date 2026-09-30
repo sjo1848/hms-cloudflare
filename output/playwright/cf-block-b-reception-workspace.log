@@ -1,5 +1,5 @@
 ### Result
-{"integratedWorkerD1":true,"queueVisibleUpperBoundMs":2913,"queueScreenshotEvidence":{"queueDomReadyMs":2578,"screenshotCapturedMs":2702,"pendingAuxiliaryPaths":["/api/v1/rooms","/api/v1/guests","/api/v1/reservation-creation-operations"]},"queueTimeline":{"/api/v1/rooms":{"startMs":745,"endMs":5246,"status":200},"/api/v1/guests":{"startMs":757,"endMs":6397,"status":200},"/api/v1/reservation-creation-operations":{"startMs":760,"endMs":6393,"status":200},"/api/v1/front-desk/board":{"startMs":765,"endMs":2439,"status":200}},"staleOverlap":{"staleOldResponse":200,"freshNewResponse":200,"currentBeforeOldCompletion":"Priority Arrival\nRoom 101\nARRIVAL\nArrival delayed\n09/29/2026 → 10/03/2026\nCheck in →\nRoom ready for arrival","currentAfterOldCompletion":"Priority Arrival\nRoom 101\nARRIVAL\nArrival delayed\n09/29/2026 → 10/03/2026\nCheck in →\nRoom ready for arrival","oldResultIgnored":true},"viewportEvidence":[{"viewport":"1280x600","name":"WIDE reduced height","mode":"Queue","queueState":{"queueVisible":true,"caseVisible":false,"queue":{"top":183,"bottom":759},"search":{"top":269,"bottom":331},"filters":{"top":341,"bottom":455},"list":{"top":467,"bottom":738},"filterButtonHeight":34,"navTop":0,"viewportHeight":600,"filterGeometry":[{"text":"Attention\n15","button":{"left":331,"right":466.9375},"label":{"left":341,"right":405.078125},"count":{"left":440.234375,"right":456.9375},"height":34},{"text":"Arrivals\n15","button":{"left":472.9375,"right":608.890625},"label":{"left":482.9375,"right":535.359375},"count":{"left":582.1875,"right":598.890625},"height":34},{"text":"In house\n0","button":{"left":331,"right":466.9375},"label":{"left":341,"right":398.796875},"count":{"left":448.578125,"right":456.9375},"height":34},{"text":"Departures\n0","button":{"left":472.9375,"right":608.890625},"label":{"left":482.9375,"right":559.125},"count":{"left":590.53125,"right":598.890625},"height":34},{"text":"Reservations\n0","button":{"left":331,"right":466.9375},"label":{"left":341,"right":429.28125},"count":{"left":448.578125,"right":456.9375},"height":34},{"text":"All\n15","button":{"left":472.9375,"right":608.890625},"label":{"left":482.9375,"right":500.453125},"count":{"left":582.1875,"right":598.890625},"height":34}],"filterOperation":"Arrivals → All PASS"}},{"viewport":"900x700","name":"COMPACT","mode":"Queue","queueState":{"queueVisible":true,"caseVisible":false,"queue":{"top":161,"bottom":531},"search":{"top":233,"bottom":295},"filters":{"top":305,"bottom":346},"list":{"top":358,"bottom":510},"filterButtonHeight":34,"navTop":632,"viewportHeight":700}},{"viewport":"768x1024","name":"COMPACT","mode":"Queue","queueState":{"queueVisible":true,"caseVisible":false,"queue":{"top":161,"bottom":855},"search":{"top":233,"bottom":295},"filters":{"top":305,"bottom":346},"list":{"top":358,"bottom":834},"filterButtonHeight":34,"navTop":956,"viewportHeight":1024}},{"viewport":"390x844","name":"NARROW","mode":"Queue","queueState":{"queueVisible":true,"caseVisible":false,"queue":{"top":233,"bottom":747},"search":{"top":315,"bottom":377},"filters":{"top":387,"bottom":428},"list":{"top":440,"bottom":730},"filterButtonHeight":34,"navTop":779,"viewportHeight":844}},{"viewport":"320x700","name":"NARROW","mode":"Queue","queueState":{"queueVisible":true,"caseVisible":false,"queue":{"top":233,"bottom":603},"search":{"top":315,"bottom":377},"filters":{"top":387,"bottom":428},"list":{"top":440,"bottom":586},"filterButtonHeight":34,"navTop":635,"viewportHeight":700}},{"viewport":"844x390","name":"NARROW landscape","mode":"Queue","queueState":{"queueVisible":true,"caseVisible":false,"queue":{"top":137,"bottom":322},"search":{"top":183,"bottom":235},"filters":{"top":240,"bottom":273},"list":{"top":278,"bottom":311},"filterButtonHeight":30,"navTop":322,"viewportHeight":390}},{"viewport":"1280x600","name":"WIDE reduced height","mode":"Case","caseState":{"queueVisible":true,"caseVisible":true,"backVisible":false,"caseScrollHeight":313,"caseClientHeight":313}},{"viewport":"900x700","name":"COMPACT","mode":"Case","caseState":{"queueVisible":false,"caseVisible":true,"backVisible":true,"caseScrollHeight":298,"caseClientHeight":298}},{"viewport":"768x1024","name":"COMPACT","mode":"Case","caseState":{"queueVisible":false,"caseVisible":true,"backVisible":true,"caseScrollHeight":313,"caseClientHeight":313}},{"viewport":"390x844","name":"NARROW","mode":"Case","caseState":{"queueVisible":false,"caseVisible":true,"backVisible":true,"caseScrollHeight":520,"caseClientHeight":520}},{"viewport":"320x700","name":"NARROW","mode":"Case","caseState":{"queueVisible":false,"caseVisible":true,"backVisible":true,"caseScrollHeight":613,"caseClientHeight":613}},{"viewport":"844x390","name":"NARROW landscape","mode":"Case","caseState":{"queueVisible":false,"caseVisible":true,"backVisible":true,"caseScrollHeight":313,"caseClientHeight":313}},{"viewport":"320x700","mode":"Keyboard and continuity","selectedId":"block-b-scroll-booking-11","queueScrollBefore":296,"queueScrollAfter":296,"focusRestored":true,"focusVisible":true}],"filtersSearchAndHistory":"PASS","appBackAndFocus":"PASS","keyboardScrollContext":{"viewport":"320x700","selectedId":"block-b-scroll-booking-11","queueScrollBefore":296,"queueScrollAfter":296,"focusRestored":true,"focusVisible":true},"pageErrors":[]}
+{"integratedWorkerD1":true,"queueVisibleUpperBoundMs":2601,"queueScreenshotEvidence":{"queueDomReadyMs":2601,"screenshotCapturedMs":2728,"pendingAuxiliaryPaths":["/api/v1/rooms","/api/v1/guests","/api/v1/reservation-creation-operations"]},"queueTimeline":{"/api/v1/rooms":{"startMs":792,"endMs":5293,"status":200},"/api/v1/guests":{"startMs":797,"endMs":6297,"status":200},"/api/v1/reservation-creation-operations":{"startMs":799,"endMs":6397,"status":200},"/api/v1/front-desk/board":{"startMs":801,"endMs":2289,"status":200}},"staleOverlap":{"staleOldResponse":200,"freshNewResponse":200,"currentBeforeOldCompletion":"Priority Arrival\nRoom 101\nARRIVAL\nArrival delayed\n09/29/2026 → 10/03/2026\nOpen case →\nRoom ready for arrival","currentAfterOldCompletion":"Priority Arrival\nRoom 101\nARRIVAL\nArrival delayed\n09/29/2026 → 10/03/2026\nOpen case →\nRoom ready for arrival","oldResultIgnored":true},"viewportEvidence":[{"viewport":"1280x600","name":"WIDE reduced height","mode":"Queue","queueState":{"queueVisible":true,"caseVisible":false,"queue":{"top":183,"bottom":759},"search":{"top":269,"bottom":331},"filters":{"top":341,"bottom":455},"list":{"top":467,"bottom":738},"filterButtonHeight":34,"navTop":0,"viewportHeight":600,"filterGeometry":[{"text":"Attention\n15","button":{"left":331,"right":466.9375},"label":{"left":341,"right":405.078125},"count":{"left":440.234375,"right":456.9375},"height":34},{"text":"Arrivals\n15","button":{"left":472.9375,"right":608.890625},"label":{"left":482.9375,"right":535.359375},"count":{"left":582.1875,"right":598.890625},"height":34},{"text":"In house\n0","button":{"left":331,"right":466.9375},"label":{"left":341,"right":398.796875},"count":{"left":448.578125,"right":456.9375},"height":34},{"text":"Departures\n0","button":{"left":472.9375,"right":608.890625},"label":{"left":482.9375,"right":559.125},"count":{"left":590.53125,"right":598.890625},"height":34},{"text":"Reservations\n0","button":{"left":331,"right":466.9375},"label":{"left":341,"right":429.28125},"count":{"left":448.578125,"right":456.9375},"height":34},{"text":"All\n15","button":{"left":472.9375,"right":608.890625},"label":{"left":482.9375,"right":500.453125},"count":{"left":582.1875,"right":598.890625},"height":34}],"filterOperation":"Arrivals → All PASS"}},{"viewport":"900x700","name":"COMPACT","mode":"Queue","queueState":{"queueVisible":true,"caseVisible":false,"queue":{"top":161,"bottom":531},"search":{"top":233,"bottom":295},"filters":{"top":305,"bottom":346},"list":{"top":358,"bottom":510},"filterButtonHeight":34,"navTop":632,"viewportHeight":700}},{"viewport":"768x1024","name":"COMPACT","mode":"Queue","queueState":{"queueVisible":true,"caseVisible":false,"queue":{"top":161,"bottom":855},"search":{"top":233,"bottom":295},"filters":{"top":305,"bottom":346},"list":{"top":358,"bottom":834},"filterButtonHeight":34,"navTop":956,"viewportHeight":1024}},{"viewport":"390x844","name":"NARROW","mode":"Queue","queueState":{"queueVisible":true,"caseVisible":false,"queue":{"top":233,"bottom":747},"search":{"top":315,"bottom":377},"filters":{"top":387,"bottom":428},"list":{"top":440,"bottom":730},"filterButtonHeight":34,"navTop":779,"viewportHeight":844}},{"viewport":"320x700","name":"NARROW","mode":"Queue","queueState":{"queueVisible":true,"caseVisible":false,"queue":{"top":233,"bottom":603},"search":{"top":315,"bottom":377},"filters":{"top":387,"bottom":428},"list":{"top":440,"bottom":586},"filterButtonHeight":34,"navTop":635,"viewportHeight":700}},{"viewport":"844x390","name":"NARROW landscape","mode":"Queue","queueState":{"queueVisible":true,"caseVisible":false,"queue":{"top":137,"bottom":322},"search":{"top":183,"bottom":235},"filters":{"top":240,"bottom":273},"list":{"top":278,"bottom":311},"filterButtonHeight":30,"navTop":322,"viewportHeight":390}},{"viewport":"1280x600","name":"WIDE reduced height","mode":"Case","caseState":{"queueVisible":true,"caseVisible":true,"backVisible":false,"caseScrollHeight":313,"caseClientHeight":313}},{"viewport":"900x700","name":"COMPACT","mode":"Case","caseState":{"queueVisible":false,"caseVisible":true,"backVisible":true,"caseScrollHeight":298,"caseClientHeight":298}},{"viewport":"768x1024","name":"COMPACT","mode":"Case","caseState":{"queueVisible":false,"caseVisible":true,"backVisible":true,"caseScrollHeight":313,"caseClientHeight":313}},{"viewport":"390x844","name":"NARROW","mode":"Case","caseState":{"queueVisible":false,"caseVisible":true,"backVisible":true,"caseScrollHeight":520,"caseClientHeight":520}},{"viewport":"320x700","name":"NARROW","mode":"Case","caseState":{"queueVisible":false,"caseVisible":true,"backVisible":true,"caseScrollHeight":613,"caseClientHeight":613}},{"viewport":"844x390","name":"NARROW landscape","mode":"Case","caseState":{"queueVisible":false,"caseVisible":true,"backVisible":true,"caseScrollHeight":313,"caseClientHeight":313}},{"viewport":"320x700","mode":"Keyboard and continuity","selectedId":"block-b-scroll-booking-11","queueScrollBefore":296,"queueScrollAfter":296,"focusRestored":true,"focusVisible":true}],"filtersSearchAndHistory":"PASS","appBackAndFocus":"PASS","keyboardScrollContext":{"viewport":"320x700","selectedId":"block-b-scroll-booking-11","queueScrollBefore":296,"queueScrollAfter":296,"focusRestored":true,"focusVisible":true},"pageErrors":[]}
 ### Ran Playwright code
 ```js
 await (page => (async () => {
@@ -18,7 +18,7 @@ await (page => (async () => {
   const staleBoardReleased = new Promise(resolve => { staleBoardReleaseResolve = resolve; });
   const pageErrors = [];
   page.on("pageerror", error => pageErrors.push(error.message));
-  await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
+  await page.addInitScript(() => { if (location.protocol !== "about:") localStorage.setItem("hms.locale", "en"); });
   await page.route("**/api/v1/**", async route => {
     const source = new URL(route.request().url());
     const pathname = source.pathname;
@@ -38,6 +38,7 @@ await (page => (async () => {
       if (staleRaceRequest === 1) {
         const response = await route.fetch({ url: target, headers });
         const body = await response.json();
+        assert(Array.isArray(body?.items), `Stale-response test board payload is invalid: status=${response.status()} body=${JSON.stringify(body)}`);
         const selectedBoardRow = body.items.find(item => item.booking.id === "z-priority");
         assert(selectedBoardRow, "Race fixture is missing z-priority board row");
         selectedBoardRow.booking.guest_name = "STALE_OLDER_BOARD_RESULT";
@@ -76,7 +77,12 @@ await (page => (async () => {
     assert(dimensions.document <= dimensions.width && dimensions.body <= dimensions.width, `${label}: horizontal overflow ${JSON.stringify(dimensions)}`);
   };
   const queueReady = async () => {
-    await page.locator('[data-booking-id="z-priority"]').waitFor({ state: "visible", timeout: 12000 });
+    try {
+      await page.locator('[data-booking-id="z-priority"]').waitFor({ state: "visible", timeout: 12000 });
+    } catch {
+      const diagnostic = await page.evaluate(() => ({ url: location.href, viewport: [innerWidth, innerHeight], layout: document.querySelector(".reception-case-layout")?.className, panel: document.querySelector(".reception-queue-panel")?.getBoundingClientRect().toJSON(), row: document.querySelector('[data-booking-id="z-priority"]')?.getBoundingClientRect().toJSON(), panelDisplay: document.querySelector(".reception-queue-panel") && getComputedStyle(document.querySelector(".reception-queue-panel")).display, panelVisibility: document.querySelector(".reception-queue-panel") && getComputedStyle(document.querySelector(".reception-queue-panel")).visibility }));
+      throw new Error(`Queue row did not become visible: ${JSON.stringify(diagnostic)}`);
+    }
     const queue = await page.locator(".reception-case-queue").isVisible();
     if (!queue) {
       const diagnostic = await page.evaluate(() => ({ layout: document.querySelector(".reception-case-layout")?.className, panel: document.querySelector(".reception-queue-panel")?.getBoundingClientRect().toJSON(), queue: document.querySelector(".reception-case-queue")?.getBoundingClientRect().toJSON(), display: document.querySelector(".reception-queue-panel") && getComputedStyle(document.querySelector(".reception-queue-panel")).display }));
@@ -112,28 +118,34 @@ await (page => (async () => {
   await page.waitForFunction(() => new URL(location.href).searchParams.get("q") === "Priority");
   const filteredUrl = new URL(page.url());
   assert(filteredUrl.searchParams.get("lane") === "arrivals" && filteredUrl.searchParams.get("q") === "Priority", `Filter/search did not persist in URL: ${page.url()}`);
-  const queueVisibleAt = Date.now();
-  const queueVisibleMs = queueVisibleAt - started;
-  const settledAncillaries = ["/api/v1/rooms", "/api/v1/guests", "/api/v1/reservation-creation-operations"].filter(path => networkTimings[path]?.endMs !== undefined && networkTimings[path].endMs <= queueVisibleMs);
-  assert(settledAncillaries.length === 0, `At least one ancillary settled before Queue became visible; elapsed=${queueVisibleMs}; timings=${JSON.stringify(networkTimings)}`);
+  const queueVisibleMs = queueDomReadyAt - started;
   await Promise.all(["/api/v1/front-desk/board", "/api/v1/rooms", "/api/v1/guests", "/api/v1/reservation-creation-operations"].filter(path => networkTimings[path]?.endMs === undefined).map(path => page.waitForResponse(response => new URL(response.url()).pathname === path, { timeout: 15000 })));
   assert(["/api/v1/rooms", "/api/v1/guests", "/api/v1/reservation-creation-operations"].every(path => networkTimings[path]?.endMs > queueVisibleMs), `Ancillary requests did not all finish after Queue-ready: ${JSON.stringify(networkTimings)}`);
   slowAncillaries = false;
   await noHorizontalOverflow("WIDE 1280x900");
   await page.screenshot({ path: "output/playwright/block-b-1280x900-queue.png", fullPage: false });
+  // Isolate browser-history assertions from prior lane/search edits so one Back
+  // means the focused Case transition and one Forward means the same Case.
+  await page.goto("about:blank");
+  await page.goto(`${origin}/bookings?origin=block-b&lane=arrivals&q=Priority#queue`);
+  await queueReady();
   await page.locator('[data-booking-id="z-priority"]').click();
-  await page.getByRole("dialog", { name: /Next action: check-in verification/ }).waitFor();
-  await page.getByRole("button", { name: "Close check-in task" }).click();
   await page.locator(".reception-booking-case").waitFor({ state: "visible" });
   await page.screenshot({ path: "output/playwright/block-b-1280x900-case.png", fullPage: false });
   await page.goBack();
+  await page.locator(".reception-booking-case").waitFor({ state: "hidden" });
   await queueReady();
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-booking-id") === "z-priority");
   const returnFocus = await page.evaluate(() => document.activeElement?.getAttribute("data-booking-id"));
   assert(returnFocus === "z-priority", `Application Back did not restore queue-row focus: ${returnFocus}`);
   await page.goForward();
-  await page.locator(".reception-booking-case").waitFor({ state: "visible" });
+  await page.locator(".reception-booking-case").waitFor({ state: "visible", timeout: 6000 }).catch(async () => {
+    const state = await page.evaluate(() => ({ url: location.href, width: innerWidth, layout: document.querySelector(".reception-case-layout")?.className, caseClass: document.querySelector(".reception-booking-case")?.className, caseDisplay: document.querySelector(".reception-booking-case") && getComputedStyle(document.querySelector(".reception-booking-case")).display, queueDisplay: document.querySelector(".reception-queue-panel") && getComputedStyle(document.querySelector(".reception-queue-panel")).display, task: document.querySelector(".reception-focused-task")?.className, selected: document.querySelector(".reception-queue-row.selected")?.dataset.bookingId }));
+    throw new Error(`Browser Forward did not restore the Case after Queue: ${JSON.stringify(state)}`);
+  });
+  assert(new URL(page.url()).searchParams.get("booking_id") === "z-priority", `Browser Forward did not restore the selected booking URL: ${page.url()}`);
   await page.goBack();
+  await page.locator(".reception-booking-case").waitFor({ state: "hidden" });
   await queueReady();
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-booking-id") === "z-priority");
   const baseline = { queueVisibleMs };
@@ -189,7 +201,8 @@ await (page => (async () => {
       };
     });
     if (width <= 900) assert([queueState.queue.bottom, queueState.search.bottom, queueState.filters.bottom].every(bottom => bottom <= queueState.navTop), `${name} Queue controls are occluded by mobile navigation: ${JSON.stringify(queueState)}`);
-    assert(queueState.queueVisible && !queueState.caseVisible, `${name} Queue state is not presented separately: ${JSON.stringify(queueState)}`);
+    assert(queueState.queueVisible, `${name} Queue panel is not visible: ${JSON.stringify(queueState)}`);
+    if (width <= 900) assert(!queueState.caseVisible, `${name} should use the Queue state instead of stacking/retaining a Case panel: ${JSON.stringify(queueState)}`);
     if (width <= 900) {
       assert(await page.locator(".reception-queue-search input").isVisible() && await page.locator(".reception-queue-tools button").isVisible(), `${name} Queue search/refresh controls are unreachable`);
       assert(queueState.filters.bottom - queueState.filters.top >= 30 && queueState.filterButtonHeight >= 30, `${name} Queue filters are clipped/unusable: ${JSON.stringify(queueState)}`);
@@ -230,6 +243,7 @@ await (page => (async () => {
   const selectedId = await selectedRow.getAttribute("data-booking-id");
   await selectedRow.focus();
   await selectedRow.press("Enter");
+  await page.locator(".reception-checkin-trigger").press("Enter");
   await page.getByRole("dialog", { name: /Next action: check-in verification/ }).waitFor();
   const closeTask = page.getByRole("button", { name: "Close check-in task" });
   await closeTask.focus();
@@ -245,6 +259,7 @@ await (page => (async () => {
   assert(await page.evaluate(() => document.activeElement?.matches(":focus-visible")), "Keyboard-activated case did not restore a visible keyboard focus indicator");
   const keyboardContext = { viewport: "320x700", selectedId, queueScrollBefore, queueScrollAfter, focusRestored: true, focusVisible: true };
   await selectedRow.press("Enter");
+  await page.locator(".reception-checkin-trigger").press("Enter");
   await page.getByRole("dialog", { name: /Next action: check-in verification/ }).waitFor();
   await closeTask.focus();
   await closeTask.press("Enter");

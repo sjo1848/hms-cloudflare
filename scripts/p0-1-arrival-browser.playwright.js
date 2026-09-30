@@ -55,6 +55,7 @@ page => (async () => {
     const rows = page.locator(".reception-queue-row");
     if ((await rows.first().getAttribute("data-booking-id")) !== "z-priority") throw new Error("Queue did not follow canonical priority");
     await rows.first().click();
+    await page.locator(".reception-checkin-trigger").click();
     const dialog = page.getByRole("dialog", { name: "Next action: check-in verification" });
     await dialog.waitFor();
     await page.waitForFunction(() => document.activeElement?.classList.contains("checkin-step-heading"));
@@ -130,6 +131,7 @@ page => (async () => {
   await page.getByRole("button", { name: /^Arrivals / }).click();
   await page.getByLabel("Search this shift").fill("Guest Priority");
   await page.locator('[data-booking-id="z-priority"]').click();
+  await page.locator(".reception-checkin-trigger").click();
   const lastTask = page.getByRole("dialog", { name: "Next action: check-in verification" });
   await lastTask.getByLabel("Final guest count").fill("2");
   await lastTask.getByLabel("Document verified").check();

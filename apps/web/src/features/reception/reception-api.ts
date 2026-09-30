@@ -18,6 +18,12 @@ export function loadRecoverableReservationOperations() {
   return api<ReservationCreationOperation[]>("/reservation-creation-operations");
 }
 
+export function loadReservationOperation(operationToken: string) {
+  return api<{ operation: ReservationCreationOperation; booking: Booking | null }>(
+    `/reservation-creation-operations/${encodeURIComponent(operationToken)}`,
+  );
+}
+
 export type ReservationCreationOperation = {
   operation_token: string; stage: "GUEST_CREATED" | "EXISTING_GUEST_SELECTED"; guest_id: string;
   guest_name: string; booking_id: string; room_id: string; check_in: string; check_out: string;

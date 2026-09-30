@@ -1,29 +1,29 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-b-reception",
+  "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-c-reception-workflows",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "BLOCK_C_PREIMPLEMENTATION_CONTRACT_FROZEN",
+  "phase": "BLOCK_C_IMPLEMENTATION_VALIDATED_ARTIFACT_A_FREEZE_REQUIRED",
   "resume_authorized": false,
   "runtime_status": "RUNNING",
-  "active_task": "HMS-BLOCK-C-RECEPTION-WORKFLOWS-001 — authorized Reception workflow UI implementation",
-  "last_completed_task": "Frozen Block C Task Contract, workflow/API/capability inventory, 24-invariant map, evidence matrix and admission Pre-Critic before product code",
-  "last_completed_head": "fc2daa783b8ef361e39e6945dbdfe2bfe6345b98",
+  "active_task": "HMS-BLOCK-C-RECEPTION-WORKFLOWS-001 — freeze validated implementation as Artifact A, then create orchestration-only Boundary B",
+  "last_completed_task": "Block C implementation, full local validation and final Pre-Critic gate passed",
+  "last_completed_head": "a52f1a9f13a0355f8f7b4ff142d913d91acc5072",
   "work_branch": "impl/hms-block-c-reception-workflows",
   "pr": null,
   "wave": "BLOCK C — RECEPTION TRANSACTIONAL WORKFLOWS",
-  "status_label": "BLOCK_C_IMPLEMENTATION_IN_PROGRESS",
-  "next_action": "IMPLEMENT_FOCUSED_RECEPTION_TASK_FLOWS_WITH_EXISTING_API_CONTRACTS",
-  "stop_reason": "Block C implementation is authorized under the frozen Task Contract; Blocks D–H remain unauthorized.",
+  "status_label": "BLOCK_C_VALIDATED_ARTIFACT_A_FREEZE_REQUIRED",
+  "next_action": "FREEZE_SUBSTANTIVE_ARTIFACT_A_THEN_CREATE_ORCHESTRATION_ONLY_BOUNDARY_B_FOR_INDEPENDENT_CRITIC",
+  "stop_reason": "All authorized Block C implementation and local validation passed. Freeze the artifact and obtain exact-pair Independent Critic review before Controller handoff.",
   "event": {
-    "seq": 249,
-    "id": "BLOCK-C-CONTRACT-PACKAGE-FROZEN",
-    "type": "PREIMPLEMENTATION_CONTRACT_GATE_PASSED"
+    "seq": 250,
+    "id": "BLOCK-C-IMPLEMENTATION-VALIDATED",
+    "type": "PRECRITIC_GATE_PASSED_ARTIFACT_A_FREEZE_REQUIRED"
   },
   "external_review": {
     "last_audited_head": "fc2daa783b8ef361e39e6945dbdfe2bfe6345b98",
     "artifact_head": "fc2daa783b8ef361e39e6945dbdfe2bfe6345b98",
-    "last_verdict": "B5 checkpoint accepted for Block C by explicit Human authorization; no new Independent Critic boundary exists yet.",
+    "last_verdict": "Block C explicitly authorized by Human; implementation validation passed; exact Artifact A + Boundary B Independent Critic is the next review boundary.",
     "review_path": "HMS Cloudflare — BLOCK C AUTHORIZATION in current Controller thread",
     "required": false,
     "prior_reviews_pending": [
@@ -346,5 +346,18 @@
     "evidence": ".orchestration/evidence/HMS-B0-RUNTIME-LOAD-INVESTIGATION-001.md",
     "classification": "ACCEPTED_MATERIAL_RECEPTION_CRITICAL_PATH_COUPLING_LOCAL_SYNTHETIC_RUNTIME",
     "policy": "B0 closed at 5a42c5e1a62191843335f3fd217fead62b3ef0b2; JS raw 330000, CSS raw 55000; JS gzip 100000 and CSS gzip 15000 unchanged; raw ceilings are development growth guardrails"
-  }
+  },
+  "block_c_task_contract": ".orchestration/contracts/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001.md; frozen at a52f1a9f13a0355f8f7b4ff142d913d91acc5072",
+  "block_c_inventory": ".orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INVENTORY.md",
+  "block_c_evidence_matrix": ".orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-EVIDENCE-MATRIX.md",
+  "block_c_invariants": ".orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-INVARIANTS.md; all 24 classified, all applicable PASS",
+  "block_c_precritic": ".orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-PRECRITIC.md; final implementation gate PASS, not Independent Critic",
+  "block_c_results": ".orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-RESULTS.md",
+  "block_c_validation": "PASS: full Vitest 35 files/175 tests; TypeScript, generated types, build, architecture/i18n/budgets, D1 query plans, API/Web Wrangler dry-runs, synthetic local Worker/D1/browser workflows, Block B queue/context regression",
+  "block_c_bundle": "Baseline JS 306733 raw/88540 gzip; CSS 52127 raw/9664 gzip. Result JS 320330 raw/91198 gzip; CSS 54937 raw/10119 gzip. Aggregate raw 375267 (+16407, +4.572%); gzip 101317 (+3113, +3.170%); all unchanged ceilings pass",
+  "block_c_runtime": "PASS causal separation: board starts 801ms, ends 2289ms; Queue visible 2601ms; screenshot 2728ms with rooms/guests/creation-operations still pending through 5293/6297/6397ms; no absolute localhost target",
+  "block_c_deferred": "Extension, No-show, Late Arrival: DEFERRED_CAPABILITY_OR_CONTRACT_NOT_PRESENT",
+  "block_c_artifact_a": "Pending immutable commit after final diff/staging audit",
+  "block_c_independent_critic": "Required on exact Artifact A + orchestration-only Boundary B; not yet run",
+  "block_c_promotion_gate": "BLOCKED; Blocks D–H NOT AUTHORIZED; no PR, push, merge, main, staging, deploy, production or real-data action"
 }

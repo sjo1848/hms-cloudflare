@@ -1,4 +1,8 @@
-(page) => (async () => {
+integrated fixture API: [{"id":"e2e-booking-success","hotel_id":"10000000-0000-0000-0000-000000000001","guest_id":"e2e-guest-success","guest_name":"Integrated Reassignment Guest","guest_email":"integrated-success@example.test","room_id":"e2e-room-a","room_number":"101","room_type":"STANDARD","check_in":"2026-09-29","check_out":"2026-10-02","status":"CheckedIn","total_cents":30000,"notes":null,"created_at":"2026-01-01","updated_at":"2026-01-01"},{"id":"e2e-booking-stale","hotel_id":"10000000-0000-0000-0000-000000000001","guest_id":"e2e-guest-stale","guest_name":"Stale Reassignment Guest","guest_email":"integrated-stale@example.test","room_id":"e2e-room-c","room_number":"103","room_type":"STANDARD","check_in":"2026-09-29","check_out":"2026-10-02","status":"CheckedIn","total_cents":30000,"notes":null,"created_at":"2026-01-01","updated_at":"2026-01-01"}]
+integrated availability API: [{"id":"e2e-room-a","hotel_id":"10000000-0000-0000-0000-000000000001","room_number":"101","room_type":"STANDARD","status":"Occupied","price_cents":10000,"operational_state":{"occupancy":"OCCUPIED","housekeeping":"READY","maintenanceImpact":"NONE","serviceState":"IN_SERVICE","readiness":{"state":"NOT_READY","reasons":["ROOM_OCCUPIED"]}},"date_range_sellability":{"state":"UNRESOLVED","reason":"LEGACY_FILTER_NOT_CANONICAL"}},{"id":"e2e-room-b","hotel_id":"10000000-0000-0000-0000-000000000001","room_number":"102","room_type":"STANDARD","status":"Available","price_cents":12000,"operational_state":{"occupancy":"VACANT","housekeeping":"READY","maintenanceImpact":"NON_BLOCKING","serviceState":"IN_SERVICE","readiness":{"state":"READY_FOR_ARRIVAL","reasons":[]}},"date_range_sellability":{"state":"UNRESOLVED","reason":"LEGACY_FILTER_NOT_CANONICAL"}},{"id":"e2e-room-e","hotel_id":"10000000-0000-0000-0000-000000000001","room_number":"105","room_type":"STANDARD","status":"Available","price_cents":15000,"operational_state":{"occupancy":"VACANT","housekeeping":"READY","maintenanceImpact":"NONE","serviceState":"IN_SERVICE","readiness":{"state":"READY_FOR_ARRIVAL","reasons":[]}},"date_range_sellability":{"state":"UNRESOLVED","reason":"LEGACY_FILTER_NOT_CANONICAL"}}]
+### Ran Playwright code
+```js
+await ((page) => (async () => {
   await page.addInitScript(() => { localStorage.setItem("hms.locale", "en"); localStorage.setItem("hms-local-acceptance-profile", "0"); });
   await page.setExtraHTTPHeaders({
     "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000002",
@@ -149,3 +153,11 @@
   await page.screenshot({ path: "output/playwright/f04-reassignment-mobile-conflict.png", fullPage: true });
   console.log("F0.4 integrated reassignment PASS: real Worker/D1 success, hotel-local remaining interval, BLOCKING/NON_BLOCKING, reason, stale 409/recovery, authoritative refresh; desktop success + mobile conflict");
 })()
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4176/bookings?booking_id=e2e-booking-stale&task=reassign
+- Page Title: HMS Elite
+- Console: 3 errors, 0 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-09-30T17-35-53-852Z.log#L1-L6

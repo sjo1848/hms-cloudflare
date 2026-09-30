@@ -30,3 +30,27 @@ Classification is frozen before implementation. Every current registry invariant
 | INV-SCOPE-001 | APPLIES | Diff/route audit restricts changes to Reception transactional task UX, tests and evidence; C–H and unrelated modules remain untouched. |
 
 At final Pre-Critic, applicable entries must be marked PASS with concrete evidence or artifact publication is blocked. N/A rationales remain bounded to this Task Contract.
+
+## Final implementation evidence — Artifact A candidate
+
+Classification above is unchanged from the frozen pre-code map. Every APPLIES row passed the local synthetic checks below. This internal gate is not an Independent Critic verdict.
+
+| Invariant | Result | Concrete evidence |
+|---|---|---|
+| INV-ATOMIC-001 | PASS | Full 175-test serial suite; F0.8 same operation identity/replay/recovery; executing-D1 reassignment race/409; checkout single-mutation server result. See results report and `output/playwright/f0-08-reservation-recovery.log`, `block-c-reassignment-integrated.log`, `block-c-checkout-integrated.log`. |
+| INV-AUDIT-001 | PASS | Reservation/check-in/edit/reassignment/checkout UIs wait for operation response and refresh authoritative board; executing-D1 rollback/event tests all pass. |
+| INV-DOMAIN-001 | PASS | Only pre-existing commands/capabilities used; extension/no-show/late arrival explicitly deferred; no Worker, schema or lifecycle changes. Exact diff and frozen inventory. |
+| INV-TENANT-001 | PASS | Synthetic local Worker/D1 operation tests include unauthorized/cross-hotel recovery denial; Block B integrated runner confirms selected hotel and server read/write boundaries. |
+| INV-RBAC-001 | PASS | Server `/auth/me` capabilities remain permission source; billing denial and capability refresh/downgrade scenario passed in Block B regression; UI hides unsupported operations. |
+| INV-PARITY-001 | PASS | Full suite 175/175; F0.8 staged creation, F0.4 remaining-stay reassignment, F0.7 settlement and lifecycle regressions; no new semantics. |
+| INV-ENUM-001 | PASS | Queue/readiness and checkout assertions keep Booking lifecycle, room occupancy, housekeeping, maintenance impact and service state separate; authoritative D1 reads in Block B and checkout logs. |
+| INV-UX-001 | PASS | F08/F11/Reassignment/Checkout integrated task logs and screenshots prove Case → focused task → authoritative result → Case/Queue with retained booking/context. |
+| INV-ORDER-001 | PASS | Block B workspace runner: lane/search/filter, next-priority selection, stale-board response ignored, queue scroll/focus restored, browser/application navigation retained. |
+| INV-RESP-001 | PASS | Block B Queue/Case geometry suite plus focused Reservation/Checkout viewport assertions cover WIDE, COMPACT, NARROW, reduced-height and landscape; F08 mobile create at 375px; critical task actions remain reachable. |
+| INV-EVID-001 | PASS | This report ties claims to Worker/D1/browser logs; UI success uses integrated commands/refresh, not screenshots alone. Timings explicitly distinguish causal evidence from localhost targets; FCP/LCP after values are not claimed. |
+| INV-MONEY-001 | PASS | Reassignment D1 evidence preserves historical/consumed nights and payment ledger while reconciling remaining segments; checkout leaves paid amount zero and does not fabricate settlement. |
+| INV-STATE-001 | PASS | Frozen Task Contract and admission gate predate product code; planned Artifact A is the substantive commit; Boundary B is orchestration/evidence only with exact A SHA; a fresh separate read-only Critic is mandatory before Controller handoff. No self-approved PASS. |
+| INV-CF-I07-004 | PASS | All integrated shell runners verify owned Worker/Vite/browser process-tree cleanup before PASS; final F08, F11, checkout, reassignment and Block B run logs. |
+| INV-SCOPE-001 | PASS | Final source diff is limited to Reception UI/API adapter/hook/styles/i18n, local tests/runners, requested output evidence and orchestration evidence. No backend/API/schema/capability or D–H product changes. |
+
+All invariants classified N/A above remain N/A with their frozen rationales. Evidence manifest and exact A/B identity are recorded at the orchestration-only boundary after Artifact A is committed.

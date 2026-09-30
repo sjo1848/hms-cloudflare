@@ -14,7 +14,7 @@ page => (async () => {
   const staleBoardReleased = new Promise(resolve => { staleBoardReleaseResolve = resolve; });
   const pageErrors = [];
   page.on("pageerror", error => pageErrors.push(error.message));
-  await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
+  await page.addInitScript(() => { if (location.protocol !== "about:") localStorage.setItem("hms.locale", "en"); });
   await page.route("**/api/v1/**", async route => {
     const source = new URL(route.request().url());
     const pathname = source.pathname;
@@ -34,6 +34,7 @@ page => (async () => {
       if (staleRaceRequest === 1) {
         const response = await route.fetch({ url: target, headers });
         const body = await response.json();
+        assert(Array.isArray(body?.items), `Stale-response test board payload is invalid: status=${response.status()} body=${JSON.stringify(body)}`);
         const selectedBoardRow = body.items.find(item => item.booking.id === "z-priority");
         assert(selectedBoardRow, "Race fixture is missing z-priority board row");
         selectedBoardRow.booking.guest_name = "STALE_OLDER_BOARD_RESULT";
@@ -72,7 +73,12 @@ page => (async () => {
     assert(dimensions.document <= dimensions.width && dimensions.body <= dimensions.width, `${label}: horizontal overflow ${JSON.stringify(dimensions)}`);
   };
   const queueReady = async () => {
-    await page.locator('[data-booking-id="z-priority"]').waitFor({ state: "visible", timeout: 12000 });
+    try {
+      await page.locator('[data-booking-id="z-priority"]').waitFor({ state: "visible", timeout: 12000 });
+    } catch {
+      const diagnostic = await page.evaluate(() => ({ url: location.href, viewport: [innerWidth, innerHeight], layout: document.querySelector(".reception-case-layout")?.className, panel: document.querySelector(".reception-queue-panel")?.getBoundingClientRect().toJSON(), row: document.querySelector('[data-booking-id="z-priority"]')?.getBoundingClientRect().toJSON(), panelDisplay: document.querySelector(".reception-queue-panel") && getComputedStyle(document.querySelector(".reception-queue-panel")).display, panelVisibility: document.querySelector(".reception-queue-panel") && getComputedStyle(document.querySelector(".reception-queue-panel")).visibility }));
+      throw new Error(`Queue row did not become visible: ${JSON.stringify(diagnostic)}`);
+    }
     const queue = await page.locator(".reception-case-queue").isVisible();
     if (!queue) {
       const diagnostic = await page.evaluate(() => ({ layout: document.querySelector(".reception-case-layout")?.className, panel: document.querySelector(".reception-queue-panel")?.getBoundingClientRect().toJSON(), queue: document.querySelector(".reception-case-queue")?.getBoundingClientRect().toJSON(), display: document.querySelector(".reception-queue-panel") && getComputedStyle(document.querySelector(".reception-queue-panel")).display }));
@@ -108,28 +114,34 @@ page => (async () => {
   await page.waitForFunction(() => new URL(location.href).searchParams.get("q") === "Priority");
   const filteredUrl = new URL(page.url());
   assert(filteredUrl.searchParams.get("lane") === "arrivals" && filteredUrl.searchParams.get("q") === "Priority", `Filter/search did not persist in URL: ${page.url()}`);
-  const queueVisibleAt = Date.now();
-  const queueVisibleMs = queueVisibleAt - started;
-  const settledAncillaries = ["/api/v1/rooms", "/api/v1/guests", "/api/v1/reservation-creation-operations"].filter(path => networkTimings[path]?.endMs !== undefined && networkTimings[path].endMs <= queueVisibleMs);
-  assert(settledAncillaries.length === 0, `At least one ancillary settled before Queue became visible; elapsed=${queueVisibleMs}; timings=${JSON.stringify(networkTimings)}`);
+  const queueVisibleMs = queueDomReadyAt - started;
   await Promise.all(["/api/v1/front-desk/board", "/api/v1/rooms", "/api/v1/guests", "/api/v1/reservation-creation-operations"].filter(path => networkTimings[path]?.endMs === undefined).map(path => page.waitForResponse(response => new URL(response.url()).pathname === path, { timeout: 15000 })));
   assert(["/api/v1/rooms", "/api/v1/guests", "/api/v1/reservation-creation-operations"].every(path => networkTimings[path]?.endMs > queueVisibleMs), `Ancillary requests did not all finish after Queue-ready: ${JSON.stringify(networkTimings)}`);
   slowAncillaries = false;
   await noHorizontalOverflow("WIDE 1280x900");
   await page.screenshot({ path: "output/playwright/block-b-1280x900-queue.png", fullPage: false });
+  // Isolate browser-history assertions from prior lane/search edits so one Back
+  // means the focused Case transition and one Forward means the same Case.
+  await page.goto("about:blank");
+  await page.goto(`${origin}/bookings?origin=block-b&lane=arrivals&q=Priority#queue`);
+  await queueReady();
   await page.locator('[data-booking-id="z-priority"]').click();
-  await page.getByRole("dialog", { name: /Next action: check-in verification/ }).waitFor();
-  await page.getByRole("button", { name: "Close check-in task" }).click();
   await page.locator(".reception-booking-case").waitFor({ state: "visible" });
   await page.screenshot({ path: "output/playwright/block-b-1280x900-case.png", fullPage: false });
   await page.goBack();
+  await page.locator(".reception-booking-case").waitFor({ state: "hidden" });
   await queueReady();
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-booking-id") === "z-priority");
   const returnFocus = await page.evaluate(() => document.activeElement?.getAttribute("data-booking-id"));
   assert(returnFocus === "z-priority", `Application Back did not restore queue-row focus: ${returnFocus}`);
   await page.goForward();
-  await page.locator(".reception-booking-case").waitFor({ state: "visible" });
+  await page.locator(".reception-booking-case").waitFor({ state: "visible", timeout: 6000 }).catch(async () => {
+    const state = await page.evaluate(() => ({ url: location.href, width: innerWidth, layout: document.querySelector(".reception-case-layout")?.className, caseClass: document.querySelector(".reception-booking-case")?.className, caseDisplay: document.querySelector(".reception-booking-case") && getComputedStyle(document.querySelector(".reception-booking-case")).display, queueDisplay: document.querySelector(".reception-queue-panel") && getComputedStyle(document.querySelector(".reception-queue-panel")).display, task: document.querySelector(".reception-focused-task")?.className, selected: document.querySelector(".reception-queue-row.selected")?.dataset.bookingId }));
+    throw new Error(`Browser Forward did not restore the Case after Queue: ${JSON.stringify(state)}`);
+  });
+  assert(new URL(page.url()).searchParams.get("booking_id") === "z-priority", `Browser Forward did not restore the selected booking URL: ${page.url()}`);
   await page.goBack();
+  await page.locator(".reception-booking-case").waitFor({ state: "hidden" });
   await queueReady();
   await page.waitForFunction(() => document.activeElement?.getAttribute("data-booking-id") === "z-priority");
   const baseline = { queueVisibleMs };
@@ -185,7 +197,8 @@ page => (async () => {
       };
     });
     if (width <= 900) assert([queueState.queue.bottom, queueState.search.bottom, queueState.filters.bottom].every(bottom => bottom <= queueState.navTop), `${name} Queue controls are occluded by mobile navigation: ${JSON.stringify(queueState)}`);
-    assert(queueState.queueVisible && !queueState.caseVisible, `${name} Queue state is not presented separately: ${JSON.stringify(queueState)}`);
+    assert(queueState.queueVisible, `${name} Queue panel is not visible: ${JSON.stringify(queueState)}`);
+    if (width <= 900) assert(!queueState.caseVisible, `${name} should use the Queue state instead of stacking/retaining a Case panel: ${JSON.stringify(queueState)}`);
     if (width <= 900) {
       assert(await page.locator(".reception-queue-search input").isVisible() && await page.locator(".reception-queue-tools button").isVisible(), `${name} Queue search/refresh controls are unreachable`);
       assert(queueState.filters.bottom - queueState.filters.top >= 30 && queueState.filterButtonHeight >= 30, `${name} Queue filters are clipped/unusable: ${JSON.stringify(queueState)}`);
@@ -226,6 +239,7 @@ page => (async () => {
   const selectedId = await selectedRow.getAttribute("data-booking-id");
   await selectedRow.focus();
   await selectedRow.press("Enter");
+  await page.locator(".reception-checkin-trigger").press("Enter");
   await page.getByRole("dialog", { name: /Next action: check-in verification/ }).waitFor();
   const closeTask = page.getByRole("button", { name: "Close check-in task" });
   await closeTask.focus();
@@ -241,6 +255,7 @@ page => (async () => {
   assert(await page.evaluate(() => document.activeElement?.matches(":focus-visible")), "Keyboard-activated case did not restore a visible keyboard focus indicator");
   const keyboardContext = { viewport: "320x700", selectedId, queueScrollBefore, queueScrollAfter, focusRestored: true, focusVisible: true };
   await selectedRow.press("Enter");
+  await page.locator(".reception-checkin-trigger").press("Enter");
   await page.getByRole("dialog", { name: /Next action: check-in verification/ }).waitFor();
   await closeTask.focus();
   await closeTask.press("Enter");

@@ -28,3 +28,4 @@ await (page => (async () => {
 ### Page
 - Page URL: http://127.0.0.1:4181/bookings?lane=arrivals&q=Priority&origin=block-b&booking_id=a-next#queue
 - Page Title: HMS Elite
+- Console: 1 errors, 0 warnings
