@@ -1,15 +1,14 @@
 # HMS Cloudflare — Orchestration State
 
-## CANONICAL HANDOFF — BLOCK_B_METADATA_RECONCILED_AWAITING_CONTROLLER_CONFIRMATION
+## ACTIVE TASK — BLOCK C RECEPTION TRANSACTIONAL WORKFLOWS
 
-- **Block B status:** COMPLETE; awaiting Controller confirmation of metadata-only repair CTRL-B-01.
-- **Artifact A2:** `c11e3d667cdd2f54834ad07a06c4485755b0cfc0` (immutable product/evidence artifact).
-- **Boundary B3:** `35c4d71704632aa13a008bac20f90e337971a1ba` (orchestration/evidence boundary).
-- **Historical Block B closure B4:** `d3472df3ed3442dd689be5aa15826a0c27d78821`; this is the reviewed closure checkpoint and parent of metadata-only B5.
-- **Critic disposition:** exact A2+B2 retains historical `PASS_WITH_CONDITIONS`; its sole LOW traceability condition was discharged by the separate exact A2+B3 follow-up `PASS`. Neither verdict is rewritten.
-- **Authorization:** Block B was authorized and completed. Blocks C–H are NOT AUTHORIZED. Promotion is BLOCKED. `resume_authorized=false`; `external_review.required=true` pending Controller confirmation.
-- **Scope of CTRL-B-01/B5:** only `.orchestration/STATE.md` and `.orchestration/STATUS.json`; no product, tests, styles, budgets, or functional evidence changes. No tests rerun.
-- **Branch:** `impl/hms-block-b-reception`, based on B0 clean checkpoint `5a42c5e1a62191843335f3fd217fead62b3ef0b2`; recovery snapshot `e9112f7e2289fda91dc1762a9d6c659c0de62a74` remains a non-promotable local recovery source.
+- **Authorization:** Human explicitly authorized only Block C from B5 `fc2daa783b8ef361e39e6945dbdfe2bfe6345b98`. Blocks D–H remain NOT AUTHORIZED. No PR, merge, main, staging, deploy, production or real data.
+- **Branch/worktree:** `impl/hms-block-c-reception-workflows`, `/home/sjo1848/dev/hms-elite-cloudflare/hms-block-c-reception-workflows`; exact base is published/accepted B5 `fc2daa783b8ef361e39e6945dbdfe2bfe6345b98`. The Block B worktree is separate and untouched.
+- **Frozen pre-code package:** Task Contract, exact workflow/API/capability inventory, 24-invariant map, evidence matrix, reviewer record and admission Pre-Critic are committed together before product code. See the files under `.orchestration/contracts/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001.md` and `.orchestration/evidence/HMS-BLOCK-C-RECEPTION-WORKFLOWS-001-*`.
+- **Target:** `Booking/Stay Case → Focused Task → authoritative result → Case/Queue` with context preservation. Preserve existing backend/API/capability/lifecycle/idempotency contracts; no new domain semantics or schema/backend work unless strictly necessary under an already approved contract.
+- **Extension/no-show/late arrival:** implement only if source-backed API, capability and lifecycle contracts exist; otherwise record `DEFERRED_CAPABILITY_OR_CONTRACT_NOT_PRESENT`.
+- **Budget baseline:** JS raw 306,733 B / gzip 88,540 B; CSS raw 52,127 B / gzip 9,664 B. Existing ceilings remain JS 330,000/100,000 B and CSS 55,000/15,000 B; no ceiling increase is authorized.
+- **Current phase:** frozen-contract admission complete; Block C UI implementation authorized to proceed. No product code has been changed yet.
 
 ### Historical Block B handoffs (superseded)
 
