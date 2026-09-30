@@ -348,3 +348,7 @@ A required Wave12 reassignment run initially timed out waiting for the success s
 ### Independent Critic condition on A2+B2
 
 Fresh separate read-only Critic reviewed exact A2 `c11e3d667cdd2f54834ad07a06c4485755b0cfc0` + B2 `c2c418628effc0af848090fe303eedecc4b0abc9`, verdict `PASS_WITH_CONDITIONS`: the prior MEDIUM WIDE filter finding is closed; one LOW traceability condition asks to clarify that the Wave12 success-status timeout was not a Critic finding and no code defect/source repair was confirmed. Full review is `.orchestration/evidence/HMS-BLOCK-B-RECEPTION-BOOKING-STAY-001-INDEPENDENT-CRITIC-A2-B2.md`. Repair is documentation-only in the Pre-Critic copy; A2 and B2 remain immutable. Boundary B3 requests bounded read-only confirmation of exact A2+B3.
+
+### Boundary B3 — A2+B2 traceability condition correction
+
+The A2+B2 Critic verdict remains historically `PASS_WITH_CONDITIONS`; its sole LOW condition identified inaccurate Pre-Critic wording that called the separate, non-reproduced Wave12 timeout a Critic finding. The Pre-Critic and invariant evidence now distinguish the closed A1+B1 MEDIUM filter finding from that regression-runner observation. Immutable A2 and B2 are unchanged; no product code or tests changed. Boundary B3 requests fresh bounded, read-only confirmation of exact A2 + B3. `resume_authorized=false`; external review remains required.

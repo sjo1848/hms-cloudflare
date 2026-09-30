@@ -32,6 +32,8 @@ Final rework validation evidence is in `output/playwright/block-b-rework-final-*
 
 The exact final production-build DevTools trace is summarized in `HMS-BLOCK-B-RECEPTION-BOOKING-STAY-001-RUNTIME.md`. Latest integrated screenshot and browser Resource Timing capture the Queue before all auxiliary reads settle. The runtime code path for Queue loading is unchanged by these repairs.
 
+The prior A1+B1 Independent Critic MEDIUM finding (WIDE 1280×600 Queue filter collision) is repaired. A Wave12 success-status timeout was a separate, non-reproduced regression observation, not a Critic finding; immutable A1 already assigns the existing notice after close/refresh, no source change was made, and the isolated rerun passed. The A2+B2 Critic's LOW traceability condition on this wording is corrected in Boundary B3 evidence. The historical A1+B1 REWORK verdict remains preserved.
+
 ## Bundle baseline → result → delta
 
 - JS raw/entry: 299,976 → 306,733 B; +6,757 B (+2.25%). Gzip: 86,915 → 88,540 B; +1,625 B (+1.87%).

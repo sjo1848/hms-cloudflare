@@ -57,7 +57,7 @@ The Task Contract prose says “all 25” registry invariants; its classificatio
 - [x] All current registry IDs are classified; no applicable invariant is FAIL or UNPROVEN.
 - [x] Task Contract validation and inherited regressions are recorded.
 - [x] Scope audit excludes Blocks C–H and backend/workflow expansion.
-- [x] Both bounded Independent Critic findings are addressed: WIDE 1280×600 Queue filter collision and reassignment success status erased by refresh. Historical first A+B REWORK verdict remains preserved and is not rewritten.
+- [x] The prior A1+B1 Independent Critic MEDIUM finding (WIDE 1280×600 Queue filter collision) is repaired. A Wave12 success-status timeout was a separate, non-reproduced regression observation, not a Critic finding; immutable A1 already assigns the existing notice after close/refresh, no source change was made, and the isolated rerun passed. The A2+B2 Critic's LOW traceability condition on this wording is corrected in Boundary B3 evidence. The historical A1+B1 REWORK verdict remains preserved.
 - [x] All required inherited regressions and final combined integrated Worker/D1/browser evidence rerun after repairs.
 - [x] Replacement Artifact A + orchestration-only Boundary B publication sequence is non-circular.
 - [ ] Fresh Independent Critic PASS is not self-declared; exact replacement Artifact A + Boundary B review remains the next blocking handoff.
