@@ -3,29 +3,29 @@
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-c-reception-workflows",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "BLOCK_D_ARTIFACT_AWAITING_INDEPENDENT_CRITIC",
+  "phase": "BLOCK_D_EVIDENCE_CORRECTION_AWAITING_INDEPENDENT_FOLLOWUP",
   "resume_authorized": false,
   "runtime_status": "WAITING_EXTERNAL_REVIEW",
-  "active_task": "Independent Critic review of exact Block D Artifact A 5003ad9655b99337453f87ba64fcc18ea3a1ecb6 plus this orchestration-only Boundary B",
+  "active_task": "Fresh read-only Independent Critic follow-up on exact Block D Artifact A 5003ad9655b99337453f87ba64fcc18ea3a1ecb6 plus the evidence-correction boundary",
   "last_completed_task": "Block C closure checkpoint 044ad756b0081d2a54083ea89c782557e97a351f; Block D inventory, Task Contract, 24-invariant map, evidence matrix and pre-implementation Pre-Critic frozen before product code",
   "last_completed_head": "044ad756b0081d2a54083ea89c782557e97a351f",
   "work_branch": "impl/hms-block-d-rooms",
   "pr": null,
   "wave": "BLOCK D — ROOMS OPERATIONAL WORKSPACE",
-  "status_label": "BLOCK_D_ARTIFACT_AWAITING_INDEPENDENT_CRITIC",
-  "next_action": "RUN_SEPARATE_READ_ONLY_INDEPENDENT_CRITIC_ON_EXACT_ARTIFACT_A_AND_CURRENT_BOUNDARY_B",
-  "stop_reason": "Substantive Artifact A is immutable and Boundary B records its exact identity. Further work is blocked pending external Independent Critic review.",
+  "status_label": "BLOCK_D_EVIDENCE_CORRECTION_AWAITING_INDEPENDENT_FOLLOWUP",
+  "next_action": "REVIEW_EVIDENCE_CORRECTION_AND_EXACT_A_PLUS_CURRENT_BOUNDARY; THEN_FINAL_ORCHESTRATION_RECONCILIATION",
+  "stop_reason": "Initial Independent Critic returned PASS_WITH_CONDITIONS for one LOW documentation-evidence scope claim. Evidence-only correction is recorded; product/test files and Artifact A remain unchanged. Follow-up review is blocking.",
   "event": {
-    "seq": 261,
-    "id": "BLOCK-D-ARTIFACT-A-BOUNDARY-B-READY-FOR-INDEPENDENT-CRITIC",
-    "type": "IMMUTABLE_ARTIFACT_AWAITING_EXTERNAL_REVIEW"
+    "seq": 262,
+    "id": "BLOCK-D-CRITIC-CONDITION-RECORDED-EVIDENCE-FOLLOWUP",
+    "type": "BOUNDED_EVIDENCE_CORRECTION_AWAITING_EXTERNAL_REVIEW"
   },
   "external_review": {
-    "last_audited_head": null,
+    "last_audited_head": "ed39c3340db2ed1d429ec4cf1140643073f42bd6",
     "artifact_head": "5003ad9655b99337453f87ba64fcc18ea3a1ecb6",
     "boundary_head": null,
-    "last_verdict": "PENDING: fresh separate read-only Independent Critic must review exact Artifact A plus this Boundary B.",
-    "review_path": null,
+    "last_verdict": "PASS_WITH_CONDITIONS from first fresh critic; sole LOW finding: git diff --check claim did not identify working-tree vs base-to-A scope. Evidence correction recorded; exact Artifact A remains unchanged; independent follow-up pending.",
+    "review_path": ".orchestration/evidence/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001-EVIDENCE-CORRECTION-001.md",
     "required": true,
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
@@ -375,7 +375,7 @@
   "block_d_precritic": ".orchestration/evidence/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001-PRECRITIC.md; pre-code admission and final implementation gate PASS, not Independent Critic",
   "block_d_base": "044ad756b0081d2a54083ea89c782557e97a351f",
   "block_d_budget_baseline": "JS 321619 raw/91486 gzip; CSS 54937 raw/10119 gzip; ceilings unchanged: JS 330000/100000, CSS 55000/15000",
-  "block_d_status": "PRODUCT IMPLEMENTATION AND VALIDATION PASS; ARTIFACT A AWAITING INDEPENDENT CRITIC",
+  "block_d_status": "ARTIFACT A PASS_WITH_CONDITIONS; LOW EVIDENCE SCOPE CONDITION CORRECTED; FOLLOW-UP REVIEW PENDING",
   "block_d_results": ".orchestration/evidence/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001-RESULTS.md",
   "block_d_final_precritic": ".orchestration/evidence/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001-PRECRITIC.md; implementation gate PASS, not Independent Critic",
   "block_d_bundle": "Baseline JS 321619 raw/91486 gzip, CSS 54937/10119; result JS 329618/93456, CSS 54297/10138; deltas +7999 (+2.485%), +1970 (+2.154%), -640 (-1.165%), +19 (+0.188%); ceilings unchanged and pass",
@@ -383,5 +383,6 @@
   "block_d_artifact_a": "5003ad9655b99337453f87ba64fcc18ea3a1ecb6",
   "block_d_development_continuation": false,
   "block_d_completed": false,
-  "block_d_boundary_b": "This orchestration-only commit immediately follows Artifact A; exact Boundary B SHA is recorded after review in final orchestration reconciliation."
+  "block_d_boundary_b": "Initial B ed39c3340db2ed1d429ec4cf1140643073f42bd6 received PASS_WITH_CONDITIONS; evidence-only boundary B2 follows for independent follow-up.",
+  "block_d_evidence_correction": ".orchestration/evidence/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001-EVIDENCE-CORRECTION-001.md"
 }
