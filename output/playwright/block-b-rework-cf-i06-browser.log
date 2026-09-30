@@ -1,3 +1,9 @@
+npm notice run test:cf-i06-browser
+npm notice run bash scripts/cf-i06-browser-regression.sh
+npm notice run npx
+npm notice run 'playwright-cli' -s cf-i06-billing-rework1 open about:blank
+npm notice run npx
+npm notice run 'playwright-cli' -s cf-i06-billing-rework1 run-code --filename scripts/cf-i06-browser-regression.playwright.js
 ### Result
 [{"width":375,"scrollWidth":375,"selected":"cf-i06","materialAction":"payment+overpay"},{"width":390,"scrollWidth":390,"selected":"cf-i06","materialAction":"responsive"},{"width":430,"scrollWidth":430,"selected":"cf-i06","materialAction":"responsive"},{"width":768,"scrollWidth":768,"selected":"cf-i06","materialAction":"responsive"},{"width":1024,"scrollWidth":1024,"selected":"cf-i06","materialAction":"responsive"}]
 ### Ran Playwright code
@@ -100,3 +106,4 @@ await ((page) => (async () => {
 - Console: 2 errors, 0 warnings
 ### Events
 - New console entries: .playwright-cli/console-2026-09-30T06-40-58-767Z.log#L1-L6
+CF-I06 browser responsive/error/close regression PASS

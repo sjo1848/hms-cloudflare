@@ -1,3 +1,7 @@
+npm notice run npx
+npm notice run 'playwright-cli' -s f0-11-reception-1540784 open about:blank
+npm notice run npx
+npm notice run 'playwright-cli' -s f0-11-reception-1540784 run-code --filename scripts/cf-f0-11-reception-integrated.playwright.js
 ### Result
 {"integratedWorkerD1":true,"mutation":200,"bookingStatus":"CheckedIn","nextPriorityCase":"z-priority","nextCaseContext":"z-priority","viewport":"375x812","preservedLane":"arrivals","preservedSearch":"Arrival","consoleMessages":[{"type":"debug","text":"[vite] connecting..."},{"type":"debug","text":"[vite] connected."},{"type":"info","text":"%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"}],"pageErrors":[]}
 ### Ran Playwright code
@@ -78,3 +82,4 @@ await (page => (async () => {
 - Page Title: HMS Elite
 ### Events
 - New console entries: .playwright-cli/console-2026-09-30T06-44-20-800Z.log#L1
+F0.11 Reception local Worker/D1/Vite/browser PASS; owned process trees verified stopped.

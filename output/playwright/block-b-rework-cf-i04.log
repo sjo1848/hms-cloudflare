@@ -1,0 +1,4 @@
+npm notice run test:cf-i04
+npm notice run bash scripts/cf-i04-regression.sh
+check-in race statuses: 409 200
+{"error":{"code":"CONFLICT","message":"Booking became unavailable during check-in","requestId":"398790ce-4283-4475-b50a-1e3baf96c775"}}{"id":"69c9683c-c9fb-4e81-afdd-b1eb958d4a88","status":"CheckedIn","room_status":"Occupied"}CF-I03 + CF-I04 lifecycle D1/API regression PASS

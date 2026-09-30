@@ -194,6 +194,25 @@ page => (async () => {
       await allFilter.click();
       assert(await allFilter.evaluate(button => button.classList.contains("selected")), `${name} Queue filter could not be operated`);
     }
+    if (width === 1280 && height === 600) {
+      const filterGeometry = await page.locator(".reception-queue-filters button").evaluateAll(buttons => buttons.map(button => {
+        const labelRange = document.createRange();
+        labelRange.selectNodeContents(button.firstChild);
+        const label = labelRange.getBoundingClientRect();
+        const count = button.querySelector("span").getBoundingClientRect();
+        const bounds = button.getBoundingClientRect();
+        return { text: button.innerText, button: { left: bounds.left, right: bounds.right }, label: { left: label.left, right: label.right }, count: { left: count.left, right: count.right }, height: bounds.height };
+      }));
+      assert(filterGeometry.length >= 5 && filterGeometry.every(item => item.height >= 30 && item.label.right <= item.count.left && item.label.left >= item.button.left && item.count.right <= item.button.right), `WIDE 1280x600 Queue filter labels/counts overlap or clip: ${JSON.stringify(filterGeometry)}`);
+      const arrivalsFilter = page.locator(".reception-queue-filters button").filter({ hasText: "Arrivals" });
+      await arrivalsFilter.click();
+      assert(await arrivalsFilter.evaluate(button => button.classList.contains("selected")) && new URL(page.url()).searchParams.get("lane") === "arrivals", `WIDE 1280x600 Arrivals filter is not operable: ${page.url()}`);
+      const allFilter = page.locator(".reception-queue-filters button").filter({ hasText: "All" });
+      await allFilter.click();
+      assert(await allFilter.evaluate(button => button.classList.contains("selected")), "WIDE 1280x600 Queue All filter could not restore the full list");
+      queueState.filterGeometry = filterGeometry;
+      queueState.filterOperation = "Arrivals → All PASS";
+    }
     if ([1280, 900, 768, 390, 320, 844].includes(width)) {
       await page.screenshot({ path: `output/playwright/block-b-${width}x${height}-queue.png`, fullPage: false });
     }

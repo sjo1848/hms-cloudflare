@@ -17,7 +17,7 @@
 .reception-attention-count{display:grid;place-items:center;flex:0 0 auto;min-width:30px;height:30px;padding:0 8px;border-radius:999px;background:#fff1dd;color:#8b5713;font-size:12px;font-weight:800}
 .reception-queue-search{display:grid;gap:6px;min-width:0;max-width:100%;margin:0 0 10px;color:#536174;font-size:12px;font-weight:700}
 .reception-queue-search input{width:100%;min-width:0;max-width:100%}
-.reception-queue-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0;max-width:100%;margin-bottom:12px}
+.reception-queue-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;min-width:0;max-width:100%;margin-bottom:12px}
 .reception-queue-filters button{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;min-height:34px;padding:6px 9px;border-color:#cbd5df;background:#fff;color:#31445a;font-size:12px;box-shadow:none}
 .reception-queue-filters button:hover{background:#eef4f9}
 .reception-queue-filters button.selected{border-color:#1f3651;background:#1f3651;color:#fff;box-shadow:0 0 0 2px #d99a36}

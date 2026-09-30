@@ -1,0 +1,2 @@
+npm notice run test:cf-i05
+npm notice run bash scripts/cf-i05-regression.sh

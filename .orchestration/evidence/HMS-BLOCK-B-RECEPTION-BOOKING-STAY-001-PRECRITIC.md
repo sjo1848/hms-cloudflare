@@ -21,13 +21,24 @@ All 24 IDs currently present in `.orchestration/INVARIANTS.md` are classified in
 | Process ownership and hygiene | PASS: integrated runners verify owned local Worker/Vite/proxy/browser process trees stopped before PASS; final `git diff --check` PASS. | runner logs; final command recorded at publication |
 | Mutation/invariant/scope audit | PASS: no new business mutation, schema, endpoint, capability, lifecycle, money, tenant or domain behavior; concrete invariant-to-evidence map in invariant record. | `HMS-BLOCK-B-RECEPTION-BOOKING-STAY-001-INVARIANTS.md`; changed-path audit; inherited regression logs |
 
+
+## Independent review and bounded rework disposition
+
+The first exact pair A `c373511a5fef56d0f1d3a42bc262f14b84c3cbf0` + B `903436fcb69e3e412db7a41aeaacde3a8cfa1504` received a fresh read-only Critic verdict `REWORK`, one MEDIUM finding: filter labels/counts collided in the WIDE 1280×600 Queue and that viewport lacked geometry/operation assertions. The disposition is preserved in `HMS-BLOCK-B-RECEPTION-BOOKING-STAY-001-INDEPENDENT-CRITIC-A-B.md`. Frozen repair contract `HMS-BLOCK-B-REPAIR-WIDE-QUEUE-FILTERS-001.md` changed desktop filters to two columns and proves all label/count bounds, height and Arrivals→All at exactly 1280×600.
+
+A required Wave12 run initially timed out waiting for the reassignment success status after HTTP 200. The frozen bounded verification contract `HMS-BLOCK-B-REPAIR-REASSIGN-SUCCESS-NOTICE-001.md` was based on a mistaken first source read. A direct inspection of immutable Artifact A confirms `useReceptionWorkspace.ts` already sets the existing notice after `closeCase()` and authoritative `load()`; no product source change was needed or made for this check. A fresh isolated Worker+D1 integrated rerun passed, observing the existing message after HTTP 200 and board refresh; mobile stale conflict remains HTTP 409 and retains case context. The initial timeout remains recorded as a transient non-reproduced runner observation, not a claimed fixed source defect.
+
+Final rework validation evidence is in `output/playwright/block-b-rework-final-*`, `block-b-rework-cf-i03.log` through `block-b-rework-cf-i07-browser.log`, `block-b-rework-f011-browser.log`, `block-b-rework-wave12.log`, the final `cf-block-b-*` logs, and original gates. One initial CF-I05 shell-chain attempt exited before writing a result; a direct full `npm run test:cf-i05` rerun completed PASS. One F0.11 call used a relative fixture path rejected by the runner's absolute-path contract; the same seeded local fixture was then passed by absolute path and the full runner passed. One Block B integration attempt received a Worker loopback error while its stale-response mock expected `items`; cleanup ran, and a fresh isolated fixture rerun passed all assertions. These retries are not counted as PASS; only the final completed rerun logs are.
+
+The exact final production-build DevTools trace is summarized in `HMS-BLOCK-B-RECEPTION-BOOKING-STAY-001-RUNTIME.md`. Latest integrated screenshot and browser Resource Timing capture the Queue before all auxiliary reads settle. The runtime code path for Queue loading is unchanged by these repairs.
+
 ## Bundle baseline → result → delta
 
 - JS raw/entry: 299,976 → 306,733 B; +6,757 B (+2.25%). Gzip: 86,915 → 88,540 B; +1,625 B (+1.87%).
-- CSS raw/entry: 48,615 → 52,127 B; +3,512 B (+7.22%). Gzip: 9,193 → 9,662 B; +469 B (+5.10%).
-- Aggregate raw initial payload: 348,591 → 358,860 B; +10,269 B (+2.95%). Aggregate gzip: 96,108 → 98,202 B; +2,094 B (+2.18%).
+- CSS raw/entry: 48,615 → 52,127 B; +3,512 B (+7.22%). Gzip: 9,193 → 9,664 B; +471 B (+5.12%).
+- Aggregate raw initial payload: 348,591 → 358,860 B; +10,269 B (+2.95%). Aggregate gzip: 96,108 → 98,204 B; +2,096 B (+2.18%).
 - Final result passes authorized ceilings JS 330,000/100,000 B raw/gzip and CSS 55,000/15,000 B raw/gzip. Raw values are development growth guardrails, not performance targets. Checker remains enabled.
 
 ## Disposition
 
-Internal Pre-Critic gate: **PASS**. No applicable invariant is FAIL or UNPROVEN. Evidence does not claim that LCP equals Queue-ready, that the lab values are production timings, or that a raw DevTools trace file exists. Artifact A must be frozen before an orchestration-only Boundary B that records its exact SHA and blocks continuation for a fresh separate Independent Critic. No self-approval is implied.
+Internal Pre-Critic gate: **PASS**. No applicable invariant is FAIL or UNPROVEN. Evidence does not claim that LCP equals Queue-ready, that the lab values are production timings, or that a raw DevTools trace file exists. Replacement Artifact A must be frozen before an orchestration-only Boundary B that records its exact SHA and blocks continuation for a fresh separate Independent Critic. The historical A+B REWORK is preserved. No self-approval is implied.
