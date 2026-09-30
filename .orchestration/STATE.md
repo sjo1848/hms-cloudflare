@@ -334,4 +334,12 @@ Fresh read-only Independent Critic reviewed exact A `c373511a5fef56d0f1d3a42bc26
 
 Frozen bounded repair contract: `.orchestration/contracts/HMS-BLOCK-B-REPAIR-WIDE-QUEUE-FILTERS-001.md`. It authorizes only responsive Queue filter presentation, exact viewport executable assertion, evidence and orchestration. Artifact A/B above remain immutable. Fix, validate all required gates, publish replacement A + orchestration-only B, and request a fresh Independent Critic. This is routine rework, no Human Gate.
 
-A required post-repair Wave12 reassignment regression exposed an existing erased-success-feedback defect: success notice was assigned before close/authoritative `load()`, whose normal start clears it. No API/D1 mutation defect was observed; runner timed out waiting for the success status after HTTP 200. This is a routine regression-only usability correction under parent Block B. Frozen contract `.orchestration/contracts/HMS-BLOCK-B-REPAIR-REASSIGN-SUCCESS-NOTICE-001.md` authorizes only notice ordering and its executable assertion. Fix and rerun Wave12 plus final combined gates before replacement Artifact A.
+A required Wave12 reassignment run initially timed out waiting for the success status after HTTP 200. The frozen verification contract `.orchestration/contracts/HMS-BLOCK-B-REPAIR-REASSIGN-SUCCESS-NOTICE-001.md` records the initial diagnostic hypothesis. Reinspection of immutable Artifact A1 confirms the existing notice was already assigned after close and authoritative refresh; no source change was made for that check. A fresh isolated Worker/D1 rerun observed the success status, authoritative destination refresh and mobile stale 409. This non-reproduced timeout is classified as a transient runner observation, not a confirmed product defect; see `.orchestration/evidence/HMS-BLOCK-B-RECEPTION-BOOKING-STAY-001-REWORK-DISPOSITION-001.md`.
+
+
+### Replacement Artifact A2 / Boundary B2 handoff
+
+- Artifact A2: `c11e3d667cdd2f54834ad07a06c4485755b0cfc0`; previous A1 `c373511a5fef56d0f1d3a42bc262f14b84c3cbf0` + B1 `903436fcb69e3e412db7a41aeaacde3a8cfa1504` received Independent Critic `REWORK` (one MEDIUM WIDE 1280×600 filter collision), repaired under frozen contract and fully revalidated.
+- A2 changes only the Queue filter presentation and adds the missing exact viewport assertions, plus evidence. Wave12's first success-status timeout did not reproduce; immutable A1 source already had correct notice ordering and A2 adds no source change for that verification.
+- Boundary B2 is orchestration-only, records exact A2 and requires a fresh separate read-only Critic. `resume_authorized=false`. Do not modify A2 during review.
+- No C–H, real data, PR, push, merge, main, staging, deploy or production.
