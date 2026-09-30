@@ -6,9 +6,40 @@ tmp_dir=$(mktemp -d)
 api_pid=""
 web_pid=""
 status=0
+api_port=8787
+web_port=4194
+codex_home=${CODEX_HOME:-$HOME/.codex}
+pwcli="$codex_home/skills/playwright/scripts/playwright_cli.sh"
+browser_session=cf-i05-integrated
+collect_tree() {
+  local parent="$1" child
+  printf '%s\n' "$parent"
+  while read -r child; do [[ -z "$child" ]] || collect_tree "$child"; done < <(pgrep -P "$parent" || true)
+}
 cleanup() {
-  if [[ -n "$web_pid" ]]; then kill "$web_pid" 2>/dev/null || true; fi
-  if [[ -n "$api_pid" ]]; then pkill -TERM -P "$api_pid" 2>/dev/null || true; kill "$api_pid" 2>/dev/null || true; fi
+  local root pid live
+  local -a owned=()
+  bash "$pwcli" -s "$browser_session" close >/dev/null 2>&1 || true
+  for root in "$web_pid" "$api_pid"; do
+    [[ -n "$root" ]] || continue
+    while read -r pid; do owned+=("$pid"); done < <(collect_tree "$root")
+  done
+  for pid in "${owned[@]}"; do kill -TERM "$pid" 2>/dev/null || true; done
+  for _ in {1..50}; do
+    live=0
+    for pid in "${owned[@]}"; do kill -0 "$pid" 2>/dev/null && live=1; done
+    (( live == 0 )) && { [[ -z "$web_pid" ]] || wait "$web_pid" 2>/dev/null || true; [[ -z "$api_pid" ]] || wait "$api_pid" 2>/dev/null || true; web_pid=""; api_pid=""; return 0; }
+    sleep 0.1
+  done
+  for pid in "${owned[@]}"; do kill -KILL "$pid" 2>/dev/null || true; done
+  for _ in {1..20}; do
+    live=0
+    for pid in "${owned[@]}"; do kill -0 "$pid" 2>/dev/null && live=1; done
+    (( live == 0 )) && { web_pid=""; api_pid=""; return 0; }
+    sleep 0.1
+  done
+  echo "CF-I05 owned Worker/Vite process tree remains" >&2
+  return 1
 }
 on_exit() {
   status=$?
@@ -16,20 +47,22 @@ on_exit() {
     mkdir -p output/playwright
     cp "$tmp_dir"/*.log output/playwright/ 2>/dev/null || true
   fi
-  cleanup
+  cleanup || status=1
   exit "$status"
 }
 trap on_exit EXIT
 cd "$repo_dir"
 mkdir -p output/playwright
 wrangler="$repo_dir/node_modules/.bin/wrangler"
+persist_dir="$tmp_dir/wrangler-state"
 hotel_local_date=$(TZ=America/Argentina/Mendoza date +%F)
-rm -rf "$repo_dir/apps/api/.wrangler/state"
+if curl -fsS "http://127.0.0.1:$api_port/health" >/dev/null 2>&1; then echo "API port $api_port already occupied" >&2; exit 1; fi
+if curl -fsS "http://127.0.0.1:$web_port/housekeeping" >/dev/null 2>&1; then echo "Web port $web_port already occupied" >&2; exit 1; fi
 
-CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc >"$tmp_dir/migrations.log" 2>&1
-CI=1 "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >>"$tmp_dir/migrations.log" 2>&1
-CI=1 "$wrangler" d1 migrations apply HOTEL_SECOND_DB --local -c apps/api/wrangler.jsonc >>"$tmp_dir/migrations.log" 2>&1
-CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --command "
+CI=1 "$wrangler" d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc --persist-to "$persist_dir" >"$tmp_dir/migrations.log" 2>&1
+CI=1 "$wrangler" d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --persist-to "$persist_dir" >>"$tmp_dir/migrations.log" 2>&1
+CI=1 "$wrangler" d1 migrations apply HOTEL_SECOND_DB --local -c apps/api/wrangler.jsonc --persist-to "$persist_dir" >>"$tmp_dir/migrations.log" 2>&1
+CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --persist-to "$persist_dir" --command "
   INSERT OR REPLACE INTO control_hotels (id,slug,operational_binding,active) VALUES ('hotel-a','hotel-a','HOTEL_DEMO_DB',1),('hotel-b','hotel-b','HOTEL_SECOND_DB',1);
   INSERT OR REPLACE INTO access_identity_mappings (access_subject,email,active) VALUES
     ('source-user:subject-a','a@example.test',1),
@@ -41,14 +74,14 @@ CI=1 "$wrangler" d1 execute CONTROL_DB --local -c apps/api/wrangler.jsonc --comm
   INSERT OR REPLACE INTO network_memberships (access_subject,role,active) VALUES ('source-user:subject-network','saas_admin',1);
   INSERT OR REPLACE INTO hotel_admin_metadata (hotel_id,name,plan_tier) VALUES ('hotel-a','Hotel Norte','BASIC'),('hotel-b','Hotel Sur','PRO');
 " >>"$tmp_dir/migrations.log" 2>&1
-CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "
+CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --persist-to "$persist_dir" --command "
   DELETE FROM housekeeping_events; DELETE FROM maintenance_cases; DELETE FROM bookings; DELETE FROM rooms WHERE id IN ('browser-a','browser-b','browser-c','browser-d','browser-e','browser-f','browser-g','browser-h','browser-report');
-  INSERT OR REPLACE INTO rooms (id,room_number,room_type,status,price_cents) VALUES
-    ('browser-a','901','STANDARD','DIRTY',10000),('browser-b','902','STANDARD','CLEANING',12000),
-    ('browser-c','903','STANDARD','AVAILABLE',13000),('browser-d','904','STANDARD','MAINTENANCE',14000),
-    ('browser-e','905','STANDARD','AVAILABLE',15000),('browser-f','906','STANDARD','OCCUPIED',16000),
-    ('browser-g','907','STANDARD','AVAILABLE',17000),('browser-h','908','STANDARD','AVAILABLE',18000),
-    ('browser-report','909','STANDARD','AVAILABLE',19000);
+  INSERT OR REPLACE INTO rooms (id,room_number,room_type,status,price_cents,housekeeping_state,service_state) VALUES
+    ('browser-a','901','STANDARD','DIRTY',10000,'DIRTY','IN_SERVICE'),('browser-b','902','STANDARD','CLEANING',12000,'CLEANING','IN_SERVICE'),
+    ('browser-c','903','STANDARD','AVAILABLE',13000,'READY','IN_SERVICE'),('browser-d','904','STANDARD','MAINTENANCE',14000,'READY','OUT_OF_ORDER'),
+    ('browser-e','905','STANDARD','AVAILABLE',15000,'READY','IN_SERVICE'),('browser-f','906','STANDARD','OCCUPIED',16000,'READY','IN_SERVICE'),
+    ('browser-g','907','STANDARD','AVAILABLE',17000,'READY','IN_SERVICE'),('browser-h','908','STANDARD','AVAILABLE',18000,'READY','IN_SERVICE'),
+    ('browser-report','909','STANDARD','AVAILABLE',19000,'READY','IN_SERVICE');
   INSERT OR REPLACE INTO maintenance_cases (id,room_id,status,priority,reason,assigned_to,reported_by_user_id,reported_at)
     VALUES ('browser-case-d','browser-d','OPEN','HIGH','Existing maintenance case','ops','subject-a','2026-01-01T00:00:00Z');
   INSERT OR REPLACE INTO guests (id,full_name,email,created_at) VALUES ('browser-guest-f','Orphan Departure Guest','orphan@example.test','2026-08-20');
@@ -63,17 +96,15 @@ CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --c
     VALUES ('browser-report-booking','browser-report-guest','browser-report','2026-09-02','2026-09-04','CONFIRMED',40000,'2026-08-20T00:00:00Z','2026-08-20T00:00:00Z');
 " >>"$tmp_dir/migrations.log" 2>&1
 
-"$wrangler" dev --local --ip 127.0.0.1 --port 8787 --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >"$tmp_dir/api.log" 2>&1 & api_pid=$!
+"$wrangler" dev --local --ip 127.0.0.1 --port "$api_port" --persist-to "$persist_dir" --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >"$tmp_dir/api.log" 2>&1 & api_pid=$!
 for _ in {1..30}; do curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1 && break; sleep 1; done
-VITE_LOCAL_ACCEPTANCE_AUTH=true "$repo_dir/node_modules/.bin/vite" --host 127.0.0.1 --port 4174 --config apps/web/vite.config.ts >"$tmp_dir/web.log" 2>&1 & web_pid=$!
-for _ in {1..30}; do curl -fsS http://127.0.0.1:4174/housekeeping >/dev/null 2>&1 && break; sleep 1; done
+VITE_LOCAL_ACCEPTANCE_AUTH=true "$repo_dir/node_modules/.bin/vite" --host 127.0.0.1 --port "$web_port" --strictPort --config apps/web/vite.config.ts >"$tmp_dir/web.log" 2>&1 & web_pid=$!
+for _ in {1..30}; do curl -fsS "http://127.0.0.1:$web_port/housekeeping" >/dev/null 2>&1 && break; sleep 1; done
 
 if [[ "${CI_BROWSER_STANDARD:-0}" == "1" ]]; then
   node scripts/cf-ux-mobile-browser-ci.mjs 2>&1 | tee output/playwright/browser.log
 else
-  codex_home=${CODEX_HOME:-$HOME/.codex}
-  pwcli="$codex_home/skills/playwright/scripts/playwright_cli.sh"
-  bash "$pwcli" -s cf-i05-integrated open about:blank >/dev/null
-  bash "$pwcli" -s cf-i05-integrated run-code --filename scripts/cf-i05-browser-regression.playwright.js
-  bash "$pwcli" -s cf-i05-integrated close >/dev/null
+  bash "$pwcli" -s "$browser_session" open about:blank >/dev/null
+  bash "$pwcli" -s "$browser_session" run-code --filename scripts/cf-i05-browser-regression.playwright.js
+  bash "$pwcli" -s "$browser_session" close >/dev/null
 fi

@@ -20,10 +20,14 @@
   await page.getByRole("button", { name: "All" }).click();
   await page.getByText("Integrated Reassignment Guest", { exact: true }).first().waitFor({ timeout: 60000 });
 
-  async function openGuest(name) {
+  async function openGuest(name, bookingId) {
     const hotelResponsePromise = page.waitForResponse(response => response.url().endsWith("/api/v1/auth/me"));
     const availabilityResponsePromise = page.waitForResponse(response => response.url().includes("/api/v1/rooms/available"));
-    await page.getByText(name, { exact: true }).first().click();
+    if (bookingId && page.viewportSize().width <= 900) {
+      await page.goto(`http://127.0.0.1:4176/bookings?booking_id=${encodeURIComponent(bookingId)}`);
+    } else {
+      await page.getByText(name, { exact: true }).first().click();
+    }
     await page.getByText("Selected case").waitFor();
     await page.locator('form[aria-label="Reassign room"]').waitFor();
     const [hotelResponse, availabilityResponse] = await Promise.all([hotelResponsePromise, availabilityResponsePromise]);
@@ -92,7 +96,7 @@
   const command = await reassignResponse.json();
   if (command.hotel_local_date !== integratedContext.hotelLocalDate || command.effective_date !== integratedContext.hotelLocalDate
     || command.remaining_interval.start_date !== integratedContext.hotelLocalDate) throw new Error(`API did not confirm the hotel-local remaining interval: ${JSON.stringify(command)}`);
-  if (await page.getByRole("status").filter({ hasText: "Room reassigned" }).count() !== 1) throw new Error(`integrated success failed: ${JSON.stringify(payloads)}; alerts=${await page.getByRole("alert").allTextContents()}`);
+  await page.getByRole("status").filter({ hasText: "Room reassigned" }).waitFor({ state: "visible", timeout: 10000 });
   const refreshedBoard = await queueRefreshResponse.json();
   const refreshedBooking = refreshedBoard.items.find(item => item.booking.id === "e2e-booking-success")?.booking;
   if (refreshedBooking?.room_id !== "e2e-room-b") throw new Error(`API refresh did not show destination room: ${JSON.stringify(refreshedBooking)}; payloads=${JSON.stringify(payloads)}`);
@@ -106,7 +110,7 @@
   await page.screenshot({ path: "output/playwright/f04-reassignment-desktop-success.png", fullPage: true });
 
   await page.setViewportSize({ width: 375, height: 812 });
-  await openGuest("Stale Reassignment Guest");
+  await openGuest("Stale Reassignment Guest", "e2e-booking-stale");
   const staleForm = page.locator('form[aria-label="Reassign room"]');
   const staleQuotePromise = page.waitForResponse(response => response.url().endsWith("/reassignment-quote"));
   await staleForm.getByRole("combobox").selectOption("e2e-room-e");

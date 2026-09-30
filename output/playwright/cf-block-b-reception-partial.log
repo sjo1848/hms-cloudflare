@@ -1,0 +1,56 @@
+### Result
+{"initialPartialLoad":{"allAuxiliaryErrors":503,"queuePreserved":true,"selectedCase":"a-next","perResourceRetryCount":3},"independentRetries":[{"endpoint":"/rooms","status":200,"queueAndCasePreserved":true},{"endpoint":"/guests","status":200,"queueAndCasePreserved":true},{"endpoint":"/reservation-creation-operations","status":200,"queueAndCasePreserved":true}],"refreshKeepsContext":{"boardRefresh":200,"auxiliaryFailures":503,"queuePreserved":true,"caseIdentity":"a-next"},"receptionBillingSeparation":true}
+### Ran Playwright code
+```js
+await (page => (async () => {
+  await page.unrouteAll({ behavior: "wait" });
+  const failures = new Set(["/rooms", "/guests", "/reservation-creation-operations"]);
+  const endpoints = [...failures];
+  await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
+  await page.route("**/api/v1/**", route => {
+    const source = new URL(route.request().url());
+    const headers = { ...route.request().headers(), "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000001", "x-local-access-email": "ana-admin@migration.invalid", "x-hotel-id": "10000000-0000-0000-0000-000000000001", "x-hms-test-delay": "0" };
+    if (failures.has(source.pathname.replace("/api/v1", ""))) headers["x-hms-test-fail"] = source.pathname;
+    return route.continue({ url: `http://127.0.0.1:8787/api/v1${source.pathname.split("/api/v1").at(-1)}${source.search}`, headers });
+  });
+  const assert = (condition, message) => { if (!condition) throw new Error(message); };
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const initialFailures = endpoints.map(path => page.waitForResponse(response => new URL(response.url()).pathname === `/api/v1${path}` && response.status() === 503, { timeout: 12000 }));
+  await page.goto("http://127.0.0.1:4181/bookings?lane=arrivals&booking_id=a-next");
+  await page.locator('[data-booking-id="z-priority"]').waitFor({ state: "visible" });
+  await page.locator(".reception-booking-case h3").filter({ hasText: "Next Arrival" }).waitFor({ state: "visible" });
+  await Promise.all(initialFailures);
+  assert(await page.locator(".reception-ancillary-status span:has(button)").count() === endpoints.length, "Expected isolated room/guest/recovery errors with individual retry controls");
+  assert(await page.locator(".reception-booking-case").isVisible(), "Initial auxiliary failures hid the selected case");
+  const initialPartialLoad = { allAuxiliaryErrors: 503, queuePreserved: true, selectedCase: "a-next", perResourceRetryCount: endpoints.length };
+
+  failures.clear();
+  const retryEvidence = [];
+  for (const endpoint of endpoints) {
+    const retry = page.locator(".reception-ancillary-status span:has(button)").first().getByRole("button", { name: "Try again" });
+    const recovered = page.waitForResponse(response => new URL(response.url()).pathname === `/api/v1${endpoint}` && response.status() === 200, { timeout: 12000 });
+    await retry.click();
+    await recovered;
+    assert(await page.locator('[data-booking-id="z-priority"]').isVisible() && await page.locator(".reception-booking-case").isVisible(), `${endpoint} retry disrupted Queue/Case`);
+    retryEvidence.push({ endpoint, status: 200, queueAndCasePreserved: true });
+  }
+
+  for (const endpoint of endpoints) failures.add(endpoint);
+  const refreshErrors = endpoints.map(endpoint => page.waitForResponse(response => new URL(response.url()).pathname === `/api/v1${endpoint}` && response.status() === 503, { timeout: 12000 }));
+  const boardRefresh = page.waitForResponse(response => new URL(response.url()).pathname === "/api/v1/front-desk/board" && response.status() === 200, { timeout: 12000 });
+  await page.locator(".reception-queue-tools button").click();
+  await Promise.all([...refreshErrors, boardRefresh]);
+  assert(await page.locator('[data-booking-id="z-priority"]').isVisible() && await page.locator(".reception-booking-case h3").filter({ hasText: "Next Arrival" }).isVisible(), "Failed auxiliary refresh replaced selected Queue/Case state");
+  assert(!(await page.locator(".reception-workspace").innerText()).match(/Cash operations|Finance workspace|Register payment/i), "Reception rendered Billing/Cash content");
+  const refreshKeepsContext = { boardRefresh: 200, auxiliaryFailures: 503, queuePreserved: true, caseIdentity: "a-next" };
+  await page.unrouteAll({ behavior: "wait" });
+  return { initialPartialLoad, independentRetries: retryEvidence, refreshKeepsContext, receptionBillingSeparation: true };
+})()
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4181/bookings?lane=arrivals&booking_id=a-next
+- Page Title: HMS Elite
+- Console: 6 errors, 0 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-09-30T06-08-42-331Z.log#L1-L6

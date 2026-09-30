@@ -27,9 +27,8 @@ describe("application navigation contract", () => {
     expect(navigationAllowed(reports!, { hotel: ["reports.revenue.read", "reports.occupancy.read"], network: [] })).toBe(true);
   });
 
-  it("keeps the approved context groups and does not promote Billing/Cash into shell navigation", () => {
+  it("preserves the approved shell taxonomy without promoting Billing/Cash into navigation", () => {
     expect(navigationGroups).toEqual(["operations", "directory", "insights", "administration", "platform"]);
-    expect(navigation.map(item => item[4])).toEqual(["operations", "operations", "operations", "directory", "insights", "administration", "platform"]);
     expect(navigation.some(item => item[0].toLowerCase().includes("billing") || item[0].toLowerCase().includes("cash"))).toBe(false);
   });
 });

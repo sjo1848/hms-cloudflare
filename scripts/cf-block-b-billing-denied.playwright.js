@@ -1,0 +1,33 @@
+page => (async () => {
+  await page.addInitScript(() => {
+    localStorage.setItem("hms.locale", "en");
+    localStorage.setItem("hms-local-acceptance-profile", "0");
+  });
+  await page.route("**/api/v1/**", route => {
+    const source = new URL(route.request().url());
+    const headers = {
+      ...route.request().headers(),
+      "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000001",
+      "x-local-access-email": "ana-admin@migration.invalid",
+      "x-hotel-id": "10000000-0000-0000-0000-000000000001",
+    };
+    const target = `http://127.0.0.1:8787/api/v1${source.pathname.split("/api/v1").at(-1)}${source.search}`;
+    return route.continue({ url: target, headers });
+  });
+  const authPromise = page.waitForResponse(response => new URL(response.url()).pathname === "/api/v1/auth/me" && response.status() === 200);
+  await page.goto("http://127.0.0.1:4181/billing");
+  const authResponse = await authPromise;
+  const auth = await authResponse.json();
+  const subject = authResponse.request().headers()["x-local-access-subject"];
+  if (subject !== "source-user:14000000-0000-0000-0000-000000000001") throw new Error(`Billing denial used wrong/changed subject: ${subject}`);
+  if (auth.capabilities.hotel.includes("billing.read")) throw new Error("Synthetic downgraded role still received billing.read from /auth/me");
+  await page.locator(".shell-state-denied").waitFor({ state: "visible" });
+  const denied = await page.locator(".app-content").innerText();
+  if (/cash operations|extra charges|register payment/i.test(denied)) throw new Error(`Billing workflow content leaked without billing.read: ${denied}`);
+  const apiDenial = await page.evaluate(async () => {
+    const response = await fetch("/api/v1/billing/balance");
+    return { status: response.status, body: await response.json() };
+  });
+  if (apiDenial.status !== 403) throw new Error(`Backend did not deny the same subject's protected Billing read: ${JSON.stringify(apiDenial)}`);
+  return { route: "/billing", directRoute: true, accessSubject: subject, serverOwnedCapabilities: auth.capabilities.hotel, denied: true, backendBillingReadStatus: apiDenial.status };
+})()

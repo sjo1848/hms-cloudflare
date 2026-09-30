@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import type { Booking, FrontDeskBoard, Guest, HousekeepingBoard, MaintenanceCase, Room } from "../../domain/types";
+import type { Booking, FrontDeskBoard, Guest, HousekeepingBoard, Invoice, MaintenanceCase, Room } from "../../domain/types";
+import { CapabilitiesContext } from "../../app/capabilities";
 import {
   cancelBooking as cancelBookingRequest,
   checkInBooking,
@@ -8,8 +9,12 @@ import {
   createReservationOperation,
   loadAvailableRooms,
   loadBooking,
+  loadBookingInvoice,
   loadHotelContext,
-  loadReceptionQueue,
+  loadReceptionBoard,
+  loadReceptionRooms,
+  loadReceptionGuests,
+  loadRecoverableReservationOperations,
   loadReassignmentQuote,
   loadRoomMaintenanceCase,
   reassignBooking,
@@ -29,6 +34,7 @@ import { ApiError } from "../../api/client";
 
 export function useReceptionWorkspace() {
   const { t } = useI18n();
+  const { hotel } = useContext(CapabilitiesContext);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [frontDeskBoard, setFrontDeskBoard] = useState<FrontDeskBoard | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -47,6 +53,15 @@ export function useReceptionWorkspace() {
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [roomsLoading, setRoomsLoading] = useState(true);
+  const [guestsLoading, setGuestsLoading] = useState(true);
+  const [recoveryLoading, setRecoveryLoading] = useState(true);
+  const [roomsError, setRoomsError] = useState("");
+  const [guestsError, setGuestsError] = useState("");
+  const [recoveryError, setRecoveryError] = useState("");
+  const [accountSummary, setAccountSummary] = useState<Invoice>(null);
+  const [accountLoading, setAccountLoading] = useState(false);
+  const [accountError, setAccountError] = useState("");
   const [error, setError] = useState("");
   const [checkInConflict, setCheckInConflict] = useState("");
   const [checkInNeedsRefresh, setCheckInNeedsRefresh] = useState(false);
@@ -57,12 +72,85 @@ export function useReceptionWorkspace() {
   const [form, setForm] = useState<BookingForm>(emptyBookingForm);
   const [editForm, setEditForm] = useState<BookingEditForm>(emptyBookingForm);
   const loadEpoch = useRef(0);
+  const roomsEpoch = useRef(0);
+  const guestsEpoch = useRef(0);
+  const recoveryEpoch = useRef(0);
+  const accountEpoch = useRef(0);
   const selectionEpoch = useRef(0);
   const checkInInFlight = useRef(false);
   const reassignQuoteEpoch = useRef(0);
   const reservationOperationToken = useRef(crypto.randomUUID());
 
+  async function loadRooms() {
+    const epoch = ++roomsEpoch.current;
+    setRoomsLoading(true);
+    setRoomsError("");
+    try {
+      const result = await loadReceptionRooms();
+      if (epoch === roomsEpoch.current) setRooms(result);
+    } catch (e) {
+      if (epoch === roomsEpoch.current) setRoomsError((e as Error).message);
+    } finally {
+      if (epoch === roomsEpoch.current) setRoomsLoading(false);
+    }
+  }
+
+  async function loadGuests() {
+    const epoch = ++guestsEpoch.current;
+    setGuestsLoading(true);
+    setGuestsError("");
+    try {
+      const result = await loadReceptionGuests();
+      if (epoch === guestsEpoch.current) setGuests(result);
+    } catch (e) {
+      if (epoch === guestsEpoch.current) setGuestsError((e as Error).message);
+    } finally {
+      if (epoch === guestsEpoch.current) setGuestsLoading(false);
+    }
+  }
+
+  async function loadRecovery() {
+    const epoch = ++recoveryEpoch.current;
+    setRecoveryLoading(true);
+    setRecoveryError("");
+    try {
+      const result = await loadRecoverableReservationOperations();
+      if (epoch === recoveryEpoch.current) setRecoverableOperations(result);
+    } catch (e) {
+      if (epoch === recoveryEpoch.current) setRecoveryError((e as Error).message);
+    } finally {
+      if (epoch === recoveryEpoch.current) setRecoveryLoading(false);
+    }
+  }
+
+  function loadAncillary() {
+    void loadRooms();
+    void loadGuests();
+    void loadRecovery();
+  }
+
+  async function loadAccountSummary(bookingId: string) {
+    if (!hotel.includes("billing.invoice.read")) {
+      setAccountSummary(null);
+      setAccountError("");
+      setAccountLoading(false);
+      return;
+    }
+    const epoch = ++accountEpoch.current;
+    setAccountLoading(true);
+    setAccountError("");
+    try {
+      const result = await loadBookingInvoice(bookingId);
+      if (epoch === accountEpoch.current && selected?.id === bookingId) setAccountSummary(result);
+    } catch (e) {
+      if (epoch === accountEpoch.current && selected?.id === bookingId) setAccountError((e as Error).message);
+    } finally {
+      if (epoch === accountEpoch.current) setAccountLoading(false);
+    }
+  }
+
   async function load() {
+    loadAncillary();
     const epoch = ++loadEpoch.current;
     const selectionAtStart = selectionEpoch.current;
     let selectedDetailRefreshFailed = false;
@@ -70,16 +158,15 @@ export function useReceptionWorkspace() {
     else setLoading(true);
     setError("");
     try {
-      const next = await loadReceptionQueue();
+      const board = await loadReceptionBoard();
       if (epoch !== loadEpoch.current) return null;
-      setFrontDeskBoard(next.board);
-      setBookings(next.bookings);
-      setRooms(next.rooms);
-      setGuests(next.guests);
-      setRecoverableOperations(next.recoverableOperations);
+      const nextBookings = board.items.map(item => item.booking);
+      setFrontDeskBoard(board);
+      setBookings(nextBookings);
       const selectedId = selectionEpoch.current === selectionAtStart ? selected?.id : undefined;
       if (selectedId) {
-        const queuedBooking = next.bookings.find(booking => booking.id === selectedId);
+        void loadAccountSummary(selectedId);
+        const queuedBooking = nextBookings.find(booking => booking.id === selectedId);
         if (queuedBooking) {
           setSelected(current => current?.id === selectedId ? queuedBooking : current);
         } else {
@@ -99,7 +186,7 @@ export function useReceptionWorkspace() {
         }
       }
       if (selectedDetailRefreshFailed) return null;
-      return next.board;
+      return board;
     } catch (e) {
       if (epoch === loadEpoch.current) setError((e as Error).message);
       return null;
@@ -113,11 +200,11 @@ export function useReceptionWorkspace() {
 
   useEffect(() => { void load(); }, []);
   useEffect(() => {
-    function revalidate() { if (document.visibilityState === "visible" && !actionBusy) void load(); }
+    function revalidate() { if (document.visibilityState === "visible" && !actionBusy && (!loading || frontDeskBoard)) void load(); }
     window.addEventListener("focus", revalidate);
     const interval = window.setInterval(revalidate, 30000);
     return () => { window.removeEventListener("focus", revalidate); window.clearInterval(interval); };
-  }, [actionBusy, frontDeskBoard]);
+  }, [actionBusy, frontDeskBoard, loading]);
 
   useEffect(() => {
     if (!selected || selected.status !== "Confirmed" || !editForm.check_in || !editForm.check_out) {
@@ -137,6 +224,11 @@ export function useReceptionWorkspace() {
     }, 120);
     return () => window.clearTimeout(timeout);
   }, [selected?.id, selected?.status, editForm.check_in, editForm.check_out]);
+
+  useEffect(() => {
+    if (selected) void loadAccountSummary(selected.id);
+    else { accountEpoch.current += 1; setAccountSummary(null); setAccountLoading(false); setAccountError(""); }
+  }, [selected?.id, hotel.join(" ")]);
 
   function resetLifecycleUi() {
     setCheckInStep(0);
@@ -178,6 +270,29 @@ export function useReceptionWorkspace() {
     if (booking.status === "CheckedIn") {
       setActionBusy(false);
       void loadReassignmentContext(booking);
+    }
+  }
+
+  async function restoreCase(bookingId: string): Promise<boolean | null> {
+    const epoch = ++selectionEpoch.current;
+    const inBoard = frontDeskBoard?.items.find(item => item.booking.id === bookingId)?.booking;
+    if (inBoard) {
+      selectCase(inBoard);
+      return true;
+    }
+    try {
+      const booking = await loadBooking(bookingId);
+      if (epoch === selectionEpoch.current) {
+        selectCase(booking);
+        return true;
+      }
+      return null;
+    } catch (e) {
+      if (epoch !== selectionEpoch.current) return null;
+      closeCase();
+      if (e instanceof ApiError && e.status === 404) return false;
+      setError((e as Error).message);
+      return true;
     }
   }
 
@@ -362,9 +477,9 @@ export function useReceptionWorkspace() {
     setError("");
     try {
       await reassignBooking(selected.id, data.get("room_id"), String(data.get("reason") ?? "").trim(), reassignQuote.quote_token);
-      setNotice(t("reception.reassignSuccess"));
       closeCase();
       await load();
+      setNotice(t("reception.reassignSuccess"));
     } catch (e) {
       setNotice("");
       const conflict = e instanceof ApiError && e.status === 409;
@@ -418,10 +533,10 @@ export function useReceptionWorkspace() {
   }
 
   return {
-    bookings, frontDeskBoard, rooms, guests, recoverableOperations, newGuestMode, newGuest, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, reassignQuote, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
+    bookings, frontDeskBoard, rooms, guests, recoverableOperations, roomsLoading, guestsLoading, recoveryLoading, roomsError, guestsError, recoveryError, accountSummary, accountLoading, accountError, newGuestMode, newGuest, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, reassignQuote, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
     setCheckInStep, setCheckInData, setForm, setEditForm, setNewGuestMode, setNewGuest,
-    selectCase, closeCase, refreshQueue: load, refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
+    selectCase, restoreCase, closeCase, refreshQueue: load, retryRooms: loadRooms, retryGuests: loadGuests, retryRecovery: loadRecovery, retryAccountSummary: () => selected ? loadAccountSummary(selected.id) : Promise.resolve(), refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
     saveEdit, cancelBooking, useRecoveredGuest,
   };
 }

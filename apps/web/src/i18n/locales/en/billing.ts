@@ -51,5 +51,6 @@ export const billingEn = {
   "billing.handoffTo": "Handoff to",
   "billing.closeNotesAria": "Close notes",
   "billing.closeShift": "Close cash shift",
-  "billing.shiftClosed": "Shift closed · difference {amount}"
+  "billing.shiftClosed": "Shift closed · difference {amount}",
+  "billing.credit": "Credit",
 } as const;

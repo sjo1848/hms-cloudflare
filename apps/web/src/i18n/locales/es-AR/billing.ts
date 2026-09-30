@@ -51,5 +51,6 @@ export const billingEsAR = {
   "billing.handoffTo": "Entregar a",
   "billing.closeNotesAria": "Notas de cierre",
   "billing.closeShift": "Cerrar turno de caja",
-  "billing.shiftClosed": "Turno cerrado · diferencia {amount}"
+  "billing.shiftClosed": "Turno cerrado · diferencia {amount}",
+  "billing.credit": "Crédito",
 } as const;

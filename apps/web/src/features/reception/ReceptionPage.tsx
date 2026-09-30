@@ -1,10 +1,9 @@
-import { useContext, useEffect, useState } from "react";
-import { BillingWorkspace } from "../billing/BillingWorkspace";
-import { StatusBadge } from "../../components/StatusBadge";
+import { useContext, useEffect, useRef, useState } from "react";
 import { DropdownMenu, DropdownMenuItem } from "../../components/ui/dropdown-menu";
 import { useReceptionWorkspace } from "./useReceptionWorkspace";
 import { useI18n } from "../../i18n";
 import { CapabilitiesContext } from "../../app/capabilities";
+import { useAppRouter } from "../../app/router";
 import type { MessageKey } from "../../i18n";
 import { filterQueue, queueCounts, queueFilters } from "./queue";
 import type { QueueFilter, QueueLane, QueueReason } from "./queue";
@@ -17,6 +16,7 @@ const filterLabelKeys: Record<QueueFilter, MessageKey> = {
   arrivals: "reception.queueFilterArrivals",
   departures: "reception.queueFilterDepartures",
   "in-house": "reception.queueFilterInHouse",
+  reservations: "reception.queueFilterReservations",
   all: "reception.queueFilterAll",
 };
 const laneLabelKeys: Record<QueueLane, MessageKey> = {
@@ -40,14 +40,15 @@ const reasonLabelKeys: Record<QueueReason, MessageKey> = {
 
 function Bookings() {
   const { t, statusLabel, formatDate, formatCurrency } = useI18n();
+  const router = useAppRouter();
   const { hotel } = useContext(CapabilitiesContext);
   const canWriteBookings = hotel.includes("bookings.write");
   const canCreateGuest = hotel.includes("guests.write");
   const {
-    bookings, frontDeskBoard, rooms, guests, recoverableOperations, newGuestMode, newGuest, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, reassignQuote, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
+    bookings, frontDeskBoard, rooms, guests, recoverableOperations, roomsLoading, guestsLoading, recoveryLoading, roomsError, guestsError, recoveryError, accountSummary, accountLoading, accountError, retryRooms, retryGuests, retryRecovery, retryAccountSummary, newGuestMode, newGuest, availableRooms, editAvailableRooms, reassignAvailableIds, reassignBoard, reassignMaintenanceCase, reassignHotelDate, reassignQuote, loading, refreshing, error, notice, checkInConflict, checkInNeedsRefresh, checkInAccepted, selected, actionBusy,
     checkInStep, checkInData, form, editForm,
     setCheckInStep, setCheckInData, setForm, setEditForm, setNewGuestMode, setNewGuest,
-    selectCase, closeCase, refreshQueue, refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
+    selectCase, restoreCase, closeCase, refreshQueue, refreshCheckInContext, refreshAvailability, submit, checkIn, reassign, checkout, selectReassignDestination,
     saveEdit, cancelBooking, useRecoveredGuest,
   } = useReceptionWorkspace();
   const [queueFilter, setQueueFilter] = useState<QueueFilter>(() => {
@@ -61,15 +62,52 @@ function Bookings() {
   const [checkInTaskId, setCheckInTaskId] = useState<string | null>(null);
   const [discardRequest, setDiscardRequest] = useState(0);
   const [checkInSuccess, setCheckInSuccess] = useState("");
+  const [queueElement, setQueueElement] = useState<HTMLDivElement | null>(null);
+  const pendingQueueFocusId = useRef<string | null>(null);
   const queue = frontDeskBoard?.items ?? [];
   const counts = queueCounts(queue);
   const visibleQueue = filterQueue(queue, queueFilter, queueSearch);
   const selectedBoardItem = frontDeskBoard?.items.find(item => item.booking.id === selected?.id);
+  const selectedRoom = selected ? rooms.find(room => room.id === selected.room_id) : undefined;
+  const roomReadinessState = (roomId: string) => rooms.find(room => room.id === roomId)?.operational_state?.readiness.state ?? "UNKNOWN";
+  const roomReadinessLabel = (roomId: string) => {
+    const readiness = roomReadinessState(roomId);
+    return readiness === "READY_FOR_ARRIVAL" ? t("reception.roomReady") : readiness === "NOT_READY" ? t("reception.arrivalNeedsReadiness") : t("reception.readinessUnknown");
+  };
   const reassignRooms = selected?.status === "CheckedIn" ? rooms.filter(room => room.id !== selected.room_id) : [];
   const boardByRoom = new Map((reassignBoard?.rooms ?? []).map(room => [room.room_id, room]));
   const effectiveDate = selected ? (reassignHotelDate && reassignHotelDate > selected.check_in ? reassignHotelDate : selected.check_in) : "";
   useEffect(() => { setReassignTargetId(""); }, [selected?.id]);
   useEffect(() => { setShowArrivalEdit(false); }, [selected?.id]);
+
+  useEffect(() => {
+    if (!frontDeskBoard || loading) return;
+    const frame = window.requestAnimationFrame(() => window.performance.mark("hms:reception-queue-ready"));
+    return () => window.cancelAnimationFrame(frame);
+  }, [frontDeskBoard, loading]);
+
+  useEffect(() => {
+    if (!selected) {
+      const pendingId = pendingQueueFocusId.current;
+      if (pendingId) {
+        const frame = window.requestAnimationFrame(() => {
+          const row = document.querySelector<HTMLButtonElement>(`[data-booking-id="${CSS.escape(pendingId)}"]`);
+          if (row && row.getClientRects().length) row.focus();
+          else document.querySelector<HTMLElement>(".reception-queue-tools button, .reception-queue-tools input")?.focus();
+          pendingQueueFocusId.current = null;
+        });
+        return () => window.cancelAnimationFrame(frame);
+      }
+      return;
+    }
+    const compact = window.matchMedia("(max-width: 1000px)").matches;
+    if (compact) window.requestAnimationFrame(() => document.querySelector<HTMLElement>(".reception-case-title")?.focus());
+  }, [selected?.id]);
+
+  useEffect(() => {
+    const y = window.history.state?.__hmsReceptionQueueScroll;
+    if (typeof y === "number" && queueElement) queueElement.scrollTop = y;
+  }, [router.search, selected?.id, queueElement]);
 
   function updateLocation(changes: Record<string, string | null>, mode: "push" | "replace" = "replace") {
     const url = new URL(window.location.href);
@@ -77,20 +115,28 @@ function Bookings() {
       if (value) url.searchParams.set(key, value);
       else url.searchParams.delete(key);
     }
-    window.history[mode === "push" ? "pushState" : "replaceState"]({}, "", url);
+    router.navigate(url.pathname + url.search + url.hash, { replace: mode === "replace" });
   }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const taskId = params.get("task") === "check-in" ? params.get("booking_id") : null;
-    if (!taskId || checkInTaskId || !frontDeskBoard) return;
-    const match = frontDeskBoard.items.find(item => item.booking.id === taskId);
-    if (match) { selectCase(match.booking); setCheckInTaskId(taskId); }
-  }, [frontDeskBoard]);
+    const bookingId = params.get("booking_id");
+    const taskId = params.get("task") === "check-in" ? bookingId : null;
+    if (bookingId && selected?.id !== bookingId) {
+      if (selected) closeCase();
+      void restoreCase(bookingId).then(valid => {
+        if (valid === false) updateLocation({ booking_id: null, task: null }, "replace");
+      });
+    }
+    else if (!bookingId && selected) closeCase();
+    if (taskId && checkInTaskId !== taskId) setCheckInTaskId(taskId);
+  }, [router.search, frontDeskBoard]);
 
   useEffect(() => {
     function onPopState() {
       const params = new URLSearchParams(window.location.search);
+      const nextBookingId = params.get("booking_id");
+      if (!nextBookingId && selected?.id) pendingQueueFocusId.current = selected.id;
       const lane = params.get("lane");
       setQueueFilter(queueFilters.find(filter => filter === lane) ?? "attention");
       setQueueSearch(params.get("q") ?? "");
@@ -104,14 +150,13 @@ function Bookings() {
         }
       }
       if (taskId !== checkInTaskId) {
-        const match = taskId ? frontDeskBoard?.items.find(item => item.booking.id === taskId) : null;
-        if (match) { selectCase(match.booking); setCheckInTaskId(taskId); }
-        else setCheckInTaskId(null);
+        if (taskId) { void restoreCase(taskId); setCheckInTaskId(taskId); }
+        else { setCheckInTaskId(null); const bookingId = params.get("booking_id"); if (bookingId) void restoreCase(bookingId); else closeCase(); }
       }
     }
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, [checkInTaskId, checkInData, frontDeskBoard]);
+  }, [checkInTaskId, checkInData, frontDeskBoard, router.search, selected?.id]);
 
   function closeCheckIn() {
     const currentId = checkInTaskId;
@@ -121,8 +166,10 @@ function Bookings() {
   }
 
   function openNonArrivalCase(booking: typeof bookings[number]) {
+    if (queueElement) window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionQueueScroll: queueElement.scrollTop }, "", window.location.href);
     selectCase(booking);
     updateLocation({ task: null, booking_id: booking.id }, "push");
+    window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionCase: true }, "", window.location.href);
   }
 
   function clearSelectedCase() {
@@ -131,11 +178,26 @@ function Bookings() {
   }
 
   function openCheckIn(booking: typeof bookings[number]) {
+    if (queueElement) window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionQueueScroll: queueElement.scrollTop }, "", window.location.href);
     selectCase(booking);
     setShowArrivalEdit(false);
     setCheckInSuccess("");
     updateLocation({ task: "check-in", booking_id: booking.id }, "push");
+    window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionCase: true }, "", window.location.href);
     setCheckInTaskId(booking.id);
+  }
+
+  function applicationBack() {
+    const row = selected?.id;
+    if (window.history.state?.__hmsReceptionCase) {
+      if (row) pendingQueueFocusId.current = row;
+      window.history.back();
+    }
+    else {
+      updateLocation({ task: null, booking_id: null }, "replace");
+      if (row) pendingQueueFocusId.current = row;
+      closeCase();
+    }
   }
 
   function finishCheckIn(updated: FrontDeskBoard, completedId: string) {
@@ -173,7 +235,7 @@ function Bookings() {
       </div>
     </div>
 
-    {showCreate && canWriteBookings && <form onSubmit={submit} aria-label={t("reception.createAria")} className="case-create reception-create-panel">
+    {showCreate && canWriteBookings ? <form onSubmit={submit} aria-label={t("reception.createAria")} className="case-create reception-create-panel">
       <h3>{t("reception.openCase")}</h3>
       {canCreateGuest && <label><input type="checkbox" checked={newGuestMode} onChange={event => setNewGuestMode(event.target.checked)} />{t("guests.add")}</label>}
       {newGuestMode && canCreateGuest ? <>
@@ -198,15 +260,21 @@ function Bookings() {
           <button type="button" onClick={() => useRecoveredGuest(operation)}>{t("reception.recoverGuest")}</button>
         </div>)}
       </section>}
-    </form>}
+    </form> : null}
 
     {error && <p className="error" role="alert">{error}</p>}
     {notice && <p className="success" role="status">{notice}</p>}
     {checkInSuccess && <p className="success" role="status">{checkInSuccess}</p>}
-    {loading && <p className="muted" role="status">{t("reception.loadingQueue")}</p>}
-    {refreshing && <p className="muted reception-refreshing" role="status">{t("reception.refreshingQueue")}</p>}
+    {loading ? <p className="muted" role="status">{t("reception.loadingQueue")}</p> : null}
+    {refreshing ? <p className="muted reception-refreshing" role="status">{t("reception.refreshingQueue")}</p> : null}
 
-    <div className="case-layout reception-case-layout">
+    <div className="reception-ancillary-status" aria-live="polite">
+      {(roomsLoading || roomsError) && <span>{roomsError ? <>{roomsError} <button type="button" onClick={() => void retryRooms()}>{t("common.retry")}</button></> : t("reception.roomsLoading")}</span>}
+      {(guestsLoading || guestsError) && <span>{guestsError ? <>{guestsError} <button type="button" onClick={() => void retryGuests()}>{t("common.retry")}</button></> : t("reception.guestsLoading")}</span>}
+      {(recoveryLoading || recoveryError) && <span>{recoveryError ? <>{recoveryError} <button type="button" onClick={() => void retryRecovery()}>{t("common.retry")}</button></> : t("reception.recoveryLoading")}</span>}
+    </div>
+
+    <div className={`case-layout reception-case-layout ${selected ? "case-open" : "queue-open"}`}>
       <aside className="reception-queue-panel" aria-label={t("reception.queueAria")}>
         <div className="reception-queue-heading">
           <div><h3>{t("reception.caseQueue")}</h3><p className="muted">{t("reception.queueNow")}{frontDeskBoard && ` · ${formatDate(frontDeskBoard.date)}`}</p></div>
@@ -216,12 +284,13 @@ function Bookings() {
           <span>{t("reception.queueSearch")}</span>
           <input value={queueSearch} onChange={event => { setQueueSearch(event.target.value); updateLocation({ q: event.target.value }); }} placeholder={t("reception.queueSearchPlaceholder")} />
         </label>
-        <div className="reception-queue-filters" aria-label={t("reception.queueAria")}>
-          {queueFilters.map(filter => <button type="button" key={filter} className={queueFilter === filter ? "selected" : ""} onClick={() => { setQueueFilter(filter); updateLocation({ lane: filter }, "push"); }}>{t(filterLabelKeys[filter])} <span>{counts[filter]}</span></button>)}
+        <div className="reception-queue-filters" role="group" aria-label={t("reception.queueAria")}>
+          {queueFilters.map(filter => <button type="button" key={filter} aria-pressed={queueFilter === filter} className={queueFilter === filter ? "selected" : ""} onClick={() => { setQueueFilter(filter); updateLocation({ lane: filter }, "push"); }}>{t(filterLabelKeys[filter])} <span>{counts[filter]}</span></button>)}
         </div>
-        <div className="case-queue reception-case-queue">
+        <div className="case-queue reception-case-queue" ref={setQueueElement}>
           {visibleQueue.map(item => {
             const booking = item.booking;
+            const readiness = roomReadinessState(booking.room_id);
             const actionKey: MessageKey = item.lane === "arrival" ? "reception.queueActionCheckIn" : item.lane === "departure" ? "reception.queueActionCheckout" : "reception.queueActionOpen";
             return <button type="button" data-booking-id={booking.id} className={`reception-queue-row lane-${item.lane} ${selected?.id === booking.id ? "selected" : ""}`} key={booking.id} onClick={() => item.lane === "arrival" ? openCheckIn(booking) : openNonArrivalCase(booking)}>
               <span className="reception-row-primary">
@@ -236,19 +305,34 @@ function Bookings() {
                 <small>{formatDate(booking.check_in)} → {formatDate(booking.check_out)}</small>
                 <span className="reception-row-action">{t(actionKey)} →</span>
               </span>
-              {item.lane === "arrival" && <span className={item.room_status === "Available" && item.maintenance_case?.impact !== "BLOCKING" ? "reception-row-ready" : "reception-row-blocked"}>{item.room_status === "Available" && item.maintenance_case?.impact !== "BLOCKING" ? t("reception.roomReady") : t("reception.arrivalNeedsReadiness")}</span>}
+              {item.lane === "arrival" && <span className={readiness === "READY_FOR_ARRIVAL" ? "reception-row-ready" : readiness === "NOT_READY" ? "reception-row-blocked" : "reception-row-readiness-unknown"}>{roomReadinessLabel(booking.room_id)}</span>}
             </button>;
           })}
           {!loading && visibleQueue.length === 0 && <div className="reception-queue-empty"><strong>{queueFilter === "attention" ? t("reception.queueEmptyAttention") : t("reception.queueEmpty")}</strong></div>}
         </div>
       </aside>
 
-      {selected ? <article className="case-panel">
-        <div className="case-panel-heading">
+      {selected ? <article className="case-panel reception-booking-case">
+        <button type="button" className="secondary-button reception-case-back" onClick={applicationBack}>← {t("reception.back")}</button>
+        <div className="case-panel-heading reception-case-title" tabIndex={-1}>
           <div><p className="eyebrow">{t("reception.selectedCase")}</p><h3>{selected.guest_name}</h3><p className="muted">{formatDate(selected.check_in)} → {formatDate(selected.check_out)} · {t("common.room")} {selected.room_number}</p></div>
-          <StatusBadge>{statusLabel(selected.status)}</StatusBadge>
         </div>
+        <section className="reception-case-signals" aria-label={t("reception.caseSignals")}>
+          <div><span>{t("reception.caseState")}</span><strong>{statusLabel(selected.status)}</strong></div>
+          {selectedBoardItem && <div><span>{t("reception.caseAttention")}</span><strong>{t(reasonLabelKeys[selectedBoardItem.reason])}</strong></div>}
+          <div><span>{t("reception.caseImpact")}</span><strong>{selectedBoardItem?.maintenance_case ? selectedBoardItem.maintenance_case.impact === "BLOCKING" ? t("reception.impactBlocking") : t("reception.impactAdvisory") : t("reception.noKnownImpact")}</strong></div>
+          {selectedRoom && <div><span>{t("reception.roomReadiness")}</span><strong>{roomReadinessLabel(selected.room_id)}</strong></div>}
+        </section>
 
+        {hotel.includes("billing.invoice.read") && <section className="reception-account-summary" aria-label={t("billing.invoice")}>
+          <h4>{t("billing.invoice")}</h4>
+          {accountLoading ? <p role="status">{t("common.loading")}</p> : accountError ? <p role="alert">{accountError} <button type="button" onClick={() => void retryAccountSummary()}>{t("common.retry")}</button></p> : accountSummary ? <dl>
+            <div><dt>{t("billing.total")}</dt><dd>{formatCurrency(accountSummary.amount_cents)}</dd></div>
+            <div><dt>{t("billing.paid")}</dt><dd>{formatCurrency(accountSummary.paid_amount_cents)}</dd></div>
+            <div><dt>{t("billing.remaining")}</dt><dd>{formatCurrency(Math.max(accountSummary.amount_cents - accountSummary.paid_amount_cents, 0))}</dd></div>
+            <div><dt>{t("billing.credit")}</dt><dd>{formatCurrency(Math.max(accountSummary.paid_amount_cents - accountSummary.amount_cents, 0))}</dd></div>
+          </dl> : <p className="muted">{t("reception.noAccountSummary")}</p>}
+        </section>}
         {selected.status === "Confirmed" && selectedBoardItem?.lane === "arrival" && <div className="reception-arrival-actions">{canWriteBookings && <button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button>}<DropdownMenu label={t("reception.moreActions")}>{canWriteBookings && <DropdownMenuItem onClick={() => setShowArrivalEdit(current => !current)}>{showArrivalEdit ? t("common.close") : t("reception.editAria")}</DropdownMenuItem>}<DropdownMenuItem onClick={clearSelectedCase}>{t("reception.closeCase")}</DropdownMenuItem></DropdownMenu></div>}
 
         {selected.status === "Confirmed" && canWriteBookings && (selectedBoardItem?.lane !== "arrival" || showArrivalEdit) ? <form onSubmit={saveEdit} aria-label={t("reception.editAria")}>
@@ -308,5 +392,5 @@ function Bookings() {
 }
 
 export function ReceptionPage() {
-  return <><Bookings /><BillingWorkspace /></>;
+  return <Bookings />;
 }

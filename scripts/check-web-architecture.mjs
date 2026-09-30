@@ -39,7 +39,8 @@ const apiClient = readFileSync("apps/web/src/api/client.ts", "utf8");
 if (!apiClient.includes("export async function api") || !apiClient.includes("fetch(`/api/v1")) throw new Error("api/ must own the shared HTTP client");
 
 const reception = readFileSync("apps/web/src/features/reception/ReceptionPage.tsx", "utf8");
-if (!reception.includes("BillingWorkspace")) throw new Error("Reception must compose the billing feature boundary");
+if (reception.includes("BillingWorkspace")) throw new Error("Reception must not mount Billing/Cash below the Reception workspace");
+if (!shell.includes("BillingWorkspace") || !shell.includes('pathname === "/billing"') || !shell.includes('capabilities.hotel.includes("billing.read")')) throw new Error("App shell must keep the separate Billing compatibility route behind its server-owned capability");
 for (const forbidden of ["function BillingPanel", "function CashBalancePanel", "type CashBalance ="]) {
   if (reception.includes(forbidden)) throw new Error(`Reception regained finance responsibility: ${forbidden}`);
 }

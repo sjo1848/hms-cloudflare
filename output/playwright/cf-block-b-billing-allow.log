@@ -1,0 +1,32 @@
+### Result
+{"billingRoute":true,"sameSubject":"source-user:14000000-0000-0000-0000-000000000001","capabilityFromAuthMe":"billing.read","directCompatibilityAllowed":true,"receptionBillingSeparation":true}
+### Ran Playwright code
+```js
+await (page => (async () => {
+  await page.unrouteAll({ behavior: "wait" });
+  await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
+  await page.route("**/api/v1/**", route => {
+    const source = new URL(route.request().url());
+    const headers = { ...route.request().headers(), "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000001", "x-local-access-email": "ana-admin@migration.invalid", "x-hotel-id": "10000000-0000-0000-0000-000000000001", "x-hms-test-delay": "0" };
+    return route.continue({ url: `http://127.0.0.1:8787/api/v1${source.pathname.split("/api/v1").at(-1)}${source.search}`, headers });
+  });
+  const authPromise = page.waitForResponse(response => new URL(response.url()).pathname === "/api/v1/auth/me" && response.status() === 200);
+  await page.goto("http://127.0.0.1:4181/billing");
+  const response = await authPromise;
+  const payload = await response.json();
+  const subject = response.request().headers()["x-local-access-subject"];
+  if (subject !== "source-user:14000000-0000-0000-0000-000000000001" || !payload.capabilities.hotel.includes("billing.read")) throw new Error("billing.read was not granted by server-owned capability for the exact same subject");
+  await page.getByRole("heading", { name: "Finance", exact: true }).waitFor();
+  const billingRoute = new URL(page.url()).pathname === "/billing";
+  await page.goto("http://127.0.0.1:4181/bookings");
+  await page.locator(".reception-workspace").waitFor({ state: "visible" });
+  const receptionText = await page.locator(".reception-workspace").innerText();
+  if (/Cash operations|Finance workspace|Register payment/i.test(receptionText)) throw new Error("Reception rendered Billing/Cash content");
+  await page.unrouteAll({ behavior: "wait" });
+  return { billingRoute, sameSubject: subject, capabilityFromAuthMe: "billing.read", directCompatibilityAllowed: true, receptionBillingSeparation: true };
+})()
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4181/bookings
+- Page Title: HMS Elite

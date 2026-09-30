@@ -6,6 +6,7 @@
 .reception-create-trigger:hover{color:#fff;background:#294968;border-color:#294968}
 .reception-create-panel{margin-bottom:18px}
 .reception-case-layout{grid-template-columns:minmax(310px,360px) minmax(0,1fr)}
+.reception-case-back{display:none}
 .reception-queue-panel{position:sticky;top:18px;display:flex;flex-direction:column;max-height:calc(100vh - 36px);overflow:hidden}
 .reception-queue-heading{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;min-width:0;margin-bottom:12px}
 .reception-queue-heading>div{min-width:0}
@@ -36,9 +37,10 @@
 .reception-row-reason{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700;color:#435369!important}
 .reception-row-footer small{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#677587!important}
 .reception-row-action{flex:0 0 auto;white-space:nowrap;color:#8b5713!important;font-size:11px;font-weight:800}
-.reception-row-ready,.reception-row-blocked{font-size:11px;font-weight:800}
+.reception-row-ready,.reception-row-blocked,.reception-row-readiness-unknown{font-size:11px;font-weight:800}
 .reception-row-ready{color:#17623b!important}
 .reception-row-blocked{color:#9c3028!important}
+.reception-row-readiness-unknown{color:#68778a!important}
 .reception-refreshing{margin:6px 0;font-size:12px}
 .local-dev-identity{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;padding:8px 12px;border:1px solid #d9e1e8;border-radius:10px;background:#fff;color:#435369;font-size:12px}
 .local-dev-identity label{display:inline-flex;align-items:center;gap:8px;font-weight:700}
@@ -122,10 +124,31 @@
 @media(max-width:900px){
   .ui-drawer-popup{inset:0;width:100vw;height:100dvh;max-height:100dvh}
   .reception-case-layout{grid-template-columns:minmax(0,1fr)}
-  .case-layout .reception-queue-panel{position:static;max-height:none;overflow:visible}
-  .reception-case-queue{max-height:52vh}
+  .reception-case-layout.case-open .reception-queue-panel{display:none}
+  .reception-case-layout.queue-open .case-panel{display:none}
+  .reception-case-layout.queue-open .empty-case{display:none}
+  .case-layout .reception-queue-panel{position:static;max-height:calc(100dvh - 330px);overflow:hidden}
+  .reception-queue-heading,.reception-queue-search,.reception-queue-filters{flex:0 0 auto}
+  .reception-case-queue{flex:1 1 auto;min-height:120px;max-height:none}
+  .reception-case-back{display:inline-flex;min-height:42px;margin-bottom:10px}
   .reception-queue-filters{display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;padding:2px 2px 5px}
   .reception-queue-filters button{flex:0 0 auto;width:auto}
+}
+@media(max-width:900px) and (max-height:450px){
+  .app-content{padding-top:8px}
+  .reception-workspace>.workspace-heading{gap:6px;margin-bottom:8px}
+  .reception-workspace>.workspace-heading h2{margin:2px 0;font-size:20px}
+  .reception-workspace>.workspace-heading .muted,.reception-workspace>.workspace-heading .case-count{display:none}
+  .reception-workspace>.workspace-heading .reception-heading-actions{gap:6px}
+  .reception-workspace>.workspace-heading .reception-create-trigger{min-height:38px;padding:6px 9px;font-size:12px}
+  .case-layout .reception-queue-panel{max-height:calc(100dvh - 205px);padding:10px;overflow:hidden}
+  .reception-queue-heading{flex:0 0 auto;margin-bottom:5px}
+  .reception-queue-heading .muted{display:none}
+  .reception-queue-search{flex:0 0 auto;gap:3px;margin-bottom:5px;font-size:11px}
+  .reception-queue-search input{min-height:36px;padding-block:6px}
+  .reception-queue-filters{flex:0 0 auto;gap:4px;margin-bottom:5px;padding:0 1px 3px}
+  .reception-queue-filters button{flex:0 0 auto;min-height:30px;padding:4px 7px;font-size:11px}
+  .reception-case-queue{min-height:0;flex:1 1 auto;overflow-y:auto}
 }
 @media(max-width:560px){
   .local-dev-identity label{flex:1 1 100%;justify-content:space-between}
@@ -134,7 +157,7 @@
   .reception-heading-actions{width:100%;justify-content:space-between}
   .reception-create-trigger{flex:0 0 auto}
   .reception-queue-heading{align-items:center}
-  .reception-case-queue{max-height:48vh}
+  .reception-case-queue{max-height:none}
   .reassign-surface{padding:13px}
   .reassign-surface-heading{display:grid;gap:8px}
   .reassign-date-chip{justify-self:start}
@@ -145,6 +168,28 @@
   .checkin-task-actions button{flex:1 1 0}
   .checkin-status-heading{align-items:flex-start;flex-direction:column;gap:4px}
   .reassign-room-summary>span{display:none}
+}
+.reception-case-signals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0;padding:12px;border:1px solid #dce4eb;border-radius:12px;background:#f8fafc}
+.reception-case-signals>div{display:grid;gap:4px;min-width:0}
+.reception-case-signals span{color:#68778a;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.reception-case-signals strong{overflow-wrap:anywhere;font-size:13px}
+.reception-account-summary{margin:12px 0;padding:12px;border:1px solid #dce4eb;border-radius:12px;background:#fff}
+.reception-account-summary h4{margin:0 0 9px}
+.reception-account-summary dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
+.reception-account-summary dl div{display:grid;gap:3px}
+.reception-account-summary dt{color:#68778a;font-size:11px}
+.reception-account-summary dd{margin:0;font-weight:750}
+.reception-case-title:focus{outline:3px solid #d99a36;outline-offset:4px;border-radius:4px}
+.reception-ancillary-status{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;color:#68778a;font-size:11px}
+.reception-ancillary-status:empty{display:none}
+.reception-ancillary-status button{min-height:30px;margin-left:6px}
+@media (max-height:650px) and (min-width:901px){
+  .reception-queue-panel{max-height:calc(100dvh - 24px);top:12px}
+  .reception-case-queue{min-height:100px;max-height:calc(100dvh - 270px)}
+  .reception-booking-case{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
+}
+@media (prefers-reduced-motion:reduce){
+  .reception-case-layout,.reception-queue-panel,.case-panel{scroll-behavior:auto!important;transition:none!important}
 }
 .reception-recovery-list{grid-column:1/-1;border-top:1px solid var(--border-subtle,#dce3eb);padding-top:12px;display:grid;gap:8px}
 .reception-recovery-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;border-radius:10px;background:var(--surface-muted,#f5f7fa)}

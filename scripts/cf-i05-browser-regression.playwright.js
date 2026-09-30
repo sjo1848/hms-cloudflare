@@ -4,19 +4,31 @@
     "x-local-access-email": "a@example.test",
     "x-hotel-id": "hotel-a",
   });
+  await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
   const widths = [375, 390, 430, 768, 1024, 1366];
   const results = [];
   const apiStatuses = [];
   page.on("response", response => { if (response.url().includes("/api/v1/housekeeping/")) apiStatuses.push({ url: response.url(), status: response.status() }); });
+  const closeFocusedTask = async () => {
+    const focusedTask = page.getByRole("dialog", { name: /Focused task room/ });
+    for (let attempt = 0; attempt < 3 && await focusedTask.count(); attempt += 1) {
+      await page.evaluate(() => {
+        const dialog = [...document.querySelectorAll('[role="dialog"]')].find(element => element.getAttribute("aria-label")?.startsWith("Focused task room"));
+        [...(dialog?.querySelectorAll("button") ?? [])].find(button => button.textContent?.trim() === "Close task")?.click();
+      });
+      try { await focusedTask.waitFor({ state: "hidden", timeout: 1500 }); } catch { await page.waitForTimeout(100); }
+    }
+    if (await focusedTask.count()) throw new Error("focused task did not close after its UI transition");
+  };
   const waitForRoom = async (roomNumber) => {
     const focusedTask = page.getByRole("dialog", { name: /Focused task room/ });
-    if (await focusedTask.count()) { await focusedTask.getByRole("button", { name: "Close task" }).click(); await focusedTask.waitFor({ state: "hidden", timeout: 5000 }); }
+    if (await focusedTask.count()) await closeFocusedTask();
     await page.getByRole("button", { name: new RegExp(`Room ${roomNumber}`) }).click();
     await page.getByRole("heading", { name: new RegExp(`Room ${roomNumber}`) }).waitFor();
   };
   const assertResponsive = async (width) => {
     const existingFocusedTask = page.getByRole("dialog", { name: /Focused task room/ });
-    if (await existingFocusedTask.count()) { await page.getByRole("button", { name: "Close task" }).click(); await existingFocusedTask.waitFor({ state: "hidden", timeout: 5000 }); }
+    if (await existingFocusedTask.count()) await closeFocusedTask();
     await page.setViewportSize({ width, height: 812 });
     await page.waitForTimeout(150);
     await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
@@ -25,7 +37,7 @@
     results.push({ width, scrollWidth: await page.evaluate(() => document.documentElement.scrollWidth), queue: await page.getByRole("complementary", { name: "Housekeeping task queue" }).count() });
   };
 
-  await page.goto("http://127.0.0.1:4174/housekeeping");
+  await page.goto("http://127.0.0.1:4194/housekeeping");
   await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
   const authStatus = await page.evaluate(async () => { const response = await fetch("/api/v1/auth/me"); return { status: response.status, body: await response.text() }; });
   if (authStatus.status !== 200) throw new Error(`local acceptance auth failed: ${JSON.stringify(authStatus)}`);
@@ -61,16 +73,24 @@
   await page.getByRole("button", { name: "Close task" }).click();
   await waitForRoom("901");
   const boardDate = page.getByRole("textbox", { name: "Board date" });
-  await page.route("**/api/v1/housekeeping/browser-a/start", async route => { await new Promise(resolve => setTimeout(resolve, 250)); await route.continue(); });
+  let delayedStartReached;
+  const delayedStart = new Promise(resolve => { delayedStartReached = resolve; });
+  await page.route("**/api/v1/housekeeping/browser-a/start", async route => { delayedStartReached(); await new Promise(resolve => setTimeout(resolve, 750)); await route.continue(); });
   const startRequest = page.getByRole("button", { name: "Start cleaning" });
   const startPromise = startRequest.click();
+  await delayedStart;
   await page.waitForTimeout(50);
   if (!await boardDate.isDisabled()) throw new Error("board date remained editable during housekeeping mutation");
+  const startResponse = await page.waitForResponse(response => response.url().endsWith("/api/v1/housekeeping/browser-a/start") && response.request().method() === "POST");
+  if (startResponse.status() !== 200) throw new Error(`integrated cleaning start returned ${startResponse.status()}: ${await startResponse.text()}`);
   await startPromise;
   await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
   await assertResponsive(390);
   await waitForRoom("901");
+  const finishResponsePromise = page.waitForResponse(response => response.url().endsWith("/api/v1/housekeeping/browser-a/finish") && response.request().method() === "POST");
   await page.getByRole("button", { name: "Finish cleaning" }).click();
+  const finishResponse = await finishResponsePromise;
+  if (finishResponse.status() !== 200) throw new Error(`integrated cleaning finish returned ${finishResponse.status()}: ${await finishResponse.text()}`);
   await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
   await assertResponsive(430);
   await waitForRoom("903");
@@ -83,7 +103,10 @@
   const roomBReason = page.getByRole("textbox", { name: "Reason", exact: true });
   if ((await roomBReason.inputValue()) !== "") throw new Error("room B inherited room A draft");
   await roomBReason.fill("Room B independent draft");
-  await page.getByRole("button", { name: "Clear form" }).click();
+  const clearFormButton = page.getByRole("button", { name: "Clear form" });
+  await clearFormButton.evaluate(element => element.scrollIntoView({ block: "center", inline: "nearest" }));
+  await clearFormButton.click();
+  await page.waitForFunction(() => document.querySelector('[aria-label="Reason"]')?.value === "");
   if ((await roomBReason.inputValue()) !== "") throw new Error("Clear form did not clear only the selected room draft");
   await page.getByRole("button", { name: "Close task" }).click();
   await page.getByRole("button", { name: /Room 903/ }).click();

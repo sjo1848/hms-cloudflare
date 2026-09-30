@@ -2,14 +2,20 @@ import { api } from "../../api/client";
 import type { ActiveHotelContext, Booking, ExtraCharge, FrontDeskBoard, Guest, HousekeepingBoard, Invoice, MaintenanceCase, Room } from "../../domain/types";
 import type { BookingEditForm, BookingForm, CheckInData, ReassignmentQuote } from "./model";
 
-export async function loadReceptionQueue() {
-  const [board, rooms, guests, recoverableOperations] = await Promise.all([
-    api<FrontDeskBoard>("/front-desk/board"),
-    api<Room[]>("/rooms"),
-    api<Guest[]>("/guests"),
-    api<ReservationCreationOperation[]>("/reservation-creation-operations"),
-  ]);
-  return { board, bookings: board.items.map(item => item.booking), rooms, guests, recoverableOperations };
+export function loadReceptionBoard() {
+  return api<FrontDeskBoard>("/front-desk/board");
+}
+
+export function loadReceptionRooms() {
+  return api<Room[]>("/rooms");
+}
+
+export function loadReceptionGuests() {
+  return api<Guest[]>("/guests");
+}
+
+export function loadRecoverableReservationOperations() {
+  return api<ReservationCreationOperation[]>("/reservation-creation-operations");
 }
 
 export type ReservationCreationOperation = {
@@ -40,6 +46,10 @@ export function loadBillingContext(bookingId: string) {
     api<Invoice>(`/bookings/${bookingId}/invoice`),
     api<ExtraCharge[]>(`/bookings/${bookingId}/extra-charges`),
   ]);
+}
+
+export function loadBookingInvoice(bookingId: string) {
+  return api<Invoice>(`/bookings/${encodeURIComponent(bookingId)}/invoice`);
 }
 
 export function createBooking(form: BookingForm) {

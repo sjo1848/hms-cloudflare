@@ -1,0 +1,3 @@
+npm notice run test:cf-i07
+npm notice run bash scripts/cf-i07-regression.sh
+CF-I07 RBAC/users/audit/network regression PASS

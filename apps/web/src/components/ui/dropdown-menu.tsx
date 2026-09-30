@@ -45,8 +45,8 @@ export function DropdownMenu({ label, children }: { label: string; children: Rea
   }
 
   return <div className="ui-dropdown-root" ref={rootRef}>
-    <button ref={triggerRef} type="button" className="secondary-button reception-more-actions" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(value => !value)}>{label} <span aria-hidden="true">⌄</span></button>
-    {open && <MenuCloseContext.Provider value={close}><div ref={menuRef} className="ui-dropdown-menu" role="menu" aria-label={label} onKeyDown={onMenuKeyDown}>{children}</div></MenuCloseContext.Provider>}
+    <button ref={triggerRef} type="button" className="secondary-button reception-more-actions" aria-haspopup="menu" aria-expanded={Boolean(open)} onClick={() => setOpen(value => !value)}>{label} <span aria-hidden="true">⌄</span></button>
+    {open ? <MenuCloseContext.Provider value={close}><div ref={menuRef} className="ui-dropdown-menu" role="menu" aria-label={label} onKeyDown={onMenuKeyDown}>{children}</div></MenuCloseContext.Provider> : null}
   </div>;
 }
 

@@ -55,10 +55,15 @@ page => (async () => {
   const currentUrl = new URL(page.url());
   if (currentUrl.searchParams.get("lane") !== "arrivals" || currentUrl.searchParams.get("q") !== "Arrival") throw new Error("Reception lane/search URL was not preserved after authoritative refresh");
   const nextCase = page.locator('[data-booking-id="z-priority"].selected');
-  await nextCase.waitFor();
+  if (width < 500) {
+    await page.waitForFunction(() => new URL(location.href).searchParams.get("booking_id") === "z-priority");
+    await page.getByRole("heading", { name: /Priority Arrival/ }).waitFor({ state: "visible" });
+  } else {
+    await nextCase.waitFor({ state: "visible" });
+  }
   if (pageErrors.length) throw new Error(`integrated Reception raised page errors: ${JSON.stringify(pageErrors)}`);
   const consoleErrors = consoleMessages.filter(message => message.type === "error");
   if (consoleErrors.length) throw new Error(`integrated Reception raised console errors: ${JSON.stringify(consoleErrors)}`);
   await page.screenshot({ path: `output/playwright/f0-11-reception-integrated-${width < 500 ? "mobile" : "desktop"}-success.png`, fullPage: true });
-  return { integratedWorkerD1: true, mutation: mutation.status(), authoritativeBoardRead: board.status, bookingStatus: saved.status, nextPriorityCase: await nextCase.getAttribute("data-booking-id"), viewport: `${width}x${height}`, preservedLane: currentUrl.searchParams.get("lane"), preservedSearch: await page.getByLabel("Search this shift").inputValue(), consoleMessages, pageErrors };
+  return { integratedWorkerD1: true, mutation: mutation.status(), authoritativeBoardRead: board.status, bookingStatus: saved.status, nextPriorityCase: await nextCase.getAttribute("data-booking-id"), nextCaseContext: width < 500 ? new URL(page.url()).searchParams.get("booking_id") : "visible-in-queue", viewport: `${width}x${height}`, preservedLane: currentUrl.searchParams.get("lane"), preservedSearch: await page.getByLabel("Search this shift").inputValue(), consoleMessages, pageErrors };
 })()

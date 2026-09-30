@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { ReactNode } from "react";
 import { api } from "../api/client";
 import { GuestsPage } from "../features/guests/GuestsPage";
+import { BillingWorkspace } from "../features/billing/BillingWorkspace";
 import { HousekeepingPage } from "../features/housekeeping/HousekeepingPage";
 import { NetworkPage } from "../features/network/NetworkPage";
 import { ReceptionPage } from "../features/reception/ReceptionPage";
@@ -94,9 +95,10 @@ export function AppShell() {
   }, [refreshAuth]);
 
   const page = pageFromPath(pathname);
+  const billingCompatibilityPath = pathname === "/billing";
   const nav = visibleNavigation(capabilities);
   const selectedItem = page ? nav.find(item => item[0] === page) : undefined;
-  const activeLabel = t(selectedItem?.[2] ?? (page ? navigation.find(item => item[0] === page)?.[2] : "shell.notFoundTitle") ?? "shell.notFoundTitle");
+  const activeLabel = t(billingCompatibilityPath ? "billing.finance" : selectedItem?.[2] ?? (page ? navigation.find(item => item[0] === page)?.[2] : "shell.notFoundTitle") ?? "shell.notFoundTitle");
   const hotelLabel = activeAuth?.hotel_name ?? (activeAuth?.hotel_id ? "Hotel" : t("shell.noHotel"));
   const userLabel = activeAuth?.email ?? activeAuth?.subject ?? "";
 
@@ -143,6 +145,8 @@ export function AppShell() {
   let routeContent: ReactNode;
   if (authState === "loading") routeContent = <section className="shell-state" role="status"><h2>{t("shell.loadingContext")}</h2><p>{t("shell.loadingCapabilities")}</p></section>;
   else if (authState === "error") routeContent = <section className="shell-state shell-state-error" role="alert"><h2>{t("shell.contextUnavailable")}</h2><p>{t("shell.contextUnavailableDescription")}</p><button type="button" onClick={() => void refreshAuth(true)}>{t("common.retry")}</button></section>;
+  else if (billingCompatibilityPath && !capabilities.hotel.includes("billing.read")) routeContent = <section className="shell-state shell-state-denied" role="status"><h2>{t("shell.routeUnavailable")}</h2><p>{t("shell.routeUnavailableDescription")}</p><nav aria-label={t("shell.authorizedDestinations")}>{navLinks(nav)}</nav></section>;
+  else if (billingCompatibilityPath) routeContent = <BillingWorkspace />;
   else if (!page) routeContent = <section className="shell-state" role="status"><h2>{t("shell.notFoundTitle")}</h2><p>{t("shell.notFoundDescription")}</p>{nav.find(item => item[0] === "bookings") && <AppLink to="/bookings">{t("shell.returnReception")}</AppLink>}</section>;
   else if (!selectedItem) routeContent = <section className="shell-state shell-state-denied" role="status"><h2>{t("shell.routeUnavailable")}</h2><p>{t("shell.routeUnavailableDescription")}</p><nav aria-label={t("shell.authorizedDestinations")}>{navLinks(nav)}</nav></section>;
   else routeContent = pageComponents[page];
@@ -170,14 +174,14 @@ export function AppShell() {
         {nav.filter(item => isMobilePrimary(item[0])).map(([key, href, label]) =>
           <AppLink key={key} to={href} className={page === key ? "active" : ""} aria-current={page === key ? "page" : undefined}><span>{t(label)}</span></AppLink>,
         )}
-        <button ref={moreTriggerRef} type="button" aria-expanded={mobileNavOpen} aria-controls="mobile-more-navigation" onClick={() => setMobileNavOpen(true)}>{t("shell.more")}</button>
+        <button ref={moreTriggerRef} type="button" aria-expanded={Boolean(mobileNavOpen)} aria-controls="mobile-more-navigation" onClick={() => setMobileNavOpen(true)}>{t("shell.more")}</button>
       </nav>
-      {mobileNavOpen && <dialog id="mobile-more-navigation" ref={mobileNavRef} className="mobile-nav" aria-label={t("shell.moreNavigation")} onClick={event => { if (event.target === event.currentTarget) closeMobileNav(); }}>
+      {mobileNavOpen ? <dialog id="mobile-more-navigation" ref={mobileNavRef} className="mobile-nav" aria-label={t("shell.moreNavigation")} onClick={event => { if (event.target === event.currentTarget) closeMobileNav(); }}>
         <div className="mobile-nav-heading"><div><p className="eyebrow">{t("shell.more")}</p><h2>{t("shell.moreNavigation")}</h2></div><button type="button" className="close-nav" aria-label={t("shell.closeNav")} onClick={closeMobileNav}>×</button></div>
         {groupedNavigation(nav, true, false)}
         {!nav.some(item => !isMobilePrimary(item[0])) && <p>{t("shell.noMoreDestinations")}</p>}
         <p className="sidebar-footer">{hotelLabel}<small>{userLabel}</small></p>
-      </dialog>}
+      </dialog> : null}
     </div>
   </CapabilitiesContext.Provider>;
 }

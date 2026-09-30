@@ -7,6 +7,7 @@ export const commonEsAR = {
   "shell.openNav": "Abrir navegación",
   "shell.closeNav": "Cerrar navegación",
   "shell.operations": "Operación",
+  "shell.group.finance": "Finanzas",
   "shell.hotelOperations": "Operación hotelera",
   "shell.stagingAccess": "Staging · Access activo",
   "shell.accessActive": "Access activo",

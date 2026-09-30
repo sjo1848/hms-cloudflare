@@ -7,6 +7,7 @@ export const commonEn = {
   "shell.openNav": "Open navigation",
   "shell.closeNav": "Close navigation",
   "shell.operations": "Operations",
+  "shell.group.finance": "Finance",
   "shell.hotelOperations": "Hotel operations",
   "shell.stagingAccess": "Staging · Access active",
   "shell.accessActive": "Access active",

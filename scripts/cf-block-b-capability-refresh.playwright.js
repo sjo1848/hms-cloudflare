@@ -1,0 +1,23 @@
+page => (async () => {
+  await page.unrouteAll({ behavior: "wait" });
+  await page.route("**/api/v1/**", route => {
+    const source = new URL(route.request().url());
+    const headers = { ...route.request().headers(), "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000001", "x-local-access-email": "ana-admin@migration.invalid", "x-hotel-id": "10000000-0000-0000-0000-000000000001" };
+    return route.continue({ url: `http://127.0.0.1:8787/api/v1${source.pathname.split("/api/v1").at(-1)}${source.search}`, headers });
+  });
+  const previousSubject = "source-user:14000000-0000-0000-0000-000000000001";
+  const priorCapabilities = (await page.locator(".app-content").getAttribute("data-hotel-capabilities") ?? "").split(" ");
+  if (!priorCapabilities.includes("bookings.read") || !priorCapabilities.includes("billing.read")) throw new Error(`Stale-capability test did not start with same-subject admin grants: ${JSON.stringify(priorCapabilities)}`);
+  const auth = page.waitForResponse(response => new URL(response.url()).pathname === "/api/v1/auth/me" && response.status() === 200);
+  await page.evaluate(() => window.dispatchEvent(new Event("hms:authorization-stale")));
+  const response = await auth;
+  const payload = await response.json();
+  const subject = response.request().headers()["x-local-access-subject"];
+  if (subject !== previousSubject) throw new Error(`Capability refresh changed subject unexpectedly: ${subject}`);
+  if (payload.capabilities.hotel.includes("bookings.read") || payload.capabilities.hotel.includes("billing.read")) throw new Error(`Same-subject capability downgrade was not adopted: ${JSON.stringify(payload.capabilities)}`);
+  await page.locator(".shell-state-denied").waitFor({ state: "visible" });
+  const currentCapabilities = (await page.locator(".app-content").getAttribute("data-hotel-capabilities") ?? "").split(" ").filter(Boolean).sort();
+  if (currentCapabilities.includes("bookings.read") || currentCapabilities.includes("billing.read")) throw new Error(`Stale UI kept old permissions after refresh: ${JSON.stringify(currentCapabilities)}`);
+  await page.unrouteAll({ behavior: "wait" });
+  return { staleAuthorization: "PASS", accessSubject: subject, updatedCapabilities: currentCapabilities, routeDeniedAfterRefresh: true };
+})()

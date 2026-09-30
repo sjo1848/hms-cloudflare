@@ -1,0 +1,29 @@
+### Result
+{"invalidLink":"http://127.0.0.1:4181/bookings?lane=arrivals&q=Priority&origin=block-b#queue","canonicalizedToQueue":true,"laneSearchOriginHashPreserved":true}
+### Ran Playwright code
+```js
+await (page => (async () => {
+  await page.unrouteAll({ behavior: "wait" });
+  await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
+  await page.route("**/api/v1/**", route => {
+    const source = new URL(route.request().url());
+    const headers = { ...route.request().headers(), "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000001", "x-local-access-email": "ana-admin@migration.invalid", "x-hotel-id": "10000000-0000-0000-0000-000000000001", "x-hms-test-delay": "0" };
+    return route.continue({ url: `http://127.0.0.1:8787/api/v1${source.pathname.split("/api/v1").at(-1)}${source.search}`, headers });
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("http://127.0.0.1:4181/bookings?lane=arrivals&q=Priority&origin=block-b&booking_id=missing-booking&task=check-in#queue");
+  await page.locator('[data-booking-id="z-priority"]').waitFor({ state: "visible" });
+  await page.waitForFunction(() => !new URL(location.href).searchParams.has("booking_id"));
+  const invalid = new URL(page.url());
+  if (invalid.searchParams.has("task") || invalid.searchParams.get("lane") !== "arrivals" || invalid.searchParams.get("q") !== "Priority" || invalid.searchParams.get("origin") !== "block-b" || invalid.hash !== "#queue") throw new Error(`Invalid deep link did not canonicalize while preserving context: ${page.url()}`);
+  await page.unrouteAll({ behavior: "wait" });
+  return { invalidLink: invalid.href, canonicalizedToQueue: true, laneSearchOriginHashPreserved: true };
+})()
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4181/bookings?lane=arrivals&q=Priority&origin=block-b#queue
+- Page Title: HMS Elite
+- Console: 1 errors, 0 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-09-30T06-08-23-470Z.log#L1

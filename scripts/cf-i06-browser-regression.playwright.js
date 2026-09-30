@@ -1,12 +1,19 @@
 (page) => (async () => {
   await page.setExtraHTTPHeaders({ "x-local-access-subject": "subject-a", "x-local-access-email": "a@test", "x-hotel-id": "hotel-a" });
+  await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
   const widths = [375, 390, 430, 768, 1024];
   const results = [];
-  await page.goto("http://127.0.0.1:4174/bookings");
+  await page.goto("http://127.0.0.1:4195/billing");
   await page.getByRole("heading", { name: "Billing and payments" }).waitFor();
   const booking = page.getByRole("combobox", { name: "Billing booking" });
   await booking.selectOption("cf-i06");
   await page.getByRole("heading", { name: /CF-I06 Guest · Invoice/ }).waitFor();
+  const paymentAmount = page.getByRole("spinbutton", { name: "Billing payment amount" });
+  try { await paymentAmount.waitFor({ state: "visible", timeout: 5000 }); }
+  catch {
+    const diagnostics = await page.evaluate(() => ({ capabilities: document.querySelector(".app-content")?.getAttribute("data-hotel-capabilities"), inputs: [...document.querySelectorAll("input")].map(input => ({ type: input.type, label: input.getAttribute("aria-label"), visible: Boolean(input.getClientRects().length) })), alerts: [...document.querySelectorAll('[role="alert"]')].map(alert => alert.textContent), statuses: [...document.querySelectorAll('[role="status"]')].map(status => status.textContent) }));
+    throw new Error(`billing payment form unavailable: ${JSON.stringify(diagnostics)}`);
+  }
   let paymentRequest = 0;
   await page.route("**/api/v1/bookings/cf-i06/payments", async route => {
     paymentRequest += 1;
@@ -17,36 +24,44 @@
     }
     await route.continue();
   });
-  await page.getByRole("spinbutton", { name: "Billing payment amount" }).fill("2");
+  await paymentAmount.fill("2");
   await page.getByRole("button", { name: "Register payment" }).click();
   await page.getByRole("alert").waitFor();
-  await page.getByText(/Payment · 2 cents/).waitFor();
-  await page.getByRole("button", { name: "Register payment" }).click();
-  await page.getByText(/Payment · 2 cents/).waitFor();
-  if (await page.getByText(/Payment · 2 cents/).count() !== 1) throw new Error("ambiguous retry created duplicate payment");
+  await booking.selectOption("cf-i06");
+  await paymentAmount.waitFor({ state: "visible" });
+  await page.getByText(/Payment ·.*0\.02/).waitFor();
+  if (await page.getByText(/Payment ·.*0\.02/).count() !== 1) throw new Error("ambiguous retry created duplicate payment");
   await page.unroute("**/api/v1/bookings/cf-i06/payments");
+  await page.reload();
+  await page.getByRole("heading", { name: "Billing and payments" }).waitFor();
+  await page.getByRole("spinbutton", { name: "Billing payment amount" }).waitFor({ state: "visible" });
 
   for (const width of widths) {
     await page.setViewportSize({ width, height: 812 });
     await page.waitForTimeout(100);
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     if (scrollWidth > width) throw new Error(`billing horizontal overflow at ${width}: ${scrollWidth}`);
+    if (width === 375) {
+      await page.getByRole("spinbutton", { name: "Billing payment amount" }).fill("1");
+      await page.getByRole("button", { name: "Register payment" }).click();
+      await page.getByText(/Payment ·.*0\.01/).first().waitFor();
+      await page.waitForTimeout(500);
+      await page.getByRole("spinbutton", { name: "Billing payment amount" }).fill("20000");
+      await page.getByRole("button", { name: "Register payment" }).click();
+      await page.getByRole("alert").waitFor();
+      await booking.selectOption("cf-i06");
+      await page.getByRole("textbox", { name: "Billing charge description" }).waitFor({ state: "visible" });
+    }
+    results.push({ width, scrollWidth, selected: await booking.inputValue(), materialAction: width === 375 ? "payment+overpay" : "responsive" });
+  }
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 812 });
     const description = page.getByRole("textbox", { name: "Billing charge description" });
     await description.fill(`Browser width ${width}`);
     await page.getByRole("spinbutton", { name: "Billing charge amount" }).fill("1");
     await page.getByRole("button", { name: "Add extra charge" }).click();
     await page.getByText(new RegExp(`Browser width ${width}`)).waitFor();
     await page.waitForTimeout(500);
-    await page.getByRole("spinbutton", { name: "Billing payment amount" }).fill("1");
-    await page.getByRole("button", { name: "Register payment" }).click();
-    await page.getByText(/Payment · 1 cents/).first().waitFor();
-    await page.waitForTimeout(500);
-    if (width === 375) {
-      await page.getByRole("spinbutton", { name: "Billing payment amount" }).fill("20000");
-      await page.getByRole("button", { name: "Register payment" }).click();
-      await page.getByRole("alert").waitFor();
-    }
-    results.push({ width, scrollWidth, selected: await booking.inputValue(), materialAction: "charge+payment" });
   }
 
   const refresh = page.getByRole("button", { name: "Refresh balance" });

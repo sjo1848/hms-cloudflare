@@ -25,7 +25,11 @@ describe("reception operational queue", () => {
   });
 
   it("reports filter counts", () => {
-    expect(queueCounts(items)).toEqual({ attention:2, arrivals:1, departures:1, "in-house":1, all:4 });
+    expect(queueCounts(items)).toEqual({ attention:2, arrivals:1, "in-house":1, departures:1, reservations:1, all:4 });
+  });
+
+  it("filters Reservations without changing the board order", () => {
+    expect(filterQueue(items, "reservations", "").map(x => x.booking.id)).toEqual(["future"]);
   });
 
   it("searches guest names accent-insensitively and rooms", () => {
