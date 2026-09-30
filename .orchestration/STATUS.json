@@ -8,21 +8,21 @@
   "runtime_status": "COMPLETE",
   "active_task": "B0 closure complete; create clean Block B worktree and selectively recover its frozen contract/evidence",
   "last_completed_task": "HMS-B0-CLOSE-RAW-GROWTH-GUARDRAILS-001; runtime coupling accepted; raw guardrails updated; checker retained",
-  "last_completed_head": null,
+  "last_completed_head": "fa43cfb242cf6f94f29ad785b336ea55d74adf17",
   "work_branch": "recovery/hms-b0-clean-close",
   "pr": null,
   "wave": "B0 CLOSED — BLOCK B NOT STARTED IN THIS CHECKPOINT",
   "status_label": "B0_CLOSED_BLOCK_B_BRANCH_REQUIRED",
   "next_action": "RECORD_B0_CLOSURE_ARTIFACT_AND_ORCHESTRATION_BOUNDARY_THEN_CREATE_IMPL_HMS_BLOCK_B_RECEPTION_WORKTREE",
-  "stop_reason": "B0 closure validated. The next B0 checkpoint commit will be recorded by an orchestration-only boundary before creating the dedicated Block B worktree.",
+  "stop_reason": "B0 closure Artifact A is recorded and this orchestration-only boundary establishes the clean checkpoint for the dedicated Block B branch.",
   "event": {
-    "seq": 236,
-    "id": "B0-RUNTIME-AND-POLICY-CLOSED",
-    "type": "B0_CLOSED_BLOCK_B_NOT_STARTED"
+    "seq": 237,
+    "id": "B0-CLEAN-CHECKPOINT-BOUNDARY",
+    "type": "ORCHESTRATION_ONLY_BOUNDARY_FOR_B0_CLOSURE"
   },
   "external_review": {
     "last_audited_head": null,
-    "artifact_head": "0a2b809097d73fd59865e75bb562eb3b6da4fea7",
+    "artifact_head": "fa43cfb242cf6f94f29ad785b336ea55d74adf17",
     "last_verdict": "Controller accepted B0 runtime diagnosis and authorized exact raw growth guardrail update; no Independent Critic PASS claimed for Block B.",
     "review_path": ".orchestration/evidence/HMS-B0-CLOSE-RAW-GROWTH-GUARDRAILS-001.md",
     "required": false,
