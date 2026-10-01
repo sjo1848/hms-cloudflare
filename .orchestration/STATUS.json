@@ -8,7 +8,7 @@
   "runtime_status": "COMPLETE",
   "active_task": "Await Controller review of Block E Artifact A3 + Boundary B3 through GitHub Issue #51; no further implementation is authorized.",
   "last_completed_task": "Block E implementation and validation complete; fresh exact-pair Independent Critic PASS_WITH_CONDITIONS; sole metadata reconciliation condition discharged.",
-  "last_completed_head": "9dfae5220ffe3e0b7a018af6a777b97b22761825",
+  "last_completed_head": "8c74c17aeaceb1e354c5273a093e234e4b889d09",
   "work_branch": "impl/hms-block-e-housekeeping-maintenance",
   "pr": null,
   "wave": "BLOCK E — HOUSEKEEPING + MAINTENANCE",
@@ -126,7 +126,7 @@
     "attribution": "EXTERNAL_FINDINGS_NOT_REOPENED_BY_THIS_TASK"
   },
   "authorization": {
-    "scope": "BLOCK_D_ROOMS_OPERATIONAL_WORKSPACE_ONLY; BLOCKS_E_H_NOT_AUTHORIZED; NO_PROMOTION",
+    "scope": "BLOCK_E_HOUSEKEEPING_MAINTENANCE_COMPLETE; BLOCKS_F_H_NOT_AUTHORIZED; NO_PROMOTION",
     "production": false,
     "acceptance_staging": false,
     "main": false,
@@ -149,7 +149,10 @@
     "blocks_d_h": false,
     "block_d_authorized": true,
     "block_d_completed": true,
-    "blocks_e_h": false
+    "blocks_e_h": false,
+    "block_e_authorized": true,
+    "block_e_completed": true,
+    "blocks_f_h": false
   },
   "validated": {
     "f0_1_task": "CLOSED_INTERNAL_EVIDENCE_GATE; NO_STANDALONE_ARTIFACT_OR_EXTERNAL_CRITIC_VERDICT",
