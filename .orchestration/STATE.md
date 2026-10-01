@@ -1,12 +1,13 @@
 # HMS Cloudflare — Orchestration State
 
-## BLOCK E — HOUSEKEEPING + MAINTENANCE (RUNNING)
+## BUNDLE_BUDGET_GATE_REQUIRED — BLOCK E PAUSED AT CSS RAW CEILING
 
 - **Authorization/base:** Controller resolved the prior bundle gate and authorized resuming Block E from published checkpoint 8d4ba5e49f025211ccc60dada3fdd4b54b4b9021. Dedicated branch/worktree impl/hms-block-e-housekeeping-maintenance. F–H, promotion, real data and environments remain unauthorized.
 - **Frozen contract:** .orchestration/contracts/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001.md and its inventory, matrix, invariant classification and admission Pre-Critic remain frozen. The contract's original budget values are historical and superseded only by the later Controller resolution record.
 - **Separate budget resolution:** .orchestration/evidence/HMS-BLOCK-E-BUDGET-GATE-CONTROLLER-RESOLUTION-001.md. JS raw ceiling 350000; JS gzip 100000, CSS raw 55000 and CSS gzip 15000 unchanged. The earlier BUNDLE_BUDGET_GATE_REQUIRED measurement remains unedited at .orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-BUNDLE-GATE.md.
-- **Current next action:** implement the separately frozen bounded repair contract `.orchestration/contracts/HMS-BLOCK-E-REPAIR-READMODEL-UX-EVIDENCE-001.md`, complete the parent Block E validation/evidence, then freeze Artifact A, Boundary B, obtain a separate read-only Independent Critic, reconcile final state and publish only this branch. Stop if any current ceiling is exceeded.
+- **Current next action:** await Controller resolution of the reopened CSS raw budget gate recorded at `.orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-BUNDLE-GATE-REOPENED-001.md`. Do not continue Block E validation or implementation while this gate is pending.
 - **Supplemental repair admission:** Task Contract, all-24 invariant map and Pre-Critic were frozen at `82c747ac0678f510817641ae505bd75b8e53d8fb` before follow-up product changes. Three separate read-only specialist reviews (domain/concurrency, UX/responsive, QA/evidence) found bounded in-scope gaps; dispositions are `.orchestration/evidence/HMS-BLOCK-E-REPAIR-READMODEL-UX-EVIDENCE-001-REVIEW-DISPOSITION.md`. These specialists are not the final Independent Critic.
+- **Reopened bundle gate:** production output CSS raw is 55,652 B against 55,000 B (+652 B). JS raw/gzip and CSS gzip pass their current ceilings. Current full metrics and deltas are recorded in the reopened gate evidence; original gate evidence remains unchanged. In-progress implementation is preserved locally; no Artifact A, Boundary B or final Critic exists.
 - **Previous Block D checkpoint:** exact base 3f06c7b52b8c5f57754e705071b7cee6a5668d05; its Controller review evidence remains historical below.
 
 ### Block C — initial Artifact A review returned bounded REWORK
