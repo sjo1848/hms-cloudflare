@@ -40,8 +40,8 @@ The scoped product diff may also remove `loading` from the existing Refresh butt
 
 ## Publication decision
 
-- [ ] All applicable invariants PASS.
-- [ ] Full contract validation passed.
-- [ ] Scope audit passed.
-- [ ] Exact Artifact A and Boundary B persisted.
-- [ ] Fresh external review required; no self-approval.
+- [x] All applicable invariants PASS; the exact out-of-order response race is asserted in the real integrated browser.
+- [x] Full contract validation passed; details are in `.orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-RESULTS.md`.
+- [x] Scope audit passed: product edit is limited to existing Refresh control enablement during reads; test edit is the CF-I05 integrated browser runner; other changes are evidence/contracts.
+- [ ] Exact replacement Artifact A and Boundary B persisted.
+- [x] Fresh external review required; no self-approval.

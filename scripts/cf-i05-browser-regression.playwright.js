@@ -56,6 +56,59 @@
   // Hide only the synthetic local-auth profile switcher at phone widths; production has no such developer chrome.
   await page.addStyleTag({ content: "@media(max-width:560px){.local-dev-identity{display:none!important}}" });
   await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
+  await page.waitForFunction(() => Boolean(document.querySelector('input[type="date"]')?.value));
+  let releaseOldBoard;
+  let oldBoardStarted;
+  const oldBoardRequestStarted = new Promise(resolve => { oldBoardStarted = resolve; });
+  const oldBoardGate = new Promise(resolve => { releaseOldBoard = resolve; });
+  await page.route("**/api/v1/housekeeping/board?date=2099-01-01", async route => {
+    oldBoardStarted();
+    await oldBoardGate;
+    await route.continue();
+  });
+  await page.goto("http://127.0.0.1:4194/housekeeping?date=2099-01-01");
+  await oldBoardRequestStarted;
+  const refreshButton = page.getByRole("button", { name: "Refresh housekeeping board" });
+  if (await refreshButton.isDisabled()) throw new Error("refresh control was disabled during a read, preventing a newer authoritative request");
+  const newerBoardResponsePromise = page.waitForResponse(response => response.url().includes("/api/v1/housekeeping/board") && !new URL(response.url()).searchParams.has("date") && response.request().method() === "GET");
+  await refreshButton.click();
+  const newerBoardResponse = await newerBoardResponsePromise;
+  if (newerBoardResponse.status() !== 200) throw new Error(`newer integrated board read returned ${newerBoardResponse.status()}`);
+  const newerBoardBody = await newerBoardResponse.json();
+  if (!newerBoardBody.date || newerBoardBody.date === "2099-01-01") throw new Error(`board race fixture did not distinguish newer and older authoritative payloads: ${JSON.stringify(newerBoardBody.date)}`);
+  await page.waitForFunction(expected => document.querySelector('input[type="date"]')?.value === expected, newerBoardBody.date);
+  const raceSearch = page.getByRole("textbox", { name: "Search housekeeping" });
+  await raceSearch.fill("904");
+  const raceShiftFilter = page.getByRole("button", { name: /Shift/ });
+  await raceShiftFilter.click();
+  const raceSelectedRoom = page.getByRole("complementary", { name: "Housekeeping task queue" }).getByRole("button", { name: /Room 904/ });
+  await raceSelectedRoom.click();
+  await page.getByRole("heading", { name: /Room 904/ }).waitFor();
+  releaseOldBoard();
+  const oldBoardResponse = await page.waitForResponse(response => response.url().includes("/api/v1/housekeeping/board?date=2099-01-01") && response.request().method() === "GET");
+  if (oldBoardResponse.status() !== 200) throw new Error(`older integrated board read returned ${oldBoardResponse.status()}`);
+  const oldBoardBody = await oldBoardResponse.json();
+  if (oldBoardBody.date !== "2099-01-01") throw new Error(`older response was not the expected distinguishable payload: ${JSON.stringify(oldBoardBody.date)}`);
+  await page.waitForFunction(expected => {
+    const date = document.querySelector('input[type="date"]')?.value;
+    const selected = document.querySelector('[aria-label="Housekeeping task queue"] button.selected');
+    return date === expected && selected?.textContent?.includes("904") && !document.querySelector('[role="status"]');
+  }, newerBoardBody.date);
+  const staleResponseContext = {
+    displayedDate: await page.getByRole("textbox", { name: "Board date" }).inputValue(),
+    expectedLatestDate: newerBoardBody.date,
+    search: await raceSearch.inputValue(),
+    filter: await raceShiftFilter.getAttribute("aria-pressed"),
+    selected: (await raceSelectedRoom.getAttribute("class"))?.includes("selected"),
+    selectedHeading: await page.getByRole("heading", { name: /Room 904/ }).count(),
+    loading: await page.getByRole("status").filter({ hasText: "Loading" }).count(),
+  };
+  if (staleResponseContext.displayedDate !== newerBoardBody.date || staleResponseContext.search !== "904" || staleResponseContext.filter !== "true" || !staleResponseContext.selected || !staleResponseContext.selectedHeading || staleResponseContext.loading) throw new Error(`late older board response overwrote newer UI/context: ${JSON.stringify(staleResponseContext)}`);
+  await page.unroute("**/api/v1/housekeeping/board?date=2099-01-01");
+  await page.goto("http://127.0.0.1:4194/housekeeping");
+  await page.addStyleTag({ content: "@media(max-width:560px){.local-dev-identity{display:none!important}}" });
+  await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
+  await page.waitForFunction(() => Boolean(document.querySelector('input[type="date"]')?.value));
   const authStatus = await page.evaluate(async () => { const response = await fetch("/api/v1/auth/me"); return { status: response.status, body: await response.text() }; });
   if (authStatus.status !== 200) throw new Error(`local acceptance auth failed: ${JSON.stringify(authStatus)}`);
   const boardEvidence = await page.evaluate(async () => { const response = await fetch("/api/v1/housekeeping/board"); const body = await response.text(); if (!response.ok) throw new Error(`housekeeping board failed ${response.status}: ${body}`); return JSON.parse(body); });
@@ -252,5 +305,5 @@
   const failedApi = apiStatuses.filter(item => item.status >= 400 && item !== intentionalRefreshFailure[0]);
   if (failedApi.length) throw new Error(`integrated API failures: ${JSON.stringify(failedApi)}`);
   await page.screenshot({ path: "output/playwright/cf-i05-integrated-housekeeping.png", fullPage: true });
-  return { responsive: results, continuity: { focusedTask: "Queue→Case→Escape→Queue with focus restoration", failedRefresh: "board, selection, filters, and search retained; retry recovered", deepLink: "date query retained on reload and browser Back/Forward" }, tenantIsolation: secondHotel, atRisk: "exact overlapping future CONFIRMED booking; advisory negative", nextTask: "advances-and-restores-focus", mutations: "validated" };
+  return { responsive: results, continuity: { focusedTask: "Queue→Case→Escape→Queue with focus restoration", failedRefresh: "board, selection, filters, and search retained; retry recovered", staleBoardResponse: { olderResponseReleasedAfterNewer: true, ...staleResponseContext }, deepLink: "date query retained on reload and browser Back/Forward" }, tenantIsolation: secondHotel, atRisk: "exact overlapping future CONFIRMED booking; advisory negative", nextTask: "advances-and-restores-focus", mutations: "validated" };
 })()

@@ -32,7 +32,7 @@ export function HousekeepingPage() {
     <div className="housekeeping-toolbar">
       <label>{t("housekeeping.search")} <input aria-label={t("housekeeping.searchAria")} value={search} onChange={e => setSearch(e.target.value)} placeholder={t("housekeeping.searchPlaceholder")} /></label>
       <label>{t("housekeeping.boardDate")} <input aria-label={t("housekeeping.boardDate")} type="date" value={boardDate} disabled={loading || actionBusy} onChange={e => { if (!loading && !actionBusy) void load(e.target.value); }} /></label>
-      <button type="button" aria-label={t("housekeeping.refreshAria")} disabled={loading || actionBusy} onClick={() => void load(boardDate)}>{t("housekeeping.refresh")}</button>
+      <button type="button" aria-label={t("housekeeping.refreshAria")} disabled={actionBusy} onClick={() => void load(boardDate)}>{t("housekeeping.refresh")}</button>
       <button type="button" onClick={nextTask} disabled={!actionableVisible.length || loading || actionBusy}>{t("housekeeping.nextTask")}</button>
     </div>
     <div className="housekeeping-status-strip housekeeping-status-controls" role="group" aria-label={t("housekeeping.filtersAria")}>

@@ -12,3 +12,7 @@ The bounded repair contract and invariant map are frozen before code/test change
 - [x] Replacement A → evidence-only B → fresh exact-pair Independent Critic → final STATE/STATUS reconciliation.
 
 **PASS — bounded technical/evidence rework admitted.** This is not an Independent Critic PASS.
+
+## Final implementation Pre-Critic
+
+**PASS — no applicable invariant is unproven.** After the narrow Refresh-control change and browser test, the real integrated race returned the newer current-date board first (`2026-10-01`) and the older `2099-01-01` response only after that. The actual UI retained date `2026-10-01`, search `904`, active Shift filter, selected Room 904/case, and no loading state after both requests completed. Full `npm run check` passed (35 files / 175 tests); `npm run types:check`; production build and canonical budgets (JS 334638/94467 B, CSS 55652/10384 B); architecture fitness I/II and i18n; D1 query plan; executing local Worker/D1 CF-I05 API; integrated Playwright CF-I05; Wrangler API/Web dry-runs; and `git diff --check` passed. The old and new controller budget-gate records remain unmodified. Exact outputs and scope are recorded in the parent Block E Results record. Replacement Artifact A may be frozen; its fresh exact-pair Critic remains required.
