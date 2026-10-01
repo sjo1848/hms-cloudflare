@@ -3,30 +3,30 @@
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-f-account-finance-cash",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "BLOCK_F_ACCOUNT_ARTIFACT_A_READY_BOUNDARY_PENDING",
+  "phase": "BLOCK_F_ACCOUNT_AWAITING_INDEPENDENT_CRITIC",
   "resume_authorized": false,
-  "runtime_status": "RUNNING",
-  "active_task": "Freeze the validated F-account implementation and evidence as immutable Artifact A, then create the immediate orchestration-only Boundary B for a fresh separate read-only Independent Critic. Do not implement F-cash; OD-1 remains its gate; Blocks G-H remain unauthorized.",
-  "last_completed_task": "Block E Controller-normalized checkpoint accepted as Block F base per Issue #52 CONTROLLER_DECISION: START.",
-  "last_completed_head": "39ee0a2b38e7205b8e041e792e16ee469c996241",
+  "runtime_status": "COMPLETE",
+  "active_task": "Obtain a fresh separate read-only Independent Critic verdict on exact Artifact A 24de78c8f84ca4d1e91057ccca34a98595cf38d6 plus this orchestration-only Boundary B; repair routine findings autonomously within the frozen F-account contract.",
+  "last_completed_task": "HMS-BLOCK-F-ACCOUNT-FINANCE-CASH-001 F-account implementation and required local validation; immutable Artifact A created.",
+  "last_completed_head": "24de78c8f84ca4d1e91057ccca34a98595cf38d6",
   "work_branch": "impl/hms-block-f-account-finance-cash",
   "pr": null,
   "wave": "BLOCK F — F-ACCOUNT ONLY",
-  "status_label": "BLOCK_F_ACCOUNT_ARTIFACT_A_READY_BOUNDARY_PENDING",
-  "next_action": "Commit Artifact A, record its exact full SHA in the immediate orchestration-only Boundary B, then publish only impl/hms-block-f-account-finance-cash and request the fresh Independent Critic on exact A+B in GitHub Issue #52.",
-  "stop_reason": null,
+  "status_label": "BLOCK_F_ACCOUNT_AWAITING_INDEPENDENT_CRITIC",
+  "next_action": "Publish only impl/hms-block-f-account-finance-cash, verify remote Boundary B SHA, and request a fresh separate read-only Independent Critic in Issue #52 on exact A=24de78c8f84ca4d1e91057ccca34a98595cf38d6 plus current orchestration-only Boundary B; do not begin F-cash or Blocks G–H.",
+  "stop_reason": "EXTERNAL_INDEPENDENT_CRITIC_REQUIRED",
   "event": {
-    "seq": 274,
-    "id": "BLOCK-F-ACCOUNT-ARTIFACT-A-READY-001",
-    "type": "BLOCK_F_ACCOUNT_ARTIFACT_A_READY_BOUNDARY_PENDING"
+    "seq": 275,
+    "id": "BLOCK-F-ACCOUNT-ARTIFACT-PAIR-001",
+    "type": "BLOCK_F_ACCOUNT_AWAITING_INDEPENDENT_CRITIC"
   },
   "external_review": {
-    "required": false,
-    "artifact_head": null,
-    "boundary_head": null,
+    "required": true,
+    "artifact_head": "24de78c8f84ca4d1e91057ccca34a98595cf38d6",
+    "boundary_head": "THIS_ORCHESTRATION_ONLY_COMMIT; exact current HEAD is the Boundary B SHA and is reported on Issue #52; intentionally not self-referenced",
     "last_audited_head": "39ee0a2b38e7205b8e041e792e16ee469c996241",
-    "last_verdict": "F-account implementation and local validation are documented in HMS-BLOCK-F-ACCOUNT-FINANCE-CASH-001-RESULTS.md; immutable Artifact A and its immediate review boundary are the next method steps.",
-    "review_path": null,
+    "last_verdict": "REQUIRED: fresh separate read-only Independent Critic has not yet reviewed the exact A+B pair.",
+    "review_path": ".orchestration/evidence/HMS-BLOCK-F-ACCOUNT-FINANCE-CASH-001-INDEPENDENT-CRITIC-A-B.md; exact Artifact A 24de78c8f84ca4d1e91057ccca34a98595cf38d6 plus current orchestration-only Boundary B; GitHub Issue #52",
     "prior_block_e_review": {
       "required": true,
       "artifact_head": "56b67732979e09cafda80316b28f2a3bfc849747",
@@ -35,7 +35,7 @@
     }
   },
   "block_a_development_gate": "PASS; exact Artifact A+B4 received Independent Critic PASS; awaiting Controller review",
-  "promotion_gate": "BLOCKED: F-account exact-pair Independent Critic and Controller review remain; F-cash remains gated by OD-1; Blocks G–H unauthorized; no PR, merge, main, staging, deploy, production or real-data action.",
+  "promotion_gate": "BLOCKED: fresh exact-pair Independent Critic and Controller review remain; F-cash remains gated by OD-1; Blocks G–H unauthorized; no PR, merge, main, staging, deploy, production or real-data action.",
   "human_gate": {
     "required": false,
     "decision": "No Human Gate blocks this synthetic/local F-account increment or its Independent Critic review. Real-hotel F-cash remains gated by OD-1.",
@@ -127,7 +127,7 @@
     "attribution": "EXTERNAL_FINDINGS_NOT_REOPENED_BY_THIS_TASK"
   },
   "authorization": {
-    "scope": "BLOCK_F_AUTHORIZED; F_ACCOUNT_IMPLEMENTATION_COMPLETE_AWAITING_INDEPENDENT_CRITIC; F_CASH_GATED_BY_OD-1; BLOCKS_G_H_NOT_AUTHORIZED; PROMOTION_BLOCKED",
+    "scope": "BLOCK_F_AUTHORIZED; F_ACCOUNT_IMPLEMENTED_AWAITING_INDEPENDENT_CRITIC; F_CASH_GATED_BY_OD-1; BLOCKS_G_H_NOT_AUTHORIZED; PROMOTION_BLOCKED",
     "production": false,
     "acceptance_staging": false,
     "main": false,
@@ -441,5 +441,7 @@
   "block_e_prior_critic_a_b": ".orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-INDEPENDENT-CRITIC-A-B.md; historical REWORK, preserved.",
   "block_e_prior_critic_a2_b2": ".orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-INDEPENDENT-CRITIC-A2-B2.md; historical REWORK, findings repaired in A3.",
   "block_e_closure": "B4 is the orchestration-only reconciliation commit immediately following B3. Exact closure is the current branch HEAD and is reported in Issue #51; it is intentionally not self-referenced here.",
-  "block_e_development_continuation": false
+  "block_e_development_continuation": false,
+  "block_f_account_completed": true,
+  "block_f_completed": false
 }
