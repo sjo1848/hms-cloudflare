@@ -6,7 +6,7 @@
   });
   await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
   const viewports = [
-    { name: "wide", width: 1366, height: 900 },
+    { name: "wide", width: 1280, height: 900 },
     { name: "reduced-height", width: 1280, height: 600 },
     { name: "compact", width: 900, height: 700 },
     { name: "narrow", width: 390, height: 844 },
@@ -115,7 +115,7 @@
   if (!await caseHeading.evaluate(element => document.activeElement === element)) throw new Error("narrow Case did not receive initial focus");
   await page.keyboard.press("Shift+Tab");
   const lastDialogControl = await focusedCase.locator("button:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex=\"-1\"])").last().evaluate(element => element === document.activeElement);
-  if (!lastDialogControl) throw new Error("Shift+Tab escaped the focused task instead of wrapping");
+  if (!lastDialogControl) { const focusState = await page.evaluate(() => ({ active: document.activeElement?.outerHTML.slice(0, 180), dialog: document.querySelector('[role="dialog"]')?.innerHTML.slice(-500) })); throw new Error("Shift+Tab escaped the focused task instead of wrapping: " + JSON.stringify(focusState)); }
   await page.keyboard.press("Tab");
   const firstDialogControl = await focusedCase.locator("button:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex=\"-1\"])").first().evaluate(element => element === document.activeElement);
   if (!firstDialogControl) throw new Error("Tab did not wrap to the first focused-task control");
@@ -192,13 +192,28 @@
   await resolution.fill("Leak repaired and verified");
   await page.getByRole("button", { name: "Resolve and return to Dirty" }).click();
   await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
+  await page.locator('[aria-label="Recent history"]').getByText("Case resolved").waitFor();
+  if (!await page.getByText("Resolved", { exact: true }).count()) throw new Error("resolved case facts disappeared after authoritative refresh");
   await assertResponsive(viewports.find(viewport => viewport.name === "wide"));
   await waitForRoom("905");
   const room105Reason = page.getByRole("textbox", { name: "Reason", exact: true });
   await room105Reason.fill("HVAC inspection required");
+  await page.getByRole("combobox", { name: "Impact" }).selectOption("NON_BLOCKING");
   await page.getByRole("button", { name: "Create case and block" }).click();
   await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
   await assertResponsive(viewports.find(viewport => viewport.name === "wide"));
+  const escalationNote = page.getByRole("textbox", { name: "Why this case is now blocking" });
+  await escalationNote.fill("short");
+  const escalateButton = page.getByRole("button", { name: "Escalate to blocking" });
+  if (!await escalateButton.isDisabled()) throw new Error("short escalation note was not blocked");
+  await escalationNote.fill("Immediate guest safety impact confirmed");
+  const escalationResponsePromise = page.waitForResponse(response => /\/api\/v1\/housekeeping\/browser-e\/maintenance\/[^/]+\/escalate$/.test(response.url()) && response.request().method() === "POST");
+  await escalateButton.click();
+  const escalationResponse = await escalationResponsePromise;
+  if (escalationResponse.status() !== 200) throw new Error(`integrated maintenance escalation returned ${escalationResponse.status()}: ${await escalationResponse.text()}`);
+  await page.getByRole("heading", { name: "Housekeeping board" }).waitFor();
+  const escalatedCase = await page.evaluate(async () => { const response = await fetch("/api/v1/housekeeping/board"); const board = await response.json(); return board.rooms.find(room => room.room_id === "browser-e"); });
+  if (escalatedCase?.maintenance_case?.impact !== "BLOCKING" || !escalatedCase.maintenance_history?.some(event => event.event_type === "MAINTENANCE_ESCALATE" && event.maintenance_case_id === escalatedCase.maintenance_case.id)) throw new Error("authoritative escalation state/history did not refresh");
   // A failed refresh must preserve the visible board and task context.
   await page.setViewportSize({ width: 390, height: 844 });
   const search = page.getByRole("textbox", { name: "Search housekeeping" });

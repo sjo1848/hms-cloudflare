@@ -30,3 +30,7 @@ All registry entries keep their parent Block E applicability (`HMS-BLOCK-E-HOUSE
 | INV-CF-I08-005 | N/A — no reporting date default. | Parent Block E classification. |
 
 No code change is admitted until this map and the companion repair Pre-Critic are committed.
+
+## Final evidence status (before replacement Artifact A)
+
+All APPLIES rows pass; N/A rows retain their parent disposition. `npm run test:cf-i05` exercises the concurrent legacy exact winner and one-event/no-drift assertion as well as the existing same-case concurrency and stale/ABA proofs. `npm run test:cf-i05-browser` proves latest-resolved-case history, focused escalation note validation/success/authoritative refresh, and WIDE 1280×900 plus every responsive viewport. Full automated validation is recorded in `.orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-RESULTS.md`. No applicable row remains unproven; replacement Artifact A may be frozen.
