@@ -1,14 +1,12 @@
 # HMS Cloudflare — Orchestration State
 
-## BUNDLE_BUDGET_GATE_REQUIRED — BLOCK E PAUSED
+## BLOCK E — HOUSEKEEPING + MAINTENANCE (RUNNING)
 
-- **Authorization/base:** Block E was authorized from exact checkpoint 3f06c7b52b8c5f57754e705071b7cee6a5668d05 on dedicated branch/worktree impl/hms-block-e-housekeeping-maintenance, /home/sjo1848/dev/hms-elite-cloudflare/hms-block-e-housekeeping-maintenance. Blocks F–H, promotion, real data and environments remain unauthorized.
-- **Frozen pre-code package:** .orchestration/contracts/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001.md, exact inventory, E-01..E-15 evidence matrix, all 24 invariant classifications and admission Pre-Critic were committed at 36ca33d609a5adadaadedd91295609873bf7d5c5.
-- **Gate:** production JS raw is 330742 B against unchanged 330000 B ceiling (+742 B over ceiling; +1124 B/+0.341% from baseline). Terser was already configured at four passes; ten-pass experiment saved only 3 B. JS gzip, CSS raw and CSS gzip pass. Exact record: .orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-BUNDLE-GATE.md.
-- **Baseline → result:** JS raw 329618 → 330742 (+1124, +0.341%); JS gzip 93456 → 93737 (+281, +0.301%); CSS raw 54297 → 54297 (0, 0.000%); CSS gzip 10138 → 10138 (0, 0.000%); aggregate raw 383915 → 385039 (+1124, +0.293%); aggregate gzip 103594 → 103875 (+281, +0.271%). Initial entry equals the only emitted JS asset: 330742 raw/93737 gzip. No browser runtime timing was measured.
-- **Ceilings:** unchanged JS raw/gzip 330000/100000; CSS raw/gzip 55000/15000. No increase requested or applied.
-- **Current boundary:** BUNDLE_BUDGET_GATE_REQUIRED. No Artifact A, Boundary B, final Pre-Critic, full test validation or Independent Critic review exists. E implementation/read-model/UI work is preserved but incomplete; Block E is not complete. Resume only after this gate is resolved under Controller authority.
-- **Previous checkpoint:** Block D and its review evidence remain historical in records below.
+- **Authorization/base:** Controller resolved the prior bundle gate and authorized resuming Block E from published checkpoint 8d4ba5e49f025211ccc60dada3fdd4b54b4b9021. Dedicated branch/worktree impl/hms-block-e-housekeeping-maintenance. F–H, promotion, real data and environments remain unauthorized.
+- **Frozen contract:** .orchestration/contracts/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001.md and its inventory, matrix, invariant classification and admission Pre-Critic remain frozen. The contract's original budget values are historical and superseded only by the later Controller resolution record.
+- **Separate budget resolution:** .orchestration/evidence/HMS-BLOCK-E-BUDGET-GATE-CONTROLLER-RESOLUTION-001.md. JS raw ceiling 350000; JS gzip 100000, CSS raw 55000 and CSS gzip 15000 unchanged. The earlier BUNDLE_BUDGET_GATE_REQUIRED measurement remains unedited at .orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-BUNDLE-GATE.md.
+- **Current next action:** rerun production build/budgets, then finish the frozen Block E implementation, full validation/evidence, Artifact A, Boundary B, separate read-only Independent Critic, final reconciliation and branch-only publication. Stop if any current ceiling is exceeded.
+- **Previous Block D checkpoint:** exact base 3f06c7b52b8c5f57754e705071b7cee6a5668d05; its Controller review evidence remains historical below.
 
 ### Block C — initial Artifact A review returned bounded REWORK
 
