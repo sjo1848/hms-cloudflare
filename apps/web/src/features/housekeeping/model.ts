@@ -1,6 +1,8 @@
 export type MaintenanceCase = { id: string; status: string; impact?: "NON_BLOCKING" | "BLOCKING"; priority: string; reason: string; assigned_to: string; reported_at: string; resolution_note?: string };
 export type HousekeepingDeparture = { booking_id: string; room_id: string; room_number?: string; room_type?: string; room_status?: string; guest_name: string; booking_status: string };
-export type HousekeepingRoom = { room_id: string; room_number: string; room_type: string; room_status: string; turnover_today: boolean; departure_guest_name?: string; departure_booking_status?: string; maintenance_case?: MaintenanceCase; departure?: HousekeepingDeparture };
+export type HousekeepingEvent = { id: string; event_type: string; from_status: string; to_status: string; actor_subject: string; request_id: string; created_at: string; maintenance_case_id: string | null };
+export type AtRiskBooking = { id: string; guest_name: string; check_in: string; check_out: string; status: string };
+export type HousekeepingRoom = { room_id: string; room_number: string; room_type: string; room_status: string; turnover_today: boolean; departure_guest_name?: string; departure_booking_status?: string; maintenance_case?: MaintenanceCase; maintenance_history?: HousekeepingEvent[]; at_risk_bookings?: AtRiskBooking[]; operational_state?: { occupancy: string; housekeeping: string; maintenanceImpact: string; serviceState: string; readiness: { state: string; reasons: string[] } }; departure?: HousekeepingDeparture };
 export type HousekeepingBoard = { date: string; rooms: HousekeepingRoom[]; departures_today: HousekeepingDeparture[] };
 export type HousekeepingQueueItem = HousekeepingRoom & { priorityRank: number; isBlocked: boolean; isOrphanDeparture: boolean };
 export type HousekeepingDraft = { reason: string; priority: string; assignedTo: string; resolution: string };

@@ -50,5 +50,17 @@ export const housekeepingEn = {
   "housekeeping.resolveDirty": "Resolve and return to Dirty",
   "housekeeping.issuePlaceholder": "Describe the issue",
   "housekeeping.createCase": "Create case and block",
-  "housekeeping.clearForm": "Clear form"
+  "housekeeping.clearForm": "Clear form",
+  "housekeeping.state": "State",
+  "housekeeping.attention": "Attention",
+  "housekeeping.impact": "Impact",
+  "housekeeping.atRisk": "At risk · {guest} · {start}–{end}",
+  "housekeeping.resolveCase": "Resolve case",
+  "housekeeping.history": "Recent history",
+  "housekeeping.noHistory": "No recorded history",
+  "housekeeping.event.CLEANING_START": "Cleaning started",
+  "housekeeping.event.CLEANING_FINISH": "Cleaning completed",
+  "housekeeping.event.MAINTENANCE_OPEN": "Maintenance reported",
+  "housekeeping.event.MAINTENANCE_ESCALATE": "Impact escalated",
+  "housekeeping.event.MAINTENANCE_RESOLVE": "Case resolved"
 } as const;

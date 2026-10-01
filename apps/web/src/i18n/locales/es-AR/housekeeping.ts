@@ -50,5 +50,17 @@ export const housekeepingEsAR = {
   "housekeeping.resolveDirty": "Resolver y devolver a Por limpiar",
   "housekeeping.issuePlaceholder": "Describí el problema",
   "housekeeping.createCase": "Crear caso y bloquear",
-  "housekeeping.clearForm": "Limpiar formulario"
+  "housekeeping.clearForm": "Limpiar formulario",
+  "housekeeping.state": "Estado",
+  "housekeeping.attention": "Atención",
+  "housekeeping.impact": "Impacto",
+  "housekeeping.atRisk": "En riesgo · {guest} · {start}–{end}",
+  "housekeeping.resolveCase": "Resolver caso",
+  "housekeeping.history": "Historial reciente",
+  "housekeeping.noHistory": "Sin historial registrado",
+  "housekeeping.event.CLEANING_START": "Limpieza iniciada",
+  "housekeeping.event.CLEANING_FINISH": "Limpieza completada",
+  "housekeeping.event.MAINTENANCE_OPEN": "Mantenimiento informado",
+  "housekeeping.event.MAINTENANCE_ESCALATE": "Impacto escalado",
+  "housekeeping.event.MAINTENANCE_RESOLVE": "Caso resuelto"
 } as const;

@@ -19,6 +19,8 @@ type CaseRow = {
   resolved_at?: string | null; return_status?: string | null;
 };
 type DepartureRow = { booking_id: string; room_id: string; room_number: string; room_type: string; room_status: string; guest_name: string; booking_status: string; check_out: string };
+type HousekeepingEventRow = { id: string; room_id: string; maintenance_case_id: string | null; event_type: string; from_status: string; to_status: string; actor_subject: string; request_id: string; created_at: string };
+type AtRiskBookingRow = { id: string; room_id: string; room_number: string; guest_name: string; check_in: string; check_out: string; status: string };
 
 function requireCapability(context: RouteContext, capability: string): void {
   if (!hasCapability(context.get("membership").role, capability)) throw ApiError.forbidden();
@@ -103,13 +105,25 @@ export function createHousekeepingRoutes(): HousekeepingApp {
     const requestedDate = context.req.query("date");
     const date = requestedDate ? isoDate(requestedDate, "date") : context.get("hotelTime")?.localDate ?? hotelLocalDate(context.get("membership").timeZone);
     const db = context.get("operationalDatabase");
-    const rooms = await db.prepare(`SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents, r.room_state_version, ${ROOM_DIMENSION_SELECT}
-      FROM rooms r WHERE r.status IN ('DIRTY', 'CLEANING', 'AVAILABLE', 'MAINTENANCE') OR r.housekeeping_state IN ('DIRTY', 'CLEANING') ORDER BY r.room_number`).all<RoomRow>();
-    const departures = await db.prepare("SELECT b.id AS booking_id, b.room_id, r.room_number, r.room_type, r.status AS room_status, g.full_name AS guest_name, b.status AS booking_status, b.check_out FROM bookings b JOIN guests g ON g.id = b.guest_id JOIN rooms r ON r.id = b.room_id WHERE b.check_out = ?1 AND b.status NOT IN ('CANCELLED', 'NO_SHOW')").bind(date).all<DepartureRow>();
-    const cases = await db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE status = 'OPEN'`).all<CaseRow>();
+    const [rooms, departures, cases, history, atRiskBookings] = await Promise.all([
+      db.prepare(`SELECT r.id, r.room_number, r.room_type, r.status, r.price_cents, r.room_state_version, ${ROOM_DIMENSION_SELECT}
+        FROM rooms r WHERE r.status IN ('DIRTY', 'CLEANING', 'AVAILABLE', 'MAINTENANCE') OR r.housekeeping_state IN ('DIRTY', 'CLEANING') OR EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN') ORDER BY r.room_number`).all<RoomRow>(),
+      db.prepare("SELECT b.id AS booking_id, b.room_id, r.room_number, r.room_type, r.status AS room_status, g.full_name AS guest_name, b.status AS booking_status, b.check_out FROM bookings b JOIN guests g ON g.id = b.guest_id JOIN rooms r ON r.id = b.room_id WHERE b.check_out = ?1 AND b.status NOT IN ('CANCELLED', 'NO_SHOW')").bind(date).all<DepartureRow>(),
+      db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE status = 'OPEN'`).all<CaseRow>(),
+      db.prepare("SELECT id, room_id, maintenance_case_id, event_type, from_status, to_status, actor_subject, request_id, created_at FROM housekeeping_events ORDER BY created_at DESC, id DESC LIMIT 150").all<HousekeepingEventRow>(),
+      db.prepare("SELECT b.id, b.room_id, r.room_number, g.full_name AS guest_name, b.check_in, b.check_out, b.status FROM bookings b JOIN rooms r ON r.id=b.room_id JOIN guests g ON g.id=b.guest_id WHERE b.status='CONFIRMED' AND b.check_out>?1 AND EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=b.room_id AND mc.status='OPEN' AND mc.impact='BLOCKING') ORDER BY b.check_in, r.room_number, b.id LIMIT 500").bind(date).all<AtRiskBookingRow>(),
+    ]);
     const departureByRoom = new Map(departures.results.map(item => [item.room_id, item]));
     const caseByRoom = new Map(cases.results.map(item => [item.room_id, item]));
-    return context.json({ date, rooms: rooms.results.map(row => roomView(row, context.get("membership").hotelId, caseByRoom.get(row.id), departureByRoom.get(row.id))), departures_today: departures.results.map(item => ({ ...item, room_status: roomStatus(item.room_status) })) });
+    const historyByRoom = new Map<string, HousekeepingEventRow[]>();
+    for (const event of history.results) historyByRoom.set(event.room_id, [...(historyByRoom.get(event.room_id) ?? []), event]);
+    const riskByRoom = new Map<string, AtRiskBookingRow[]>();
+    for (const booking of atRiskBookings.results) riskByRoom.set(booking.room_id, [...(riskByRoom.get(booking.room_id) ?? []), booking]);
+    return context.json({ date, rooms: rooms.results.map(row => ({
+      ...roomView(row, context.get("membership").hotelId, caseByRoom.get(row.id), departureByRoom.get(row.id)),
+      maintenance_history: historyByRoom.get(row.id) ?? [],
+      at_risk_bookings: riskByRoom.get(row.id) ?? [],
+    })), departures_today: departures.results.map(item => ({ ...item, room_status: roomStatus(item.room_status) })) });
   });
 
   app.get("/housekeeping/:id/maintenance", async context => {
