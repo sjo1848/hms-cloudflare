@@ -3,30 +3,30 @@
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-e-housekeeping-maintenance",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "BLOCK_E_BUNDLE_GATE_REPRODUCIBILITY_CHECKPOINT",
+  "phase": "BUNDLE_BUDGET_GATE_REQUIRED",
   "resume_authorized": false,
-  "runtime_status": "RUNNING",
-  "active_task": "HMS-BLOCK-E-BUNDLE-GATE-REPRODUCIBILITY-001: commit exact preserved Block E implementation/test work, then run only production build, types:check and canonical budget checker from clean commit",
+  "runtime_status": "WAITING_HUMAN_GATE",
+  "active_task": "BUNDLE_BUDGET_GATE_REQUIRED: clean exact-commit Block E output reproduces CSS raw 55652 B against unchanged 55000 B ceiling",
   "last_completed_task": "Controller bundle-gate resolution recorded; JS raw ceiling now 350000 B only; other ceilings unchanged; historical gate evidence preserved",
   "last_completed_head": "8d4ba5e49f025211ccc60dada3fdd4b54b4b9021",
   "work_branch": "impl/hms-block-e-housekeeping-maintenance",
   "pr": null,
   "wave": "BLOCK E \u2014 HOUSEKEEPING + MAINTENANCE",
-  "status_label": "BLOCK_E_BUNDLE_GATE_REPRODUCIBILITY_CHECKPOINT",
-  "next_action": "Commit unchanged Block E implementation/test diff with reconciled state, verify clean worktree, run only build/types/budget checker, record results, then publish and hand off via Issue #51.",
+  "status_label": "BUNDLE_BUDGET_GATE_REQUIRED_AWAITING_CONTROLLER_REVIEW",
+  "next_action": "Publish only impl/hms-block-e-housekeeping-maintenance, verify exact remote SHA, report clean-tree bundle metrics and evidence on Issue #51, then await Controller decision.",
   "stop_reason": "Bounded Controller-authorized reproducibility checkpoint is in progress. Preserve existing source/test/CSS/budget contents exactly; run only production build, types:check and canonical budgets from the clean commit.",
   "event": {
-    "seq": 269,
-    "id": "BLOCK-E-BUNDLE-GATE-REPRODUCIBILITY-STARTED",
-    "type": "BLOCK_E_BUNDLE_GATE_REPRODUCIBILITY_STARTED"
+    "seq": 270,
+    "id": "BLOCK-E-CLEAN-BUNDLE-GATE-REPRODUCED",
+    "type": "BUNDLE_BUDGET_GATE_REQUIRED"
   },
   "external_review": {
-    "required": false,
+    "required": true,
     "artifact_head": null,
     "boundary_head": null,
     "last_audited_head": null,
-    "last_verdict": "Controller authorized bounded reproducibility rework on Issue #51; no product verdict. The previous dirty-tree budget record is historical and will be compared to the clean exact commit.",
-    "review_path": ".orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-BUNDLE-GATE-REOPENED-001.md",
+    "last_verdict": "Clean build from exact WIP source checkpoint c67c5eeca8c6a215ac4f97240eee50c4db670a50 reproduces CSS raw 55652/55000 (+652 B); canonical budget checker fails only cssRaw.",
+    "review_path": ".orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-BUNDLE-REPRODUCIBILITY-RESULT-001.md",
     "prior_reviews_pending": [
       "P0.1 artifact A + boundary B",
       "Wave 1.2 artifact A + boundary B"
@@ -403,7 +403,7 @@
   "block_e_precritic": ".orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-PRECRITIC.md; PASS for implementation admission only, not product validation or Independent Critic",
   "block_e_base": "3f06c7b52b8c5f57754e705071b7cee6a5668d05",
   "block_e_budget_baseline": "JS raw 329618/330000, gzip 93456/100000; CSS raw 54297/55000, gzip 10138/15000; JS raw headroom 382 B, CSS raw headroom 703 B; ceilings unchanged",
-  "block_e_status": "BUNDLE_GATE_REPRODUCIBILITY_CHECKPOINT_IN_PROGRESS",
+  "block_e_status": "BUNDLE_BUDGET_GATE_REQUIRED_AWAITING_CONTROLLER_REVIEW",
   "block_e_completed": false,
   "block_e_bundle_gate": ".orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-BUNDLE-GATE.md; JS raw 330742/330000 after 10-pass Terser experiment (330739); ceilings unchanged",
   "block_e_partial_implementation": "Local changes on dedicated Block E branch are preserved; no Artifact A, final Pre-Critic or Independent Critic claim.",
@@ -415,5 +415,6 @@
   "block_e_repair_review_disposition": ".orchestration/evidence/HMS-BLOCK-E-REPAIR-READMODEL-UX-EVIDENCE-001-REVIEW-DISPOSITION.md; domain/concurrency, UX/responsive and QA/evidence separate read-only specialists; not final Independent Critic",
   "block_e_reopened_bundle_gate": ".orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-BUNDLE-GATE-REOPENED-001.md; CSS raw 55652/55000 (+652 B); other ceilings pass",
   "block_e_validation": "PAUSED AT REOPENED BUNDLE GATE: types:check and production build passed; budget checker failed on CSS raw 55652/55000. Full validation and runtime/browser evidence not run after the bounded changes.",
-  "block_e_reproducibility_checkpoint": "Controller CONTROLLER_DECISION: REWORK from Issue #51 comment 5923903690; checkpoint all existing Block E implementation/test changes without altering them; not Artifact A"
+  "block_e_reproducibility_checkpoint": "Clean source tested at c67c5eeca8c6a215ac4f97240eee50c4db670a50; WIP only, not Artifact A",
+  "block_e_reproducibility_result": ".orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-BUNDLE-REPRODUCIBILITY-RESULT-001.md; build/types PASS; CSS raw 55652/55000 gate FAIL; other ceilings pass"
 }
