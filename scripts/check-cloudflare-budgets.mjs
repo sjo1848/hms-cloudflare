@@ -17,7 +17,7 @@ const cssGzip = sum(cssFiles, value => gzipSync(value).length);
 // Baseline before Architecture Hardening II was ~254 KB JS raw / ~75 KB gzip.
 // Raw ceilings are development growth guardrails, not performance targets.
 // Gzip ceilings remain the compressed transfer guardrails for emitted assets.
-const budgets = { jsRaw: 350_000, jsGzip: 100_000, cssRaw: 55_000, cssGzip: 15_000 };
+const budgets = { jsRaw: 350_000, jsGzip: 100_000, cssRaw: 60_000, cssGzip: 15_000 };
 const actual = { jsRaw, jsGzip, cssRaw, cssGzip };
 for (const [name, budget] of Object.entries(budgets)) {
   if (actual[name] > budget) throw new Error(`${name} budget exceeded: ${actual[name]} > ${budget}`);
