@@ -41,7 +41,7 @@ export function buildHousekeepingQueue(rooms: HousekeepingRoom[], departures: Ho
 
 export function filterHousekeepingQueue(queue: HousekeepingQueueItem[], filter: string, search: string): HousekeepingQueueItem[] {
   const normalizedSearch = search.trim().toLocaleLowerCase();
-  return queue.filter(room => (filter === "shift" || room.room_status.toLowerCase() === filter) && `${room.room_number} ${room.room_type} ${room.room_status} ${room.departure_guest_name ?? ""}`.toLocaleLowerCase().includes(normalizedSearch));
+  return queue.filter(room => (filter === "shift" || room.room_status.toLowerCase() === filter) && `${room.room_number} ${room.room_type} ${room.room_status} ${room.departure_guest_name ?? ""} ${(room.at_risk_bookings ?? []).map(booking => booking.guest_name).join(" ")}`.toLocaleLowerCase().includes(normalizedSearch));
 }
 
 export const newHousekeepingDraft = (): HousekeepingDraft => ({ reason: "", priority: "MEDIUM", assignedTo: "ops", resolution: "", impact: "BLOCKING" });

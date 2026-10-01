@@ -654,5 +654,15 @@
   "housekeeping.atRiskBadge": "At risk ({count})",
   "housekeeping.impactNonBlocking": "Advisory · NON_BLOCKING",
   "housekeeping.impactBlocking": "Blocking · BLOCKING",
-  "housekeeping.trace": "Actor {actor} · Request {request} · Case {case}"
+  "housekeeping.trace": "Actor {actor} · Request {request} · Case {case}",
+  "housekeeping.reportedUnknown": "Unknown",
+  "housekeeping.event.unknown": "Other maintenance event",
+  "housekeeping.event.CLEANING_START": "Cleaning started",
+  "housekeeping.event.CLEANING_FINISH": "Cleaning completed",
+  "housekeeping.event.MAINTENANCE_OPEN": "Maintenance reported",
+  "housekeeping.event.MAINTENANCE_ESCALATE": "Impact escalated",
+  "housekeeping.event.MAINTENANCE_RESOLVE": "Case resolved",
+  "housekeeping.resolvedBy": "Resolved by",
+  "housekeeping.resolvedAt": "Resolved at",
+  "housekeeping.returnState": "Room state after resolution"
 }

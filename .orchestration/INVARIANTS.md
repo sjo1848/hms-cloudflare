@@ -28,6 +28,8 @@ When an Independent Critic finds a defect whose root cause can recur outside the
 
 **Invariant:** the business operation must prove that the exact authoritative entity/version/case intended by the current operation won the transition. If a conditional mutation affects zero rows, a related entity has been replaced/reopened, or state leaves and later re-enters the same visible value (ABA), the operation must not succeed merely because the final state again looks valid. All writes and audit/event side effects must represent the same logical operation or roll back together. A transaction/batch plus final-state checks is not sufficient when zero-row statements, stale identities or ABA re-entry can be treated as success.
 
+**D1 batch rule:** D1 continues later statements in a batch when an earlier conditional statement affects zero rows. Every dependent `INSERT ... SELECT` event/audit statement must therefore independently prove the exact winning room version and related case identity/state; checking the batch's `meta.changes` afterward cannot prevent a losing caller from persisting side effects.
+
 **Required evidence:**
 - deterministic zero-row stale-state regression;
 - when identity/version/case correlation exists, deterministic stale-identity or ABA regression (for example K1 -> resolved -> K2 opened -> stale K1 attempt);
@@ -44,6 +46,8 @@ When an Independent Critic finds a defect whose root cause can recur outside the
 **Applies when:** risk-relevant mutation records an event/audit row.
 
 **Invariant:** one successful logical mutation produces the intended audit/event exactly once; a failed/stale/rejected mutation produces none. Audit insertion must not itself turn a zero-row business mutation into apparent success.
+
+**D1 batch rule:** guard event creation in SQL against the committed target version and exact winning case state/identity, and enforce at most one event of that type per room/version. Concurrent batches can both observe the same post-transition version after the winner commits; state predicates alone do not distinguish the loser. A preceding zero-row statement does not stop a later audit insert in the same D1 batch.
 
 **Required evidence:** concurrent or repeated-operation regression with event counts and actor/hotel/request assertions.
 

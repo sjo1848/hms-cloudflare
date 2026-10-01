@@ -64,7 +64,19 @@ async function findOpenCase(db: Db, roomId: string): Promise<CaseRow | null> {
 }
 
 function audit(db: Db, eventId: string, roomId: string, caseId: string | null, eventType: string, fromStatus: string, toStatus: string, context: RouteContext, details: Record<string, unknown>) {
-  return db.prepare("INSERT INTO housekeeping_events (id, room_id, maintenance_case_id, event_type, from_status, to_status, actor_subject, request_id, hotel_id, details_json, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)").bind(eventId, roomId, caseId, eventType, fromStatus, toStatus, context.get("identity").subject, context.get("requestId"), context.get("membership").hotelId, JSON.stringify(details), new Date().toISOString());
+  const detailsJson = JSON.stringify(details);
+  return db.prepare(`INSERT INTO housekeeping_events (id, room_id, maintenance_case_id, event_type, from_status, to_status, actor_subject, request_id, hotel_id, details_json, created_at)
+    SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11
+    WHERE EXISTS (SELECT 1 FROM rooms r WHERE r.id=?2 AND r.status=?6
+      AND r.room_state_version=CAST(json_extract(?10, '$.room_state_version_after') AS INTEGER)
+      AND CAST(json_extract(?10, '$.room_state_version_after') AS INTEGER)=CAST(json_extract(?10, '$.room_state_version_before') AS INTEGER)+1)
+      AND NOT EXISTS (SELECT 1 FROM housekeeping_events e WHERE e.room_id=?2 AND e.event_type=?4
+        AND CAST(json_extract(e.details_json, '$.room_state_version_after') AS INTEGER)=CAST(json_extract(?10, '$.room_state_version_after') AS INTEGER))
+      AND EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.id=?3 AND mc.room_id=?2
+        AND ((?4='MAINTENANCE_OPEN' AND mc.status='OPEN' AND mc.impact=json_extract(?10, '$.impact'))
+          OR (?4='MAINTENANCE_ESCALATE' AND mc.status='OPEN' AND mc.impact='BLOCKING')
+          OR (?4='MAINTENANCE_RESOLVE' AND mc.status='RESOLVED' AND mc.return_status=?6)))`)
+    .bind(eventId, roomId, caseId, eventType, fromStatus, toStatus, context.get("identity").subject, context.get("requestId"), context.get("membership").hotelId, detailsJson, new Date().toISOString());
 }
 
 function guardedTransitionAudit(db: Db, eventId: string, roomId: string, eventType: string, fromStatus: string, toStatus: string, versionAfter: number, context: RouteContext, details: Record<string, unknown>) {
@@ -165,7 +177,7 @@ export function createHousekeepingRoutes(): HousekeepingApp {
     const eventId = crypto.randomUUID();
     try {
       const results = await db.batch([
-        db.prepare("UPDATE rooms SET status=?2, room_state_version=?3 WHERE id=?1 AND status=?4 AND room_state_version=?5 AND room_state_version+1=?3").bind(roomId, target, versionAfter, room.status, versionBefore),
+        db.prepare("UPDATE rooms SET status=?2, room_state_version=?3 WHERE id=?1 AND status=?4 AND room_state_version=?5 AND room_state_version+1=?3 AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id=?1 AND status='OPEN')").bind(roomId, target, versionAfter, room.status, versionBefore),
         db.prepare("INSERT INTO maintenance_cases (id, room_id, status, impact, priority, reason, assigned_to, reported_by_user_id, reported_at) SELECT ?1, ?2, 'OPEN', ?3, ?4, ?5, ?6, ?7, ?8 WHERE EXISTS (SELECT 1 FROM rooms WHERE id=?2 AND status=?9 AND room_state_version=?10) AND NOT EXISTS (SELECT 1 FROM maintenance_cases WHERE room_id=?2 AND status='OPEN')").bind(caseId, roomId, impact, priority, reason, assignedTo, context.get("identity").subject, new Date().toISOString(), target, versionAfter),
         audit(db, eventId, roomId, caseId, "MAINTENANCE_OPEN", room.status, target, context, { impact, priority, reason, assigned_to: assignedTo, occupancy_before: roomOperationalReadModel(room).occupancy, occupancy_after: roomOperationalReadModel(room).occupancy, housekeeping_state_after: room.housekeeping_state, service_state_after: room.service_state, maintenance_impact_before: room.open_maintenance_count ? roomOperationalReadModel(room).maintenanceImpact : "NONE", maintenance_impact_after: impact, room_state_version_before: versionBefore, room_state_version_after: versionAfter, maintenance_open_case_count: openCountAfter }),
       ]);

@@ -20,3 +20,17 @@ Task Contract `.orchestration/contracts/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001
 ## Admission decision
 
 **PASS — admitted to implementation under the frozen Block E contract.** This is a pre-code method/scope decision only; it does not prove implementation, evidence, invariant completion, technical PASS or Independent Critic PASS. No unresolved product policy question was identified in the approved Block E requirements. Final Pre-Critic remains mandatory before Artifact A.
+
+## Final implementation Pre-Critic (before Artifact A)
+
+**Status: PASS.** Exact results: `.orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-RESULTS.md`; all 24 invariants: `.orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-INVARIANTS.md`.
+
+- [x] Frozen contract/scope retained; no schema, migration, route, capability, role map or domain/lifecycle change.
+- [x] Adversarial D1 paths pass: duplicate open has zero partial drift; concurrent resolve has one winner and exactly one event; stale identity/ABA and tenant/RBAC boundaries have zero unauthorized side effects.
+- [x] Browser executes controls (not screenshots only) for WIDE, COMPACT, NARROW, 320px, reduced-height and landscape; keyboard focus, task return, failed refresh/retry, selection/search/filter and date deep-link history pass.
+- [x] Exact validation passes: 35 files / 175 unit+integration tests; Wrangler API/web types; production build; architecture/i18n/budgets; D1 query plan; local Worker+D1 regression; integrated browser; Wrangler dry-runs; `git diff --check`.
+- [x] JS, CSS, aggregate and entry-payload baseline/result/delta are recorded with byte and percent changes; all current ceilings pass.
+- [x] Product diff audit shows no out-of-scope modules and no unreviewed integration; no real data or promotion operation.
+- [x] Fresh Independent Critic remains a required separate read-only review after Artifact A and Boundary B; implementer has not self-approved or claimed a Critic verdict.
+
+This final gate permits freezing Artifact A; it is not the Independent Critic verdict or Controller acceptance.
