@@ -1,13 +1,13 @@
 # HMS Cloudflare — Orchestration State
 
-## BLOCK D COMPLETE — AWAITING CONTROLLER REVIEW
+## BLOCK E — HOUSEKEEPING + MAINTENANCE (RUNNING)
 
-- **Authorization:** Human authorized Block D — Rooms from reconciled/published Block C checkpoint `044ad756b0081d2a54083ea89c782557e97a351f`. Blocks E–H remain NOT AUTHORIZED. No PR, merge, main, staging, deploy, production or real data.
-- **Branch/worktree:** `impl/hms-block-d-rooms`, `/home/sjo1848/dev/hms-elite-cloudflare/hms-block-d-rooms`; exact base is `044ad756b0081d2a54083ea89c782557e97a351f`. Dedicated worktree; other branches/worktrees were not modified.
-- **Frozen pre-code package:** `.orchestration/contracts/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001.md` plus exact UI/API/capability inventory, 24-invariant classification, requirement/evidence matrix and pre-implementation Pre-Critic are committed before product code.
-- **Target:** Room board and selected-room workspace expose independent Occupancy, Housekeeping, Maintenance Impact and Service; derived readiness; canonical explicit-interval sellability; holds and navigable context. Reuse only approved F0 semantics and existing room/hold commands. No Housekeeping/Maintenance workflows or state mutation.
-- **Budget baseline:** JS 321,619 raw / 91,486 gzip; CSS 54,937 raw / 10,119 gzip. Ceilings remain JS 330,000/100,000 and CSS 55,000/15,000; CSS raw headroom is 63 B. No ceiling increase is authorized.
-- **Current phase:** `BLOCK_D_COMPLETE_AWAITING_CONTROLLER_REVIEW`. Artifact A is `5003ad9655b99337453f87ba64fcc18ea3a1ecb6`; the exact Independent Critic boundary is B2 `927d79073f488f9ce7e341f8569451c58ca51cba`. Initial Boundary B `ed39c3340db2ed1d429ec4cf1140643073f42bd6` received `PASS_WITH_CONDITIONS` for one LOW evidence-scope issue; the evidence-only correction is `.orchestration/evidence/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001-EVIDENCE-CORRECTION-001.md`. A fresh read-only follow-up on A+B2 returned `PASS`; record: `.orchestration/evidence/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001-INDEPENDENT-CRITIC-A-B2.md`. Final orchestration reconciliation is this controller-ready checkpoint following B2. Block D is complete; `development_continuation=false`, `resume_authorized=false`, Blocks E–H remain unauthorized, promotion is blocked, and Controller review is the next boundary. No product or test changes were made after Artifact A.
+- **Authorization/base:** Block E authorized by the current Controller instruction from exact checkpoint `3f06c7b52b8c5f57754e705071b7cee6a5668d05`. Dedicated branch/worktree `impl/hms-block-e-housekeeping-maintenance`, `/home/sjo1848/dev/hms-elite-cloudflare/hms-block-e-housekeeping-maintenance`. F–H, promotion, real data and environments remain unauthorized.
+- **Frozen before product code:** `.orchestration/contracts/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001.md`, exact inventory, E-01..E-15 evidence matrix, all 24 invariant classifications and admission Pre-Critic.
+- **Objective:** operational Housekeeping task queue and first-class Maintenance case with deterministic priority, history, booking risk and state-preserving actions; no new domain contract, route, schema or capability.
+- **Budget baseline / unchanged ceilings:** JS raw 329618/330000, gzip 93456/100000; CSS raw 54297/55000, gzip 10138/15000. Raw headroom at entry: JS 382 B, CSS 703 B. Any post-optimization ceiling failure stops at `BUNDLE_BUDGET_GATE_REQUIRED`.
+- **Current next action:** implement only the frozen E contract, execute the full local synthetic validation/evidence loop, then Artifact A → Boundary B → separate Independent Critic → final reconciliation → publish this branch.
+- **Previous checkpoint:** Block D exact base `3f06c7b52b8c5f57754e705071b7cee6a5668d05`; D review evidence and closure remain historical in the records below and do not override the current explicit E authorization.
 
 ### Block C — initial Artifact A review returned bounded REWORK
 
