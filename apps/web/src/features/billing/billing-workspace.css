@@ -1,3 +1,20 @@
+.billing-workspace .billing-return-reception {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid #cbd5df;
+  border-radius: 10px;
+  color: #1f3651;
+  background: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.billing-workspace .billing-return-reception:hover {
+  background: #f3f7fa;
+}
+
 .billing-workspace .billing-charge-recovery {
   display: flex;
   flex-wrap: wrap;
@@ -6,6 +23,32 @@
   max-width: 100%;
   white-space: normal;
   line-height: 1.45;
+}
+
+.billing-account-totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 125px), 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.billing-account-totals > div {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid #dce4eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.billing-account-totals dt {
+  color: #68778a;
+  font-size: 11px;
+}
+
+.billing-account-totals dd {
+  margin: 0;
+  font-weight: 750;
 }
 
 .billing-workspace .billing-charge-recovery > button {

@@ -1,0 +1,17 @@
+# Block F Account/Finance — Requirement / Evidence Matrix
+
+Frozen against Task Contract `HMS-BLOCK-F-ACCOUNT-FINANCE-CASH-001` at base `39ee0a2b38e7205b8e041e792e16ee469c996241`.
+
+| Requirement | Expected surface | Acceptance | Executable evidence |
+|---|---|---|---|
+| Account stays Booking/Stay scoped | Reception Case and existing billing account route | selected booking identity is explicit and preserved; never guest-global | integrated browser identity/context assertions + API booking-scoped D1 query assertions |
+| D11 exact-cent truth | API/repository/UI | paid ledger sum, amount, remaining and credit independently agree; credit is visually distinct | executing-D1 fixtures with exact cents and independently computed sums; UI/API comparison |
+| Charge operation recovery | existing charge API/UI | stable token across reload/ambiguous response; exact payload replay; changed payload conflict; no optimistic success | F0.9 executing-D1/API regression and Worker+D1 browser response-loss/reload/recovery; durable charge/event/invoice/payment snapshots |
+| Payment operation | existing payment API/UI | server capability, safe balance target, immutable ledger; exact booking-scoped token/payload replay even after final settlement; changed payload conflicts; response-loss reload retries same identity | executing-D1 concurrency/replay/overpay/final-payment-replay tests, API denied-write/tenant tests, integrated Worker+D1 local-only post-commit 502 → reload → exact retry and D1 exact ledger |
+| Latest coherent account read | BillingWorkspace | stale account response cannot bind to a different selection; failed refresh is explicit and retryable | deterministic deferred-response component test + integrated authoritative refresh |
+| Checkout settlement compatibility | existing F0.7 route/repository (no new checkout feature) | F-account display does not assert settlement; F0.7 checkout verifies current remaining due at mutation boundary | F0.7 executing-D1 regression and static audit that this increment does not alter checkout settlement |
+| Server-owned authorization/tenant scope | API auth/capabilities and route tests | existing capabilities unchanged; denied write/read leaves zero effects; hotel D1 owns all data | existing capability matrix + configured two-hotel local D1 API tests; exact no-effect snapshots |
+| Cash/Receivables separation | existing cash regression and diff boundary | pending/credit balances excluded from cash; no Cash behavior edits or new owner/session inference | cash arithmetic D1 regression and static diff proof; no real hotel data |
+| UX/accessibility/context | Billing/Reception changed surfaces | WIDE 1280, COMPACT 768, NARROW 375; keyboard, focus, error/status, Booking/Stay return context; contextual route shows account only and legacy route retains Cash panel | integrated Playwright assertions at each width; focus/keyboard, direct deep link/reload/Back and safe normalized return path assertions; screenshot only diagnostic |
+| Build/budgets | Vite output / canonical checker | all current ceilings remain passing; baseline/result/delta bytes and percent recorded | production build + `npm run architecture:fitness`; raw/gzip/aggregate/entry measured output |
+| Scope/evidence integrity | branch and records | no Cash, G–H, real data or promotion; every claim names proof | diff/path audit, `git diff --check`, STATUS parse, runner cleanup receipt |

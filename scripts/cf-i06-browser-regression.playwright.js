@@ -1,7 +1,7 @@
 (page) => (async () => {
   await page.setExtraHTTPHeaders({ "x-local-access-subject": "subject-a", "x-local-access-email": "a@test", "x-hotel-id": "hotel-a" });
   await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
-  const widths = [375, 390, 430, 768, 1024];
+  const widths = [375, 390, 430, 768, 1024, 1280];
   const results = [];
   await page.goto("http://127.0.0.1:4195/billing");
   await page.getByRole("heading", { name: "Billing and payments" }).waitFor();
@@ -14,27 +14,37 @@
     const diagnostics = await page.evaluate(() => ({ capabilities: document.querySelector(".app-content")?.getAttribute("data-hotel-capabilities"), inputs: [...document.querySelectorAll("input")].map(input => ({ type: input.type, label: input.getAttribute("aria-label"), visible: Boolean(input.getClientRects().length) })), alerts: [...document.querySelectorAll('[role="alert"]')].map(alert => alert.textContent), statuses: [...document.querySelectorAll('[role="status"]')].map(status => status.textContent) }));
     throw new Error(`billing payment form unavailable: ${JSON.stringify(diagnostics)}`);
   }
-  let paymentRequest = 0;
-  await page.route("**/api/v1/bookings/cf-i06/payments", async route => {
-    paymentRequest += 1;
-    if (paymentRequest === 1) {
-      await route.fetch();
-      await route.abort("connectionreset");
-      return;
-    }
-    await route.continue();
-  });
+  await page.setExtraHTTPHeaders({ "x-local-access-subject": "subject-a", "x-local-access-email": "a@test", "x-hotel-id": "hotel-a", "x-test-drop-payment-response": "after-commit" });
   await paymentAmount.fill("2");
   await page.getByRole("button", { name: "Register payment" }).click();
-  await page.getByRole("alert").waitFor();
-  await booking.selectOption("cf-i06");
-  await paymentAmount.waitFor({ state: "visible" });
-  await page.getByText(/Payment ·.*0\.02/).waitFor();
-  if (await page.getByText(/Payment ·.*0\.02/).count() !== 1) throw new Error("ambiguous retry created duplicate payment");
+  await page.waitForFunction(async () => {
+    const response = await fetch("/api/v1/bookings/cf-i06/payments");
+    const payments = await response.json();
+    return payments.some(payment => payment.amount_cents === 2);
+  }, null, { timeout: 10000 });
+  await page.setExtraHTTPHeaders({ "x-local-access-subject": "subject-a", "x-local-access-email": "a@test", "x-hotel-id": "hotel-a" });
+  await page.reload();
+  await page.getByRole("heading", { name: /CF-I06 Guest · Invoice/ }).waitFor();
+  try { await page.getByRole("button", { name: "Retry this payment" }).waitFor({ timeout: 5000 }); }
+  catch {
+    const diagnostics = await page.evaluate(() => ({ caseHtml: document.querySelector(".case-panel")?.innerHTML, body: document.body.innerText, pending: Object.keys(sessionStorage).filter(key => key.includes("pending-payment")).map(key => sessionStorage.getItem(key)), statuses: [...document.querySelectorAll('[role="status"]')].map(node => node.textContent), alerts: [...document.querySelectorAll('[role="alert"]')].map(node => node.textContent), buttons: [...document.querySelectorAll("button")].map(button => ({ text: button.textContent, disabled: button.disabled })) }));
+    throw new Error(`payment recovery missing after reload: ${JSON.stringify(diagnostics)}`);
+  }
+  await page.getByRole("button", { name: "Retry this payment" }).click();
+  await page.waitForFunction(() => !sessionStorage.getItem("hms.billing.pending-payment:hotel-a:cf-i06"), null, { timeout: 10000 });
+  await page.getByRole("spinbutton", { name: "Billing payment amount" }).waitFor({ state: "visible" });
+  const recoveredPayment = page.locator(".case-panel > p").filter({ hasText: /Payment ·.*0\.02/ });
+  await recoveredPayment.waitFor();
+  const paymentCount = await page.evaluate(async () => (await fetch("/api/v1/bookings/cf-i06/payments").then(response => response.json())).length);
+  if (paymentCount !== 1) throw new Error(`ambiguous retry created duplicate payment rows: ${paymentCount}`);
   await page.unroute("**/api/v1/bookings/cf-i06/payments");
   await page.reload();
   await page.getByRole("heading", { name: "Billing and payments" }).waitFor();
-  await page.getByRole("spinbutton", { name: "Billing payment amount" }).waitFor({ state: "visible" });
+  try { await page.getByRole("spinbutton", { name: "Billing payment amount" }).waitFor({ state: "visible", timeout: 5000 }); }
+  catch {
+    const diagnostics = await page.evaluate(() => ({ url: location.href, body: document.body.innerText, selected: [...document.querySelectorAll("select")].map(select => select.value), pending: Object.keys(sessionStorage).map(key => [key, sessionStorage.getItem(key)]) }));
+    throw new Error(`billing account not restored after resolved retry: ${JSON.stringify(diagnostics)}`);
+  }
 
   for (const width of widths) {
     await page.setViewportSize({ width, height: 812 });
@@ -86,5 +96,32 @@
   await page.getByRole("button", { name: "Close cash shift" }).click();
   await page.getByRole("status").filter({ hasText: /Shift closed/ }).waitFor();
   await page.screenshot({ path: "output/playwright/cf-i06-billing.png", fullPage: true });
+  const returnTo = encodeURIComponent("/bookings?lane=all&booking_id=cf-i06");
+  await page.goto(`http://127.0.0.1:4195/billing?booking_id=cf-i06&return_to=${returnTo}`);
+  await page.getByRole("heading", { name: /CF-I06 Guest · Invoice/ }).waitFor();
+  if (await page.getByRole("combobox", { name: "Billing booking" }).count()) throw new Error("contextual account redundantly exposes the Booking selector");
+  if (await page.getByRole("region", { name: "Cash balance and close" }).count()) throw new Error("contextual account rendered gated Cash workflow");
+  for (const [name, width, height] of [["wide", 1280, 900], ["compact", 768, 812], ["narrow", 375, 812], ["reduced-height", 375, 600], ["landscape", 844, 390]]) {
+    await page.setViewportSize({ width, height });
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
+    if (overflow) throw new Error(`contextual account horizontal overflow at ${name} ${width}x${height}`);
+    await page.screenshot({ path: `output/playwright/cf-i06-account-${name}.png`, fullPage: true });
+  }
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.getByRole("spinbutton", { name: "Billing payment amount" }).focus();
+  await page.keyboard.press("Tab");
+  const keyboardFocus = await page.evaluate(() => ({ label: document.activeElement?.getAttribute("aria-label"), visible: document.activeElement?.matches(":focus-visible") }));
+  if (keyboardFocus.label !== "Billing payment method" || !keyboardFocus.visible) throw new Error(`payment keyboard focus is not visible: ${JSON.stringify(keyboardFocus)}`);
+  await page.getByRole("link", { name: "Go to Reception" }).click();
+  await page.waitForURL("**/bookings?lane=all&booking_id=cf-i06");
+  await page.getByRole("heading", { name: /CF-I06 Guest/ }).waitFor();
+  if (await page.evaluate(() => document.activeElement?.classList.contains("reception-case-title")) !== true) throw new Error("application return did not restore focus to the selected Booking/Stay Case");
+  const billingLink = page.getByRole("link", { name: "Billing and payments" });
+  await billingLink.waitFor();
+  await billingLink.click();
+  await page.getByRole("heading", { name: /CF-I06 Guest · Invoice/ }).waitFor();
+  await page.goBack();
+  await page.getByRole("heading", { name: /CF-I06 Guest/ }).waitFor();
+  await page.waitForFunction(() => document.activeElement?.classList.contains("reception-case-title") === true, null, { timeout: 5000 });
   return results;
 })()

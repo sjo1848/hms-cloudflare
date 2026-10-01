@@ -1,6 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
-repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd); cd "$repo_dir"; wrangler="$repo_dir/node_modules/.bin/wrangler"; tmp_dir=$(mktemp -d); persist_dir="$tmp_dir/persist"; mkdir -p "$persist_dir"; persist_args=(--persist-to "$persist_dir"); worker_pid=""; cleanup() { if [[ -n "$worker_pid" ]]; then pkill -TERM -P "$worker_pid" 2>/dev/null || true; kill "$worker_pid" 2>/dev/null || true; wait "$worker_pid" 2>/dev/null || true; fi; rm -rf "$tmp_dir"; }; trap cleanup EXIT
+repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd); cd "$repo_dir"; wrangler="$repo_dir/node_modules/.bin/wrangler"; tmp_dir=$(mktemp -d); persist_dir="$tmp_dir/persist"; mkdir -p "$persist_dir"; persist_args=(--persist-to "$persist_dir"); worker_pid=""
+collect_tree() { local parent="$1" child; printf '%s\n' "$parent"; while read -r child; do [[ -z "$child" ]] || collect_tree "$child"; done < <(pgrep -P "$parent" || true); }
+stop_worker() {
+  local root="$worker_pid" pid live
+  local -a owned=()
+  [[ -n "$root" ]] || return 0
+  while read -r pid; do owned+=("$pid"); done < <(collect_tree "$root")
+  for pid in "${owned[@]}"; do kill -TERM "$pid" 2>/dev/null || true; done
+  for _ in {1..50}; do
+    live=0
+    for pid in "${owned[@]}"; do kill -0 "$pid" 2>/dev/null && live=1; done
+    (( live == 0 )) && { wait "$root" 2>/dev/null || true; worker_pid=""; return 0; }
+    sleep 0.1
+  done
+  for pid in "${owned[@]}"; do kill -KILL "$pid" 2>/dev/null || true; done
+  for _ in {1..20}; do
+    live=0
+    for pid in "${owned[@]}"; do kill -0 "$pid" 2>/dev/null && live=1; done
+    (( live == 0 )) && { wait "$root" 2>/dev/null || true; worker_pid=""; return 0; }
+    sleep 0.1
+  done
+  echo "owned CF-I06 Worker process tree remains after cleanup: $root" >&2
+  ps -o pid,ppid,stat,args -p "$(IFS=,; echo "${owned[*]}")" >&2 || true
+  return 1
+}
+cleanup() { local status=$?; stop_worker || status=1; rm -rf "$tmp_dir"; exit "$status"; }
+trap cleanup EXIT
 wrangler_cmd() { CI=1 "$wrangler" "$@" "${persist_args[@]}"; }
 wrangler_cmd d1 migrations apply CONTROL_DB --local -c apps/api/wrangler.jsonc >/dev/null
 wrangler_cmd d1 migrations apply HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc >/dev/null
@@ -11,7 +37,6 @@ wrangler_cmd d1 execute HOTEL_SECOND_DB --local -c apps/api/wrangler.jsonc --com
 "$repo_dir/node_modules/.bin/wrangler" dev --local --persist-to "$persist_dir" --ip 127.0.0.1 --port 8787 --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >"$tmp_dir/worker.log" 2>&1 & worker_pid=$!
 for _ in {1..30}; do curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1 && break; sleep 1; done
 base=http://127.0.0.1:8787/api/v1; common=(-H 'x-local-access-subject: subject-a' -H 'x-local-access-email: a@test' -H 'x-hotel-id: hotel-a' -H 'content-type: application/json'); request() { curl -sS -o "$tmp_dir/response.json" -w '%{http_code}' "${common[@]}" "$@"; }; assert_status() { [[ "$1" == "$2" ]] || { echo "expected $2 got $1: $(cat "$tmp_dir/response.json")" >&2; cat "$tmp_dir/worker.log" >&2; exit 1; }; }
-stop_worker() { if [[ -n "$worker_pid" ]]; then pkill -TERM -P "$worker_pid" 2>/dev/null || true; kill "$worker_pid" 2>/dev/null || true; worker_pid=""; fi; }
 status=$(request -X POST -d '{"description":"Late checkout","amount_cents":1500}' "$base/bookings/cf-i06/extra-charges"); assert_status "$status" 201
 wrangler_cmd d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT COUNT(*) AS count FROM financial_events WHERE booking_id='cf-i06' AND event_type='PRICE_RECONCILIATION'" --json >"$tmp_dir/charge-reconciliation-before.json"
 if wrangler_cmd d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "BEGIN; INSERT INTO financial_events (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at) VALUES ('unlinked-charge-cause','EXTRA_CHARGE','cf-i06','subject-a','forged-charge-request','hotel-a','{\"amount_cents\":1}','2026-01-01'); INSERT INTO financial_events (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at) VALUES ('unlinked-charge-reconciliation','PRICE_RECONCILIATION','cf-i06','subject-a','forged-charge-request','hotel-a',json_object('reason','EXTRA_CHARGE','cause_event_id','unlinked-charge-cause','charge_id','missing-charge','old_amount_cents',(SELECT total_cents-1 FROM bookings WHERE id='cf-i06'),'new_amount_cents',(SELECT total_cents FROM bookings WHERE id='cf-i06')),'2026-01-01'); COMMIT;" >/dev/null 2>&1; then echo "unlinked extra-charge reconciliation unexpectedly committed" >&2; exit 1; fi
@@ -31,13 +56,15 @@ status=$(request -X POST -d '{"amount_cents":20000,"payment_method":"CASH"}' "$b
 status=$(request -X POST -d '{"amount_cents":5000,"payment_method":"CASH","payment_reference":"cash-1","note":"counter-1","operation_token":"op-cf-i06"}' "$base/bookings/cf-i06/payments"); assert_status "$status" 200
 status=$(request -X POST -d '{"amount_cents":5000,"payment_method":"CASH","payment_reference":"cash-1","note":"counter-1","operation_token":"op-cf-i06"}' "$base/bookings/cf-i06/payments"); assert_status "$status" 200
 status=$(request -X POST -d '{"amount_cents":5000,"payment_method":"CASH","payment_reference":"cash-1","note":"different-note","operation_token":"op-cf-i06"}' "$base/bookings/cf-i06/payments"); assert_status "$status" 409
-status=$(curl -sS -o "$tmp_dir/cross-token.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"amount_cents":1000,"payment_method":"CASH","payment_reference":"cross-token","operation_token":"op-cf-i06"}' "$base/bookings/cf-i06-b/payments"); [[ "$status" == "409" ]] || { echo "payment token was reused across bookings" >&2; exit 1; }
+status=$(curl -sS -o "$tmp_dir/cross-token.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"amount_cents":1000,"payment_method":"CASH","payment_reference":"cross-token","operation_token":"op-cf-i06"}' "$base/bookings/cf-i06-b/payments"); [[ "$status" == "200" ]] || { echo "booking-scoped operation token was not independently accepted" >&2; exit 1; }; node -e "const x=JSON.parse(require('fs').readFileSync('$tmp_dir/cross-token.json')); if(x.amount_cents!==1000||x.invoice.paid_amount_cents!==1000) process.exit(1)"
 curl -sS -o "$tmp_dir/race-a.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"amount_cents":6500,"payment_method":"TRANSFER","payment_reference":"transfer-a"}' "$base/bookings/cf-i06/payments" >"$tmp_dir/race-a.status" & race_a=$!
 curl -sS -o "$tmp_dir/race-b.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"amount_cents":6500,"payment_method":"TRANSFER","payment_reference":"transfer-b"}' "$base/bookings/cf-i06/payments" >"$tmp_dir/race-b.status" & race_b=$!
 wait "$race_a" "$race_b"; node -e "const fs=require('fs'); const a=fs.readFileSync('$tmp_dir/race-a.status','utf8'), b=fs.readFileSync('$tmp_dir/race-b.status','utf8'); if([a,b].sort().join(',')!=='200,409') process.exit(1); const ok=JSON.parse(fs.readFileSync(a==='200'?'$tmp_dir/race-a.json':'$tmp_dir/race-b.json')); if(ok.invoice.paid_amount_cents!==11500||ok.invoice.status!=='PAID') process.exit(1)"
+status=$(request -X POST -d '{"amount_cents":5000,"payment_method":"CASH","payment_reference":"cash-1","note":"counter-1","operation_token":"op-cf-i06"}' "$base/bookings/cf-i06/payments"); assert_status "$status" 200; node -e "const x=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(x.amount_cents!==5000||x.invoice.paid_amount_cents!==11500||x.invoice.status!=='PAID') process.exit(1)"
+status=$(request -X POST -d '{"amount_cents":5000,"payment_method":"CASH","payment_reference":"cash-1","note":"changed-after-settlement","operation_token":"op-cf-i06"}' "$base/bookings/cf-i06/payments"); assert_status "$status" 409
 status=$(request -X POST -d '{"amount_cents":1,"payment_method":"CASH"}' "$base/bookings/cf-i06/payments"); assert_status "$status" 409
 status=$(request "$base/bookings/cf-i06/payments"); assert_status "$status" 200; node -e "if(JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')).length!==2) process.exit(1)"
-status=$(request -X POST -d '{"amount_cents":1000,"payment_method":"CASH","payment_reference":"b2-first"}' "$base/bookings/cf-i06-b/payments"); assert_status "$status" 200
+status=$(request -X POST -d '{"amount_cents":1000,"payment_method":"CASH","payment_reference":"cross-token","operation_token":"op-cf-i06"}' "$base/bookings/cf-i06-b/payments"); assert_status "$status" 200; node -e "const x=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(x.amount_cents!==1000||x.invoice.paid_amount_cents!==1000) process.exit(1)"
 status=$(request "$base/billing/balance"); assert_status "$status" 200; node -e "const x=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(x.total_amount_cents!==12500||x.cash_amount_cents!==6000||x.card_amount_cents!==6500||x.payment_count!==3) process.exit(1)"
 status=$(request -X POST -d '{"payment_method":"CASH","payment_reference":"b2-settle"}' "$base/bookings/cf-i06-b/settle-payment"); assert_status "$status" 200; node -e "const x=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(x.amount_cents!==1000||x.invoice.status!=='PAID'||x.invoice.paid_amount_cents!==2000) process.exit(1)"
 status=$(curl -sS -o "$tmp_dir/tenant-b-payment.json" -w '%{http_code}' -H 'x-local-access-subject: subject-b' -H 'x-local-access-email: b@test' -H 'x-hotel-id: hotel-b' -H 'content-type: application/json' -X POST -d '{"amount_cents":1000,"payment_method":"CASH","payment_reference":"tenant-b-payment"}' "$base/bookings/tenant-b-booking/payments"); [[ "$status" == "200" ]] || { echo "tenant-b financial fixture did not commit" >&2; exit 1; }

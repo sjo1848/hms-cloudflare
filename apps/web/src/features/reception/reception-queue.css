@@ -222,3 +222,19 @@
 .reception-recovery-item span{display:grid;gap:3px;min-width:0}
 .reception-recovery-item small{color:var(--text-muted,#657386)}
 .reception-recovery-item button{min-height:40px}
+.case-panel .reception-account-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid #cbd5df;
+  border-radius: 10px;
+  color: #1f3651;
+  background: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.case-panel .reception-account-link:hover {
+  background: #f3f7fa;
+}

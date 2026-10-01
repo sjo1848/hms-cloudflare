@@ -3,7 +3,7 @@ import type { AriaAttributes, MouseEvent, ReactNode } from "react";
 
 type LocationState = { pathname: string; search: string; hash: string };
 type PendingScroll = number | string | null;
-type RouterValue = LocationState & { navigate: (to: string, options?: { replace?: boolean }) => void };
+type RouterValue = LocationState & { navigate: (to: string, options?: { replace?: boolean; historyState?: Record<string, unknown> }) => void };
 const RouterContext = createContext<RouterValue | null>(null);
 const SCROLL_KEY = "__hmsScrollY";
 const LOADING_SELECTOR = ".shell-state[role='status'], .state-panel[role='status'], .loading-state, [aria-busy='true']";
@@ -71,7 +71,7 @@ export function RouterProvider({ children }: { children: ReactNode }) {
       resize.disconnect();
     };
   }, [location]);
-  const navigate = useCallback((to: string, options?: { replace?: boolean }) => {
+  const navigate = useCallback((to: string, options?: { replace?: boolean; historyState?: Record<string, unknown> }) => {
     const url = new URL(to, window.location.origin);
     if (url.origin !== window.location.origin) { window.location.assign(url.href); return; }
     const next = url.pathname + url.search + url.hash;
@@ -83,7 +83,7 @@ export function RouterProvider({ children }: { children: ReactNode }) {
     }
     else {
       window.history.replaceState({ ...currentHistoryState(), [SCROLL_KEY]: window.scrollY }, "", current);
-      window.history.pushState({ [SCROLL_KEY]: 0 }, "", next);
+      window.history.pushState({ [SCROLL_KEY]: 0, ...options?.historyState }, "", next);
       pendingScrollRef.current = url.hash || 0;
     }
     setLocation(readLocation());
@@ -99,12 +99,13 @@ export function useAppRouter() {
   return value;
 }
 
-export function AppLink({ to, className, children, onNavigate, ...aria }: { to: string; className?: string; children: ReactNode; onNavigate?: () => void } & Pick<AriaAttributes, "aria-current">) {
+export function AppLink({ to, className, children, onNavigate, onBeforeNavigate, historyState, ...aria }: { to: string; className?: string; children: ReactNode; onNavigate?: () => void; onBeforeNavigate?: () => void; historyState?: Record<string, unknown> } & Pick<AriaAttributes, "aria-current">) {
   const { navigate } = useAppRouter();
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
-    navigate(to);
+    onBeforeNavigate?.();
+    navigate(to, { historyState });
     onNavigate?.();
   }
   return <a href={to} className={className} onClick={handleClick} {...aria}>{children}</a>;

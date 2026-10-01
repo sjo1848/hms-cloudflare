@@ -4,7 +4,7 @@ import { DialogContent } from "../../components/ui/dialog";
 import { useReceptionWorkspace } from "./useReceptionWorkspace";
 import { useI18n } from "../../i18n";
 import { CapabilitiesContext } from "../../app/capabilities";
-import { useAppRouter } from "../../app/router";
+import { AppLink, useAppRouter } from "../../app/router";
 import type { MessageKey } from "../../i18n";
 import { filterQueue, queueCounts, queueFilters } from "./queue";
 import type { QueueFilter, QueueLane, QueueReason } from "./queue";
@@ -480,6 +480,7 @@ function Bookings() {
             <div><dt>{t("billing.remaining")}</dt><dd>{formatCurrency(Math.max(accountSummary.amount_cents - accountSummary.paid_amount_cents, 0))}</dd></div>
             <div><dt>{t("billing.credit")}</dt><dd>{formatCurrency(Math.max(accountSummary.paid_amount_cents - accountSummary.amount_cents, 0))}</dd></div>
           </dl> : <p className="muted">{t("reception.noAccountSummary")}</p>}
+          {hotel.includes("billing.read") && hotel.includes("bookings.read") && <AppLink className="reception-account-link" to={`/billing?booking_id=${encodeURIComponent(selected.id)}&return_to=${encodeURIComponent(router.pathname + router.search + router.hash)}`} onBeforeNavigate={() => window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionFocusTarget: "case", __hmsReceptionFocusBookingId: selected.id }, "", window.location.href)}>{t("billing.title")}</AppLink>}
         </section>}
         {selected.status === "Confirmed" && selectedBoardItem?.lane === "arrival" && <div className="reception-arrival-actions">{canWriteBookings && <button type="button" className="reception-checkin-trigger" onClick={() => openCheckIn(selected)}>{t("reception.queueActionCheckIn")} →</button>}<DropdownMenu label={t("reception.moreActions")}>{canWriteBookings && <><DropdownMenuItem onClick={() => openTask("edit")}>{t("reception.editAria")}</DropdownMenuItem><DropdownMenuItem onClick={() => void cancelBooking()}>{t("reception.cancelBooking")}</DropdownMenuItem></>}<DropdownMenuItem onClick={clearSelectedCase}>{t("reception.closeCase")}</DropdownMenuItem></DropdownMenu></div>}
 

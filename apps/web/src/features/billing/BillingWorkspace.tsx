@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { ApiError, api } from "../../api/client";
 import type { ActiveHotelContext, Booking, ExtraCharge, Invoice, Payment } from "../../domain/types";
 import { useI18n } from "../../i18n";
+import { AppLink, useAppRouter } from "../../app/router";
 import "./billing-workspace.css";
 
 type ChargePayload = { description: string; amount_cents: number; category: string };
@@ -10,6 +11,8 @@ type PendingCharge = { hotelId: string; bookingId: string; operationToken: strin
 type ExtraChargeOperation = ExtraCharge & { booking_id: string; operation_token: string };
 type ExtraChargeResult = { ok: true; operation_token: string; charge: ExtraChargeOperation; replayed: boolean; invoice: Invoice };
 type BookingAccount = { invoice: Invoice; payments: Payment[]; charges: ExtraCharge[] };
+type PaymentPayload = { amount_cents: number; payment_method: string; payment_reference: string | null; note: string | null };
+type PendingPayment = { hotelId: string; bookingId: string; operationToken: string; payload: PaymentPayload };
 const emptyBookingAccount: BookingAccount = { invoice: null, payments: [], charges: [] };
 
 function pendingChargeKey(hotelId: string, bookingId: string) {
@@ -20,8 +23,28 @@ function selectedBookingKey(hotelId: string) {
   return "hms.billing.selected-booking:" + hotelId;
 }
 
+function pendingPaymentKey(hotelId: string, bookingId: string) {
+  return "hms.billing.pending-payment:" + hotelId + ":" + bookingId;
+}
+
+function receptionReturnPath(value: string | null) {
+  if (!value) return "/bookings";
+  try {
+    const url = new URL(value, window.location.origin);
+    if (url.origin !== window.location.origin || url.pathname !== "/bookings") return "/bookings";
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return "/bookings";
+  }
+}
+
 function BillingPanel() {
   const { t, statusLabel, paymentMethodLabel, formatCurrency } = useI18n();
+  const router = useAppRouter();
+  const routeParams = new URLSearchParams(router.search);
+  const contextBookingId = routeParams.get("booking_id");
+  const returnTo = routeParams.get("return_to");
+  const validReturnTo = receptionReturnPath(returnTo);
   const [items, setItems] = useState<Booking[]>([]);
   const [selected, setSelected] = useState<Booking | null>(null);
   const [hotelId, setHotelId] = useState<string | null>(null);
@@ -32,9 +55,10 @@ function BillingPanel() {
   const [chargeMessage, setChargeMessage] = useState("");
   const [submittingCharge, setSubmittingCharge] = useState(false);
   const [payment, setPayment] = useState({ amount: "", method: "CASH", reference: "", note: "" });
+  const [pendingPayment, setPendingPayment] = useState<PendingPayment | null>(null);
+  const [paymentRecovery, setPaymentRecovery] = useState<"retry" | null>(null);
   const [error, setError] = useState("");
   const [submittingPayment, setSubmittingPayment] = useState(false);
-  const [paymentOperationToken, setPaymentOperationToken] = useState<string | null>(null);
   const accountRequestIdRef = useRef(0);
   const [accountLoading, setAccountLoading] = useState(false);
 
@@ -54,7 +78,22 @@ function BillingPanel() {
           // Booking selection persistence is best-effort.
         }
       }
-      const current = next.find(item => item.id === id)
+      const requestedId = id ?? contextBookingId;
+      let current = requestedId ? next.find(item => item.id === requestedId) : undefined;
+      if (requestedId && !current) {
+        try {
+          current = await api<Booking>("/bookings/" + encodeURIComponent(requestedId));
+          if (requestId !== accountRequestIdRef.current) return null;
+        } catch (e) {
+          if (requestId === accountRequestIdRef.current) {
+            setSelected(null);
+            setAccount(emptyBookingAccount);
+            setError((e as Error).message);
+          }
+          return null;
+        }
+      }
+      current = current
         ?? next.find(item => item.id === savedId)
         ?? next.find(item => item.id === selected?.id)
         ?? next[0];
@@ -93,8 +132,8 @@ function BillingPanel() {
   }, []);
 
   useEffect(() => {
-    if (hotelId) void refresh();
-  }, [hotelId]);
+    if (hotelId) void refresh(contextBookingId ?? undefined);
+  }, [hotelId, contextBookingId]);
 
   async function confirmChargeOutcome(pending: PendingCharge, result: ExtraChargeResult) {
     const saved = result.charge;
@@ -171,6 +210,37 @@ function BillingPanel() {
     }
   }, [hotelId, selected?.id]);
 
+  useEffect(() => {
+    if (!hotelId || !selected) return;
+    try {
+      const raw = window.sessionStorage.getItem(pendingPaymentKey(hotelId, selected.id));
+      if (!raw) {
+        setPendingPayment(null);
+        setPaymentRecovery(null);
+        return;
+      }
+      const pending = JSON.parse(raw) as PendingPayment;
+      if (pending.hotelId !== hotelId || pending.bookingId !== selected.id || !pending.operationToken
+        || !Number.isSafeInteger(pending.payload?.amount_cents) || pending.payload.amount_cents <= 0
+        || !["CASH", "CARD", "TRANSFER"].includes(pending.payload.payment_method)
+        || (pending.payload.payment_reference !== null && typeof pending.payload.payment_reference !== "string")
+        || (pending.payload.note !== null && typeof pending.payload.note !== "string")) {
+        setPendingPayment(null);
+        setPaymentRecovery(null);
+        setError(t("billing.paymentRecoveryConflict"));
+        return;
+      }
+      setPendingPayment(pending);
+      setPayment({ amount: String(pending.payload.amount_cents), method: pending.payload.payment_method, reference: pending.payload.payment_reference ?? "", note: pending.payload.note ?? "" });
+      setPaymentRecovery("retry");
+      setError(t("billing.paymentRecoveryPending"));
+    } catch {
+      setPendingPayment(null);
+      setPaymentRecovery(null);
+      setError(t("billing.paymentRecoveryConflict"));
+    }
+  }, [hotelId, selected?.id]);
+
   async function sendCharge(pending: PendingCharge) {
     if (submittingCharge) return;
     setError(""); setSubmittingCharge(true); setChargeRecovery("checking");
@@ -210,40 +280,67 @@ function BillingPanel() {
     await sendCharge(pending);
   }
 
-  async function submitPayment(event: FormEvent) {
-    event.preventDefault();
-    if (!selected || submittingPayment) return;
-    setError(""); setSubmittingPayment(true);
-    const operationToken = paymentOperationToken ?? crypto.randomUUID();
-    setPaymentOperationToken(operationToken);
+  async function sendPayment(pending: PendingPayment) {
+    if (submittingPayment || selected?.id !== pending.bookingId || hotelId !== pending.hotelId) return;
+    setError(""); setSubmittingPayment(true); setPaymentRecovery(null);
     try {
-      await api("/bookings/" + encodeURIComponent(selected.id) + "/payments", {
+      const result = await api<{ ok: true; amount_cents: number; invoice: Invoice }>("/bookings/" + encodeURIComponent(pending.bookingId) + "/payments", {
         method: "POST",
-        body: JSON.stringify({
-          amount_cents: Number(payment.amount),
-          payment_method: payment.method,
-          payment_reference: payment.reference || undefined,
-          note: payment.note || undefined,
-          operation_token: operationToken,
-        }),
+        body: JSON.stringify({ ...pending.payload, operation_token: pending.operationToken }),
       });
-      setPayment({ ...payment, amount: "", reference: "", note: "" });
-      setPaymentOperationToken(null);
-      await refresh(selected.id);
+      if (result.amount_cents !== pending.payload.amount_cents) throw new Error(t("billing.paymentRecoveryConflict"));
+      const refreshed = await refresh(pending.bookingId);
+      if (!refreshed) {
+        setPendingPayment(pending);
+        setPaymentRecovery("retry");
+        setError(t("billing.paymentRecoveryPending"));
+        return;
+      }
+      try { window.sessionStorage.removeItem(pendingPaymentKey(pending.hotelId, pending.bookingId)); } catch { /* Durable replay identity remains; operator can retry if reload is needed. */ }
+      setPendingPayment(null);
+      setPayment({ amount: "", method: "CASH", reference: "", note: "" });
+      setError("");
     } catch (e) {
       const apiError = e instanceof ApiError ? e : null;
-      await refresh(selected.id);
       if (apiError && apiError.status >= 400 && apiError.status < 500) {
-        setPaymentOperationToken(null); setError(apiError.message);
+        try { window.sessionStorage.removeItem(pendingPaymentKey(pending.hotelId, pending.bookingId)); } catch { /* Business rejection is authoritative. */ }
+        setPendingPayment(null);
+        setPaymentRecovery(null);
+        setError(apiError.message);
       } else {
-        setError(String((e as Error).message) + " " + t("billing.retryPaymentHint"));
+        setPendingPayment(pending);
+        setPaymentRecovery("retry");
+        setError(t("billing.paymentRecoveryPending"));
       }
     } finally {
       setSubmittingPayment(false);
     }
   }
 
-  const chargeLocked = Boolean(pendingCharge) || submittingCharge || chargeRecovery === "conflict";
+  async function submitPayment(event: FormEvent) {
+    event.preventDefault();
+    if (!selected || !hotelId || submittingPayment || pendingPayment) return;
+    const amount = Number(payment.amount);
+    if (!Number.isSafeInteger(amount) || amount <= 0) return;
+    const pending: PendingPayment = {
+      hotelId,
+      bookingId: selected.id,
+      operationToken: crypto.randomUUID(),
+      payload: { amount_cents: amount, payment_method: payment.method, payment_reference: payment.reference || null, note: payment.note || null },
+    };
+    try {
+      window.sessionStorage.setItem(pendingPaymentKey(hotelId, selected.id), JSON.stringify(pending));
+    } catch {
+      setError(t("billing.paymentRecoveryStorageError"));
+      return;
+    }
+    setPendingPayment(pending);
+    await sendPayment(pending);
+  }
+
+  const pendingPaymentForSelected = pendingPayment?.hotelId === hotelId && pendingPayment?.bookingId === selected?.id;
+  const paymentLocked = Boolean(pendingPaymentForSelected) || submittingPayment || Boolean(pendingCharge) || submittingCharge;
+  const chargeLocked = Boolean(pendingCharge) || submittingCharge || chargeRecovery === "conflict" || Boolean(pendingPaymentForSelected);
   return (
     <section className="billing-workspace billing-account-workspace">
       <div className="workspace-heading">
@@ -252,9 +349,10 @@ function BillingPanel() {
           <h2>{t("billing.title")}</h2>
           <p className="muted">{t("billing.subtitle")}</p>
         </div>
+        {contextBookingId && <AppLink className="billing-return-reception" to={validReturnTo} historyState={{ __hmsReceptionFocusTarget: "case", __hmsReceptionFocusBookingId: contextBookingId }}>{t("shell.returnReception")}</AppLink>}
       </div>
       {error && <p className="error" role="alert">{error}</p>}
-      <label>
+      {!contextBookingId && <label>
         {t("billing.booking")}
         <select
           aria-label={t("billing.bookingAria")}
@@ -273,18 +371,20 @@ function BillingPanel() {
           <option value="">{t("billing.selectBooking")}</option>
           {items.map(item => <option key={item.id} value={item.id}>{item.guest_name} · {item.room_number}</option>)}
         </select>
-      </label>
+      </label>}
       {selected && (
         <article className="case-panel">
           <h3>{selected.guest_name} · {t("billing.invoice")}</h3>
           {accountLoading && <p className="muted" role="status">{t("common.loading")}</p>}
+          {pendingPaymentForSelected && paymentRecovery === "retry" && !submittingPayment && <div className="billing-charge-recovery status-badge" role="status">{t("billing.paymentRecoveryPending")}<button type="button" onClick={() => void sendPayment(pendingPayment!)}>{t("billing.paymentRetryButton")}</button></div>}
           {!accountLoading && !error && <>
-          <p className="muted">
-            {t("billing.total")} {formatCurrency(account.invoice?.amount_cents ?? selected.total_cents)} ·
-            {" "}{t("billing.paid")} {formatCurrency(account.invoice?.paid_amount_cents ?? 0)} ·
-            {" "}{t("billing.remaining")} {formatCurrency(Math.max(0, (account.invoice?.amount_cents ?? selected.total_cents) - (account.invoice?.paid_amount_cents ?? 0)))} ·
-            {" "}{statusLabel(account.invoice?.status ?? "PENDING")}
-          </p>
+          <dl className="billing-account-totals">
+            <div><dt>{t("billing.total")}</dt><dd>{formatCurrency(account.invoice?.amount_cents ?? selected.total_cents)}</dd></div>
+            <div><dt>{t("billing.paid")}</dt><dd>{formatCurrency(account.invoice?.paid_amount_cents ?? 0)}</dd></div>
+            <div><dt>{t("billing.remaining")}</dt><dd>{formatCurrency(Math.max(0, (account.invoice?.amount_cents ?? selected.total_cents) - (account.invoice?.paid_amount_cents ?? 0)))}</dd></div>
+            <div><dt>{t("billing.credit")}</dt><dd>{formatCurrency(Math.max(0, (account.invoice?.paid_amount_cents ?? 0) - (account.invoice?.amount_cents ?? selected.total_cents)))}</dd></div>
+            <div><dt>{t("billing.invoice")}</dt><dd>{statusLabel(account.invoice?.status ?? "PENDING")}</dd></div>
+          </dl>
           <form className="billing-extra-charge-form" onSubmit={submitCharge} aria-label={t("billing.extraChargeAria")}>
             <input
               required aria-label={t("billing.chargeDescriptionAria")} placeholder={t("billing.description")}
@@ -316,15 +416,15 @@ function BillingPanel() {
             </div>
           )}
           <form className="billing-payment-form" onSubmit={submitPayment} aria-label={t("billing.paymentAria")}>
-            <input required min="1" type="number" aria-label={t("billing.paymentAmountAria")} placeholder={t("billing.paymentAmount")} value={payment.amount} onChange={event => setPayment({ ...payment, amount: event.target.value })} />
-            <select aria-label={t("billing.paymentMethodAria")} value={payment.method} onChange={event => setPayment({ ...payment, method: event.target.value })}>
+            <input required min="1" type="number" aria-label={t("billing.paymentAmountAria")} placeholder={t("billing.paymentAmount")} value={payment.amount} disabled={paymentLocked} onChange={event => setPayment({ ...payment, amount: event.target.value })} />
+            <select aria-label={t("billing.paymentMethodAria")} value={payment.method} disabled={paymentLocked} onChange={event => setPayment({ ...payment, method: event.target.value })}>
               <option value="CASH">{paymentMethodLabel("CASH")}</option>
               <option value="CARD">{paymentMethodLabel("CARD")}</option>
               <option value="TRANSFER">{paymentMethodLabel("TRANSFER")}</option>
             </select>
-            <input aria-label={t("billing.referenceAria")} placeholder={t("billing.reference")} value={payment.reference} onChange={event => setPayment({ ...payment, reference: event.target.value })} />
-            <input aria-label={t("billing.noteAria")} placeholder={t("billing.note")} value={payment.note} onChange={event => setPayment({ ...payment, note: event.target.value })} />
-            <button type="submit" disabled={submittingPayment}>{submittingPayment ? t("billing.registering") : t("billing.registerPayment")}</button>
+            <input aria-label={t("billing.referenceAria")} placeholder={t("billing.reference")} value={payment.reference} disabled={paymentLocked} onChange={event => setPayment({ ...payment, reference: event.target.value })} />
+            <input aria-label={t("billing.noteAria")} placeholder={t("billing.note")} value={payment.note} disabled={paymentLocked} onChange={event => setPayment({ ...payment, note: event.target.value })} />
+            <button type="submit" disabled={paymentLocked}>{submittingPayment ? t("billing.registering") : t("billing.registerPayment")}</button>
           </form>
           {account.charges.map(item => <p className="muted" key={item.id}>{t("billing.charge")} · {item.description} · {formatCurrency(item.amount_cents)}</p>)}
           {account.payments.map(item => <p className="muted" key={item.id}>{t("billing.payment")} · {formatCurrency(item.amount_cents)} · {paymentMethodLabel(item.payment_method)}</p>)}
@@ -346,5 +446,7 @@ function CashBalancePanel() {
 }
 
 export function BillingWorkspace() {
-  return <><BillingPanel /><CashBalancePanel /></>;
+  const { search } = useAppRouter();
+  const contextualBooking = new URLSearchParams(search).get("booking_id");
+  return <><BillingPanel />{!contextualBooking && <CashBalancePanel />}</>;
 }

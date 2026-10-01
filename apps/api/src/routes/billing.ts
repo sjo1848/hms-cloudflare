@@ -68,9 +68,13 @@ async function recordPayment(c: Ctx, id: string, body: Body, settle: boolean) {
   const problem = reconciliationProblem(invoice);
   if (problem === "VOIDED") throw ApiError.conflict("Invoice is voided");
   if (problem === "LEDGER_MISMATCH") throw ApiError.conflict("Invoice payment ledger is inconsistent");
+  const prior = await repository.findPriorPayment(id, operationToken);
+  if (prior && !settle) {
+    if (!priorPaymentMatches(prior, id, amount!, pm, reference, note)) throw ApiError.conflict("Payment operation token was reused with different details");
+    return { ok: true, amount_cents: prior.amount_cents, invoice: await repository.invoiceView(id) };
+  }
   const target = paymentTarget(amount, booking, invoice);
   if (target == null) throw ApiError.conflict("Payment exceeds the current remaining balance or booking is already settled");
-  const prior = await repository.findPriorPayment(operationToken);
   if (prior) {
     if (!priorPaymentMatches(prior, id, target, pm, reference, note)) throw ApiError.conflict("Payment operation token was reused with different details");
     return { ok: true, amount_cents: prior.amount_cents, invoice: await repository.invoiceView(id) };
@@ -147,7 +151,13 @@ export function createBillingRoutes(): BillingApp {
   app.get("/bookings/:id/invoice", async c => { requireCap(c, "billing.invoice.read"); const repository = new D1PaymentRepository(c.get("operationalDatabase")); if (!await repository.findBooking(c.req.param("id"))) throw ApiError.notFound("Booking not found"); return c.json(await repository.invoiceView(c.req.param("id"))); });
   app.get("/invoices", async c => { requireCap(c, "billing.invoices.read"); const rows = await c.get("operationalDatabase").prepare("SELECT id, booking_id, amount_cents, paid_amount_cents, MAX(amount_cents-paid_amount_cents,0) AS remaining_cents, MAX(paid_amount_cents-amount_cents,0) AS credit_cents, status, payment_method, payment_reference, paid_at, created_at FROM invoices ORDER BY created_at DESC").all(); return c.json(rows.results); });
   app.get("/bookings/:id/payments", async c => { requireCap(c, "billing.invoice.read"); const rows = await c.get("operationalDatabase").prepare("SELECT id, invoice_id, booking_id, amount_cents, payment_method, payment_reference, note, received_by_user_id, received_at FROM payment_entries WHERE booking_id = ?1 ORDER BY received_at DESC, id DESC").bind(c.req.param("id")).all(); return c.json(rows.results); });
-  app.post("/bookings/:id/payments", async c => c.json(await recordPayment(c, c.req.param("id"), await jsonBody<Body>(c.req.raw), false)));
+  app.post("/bookings/:id/payments", async c => {
+    const result = await recordPayment(c, c.req.param("id"), await jsonBody<Body>(c.req.raw), false);
+    if (String(c.env.LOCAL_DEV_AUTH) === "true" && c.req.header("x-test-drop-payment-response") === "after-commit") {
+      return c.json({ error: { message: "Synthetic response loss after the payment committed" } }, 502);
+    }
+    return c.json(result);
+  });
   app.post("/bookings/:id/settle-payment", async c => c.json(await recordPayment(c, c.req.param("id"), await jsonBody<Body>(c.req.raw), true)));
   app.get("/billing/balance", async c => { requireCap(c, "billing.balance.read"); const db = c.get("operationalDatabase"); const opening = await shiftOpening(db); const row = await shiftSnapshot(db, opening); const pending = await db.prepare("SELECT COALESCE(SUM(amount_cents-paid_amount_cents),0) pending_amount_cents, COUNT(*) pending_bookings_count FROM invoices WHERE status='PENDING'").first(); return c.json({ ...row, card_amount_cents: row?.non_cash_amount_cents ?? 0, ...pending, opening_time: opening }); });
   app.get("/billing/closures", async c => { requireCap(c, "billing.balance.read"); const rows = await c.get("operationalDatabase").prepare("SELECT id, actor_subject, total_amount_cents, cash_amount_cents, card_amount_cents, payment_count, counted_cash_amount_cents, cash_difference_cents, opening_time, closing_time, handoff_to, notes FROM cash_closures ORDER BY closing_time DESC").all(); return c.json(rows.results); });

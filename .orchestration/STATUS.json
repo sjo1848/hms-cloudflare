@@ -1,43 +1,44 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-e-housekeeping-maintenance",
+  "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-f-account-finance-cash",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "BLOCK_E_COMPLETE_AWAITING_CONTROLLER_REVIEW",
+  "phase": "BLOCK_F_ACCOUNT_ARTIFACT_A_READY_BOUNDARY_PENDING",
   "resume_authorized": false,
-  "runtime_status": "COMPLETE",
-  "active_task": "Await Controller review of Block E Artifact A3 + Boundary B3 through GitHub Issue #51; no further implementation is authorized.",
-  "last_completed_task": "Block E implementation and validation complete; fresh exact-pair Independent Critic PASS_WITH_CONDITIONS; sole metadata reconciliation condition discharged.",
-  "last_completed_head": "8c74c17aeaceb1e354c5273a093e234e4b889d09",
-  "work_branch": "impl/hms-block-e-housekeeping-maintenance",
+  "runtime_status": "RUNNING",
+  "active_task": "Freeze the validated F-account implementation and evidence as immutable Artifact A, then create the immediate orchestration-only Boundary B for a fresh separate read-only Independent Critic. Do not implement F-cash; OD-1 remains its gate; Blocks G-H remain unauthorized.",
+  "last_completed_task": "Block E Controller-normalized checkpoint accepted as Block F base per Issue #52 CONTROLLER_DECISION: START.",
+  "last_completed_head": "39ee0a2b38e7205b8e041e792e16ee469c996241",
+  "work_branch": "impl/hms-block-f-account-finance-cash",
   "pr": null,
-  "wave": "BLOCK E — HOUSEKEEPING + MAINTENANCE",
-  "status_label": "BLOCK_E_COMPLETE_AWAITING_CONTROLLER_REVIEW",
-  "next_action": "Wait for Controller decision on the reconciled Block E handoff in GitHub Issue #51.",
-  "stop_reason": "BLOCK_E_COMPLETE_AWAITING_CONTROLLER_REVIEW",
+  "wave": "BLOCK F — F-ACCOUNT ONLY",
+  "status_label": "BLOCK_F_ACCOUNT_ARTIFACT_A_READY_BOUNDARY_PENDING",
+  "next_action": "Commit Artifact A, record its exact full SHA in the immediate orchestration-only Boundary B, then publish only impl/hms-block-f-account-finance-cash and request the fresh Independent Critic on exact A+B in GitHub Issue #52.",
+  "stop_reason": null,
   "event": {
-    "seq": 272,
-    "id": "BLOCK-E-A3-B3-CRITIC-CONDITION-RECONCILED-001",
-    "type": "BLOCK_E_COMPLETE_AWAITING_CONTROLLER_REVIEW"
+    "seq": 274,
+    "id": "BLOCK-F-ACCOUNT-ARTIFACT-A-READY-001",
+    "type": "BLOCK_F_ACCOUNT_ARTIFACT_A_READY_BOUNDARY_PENDING"
   },
   "external_review": {
-    "required": true,
-    "artifact_head": "56b67732979e09cafda80316b28f2a3bfc849747",
-    "boundary_head": "9dfae5220ffe3e0b7a018af6a777b97b22761825",
-    "last_audited_head": "9dfae5220ffe3e0b7a018af6a777b97b22761825",
-    "last_verdict": "Fresh separate read-only Independent Critic on exact A3+B3 returned PASS_WITH_CONDITIONS; its sole STATE/STATUS reconciliation condition is discharged in the immediately subsequent orchestration-only closure. Historical verdict preserved; Controller review pending.",
-    "review_path": ".orchestration/evidence/HMS-BLOCK-E-HOUSEKEEPING-MAINTENANCE-001-INDEPENDENT-CRITIC-A3-B3.md",
-    "prior_reviews_pending": [
-      "P0.1 artifact A + boundary B",
-      "Wave 1.2 artifact A + boundary B"
-    ],
-    "previous_block_d_review": "PASS follow-up on exact D Artifact A 5003ad9655b99337453f87ba64fcc18ea3a1ecb6 + Boundary B2 927d79073f488f9ce7e341f8569451c58ca51cba; historical at E base."
+    "required": false,
+    "artifact_head": null,
+    "boundary_head": null,
+    "last_audited_head": "39ee0a2b38e7205b8e041e792e16ee469c996241",
+    "last_verdict": "F-account implementation and local validation are documented in HMS-BLOCK-F-ACCOUNT-FINANCE-CASH-001-RESULTS.md; immutable Artifact A and its immediate review boundary are the next method steps.",
+    "review_path": null,
+    "prior_block_e_review": {
+      "required": true,
+      "artifact_head": "56b67732979e09cafda80316b28f2a3bfc849747",
+      "boundary_head": "9dfae5220ffe3e0b7a018af6a777b97b22761825",
+      "verdict": "PASS_WITH_CONDITIONS; sole metadata condition discharged in accepted base"
+    }
   },
   "block_a_development_gate": "PASS; exact Artifact A+B4 received Independent Critic PASS; awaiting Controller review",
-  "promotion_gate": "BLOCKED: Controller review pending; Blocks F–H unauthorized; no PR, merge, main, staging, deploy, production or real-data action",
+  "promotion_gate": "BLOCKED: F-account exact-pair Independent Critic and Controller review remain; F-cash remains gated by OD-1; Blocks G–H unauthorized; no PR, merge, main, staging, deploy, production or real-data action.",
   "human_gate": {
     "required": false,
-    "decision": "No Human Gate is pending; Block E is complete and awaits Controller review.",
+    "decision": "No Human Gate blocks this synthetic/local F-account increment or its Independent Critic review. Real-hotel F-cash remains gated by OD-1.",
     "implementation_authorized": true
   },
   "f0_8_artifact_a": "abd9afdd7537ecef29ad4ae099d769c38b137f6d",
@@ -126,7 +127,7 @@
     "attribution": "EXTERNAL_FINDINGS_NOT_REOPENED_BY_THIS_TASK"
   },
   "authorization": {
-    "scope": "BLOCK_E_HOUSEKEEPING_MAINTENANCE_COMPLETE; BLOCKS_F_H_NOT_AUTHORIZED; NO_PROMOTION",
+    "scope": "BLOCK_F_AUTHORIZED; F_ACCOUNT_IMPLEMENTATION_COMPLETE_AWAITING_INDEPENDENT_CRITIC; F_CASH_GATED_BY_OD-1; BLOCKS_G_H_NOT_AUTHORIZED; PROMOTION_BLOCKED",
     "production": false,
     "acceptance_staging": false,
     "main": false,
@@ -134,8 +135,8 @@
     "deploy": false,
     "wave_1_1a": false,
     "development_continuation": false,
-    "ui_implementation": false,
-    "backend_implementation": false,
+    "ui_implementation": true,
+    "backend_implementation": true,
     "real_data_cutover": false,
     "active_stay_pricing_bootstrap_real_data": false,
     "blocks_a_h": false,
@@ -152,7 +153,16 @@
     "blocks_e_h": false,
     "block_e_authorized": true,
     "block_e_completed": true,
-    "blocks_f_h": false
+    "blocks_f_h": false,
+    "block_f_authorized": true,
+    "block_f_completed": false,
+    "block_f_account_authorized": true,
+    "block_f_cash_authorized": false,
+    "block_f_cash_gate": "REAL_HOTEL_CASH_OWNERSHIP_PRODUCT_ACCEPTANCE_HUMAN_GATE_OD-1",
+    "block_g_authorized": false,
+    "block_h_authorized": false,
+    "blocks_g_h": false,
+    "block_f_account_completed": true
   },
   "validated": {
     "f0_1_task": "CLOSED_INTERNAL_EVIDENCE_GATE; NO_STANDALONE_ARTIFACT_OR_EXTERNAL_CRITIC_VERDICT",
@@ -392,7 +402,7 @@
   "block_d_authorized": true,
   "development_continuation": false,
   "block_e_authorized": true,
-  "block_f_authorized": false,
+  "block_f_authorized": true,
   "block_g_authorized": false,
   "block_h_authorized": false,
   "block_d_initial_boundary_b": "ed39c3340db2ed1d429ec4cf1140643073f42bd6",

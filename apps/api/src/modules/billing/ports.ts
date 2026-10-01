@@ -38,7 +38,7 @@ export type ExtraChargeOutcome = { charge: ExtraChargeOperation; replayed: boole
 export interface BillingPaymentRepository {
   findBooking(id: string): Promise<BillingBooking | null>;
   findInvoice(bookingId: string): Promise<BillingInvoice | null>;
-  findPriorPayment(operationToken: string): Promise<PriorPayment | null>;
+  findPriorPayment(bookingId: string, operationToken: string): Promise<PriorPayment | null>;
   findExtraChargeOperation(bookingId: string, operationToken: string): Promise<ExtraChargeOperation | null>;
   invoiceView(bookingId: string): Promise<unknown>;
   recordPayment(write: PaymentWrite, existingInvoice: BillingInvoice | null): Promise<boolean>;

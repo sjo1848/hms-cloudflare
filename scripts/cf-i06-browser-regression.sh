@@ -69,9 +69,30 @@ for _ in {1..30}; do curl -fsS "http://127.0.0.1:$web_port/bookings" >/dev/null 
 curl -fsS "http://127.0.0.1:$web_port/bookings" >/dev/null
 
 bash "$pwcli" -s "$browser_session" open about:blank >/dev/null
+set +e
 bash "$pwcli" -s "$browser_session" run-code --filename scripts/cf-i06-browser-regression.playwright.js | tee output/playwright/cf-i06-browser.log
+browser_cli_status=${PIPESTATUS[0]}
+set -e
+if [[ "$browser_cli_status" != 0 ]]; then
+  if ! grep -q '^### Result$' output/playwright/cf-i06-browser.log || grep -q '^### Error$' output/playwright/cf-i06-browser.log; then
+    exit "$browser_cli_status"
+  fi
+  console_ref=$(sed -n 's/.*New console entries: \(.*\)#L[0-9-]*$/\1/p' output/playwright/cf-i06-browser.log | tail -n 1)
+  console_log="${console_ref%%#*}"
+  if [[ -z "$console_log" || ! -f "$console_log" ]]; then
+    echo "Playwright CLI returned $browser_cli_status without an inspectable console log" >&2
+    exit "$browser_cli_status"
+  fi
+  unexpected_console_errors=$(grep '\[ERROR\]' "$console_log" | grep -Ev 'Failed to load resource: the server responded with a status of (404 \(Not Found\).*favicon.ico|502 \(Bad Gateway\).*api/v1/bookings/.*/payments|409 \(Conflict\).*api/v1/bookings/.*/payments|409 \(Conflict\).*api/v1/billing/close-cash)' || true)
+  if [[ -n "$unexpected_console_errors" ]]; then
+    echo "$unexpected_console_errors" >&2
+    exit "$browser_cli_status"
+  fi
+  echo "Playwright assertions returned results; CLI status $browser_cli_status is limited to the expected synthetic HTTP failures and missing local favicon." >&2
+fi
 cleanup
 api_pid=""
 web_pid=""
+cp "$tmp_dir"/api.log "$tmp_dir"/migrations.log "$tmp_dir"/web.log output/playwright/
 trap - EXIT
 echo "CF-I06 browser responsive/error/close regression PASS"

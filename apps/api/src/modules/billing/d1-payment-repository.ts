@@ -19,8 +19,8 @@ export class D1PaymentRepository implements BillingPaymentRepository {
       FROM invoices i WHERE i.booking_id = ?1`).bind(bookingId).first<BillingInvoice>();
   }
 
-  findPriorPayment(operationToken: string): Promise<PriorPayment | null> {
-    return this.db.prepare("SELECT booking_id, amount_cents, payment_method, payment_reference, note FROM payment_entries WHERE operation_token = ?1").bind(operationToken).first<PriorPayment>();
+  findPriorPayment(bookingId: string, operationToken: string): Promise<PriorPayment | null> {
+    return this.db.prepare("SELECT booking_id, amount_cents, payment_method, payment_reference, note FROM payment_entries WHERE booking_id = ?1 AND operation_token = ?2").bind(bookingId, operationToken).first<PriorPayment>();
   }
 
   async findExtraChargeOperation(bookingId: string, operationToken: string, expectedHotelId?: string) {
