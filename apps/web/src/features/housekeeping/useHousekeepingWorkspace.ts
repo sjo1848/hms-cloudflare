@@ -24,7 +24,7 @@ export function useHousekeepingWorkspace() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, HousekeepingDraft>>({});
   const [mobileFocus, setMobileFocus] = useState(false);
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900);
   const [lastUpdated, setLastUpdated] = useState("");
   const openerRef = useRef<HTMLButtonElement | null>(null);
   const taskHeadingRef = useRef<HTMLHeadingElement | null>(null);
@@ -52,7 +52,7 @@ export function useHousekeepingWorkspace() {
 
   useEffect(() => { void load(new URLSearchParams(location.search).get("date") ?? undefined); }, []);
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 768);
+    const onResize = () => setIsMobile(window.innerWidth <= 900);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -97,7 +97,7 @@ export function useHousekeepingWorkspace() {
 
   function focusRoom(roomId: string, opener?: HTMLButtonElement) {
     if (opener) openerRef.current = opener;
-    const mobile = window.innerWidth < 768;
+    const mobile = window.innerWidth <= 900;
     setSelectedId(roomId);
     setIsMobile(mobile);
     if (mobile) {

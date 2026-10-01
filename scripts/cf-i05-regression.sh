@@ -32,7 +32,10 @@ CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc "${
   UPDATE rooms SET housekeeping_state=CASE status WHEN 'DIRTY' THEN 'DIRTY' WHEN 'CLEANING' THEN 'CLEANING' WHEN 'AVAILABLE' THEN 'READY' WHEN 'OCCUPIED' THEN 'READY' ELSE NULL END, service_state='IN_SERVICE', room_state_version=0;
   UPDATE rooms SET housekeeping_state='DIRTY' WHERE id='room-f';
   UPDATE rooms SET housekeeping_state='READY' WHERE id='room-h';
-  INSERT OR REPLACE INTO bookings (id,guest_id,room_id,check_in,check_out,status,total_cents,created_at,updated_at) VALUES ('booking-i','guest-a','room-i','2026-01-01','2026-01-02','CHECKED_IN',19000,'2026-01-01T00:00:00Z','2026-01-01T00:00:00Z');
+  INSERT OR REPLACE INTO bookings (id,guest_id,room_id,check_in,check_out,status,total_cents,created_at,updated_at) VALUES
+    ('booking-i','guest-a','room-i','2026-01-01','2026-01-02','CHECKED_IN',19000,'2026-01-01T00:00:00Z','2026-01-01T00:00:00Z'),
+    ('booking-risk-f','guest-a','room-f','2026-01-02','2026-01-04','CONFIRMED',21000,'2026-01-01T00:00:00Z','2026-01-01T00:00:00Z'),
+    ('booking-advisory-c','guest-a','room-c','2026-01-02','2026-01-04','CONFIRMED',22000,'2026-01-01T00:00:00Z','2026-01-01T00:00:00Z');
 " >/dev/null
 
 CI=1 "$wrangler" d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc "${persist_args[@]}" --command "INSERT OR REPLACE INTO maintenance_cases (id,room_id,status,impact,priority,reason,assigned_to,reported_by_user_id,reported_at) VALUES ('case-f','room-f','OPEN','BLOCKING','HIGH','Existing maintenance case','ops','subject-a','2026-01-01T00:00:00Z');" >/dev/null
@@ -49,8 +52,8 @@ assert_status() { [[ "$1" == "$2" ]] || { echo "expected HTTP $2, got $1: $(cat 
 
 status=$(request "$base/housekeeping/dirty"); assert_status "$status" 200
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.map(x=>x.id).sort().join(',')!=='room-a,room-b,room-e,room-f,room-g') process.exit(1); const f=r.find(x=>x.id==='room-f'); if(f.operational_state.maintenanceImpact!=='BLOCKING') process.exit(1)"
-status=$(request "$base/housekeeping/board"); assert_status "$status" 200
-node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); if(r.rooms.length!==8||!r.rooms.some(x=>x.room_id==='room-d'&&x.room_status==='Maintenance')) process.exit(1)"
+status=$(request "$base/housekeeping/board?date=2026-01-01"); assert_status "$status" 200
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); const f=r.rooms.find(x=>x.room_id==='room-f'); if(r.rooms.length!==8||!r.rooms.some(x=>x.room_id==='room-d'&&x.room_status==='Maintenance')||!f||f.at_risk_bookings?.[0]?.id!=='booking-risk-f') process.exit(1)"
 
 status=$(request -X POST "$base/housekeeping/room-a/start"); assert_status "$status" 200
 status=$(request -X POST "$base/housekeeping/room-a/start"); assert_status "$status" 409
@@ -78,6 +81,8 @@ case_c=$(node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/respon
 serialized_d1 HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT status FROM rooms WHERE id='room-c';" --json >"$tmp_dir/nonblocking-open.json"
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/nonblocking-open.json')); if(r[0].results[0].status!=='AVAILABLE') process.exit(1)"
 status=$(request -X POST -d '{"reason":"Duplicate report","priority":"HIGH","assigned_to":"ops"}' "$base/housekeeping/room-c/maintenance"); assert_status "$status" 409
+status=$(request "$base/housekeeping/board?date=2026-01-01"); assert_status "$status" 200
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); const c=r.rooms.find(x=>x.room_id==='room-c'); if(!c||c.maintenance_case?.impact!=='NON_BLOCKING'||c.at_risk_bookings?.length) process.exit(1)"
 status=$(request -X POST -d '{"note":"Risk now requires blocking"}' "$base/housekeeping/room-c/maintenance/$case_c/escalate"); assert_status "$status" 200
 serialized_d1 HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT status FROM rooms WHERE id='room-c';" --json >"$tmp_dir/escalated.json"
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/escalated.json')); if(r[0].results[0].status!=='MAINTENANCE') process.exit(1)"
@@ -91,7 +96,7 @@ status=$(request -X POST -d '{"case_id":"'$case_i'","resolution_note":"Occupied 
 serialized_d1 HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --command "SELECT status FROM rooms WHERE id='room-i'; SELECT return_status FROM maintenance_cases WHERE id='$case_i';" --json >"$tmp_dir/occupied-resolve.json"
 node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/occupied-resolve.json')).flatMap(x=>x.results); if(r[0].status!=='OCCUPIED'||r[1].return_status!=='OCCUPIED') process.exit(1)"
 status=$(request "$base/housekeeping/board"); assert_status "$status" 200
-node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); const c=r.rooms.find(x=>x.room_id==='room-c'); if(!c||c.room_status!=='Dirty') process.exit(1)"
+node -e "const r=JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')); const c=r.rooms.find(x=>x.room_id==='room-c'); const a=r.rooms.find(x=>x.room_id==='room-a'); if(!c||c.room_status!=='Dirty'||!a?.maintenance_history?.some(e=>e.event_type==='CLEANING_START'&&e.actor_subject==='subject-a'&&e.request_id)||!a?.maintenance_history?.some(e=>e.event_type==='CLEANING_FINISH')) process.exit(1)"
 
 status=$(request -X POST -d '{"resolution_note":"Legacy maintenance reviewed and repaired"}' "$base/housekeeping/room-d/dirty"); assert_status "$status" 200
 status=$(request -X POST -d '{"case_id":"case-h1","resolution_note":"Stale first case attempt"}' "$base/housekeeping/room-h/dirty"); assert_status "$status" 409

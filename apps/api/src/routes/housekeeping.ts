@@ -110,8 +110,14 @@ export function createHousekeepingRoutes(): HousekeepingApp {
         FROM rooms r WHERE r.status IN ('DIRTY', 'CLEANING', 'AVAILABLE', 'MAINTENANCE') OR r.housekeeping_state IN ('DIRTY', 'CLEANING') OR EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN') ORDER BY r.room_number`).all<RoomRow>(),
       db.prepare("SELECT b.id AS booking_id, b.room_id, r.room_number, r.room_type, r.status AS room_status, g.full_name AS guest_name, b.status AS booking_status, b.check_out FROM bookings b JOIN guests g ON g.id = b.guest_id JOIN rooms r ON r.id = b.room_id WHERE b.check_out = ?1 AND b.status NOT IN ('CANCELLED', 'NO_SHOW')").bind(date).all<DepartureRow>(),
       db.prepare(`SELECT ${caseColumns} FROM maintenance_cases WHERE status = 'OPEN'`).all<CaseRow>(),
-      db.prepare("SELECT id, room_id, maintenance_case_id, event_type, from_status, to_status, actor_subject, request_id, created_at FROM housekeeping_events ORDER BY created_at DESC, id DESC LIMIT 150").all<HousekeepingEventRow>(),
-      db.prepare("SELECT b.id, b.room_id, r.room_number, g.full_name AS guest_name, b.check_in, b.check_out, b.status FROM bookings b JOIN rooms r ON r.id=b.room_id JOIN guests g ON g.id=b.guest_id WHERE b.status='CONFIRMED' AND b.check_out>?1 AND EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=b.room_id AND mc.status='OPEN' AND mc.impact='BLOCKING') ORDER BY b.check_in, r.room_number, b.id LIMIT 500").bind(date).all<AtRiskBookingRow>(),
+      db.prepare(`SELECT id, room_id, maintenance_case_id, event_type, from_status, to_status, actor_subject, request_id, created_at
+        FROM (SELECT e.*, ROW_NUMBER() OVER (PARTITION BY room_id ORDER BY created_at DESC, id DESC) AS room_event_rank
+          FROM housekeeping_events e) WHERE room_event_rank <= 20 ORDER BY room_id, created_at DESC, id DESC`).all<HousekeepingEventRow>(),
+      db.prepare(`SELECT b.id, b.room_id, r.room_number, g.full_name AS guest_name, b.check_in, b.check_out, b.status
+        FROM bookings b JOIN rooms r ON r.id=b.room_id JOIN guests g ON g.id=b.guest_id
+        WHERE b.status='CONFIRMED' AND b.check_out>?1 AND EXISTS
+          (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=b.room_id AND mc.status='OPEN' AND mc.impact='BLOCKING')
+        ORDER BY b.check_in, r.room_number, b.id LIMIT 500`).bind(date).all<AtRiskBookingRow>(),
     ]);
     const departureByRoom = new Map(departures.results.map(item => [item.room_id, item]));
     const caseByRoom = new Map(cases.results.map(item => [item.room_id, item]));
