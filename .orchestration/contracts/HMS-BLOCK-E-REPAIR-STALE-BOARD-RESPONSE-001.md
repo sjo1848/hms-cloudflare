@@ -10,7 +10,9 @@ Fresh read-only Independent Critic reviewed A2 `3d28da570b1b0916c49dd03c93c33349
 
 Add a deterministic real-browser regression to the existing integrated CF-I05 Worker + D1 runner. Cause two actual UI-triggered `GET /api/v1/housekeeping/board` requests to overlap, hold the older request, let the newer request resolve first with distinguishable authoritative board data, and then release the older response. Assert the UI retains the newer response after both have completed, including its selected queue/case context. The older response must not replace current board data or clear the latest request's loading/error state.
 
-Keep the assertion deterministic and local/synthetic. Use the existing board endpoint, route, hook request identity behavior and existing fixture; do not add an API, schema, capability, domain state, persistence, product policy or CSS behavior. If the existing app surface cannot produce the required race without a production behavior change, stop as `ROADMAP_BLOCKER` rather than adding a test-only production seam.
+The existing Refresh control is disabled during a board read, which prevents the contracted race from being initiated by an operator. A narrowly scoped interaction repair is permitted: leave Refresh enabled while `loading` is true, but continue disabling it during a business mutation (`actionBusy`). This allows an operator to request a newer authoritative refresh and makes the already-implemented request identity guard reachable through the real UI. Do not enable other controls or change queue, mutation, error, or data semantics.
+
+Keep the assertion deterministic and local/synthetic. Use the existing board endpoint, route, hook request identity behavior and existing fixture; do not add an API, schema, capability, domain state, persistence, product policy or CSS behavior. Do not add a test-only production seam.
 
 ## Acceptance and evidence
 
@@ -26,4 +28,4 @@ All 24 registry invariants remain classified by the frozen parent Block E contra
 
 ## Non-goals
 
-No changes to product code, CSS, budgets, API, D1 schema, domain/capability semantics, or workflow behavior are authorized by this finding. Only the integrated browser test and associated evidence/orchestration records may change unless the test exposes a genuine defect already within the frozen E-11 contract; any such repair requires an amended/fresh bounded contract before product code changes. No F–H, real data, promotion, PR, merge, main, staging, deploy or production.
+No changes to product code beyond the explicitly permitted Refresh-control enablement, CSS, budgets, API, D1 schema, domain/capability semantics, or workflow behavior are authorized by this finding. No F–H, real data, promotion, PR, merge, main, staging, deploy or production.

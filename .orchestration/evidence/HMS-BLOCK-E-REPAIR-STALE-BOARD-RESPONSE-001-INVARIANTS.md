@@ -29,6 +29,8 @@ All registry invariants retain the frozen parent Block E classifications. This t
 | INV-CF-I08-005 | N/A | No reporting date defaults or continuity changes. |
 | INV-SCOPE-001 | APPLIES | Diff allowlist is the existing CF-I05 browser runner and scoped evidence/orchestration files only. |
 
+The scoped product diff may also remove `loading` from the existing Refresh button's disabled predicate, retaining `actionBusy` as its mutation lock, so the documented refresh action can safely start a newer read. No other product code is in scope.
+
 ## Evidence claim audit
 
 | Claim | Evidence | Classification |
