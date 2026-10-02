@@ -48,6 +48,8 @@ export function GuestsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selected, setSelected] = useState<Guest | null>(null);
   const [loading, setLoading] = useState(true);
+  const [bookingContextUnavailable, setBookingContextUnavailable] = useState(false);
+  const [bookingContextRetrying, setBookingContextRetrying] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
@@ -66,13 +68,31 @@ export function GuestsPage() {
       ]);
       if (guestResult.status === "rejected") throw guestResult.reason;
       setGuests(guestResult.value);
-      setBookings(bookingResult.status === "fulfilled" ? bookingResult.value : []);
+      if (bookingResult.status === "fulfilled") {
+        setBookings(bookingResult.value);
+        setBookingContextUnavailable(false);
+      } else {
+        // Keep any prior authoritative context and never turn a failed read into "no stays".
+        setBookingContextUnavailable(true);
+      }
       if (selected) setSelected(guestResult.value.find(guest => guest.id === selected.id) ?? null);
     } catch (e) { setError((e as Error).message); }
     finally { setLoading(false); }
   }
 
   useEffect(() => { void load(); }, []);
+
+  async function retryBookingContext() {
+    setBookingContextRetrying(true);
+    try {
+      setBookings(await api<Booking[]>("/bookings?limit=100"));
+      setBookingContextUnavailable(false);
+    } catch {
+      setBookingContextUnavailable(true);
+    } finally {
+      setBookingContextRetrying(false);
+    }
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -119,8 +139,9 @@ export function GuestsPage() {
     </div>
 
     <div className="guests-status-filters" role="group" aria-label={t("guests.filtersAria")}>
-      {(["all", "active", "arrivals", "upcoming"] as GuestFilter[]).map(value => <button type="button" key={value} className={guestFilter === value ? "selected" : ""} aria-pressed={guestFilter === value} onClick={() => setGuestFilter(value)}><strong>{counts[value]}</strong><span>{t(value === "all" ? "guests.filterAll" : value === "active" ? "guests.filterActive" : value === "arrivals" ? "guests.filterArrivals" : "guests.filterUpcoming")}</span></button>)}
+      {(["all", "active", "arrivals", "upcoming"] as GuestFilter[]).map(value => <button type="button" key={value} className={guestFilter === value ? "selected" : ""} aria-pressed={guestFilter === value} disabled={bookingContextUnavailable && value !== "all"} onClick={() => setGuestFilter(value)}><strong>{counts[value]}</strong><span>{t(value === "all" ? "guests.filterAll" : value === "active" ? "guests.filterActive" : value === "arrivals" ? "guests.filterArrivals" : "guests.filterUpcoming")}</span></button>)}
     </div>
+    {bookingContextUnavailable && <div className="error-row guest-context-error"><p className="error" role="alert">{t("guests.bookingContextUnavailable")}</p><button type="button" onClick={() => void retryBookingContext()} disabled={bookingContextRetrying}>{bookingContextRetrying ? t("guests.loading") : t("guests.retryBookingContext")}</button></div>}
 
     {showCreate && <form className="resource-form guest-form guests-create-form" onSubmit={submit}>
       <div><label>{t("guests.fullName")}<input required value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} placeholder={t("guests.namePlaceholder")} /></label></div>
@@ -137,15 +158,15 @@ export function GuestsPage() {
     {!loading && !error && visible.length > 0 && <div className="guest-operational-layout">
       <div className="guest-grid guest-operational-list" aria-label={t("guests.listAria")}>{visible.map(({ guest, context }) => <button type="button" className={selected?.id === guest.id ? "guest-card guest-operational-card selected" : "guest-card guest-operational-card"} key={guest.id} onClick={() => setSelected(guest)} aria-pressed={selected?.id === guest.id}>
         <span className="avatar">{guest.full_name.trim().charAt(0).toUpperCase() || "?"}</span>
-        <span className="guest-card-main"><strong>{guest.full_name}</strong><small>{guest.email}</small><small>{context.booking ? `${t("common.room")} ${context.booking.room_number} · ${contextLabel(context)}` : contextLabel(context)}</small></span>
-        <span className={`guest-context-badge context-${context.kind}`}>{contextLabel(context)}</span>
+        <span className="guest-card-main"><strong>{guest.full_name}</strong><small>{guest.email}</small><small>{bookingContextUnavailable ? t("guests.bookingContextUnavailableShort") : context.booking ? `${t("common.room")} ${context.booking.room_number} · ${contextLabel(context)}` : contextLabel(context)}</small></span>
+        <span className={`guest-context-badge context-${context.kind}`}>{bookingContextUnavailable ? t("guests.bookingContextUnavailableShort") : contextLabel(context)}</span>
       </button>)}</div>
 
       <aside className="guest-detail guest-operational-detail" aria-live="polite">
         {!selected ? <div><p className="eyebrow">{t("guests.selected")}</p><h3>{t("guests.selectGuest")}</h3><p className="muted">{t("guests.selectHint")}</p></div> : <>
           <div className="guest-detail-heading"><div><p className="eyebrow">{t("guests.selected")}</p><h3>{selected.full_name}</h3><p>{selected.email}</p><p>{selected.phone ?? t("common.noPhone")}</p></div><button type="button" className="secondary-button" onClick={() => setSelected(null)}>{t("guests.clear")}</button></div>
-          {selectedContext && <div className="guest-current-stay"><span>{t("guests.currentSituation")}</span><strong>{contextLabel(selectedContext)}</strong>{selectedContext.booking && <p>{t("common.room")} {selectedContext.booking.room_number} · {formatDate(selectedContext.booking.check_in)} → {formatDate(selectedContext.booking.check_out)}</p>}</div>}
-          <div className="guest-stay-history"><h4>{t("guests.recentStays")}</h4>{selectedBookings.length === 0 ? <p className="muted">{t("guests.noStays")}</p> : selectedBookings.map(booking => <div className="guest-stay-row" key={booking.id}><div><strong>{t("common.room")} {booking.room_number}</strong><span>{formatDate(booking.check_in)} → {formatDate(booking.check_out)}</span></div><span>{statusLabel(booking.status)}</span></div>)}</div>
+          {selectedContext && <div className="guest-current-stay"><span>{t("guests.currentSituation")}</span><strong>{bookingContextUnavailable ? t("guests.bookingContextUnavailableShort") : contextLabel(selectedContext)}</strong>{selectedContext.booking && <p>{t("common.room")} {selectedContext.booking.room_number} · {formatDate(selectedContext.booking.check_in)} → {formatDate(selectedContext.booking.check_out)}</p>}</div>}
+          <div className="guest-stay-history"><h4>{t("guests.recentStays")}</h4>{bookingContextUnavailable ? <p className="muted">{t("guests.bookingContextUnavailable")}</p> : selectedBookings.length === 0 ? <p className="muted">{t("guests.noStays")}</p> : selectedBookings.map(booking => <div className="guest-stay-row" key={booking.id}><div><strong>{t("common.room")} {booking.room_number}</strong><span>{formatDate(booking.check_in)} → {formatDate(booking.check_out)}</span></div><span>{statusLabel(booking.status)}</span></div>)}</div>
         </>}
       </aside>
     </div>}

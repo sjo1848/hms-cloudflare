@@ -8,7 +8,7 @@
   const json=(route,status,body)=>route.fulfill({status,contentType:"application/json",body:JSON.stringify(body)});
   await page.route("**/api/v1/**",async route=>{
     const request=route.request(),url=request.url(),method=request.method();
-    if(url.endsWith("/api/v1/auth/me")) return json(route,200,{hotel_id:"hotel-a",hotel_name:"Hotel Norte"});
+    if(url.endsWith("/api/v1/auth/me")) return json(route,200,{subject:"subject-a",email:"a@example.test",hotel_id:"hotel-a",hotel_name:"Hotel Norte",capabilities:{hotel:["rooms.read","rooms.write","rooms.search","guests.read","guests.write","bookings.read"],network:[]}});
     if(url.includes("/api/v1/bookings")&&method==="GET") return json(route,200,bookings);
     if(url.endsWith("/api/v1/rooms")&&method==="GET") return json(route,200,roomCreated?rooms.concat({id:"room-c",room_number:"103",room_type:"STANDARD",status:"Available",price_cents:19000}):rooms);
     if(url.endsWith("/api/v1/rooms")&&method==="POST"){roomCreated=true;return json(route,201,{id:"room-c"});}
@@ -23,7 +23,7 @@
   await page.getByRole("heading",{name:"Rooms",level:1}).waitFor();
   await page.getByRole("button",{name:/Room 101/}).click();
   await page.getByRole("heading",{name:"Room 101"}).waitFor();
-  await page.getByLabel("Start").fill("2026-09-01");await page.getByLabel("End").fill("2026-09-03");await page.getByLabel("Reason").fill("Maintenance window");await page.getByRole("button",{name:"Add hold"}).click();await page.getByText("Maintenance window").waitFor();
+  const holdForm=page.locator(".resource-subform");await holdForm.getByLabel("Start",{exact:true}).fill("2026-09-01");await holdForm.getByLabel("End",{exact:true}).fill("2026-09-03");await holdForm.getByLabel("Reason",{exact:true}).fill("Maintenance window");await holdForm.getByRole("button",{name:"Add hold"}).click();await page.getByText("Maintenance window").waitFor();
   if(await page.getByLabel("Reason").inputValue()!=="")throw new Error("hold form was not reset");
   await page.getByRole("button",{name:/Room 101/}).click();await page.getByRole("button",{name:/Room 102/}).click();await page.getByRole("heading",{name:"Room 102"}).waitFor();await page.getByText("B hold").waitFor();
   if(await page.getByText("A hold").count())throw new Error("stale Room A hold leaked into Room B");

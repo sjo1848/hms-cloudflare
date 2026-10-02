@@ -1,6 +1,6 @@
 # HMS Cloudflare — Orchestration State
 
-## CURRENT DISPATCH — BLOCK G AUTHORIZED; STAGING AUTHENTICATED UI SMOKE PENDING
+## CURRENT DISPATCH — BLOCK G IMPLEMENTATION / FINAL VALIDATION
 
 - **Authority:** Controller decision in Issue #52 comment `5946431862`, `STAGING_DEPLOY_PASS_SMOKE_EXTERNAL_BLOCKER`, plus Issue #53 comment `5946432195`, `START_BLOCK_G_WITH_STAGING_SMOKE_PENDING`.
 - **Deployed product checkpoint:** `acceptance/staging@074804329f487c2cfb0a9e5123f1f90b1a0e0252`. Workflow run `36968916971` succeeded on that exact SHA. API/Web Workers deployed and Cloudflare Access remains fail-closed to anonymous web/API requests.
@@ -12,14 +12,16 @@
 - **Forbidden:** main, PR/merge, production, real hotel data and F-cash. Block H remains gated until Block G Controller PASS.
 
 
-## BLOCK G — ACTIVE CONTRACTING
+## BLOCK G — IMPLEMENTATION AND FINAL VALIDATION
 
 - **Task:** `HMS-BLOCK-G-GUESTS-REPORTS-ADMIN-NETWORK-001`.
 - **Base:** Controller-normalized `d9ff3325709633d7760dd236977b90f582b1b144`; worktree branch `impl/hms-block-g-guests-reports-admin-network`.
 - **Authority:** Issue #53 comments `5946432195` and `5946441901`; authenticated staging UI smoke remains an `EXTERNAL_TEST_HARNESS_BLOCKER` in Issue #52, not a Block G prerequisite.
 - **Scope:** Guests, Reports, hotel-user administration and Network only. F-cash and Block H are prohibited. No main, PR/merge, production, real hotel data or redeploy.
-- **Current step:** freeze Task Contract, inspected surface inventory, evidence matrix, invariant mapping and Pre-Critic before product changes.
+- **Admission is complete:** Task Contract, exact inventory/evidence matrix, all 24 invariant classifications and admission Pre-Critic were frozen before product changes; admission checkpoint is `74be2f2c8bf37b3aecb3f7cc3929d451238a1e07`. Final validation and mandatory Pre-Critic have passed; current step: freeze immutable Artifact A, then create the immediate orchestration-only Boundary B.
 - **Bundle ceilings:** JS raw/gzip `350000/100000 B`; CSS raw/gzip `60000/15000 B`; no increase authorized.
+- **Implementation evidence in progress:** Guest booking-context partial failure/retry is distinguished; user deactivation is a focused accessible dialog with safe keyboard cancel/focus behavior; reports/admin/network integrated Worker/D1 browser coverage is extended. Detailed results and bundle baseline/delta: `.orchestration/evidence/HMS-BLOCK-G-GUESTS-REPORTS-ADMIN-NETWORK-001-RESULTS.md`. Final invariant statuses: `.orchestration/evidence/HMS-BLOCK-G-GUESTS-REPORTS-ADMIN-NETWORK-001-INVARIANTS.md`.
+- **Latest local evidence:** full suite 35 files / 176 tests (final run 116.07 s); typecheck, API/Web Wrangler types, architecture/i18n/budgets, query plan, CF-I07/CF-I08 Worker/D1, integrated responsive browser, Guest failure/retry browser, inherited CF-I05 browser, API/Web dry-runs all PASS. Candidate bundle remains within unchanged ceilings.
 
 ## BLOCK F — F-ACCOUNT CONTROLLER PASS; F-CASH OD-1 HUMAN GATE
 

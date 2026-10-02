@@ -671,5 +671,6 @@
   "billing.paymentRecoveryPending": "Es posible que este pago ya se haya registrado. Reintentá el mismo pago guardado para verificarlo; no inicies otro pago.",
   "billing.paymentRecoveryConflict": "Los datos del pago guardado están incompletos o no son válidos. No envíes otro pago; pedí que una persona administradora verifique la cuenta.",
   "billing.paymentRecoveryStorageError": "Este navegador no pudo guardar la identidad de la operación, así que no se envió el pago. Reintentá cuando el almacenamiento de sesión esté disponible.",
-  "billing.paymentRetryButton": "Reintentar este pago"
+  "billing.paymentRetryButton": "Reintentar este pago",
+  "users.cancelDeactivation": "Cancelar"
 }

@@ -35,5 +35,8 @@ export const guestsEn = {
   "guests.contextHistory": "Previous stay",
   "guests.contextNone": "No related stays",
   "guests.recentStays": "Recent stays",
-  "guests.noStays": "No stays are recorded for this guest."
+  "guests.noStays": "No stays are recorded for this guest.",
+  "guests.bookingContextUnavailable": "Stay history could not be loaded, so this guest's booking context is unknown.",
+  "guests.bookingContextUnavailableShort": "Stay context unavailable",
+  "guests.retryBookingContext": "Retry stay history"
 } as const;

@@ -20,6 +20,7 @@ export const usersEsAR = {
   "users.trySearch": "Probá con otro email, identidad o rol.",
   "users.createFirst": "Creá la primera membresía del hotel arriba.",
   "users.viewDetails": "Ver detalle",
+  "users.cancelDeactivation": "Cancelar",
   "users.deactivate": "Desactivar",
   "users.details": "Detalle del usuario",
   "users.roleFor": "Rol de {email}",

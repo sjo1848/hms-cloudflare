@@ -35,5 +35,8 @@ export const guestsEsAR = {
   "guests.contextHistory": "Estadía anterior",
   "guests.contextNone": "Sin estadías asociadas",
   "guests.recentStays": "Estadías recientes",
-  "guests.noStays": "No hay estadías registradas para este huésped."
+  "guests.noStays": "No hay estadías registradas para este huésped.",
+  "guests.bookingContextUnavailable": "No se pudo cargar el historial de estadías; el contexto de este huésped es desconocido.",
+  "guests.bookingContextUnavailableShort": "Contexto de estadía no disponible",
+  "guests.retryBookingContext": "Reintentar historial de estadías"
 } as const;

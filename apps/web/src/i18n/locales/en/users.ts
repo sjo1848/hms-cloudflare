@@ -20,6 +20,7 @@ export const usersEn = {
   "users.trySearch": "Try another email, identity or role.",
   "users.createFirst": "Create the first hotel membership above.",
   "users.viewDetails": "View details",
+  "users.cancelDeactivation": "Cancel",
   "users.deactivate": "Deactivate",
   "users.details": "User details",
   "users.roleFor": "Role for {email}",

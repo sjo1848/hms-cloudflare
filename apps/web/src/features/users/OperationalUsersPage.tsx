@@ -20,6 +20,9 @@ export function UsersPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({ access_subject: "", email: "", role: "receptionist" });
   const opener = useRef<HTMLButtonElement | null>(null);
+  const searchInput = useRef<HTMLInputElement | null>(null);
+  const [deactivateTarget, setDeactivateTarget] = useState<AdminUser | null>(null);
+  const deactivateDialog = useRef<HTMLDialogElement | null>(null);
 
   async function load() {
     setLoading(true); setError("");
@@ -31,6 +34,19 @@ export function UsersPage() {
     finally { setLoading(false); }
   }
   useEffect(() => { void load(); }, []);
+
+  useEffect(() => {
+    if (message === t("users.membershipDeactivated") && !loading) requestAnimationFrame(() => focusContext());
+  }, [loading, message]);
+
+  useEffect(() => {
+    const dialog = deactivateDialog.current;
+    if (!dialog) return;
+    if (deactivateTarget && !dialog.open) {
+      dialog.showModal();
+      dialog.querySelector<HTMLButtonElement>("[data-autofocus]")?.focus();
+    } else if (!deactivateTarget && dialog.open) dialog.close();
+  }, [deactivateTarget]);
 
   async function create(event: FormEvent) {
     event.preventDefault(); setError(""); setMessage(""); setSaving(true);
@@ -50,14 +66,25 @@ export function UsersPage() {
     } catch (e) { setError((e as Error).message); await load(); }
     finally { setSaving(false); }
   }
-  async function deactivate(user: AdminUser) {
-    if (!window.confirm(t("users.deactivateConfirm", { email: user.email }))) return;
+  async function deactivate() {
+    const user = deactivateTarget;
+    if (!user) return;
     setError(""); setMessage(""); setSaving(true);
     try {
       await api(`/users/${encodeURIComponent(user.access_subject)}`, { method: "DELETE" });
-      setMessage(t("users.membershipDeactivated")); setSelectedUser(null); await load(); requestAnimationFrame(() => opener.current?.focus());
-    } catch (e) { setError((e as Error).message); }
+      setMessage(t("users.membershipDeactivated")); setSelectedUser(null); setDeactivateTarget(null); await load();
+    } catch (e) { setError((e as Error).message); setDeactivateTarget(null); requestAnimationFrame(() => focusContext()); }
     finally { setSaving(false); }
+  }
+
+  function cancelDeactivation() {
+    setDeactivateTarget(null);
+    requestAnimationFrame(() => requestAnimationFrame(() => focusContext()));
+  }
+
+  function focusContext() {
+    if (opener.current?.isConnected) opener.current.focus();
+    else searchInput.current?.focus();
   }
 
   const activeCount = users.filter(user => Boolean(user.active)).length;
@@ -75,9 +102,12 @@ export function UsersPage() {
   return <section className="admin-surface users-operational">
     <div className="workspace-heading"><div><p className="eyebrow">{t("users.security")}</p><h2>{t("users.title")}</h2><p className="muted">{t("users.subtitle")}</p></div><div className="workspace-heading-actions"><span className="case-count">{t("users.count", { active: activeCount, inactive: users.length - activeCount })}</span>{!createOpen && <button type="button" onClick={() => setCreateOpen(true)}>{t("users.createMembership")}</button>}</div></div>
     {createOpen && <form className="admin-create users-create" onSubmit={create}><div className="users-create-heading"><h3>{t("users.createMembership")}</h3><button type="button" className="button-secondary" onClick={() => setCreateOpen(false)}>{t("common.close")}</button></div><div className="form-field"><label htmlFor="user-subject">{t("users.accessSubject")}</label><input id="user-subject" required placeholder={t("users.accessSubject")} value={form.access_subject} onChange={e => setForm({ ...form, access_subject: e.target.value })} /></div><div className="form-field"><label htmlFor="user-email">Email</label><input id="user-email" required type="email" placeholder="name@hotel.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div><div className="form-field"><label htmlFor="user-role">{t("users.role")}</label><select id="user-role" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}><option value="admin">{roleLabel("admin")}</option><option value="receptionist">{roleLabel("receptionist")}</option><option value="ops">{roleLabel("ops")}</option><option value="housekeeping">{roleLabel("housekeeping")}</option></select></div><button type="submit" disabled={saving}>{saving ? t("common.saving") : t("users.create")}</button></form>}
-    <div className="users-toolbar"><label className="admin-search">{t("users.search")} <input aria-label={t("users.search")} value={search} onChange={e => setSearch(e.target.value)} placeholder={t("users.searchPlaceholder")} /></label><button type="button" className="button-secondary" onClick={() => void load()} disabled={loading}>{t("common.refresh")}</button></div>
+    <div className="users-toolbar"><label className="admin-search">{t("users.search")} <input ref={searchInput} aria-label={t("users.search")} value={search} onChange={e => setSearch(e.target.value)} placeholder={t("users.searchPlaceholder")} /></label><button type="button" className="button-secondary" onClick={() => void load()} disabled={loading}>{t("common.refresh")}</button></div>
     <div className="users-filters" role="group" aria-label={t("users.title")}>{filters.map(value => <button type="button" key={value} className={filter === value ? "selected" : ""} aria-pressed={filter === value} onClick={() => setFilter(value)}>{value === "active" ? t("common.active") : value === "inactive" ? t("common.inactive") : roleLabel(value)} <span>{countFor(value)}</span></button>)}</div>
     {message && <p className="success" role="status">{message}</p>}{error && <div className="error-row"><p className="error" role="alert">{error}</p><button type="button" onClick={() => void load()}>{t("users.retry")}</button></div>}
-    {loading ? <p className="muted loading-state" role="status">{t("users.loading")}</p> : visible.length === 0 ? <div className="empty-state"><h3>{t(users.length ? "users.noMatch" : "users.none")}</h3><p className="muted">{t(users.length ? "users.trySearch" : "users.createFirst")}</p></div> : <div className="admin-network-layout users-layout"><div className="cards admin-user-list">{visible.map(user => <article className={selectedUser?.access_subject === user.access_subject ? "admin-user-card selected" : "admin-user-card"} key={user.access_subject}><div className="admin-user-main"><strong>{user.email}</strong><small>{user.access_subject}</small><span className={user.active ? "status-badge active" : "status-badge inactive"}>{t(user.active ? "common.active" : "common.inactive")} · {roleLabel(user.role)}</span></div><button type="button" className="button-secondary" onClick={e => selectUser(user, e.currentTarget)}>{t("users.viewDetails")}</button></article>)}</div>{selectedUser ? <article className="admin-user-detail" role="region" aria-labelledby="user-detail-title"><div className="users-detail-heading"><div><h3 id="user-detail-title">{t("users.details")}</h3><strong>{selectedUser.email}</strong><small>{selectedUser.access_subject}</small></div><button type="button" className="button-secondary" onClick={closeDetails}>{t("users.closeDetails")}</button></div><span className={selectedUser.active ? "status-badge active" : "status-badge inactive"}>{t(selectedUser.active ? "common.active" : "common.inactive")} · {roleLabel(selectedUser.role)}</span><label>{t("users.role")} <select aria-label={t("users.roleFor", { email: selectedUser.email })} value={selectedUser.role} disabled={!selectedUser.active || saving} onChange={e => void changeRole(selectedUser, e.target.value)}><option value="admin">{roleLabel("admin")}</option><option value="ops">{roleLabel("ops")}</option><option value="receptionist">{roleLabel("receptionist")}</option><option value="housekeeping">{roleLabel("housekeeping")}</option></select></label>{selectedUser.active && <button type="button" className="danger-button" disabled={saving} onClick={() => void deactivate(selectedUser)}>{t("users.deactivateUser")}</button>}</article> : <div className="users-empty-detail"><p className="muted">{t("common.noAdditionalContext")}</p></div>}</div>}
+    {loading ? <p className="muted loading-state" role="status">{t("users.loading")}</p> : visible.length === 0 ? <div className="empty-state"><h3>{t(users.length ? "users.noMatch" : "users.none")}</h3><p className="muted">{t(users.length ? "users.trySearch" : "users.createFirst")}</p></div> : <div className="admin-network-layout users-layout"><div className="cards admin-user-list">{visible.map(user => <article className={selectedUser?.access_subject === user.access_subject ? "admin-user-card selected" : "admin-user-card"} key={user.access_subject}><div className="admin-user-main"><strong>{user.email}</strong><small>{user.access_subject}</small><span className={user.active ? "status-badge active" : "status-badge inactive"}>{t(user.active ? "common.active" : "common.inactive")} · {roleLabel(user.role)}</span></div><button type="button" className="button-secondary" onClick={e => selectUser(user, e.currentTarget)}>{t("users.viewDetails")}</button></article>)}</div>{selectedUser ? <article className="admin-user-detail" role="region" aria-labelledby="user-detail-title"><div className="users-detail-heading"><div><h3 id="user-detail-title">{t("users.details")}</h3><strong>{selectedUser.email}</strong><small>{selectedUser.access_subject}</small></div><button type="button" className="button-secondary" onClick={closeDetails}>{t("users.closeDetails")}</button></div><span className={selectedUser.active ? "status-badge active" : "status-badge inactive"}>{t(selectedUser.active ? "common.active" : "common.inactive")} · {roleLabel(selectedUser.role)}</span><label>{t("users.role")} <select aria-label={t("users.roleFor", { email: selectedUser.email })} value={selectedUser.role} disabled={!selectedUser.active || saving} onChange={e => void changeRole(selectedUser, e.target.value)}><option value="admin">{roleLabel("admin")}</option><option value="ops">{roleLabel("ops")}</option><option value="receptionist">{roleLabel("receptionist")}</option><option value="housekeeping">{roleLabel("housekeeping")}</option></select></label>{selectedUser.active && <button type="button" className="danger-button" disabled={saving} onClick={() => setDeactivateTarget(selectedUser)}>{t("users.deactivateUser")}</button>}</article> : <div className="users-empty-detail"><p className="muted">{t("common.noAdditionalContext")}</p></div>}</div>}
+    <dialog ref={deactivateDialog} className="user-deactivation-dialog" aria-label={t("users.deactivateUser")} onCancel={event => { event.preventDefault(); if (!saving) cancelDeactivation(); }}>
+      {deactivateTarget && <><p>{t("users.deactivateConfirm", { email: deactivateTarget.email })}</p><div className="user-deactivation-actions"><button type="button" className="button-secondary" data-autofocus disabled={saving} onClick={cancelDeactivation}>{t("users.cancelDeactivation")}</button><button type="button" className="danger-button" disabled={saving} onClick={() => void deactivate()}>{saving ? t("common.saving") : t("users.deactivate")}</button></div></>}
+    </dialog>
   </section>;
 }

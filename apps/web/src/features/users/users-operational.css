@@ -5,3 +5,5 @@
 .app-content:not([data-hotel-capabilities~="users.delete"]) .users-operational .admin-user-detail > .danger-button {
   display: none;
 }
+
+.user-deactivation-dialog{width:min(420px,calc(100vw - 32px));max-width:none;border:1px solid #d8e0e8;border-radius:16px;padding:22px;color:#17324d;background:#fff;box-shadow:0 24px 70px #14203333}.user-deactivation-dialog::backdrop{background:#10243a80}.user-deactivation-dialog p{margin:0 0 20px}.user-deactivation-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}.user-deactivation-actions button{min-height:42px}
