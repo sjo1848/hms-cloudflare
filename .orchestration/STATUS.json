@@ -3,25 +3,25 @@
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-d1-sql-splitter-compatibility",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "STAGING_D1_0019_PHASE5_AUTHENTICATED_SMOKE_BLOCKED",
-  "resume_authorized": false,
-  "runtime_status": "BLOCKED",
-  "active_task": "Complete authenticated staging UI smoke tests on the deployed accepted checkpoint; do not redeploy or mutate staging data.",
-  "last_completed_task": "Phase 5 staging workflow, D1 migrations/data preservation, API/Web Worker deploy and anonymous Access fail-closed passed; authenticated UI smoke tests remain blocked by browser runtime initialization.",
-  "last_completed_head": "074804329f487c2cfb0a9e5123f1f90b1a0e0252",
+  "phase": "STAGING_DEPLOYED_UI_SMOKE_PENDING_BLOCK_G_AUTHORIZED",
+  "resume_authorized": true,
+  "runtime_status": "READY",
+  "active_task": "Begin Block G under Issue #53 while Issue #52 retains the external authenticated-browser smoke evidence gate for staging acceptance.",
+  "last_completed_task": "Staging deploy/migrations/data preservation/Workers/Access PASS at 074804329f487c2cfb0a9e5123f1f90b1a0e0252; authenticated UI smoke pending only because Browser test runtime failed before navigation.",
+  "last_completed_head": "d2afef78e8f04f5bfce52ff424535620e4dc817d",
   "work_branch": "staging/d1-sql-splitter-compatibility",
   "pr": null,
   "wave": "BLOCK F — F-ACCOUNT ONLY",
-  "status_label": "STAGING_D1_0019_PHASE5_AUTHENTICATED_SMOKE_BLOCKED",
-  "next_action": "Resolve the supported browser-runtime initialization failure, then run the authorized authenticated smoke matrix. Only after every smoke passes report STAGING_DEPLOYED_AWAITING_HUMAN_ACCEPTANCE and begin Block G per Issue #53.",
-  "stop_reason": "STOP — STAGING_DEPLOY_GATE_REQUIRED: authenticated UI smoke tests are unverified because Browser runtime setup failed with Importing module node:process is not allowed in node_repl. Staging workflow, migration, data-preservation, Worker and anonymous Access checks passed.",
+  "status_label": "STAGING_DEPLOYED_TECHNICALLY_VERIFIED_UI_SMOKE_PENDING",
+  "next_action": "Start Block G from the Controller-normalized lineage under Issue #53. Keep Issue #52 open and complete authenticated staging UI smoke later when a supported browser-capable runtime or human acceptance session is available.",
+  "stop_reason": null,
   "event": {
-    "seq": 284,
-    "id": "HMS-STAGING-PHASE5-001-AUTHENTICATED-SMOKE-BLOCKED",
-    "type": "STAGING_DEPLOYED_UI_SMOKE_EVIDENCE_BLOCKED"
+    "seq": 285,
+    "id": "HMS-STAGING-PHASE5-EXTERNAL-SMOKE-BLOCKER-CLASSIFIED",
+    "type": "STAGING_TECHNICAL_DEPLOY_PASS_BLOCK_G_AUTHORIZED"
   },
   "external_review": {
-    "required": true,
+    "required": false,
     "artifact_head": "074804329f487c2cfb0a9e5123f1f90b1a0e0252",
     "boundary_head": null,
     "last_audited_head": "074804329f487c2cfb0a9e5123f1f90b1a0e0252",
@@ -33,10 +33,10 @@
       "boundary_head": "9dfae5220ffe3e0b7a018af6a777b97b22761825",
       "verdict": "PASS_WITH_CONDITIONS; sole metadata condition discharged in accepted base"
     },
-    "current_gate": "STAGING_DEPLOY_GATE_REQUIRED_AUTHENTICATED_UI_SMOKE"
+    "current_gate": null
   },
   "block_a_development_gate": "PASS; exact Artifact A+B4 received Independent Critic PASS; awaiting Controller review",
-  "promotion_gate": "Checkpoint 074804329f487c2cfb0a9e5123f1f90b1a0e0252 is deployed to staging; migrations/data/Workers/anonymous Access passed, but authenticated UI smoke suite is unverified. STAGING_DEPLOYED_AWAITING_HUMAN_ACCEPTANCE has not been reached. Block G remains queued per Issue #53 and cannot start yet.",
+  "promotion_gate": "STAGING TECHNICAL DEPLOY PASS; AUTHENTICATED UI SMOKE PENDING due external test-harness blocker. Block G development authorized. Production remains blocked until required staging acceptance evidence passes.",
   "human_gate": {
     "required": true,
     "decision": "OD-1 is now the active Human Gate: validate real-hotel cash ownership / operational responsibility before any F-cash design or implementation.",
@@ -128,7 +128,7 @@
     "attribution": "EXTERNAL_FINDINGS_NOT_REOPENED_BY_THIS_TASK"
   },
   "authorization": {
-    "scope": "STAGING-ONLY PHASE 5 AUTHORIZED FOR REVIEWED D1 REPAIR; F_CASH_GATED_BY_OD-1; BLOCK_G_QUEUED_AFTER_SUCCESSFUL_STAGING_HANDOFF; NO MAIN_OR_PRODUCTION",
+    "scope": "BLOCK_G AUTHORIZED AFTER TECHNICALLY VERIFIED STAGING DEPLOY; AUTHENTICATED UI SMOKE PENDING AS EXTERNAL TEST-HARNESS GATE; F_CASH_GATED_BY_OD-1; NO MAIN_OR_PRODUCTION",
     "production": false,
     "acceptance_staging": true,
     "main": false,
@@ -160,7 +160,7 @@
     "block_f_account_authorized": true,
     "block_f_cash_authorized": false,
     "block_f_cash_gate": "REAL_HOTEL_CASH_OWNERSHIP_PRODUCT_ACCEPTANCE_HUMAN_GATE_OD-1",
-    "block_g_authorized": false,
+    "block_g_authorized": true,
     "block_h_authorized": false,
     "blocks_g_h": false,
     "block_f_account_completed": true
@@ -404,7 +404,7 @@
   "development_continuation": true,
   "block_e_authorized": true,
   "block_f_authorized": true,
-  "block_g_authorized": false,
+  "block_g_authorized": true,
   "block_h_authorized": false,
   "block_d_initial_boundary_b": "ed39c3340db2ed1d429ec4cf1140643073f42bd6",
   "block_d_critic": "PASS: fresh separate read-only follow-up on exact Artifact A 5003ad9655b99337453f87ba64fcc18ea3a1ecb6 + Boundary B2 927d79073f488f9ce7e341f8569451c58ca51cba; initial PASS_WITH_CONDITIONS and its sole LOW finding preserved.",
