@@ -3,40 +3,40 @@
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-g-guests-reports-admin-network",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "BLOCK_G_INDEPENDENT_CRITIC",
-  "resume_authorized": false,
-  "runtime_status": "WAITING_EXTERNAL_REVIEW",
-  "active_task": "HMS-BLOCK-G-GUESTS-REPORTS-ADMIN-NETWORK-001: fresh separate read-only Independent Critic review of exact Artifact A plus Boundary B.",
-  "last_completed_task": "Block G validated immutable Artifact A and mandatory Pre-Critic publication gate",
-  "last_completed_head": "66d43fd28d16fd6379b23c22e73d74578533fe57",
+  "phase": "BLOCK_G_CONTROLLER_PASS",
+  "resume_authorized": true,
+  "runtime_status": "READY",
+  "active_task": "Block G has Controller PASS. Prepare Block H under Issue #54 from the Controller-normalized Block G lineage.",
+  "last_completed_task": "Block G exact Artifact A + Boundary B reviewed; substantive PASS, sole orchestration metadata condition discharged.",
+  "last_completed_head": "c62fd472ac3aca634373147be6eb1dd77f01ef6a",
   "work_branch": "impl/hms-block-g-guests-reports-admin-network",
   "pr": null,
   "wave": "BLOCK G — GUESTS, REPORTS, HOTEL ADMINISTRATION & NETWORK",
-  "status_label": "BLOCK_G_IMPLEMENTATION_AND_FINAL_VALIDATION",
-  "next_action": "Await a fresh read-only Independent Critic decision on the exact Artifact A + Boundary B pair in Issue #53; no Block H until Controller PASS.",
-  "stop_reason": "EXTERNAL_REVIEW_REQUIRED: substantive Artifact A and orchestration-only Boundary B are awaiting Independent Critic/Controller review.",
+  "status_label": "BLOCK_G_CONTROLLER_PASS",
+  "next_action": "Close Issue #53 and begin Block H under Issue #54 from the final Controller-normalized Block G checkpoint.",
+  "stop_reason": null,
   "event": {
-    "seq": 289,
-    "id": "HMS-BLOCK-G-BOUNDARY-B-CRITIC-REQUEST-001",
-    "type": "SUBSTANTIVE_ARTIFACT_AWAITING_INDEPENDENT_CRITIC"
+    "seq": 290,
+    "id": "HMS-BLOCK-G-CONTROLLER-PASS-001",
+    "type": "BLOCK_G_CONTROLLER_PASS_METADATA_CONDITION_DISCHARGED"
   },
   "external_review": {
-    "required": true,
+    "required": false,
     "artifact_head": "66d43fd28d16fd6379b23c22e73d74578533fe57",
-    "boundary_head": null,
-    "last_audited_head": "074804329f487c2cfb0a9e5123f1f90b1a0e0252",
-    "last_verdict": "PENDING: fresh separate read-only Independent Critic requested on exact Block G Artifact A + Boundary B.",
-    "review_path": "Issue #53; exact-pair handoff comment to be posted after publishing Boundary B.",
+    "boundary_head": "c62fd472ac3aca634373147be6eb1dd77f01ef6a",
+    "last_audited_head": "c62fd472ac3aca634373147be6eb1dd77f01ef6a",
+    "last_verdict": "PASS_WITH_CONDITIONS on exact Block G A+B; substantive review PASS. Sole stale orchestration metadata condition discharged directly by Controller.",
+    "review_path": "GitHub Issue #53 comments 5947364016 (handoff) and 5955955956 (Independent Critic verdict).",
     "prior_block_e_review": {
       "required": true,
       "artifact_head": "56b67732979e09cafda80316b28f2a3bfc849747",
       "boundary_head": "9dfae5220ffe3e0b7a018af6a777b97b22761825",
       "verdict": "PASS_WITH_CONDITIONS; sole metadata condition discharged in accepted base"
     },
-    "current_gate": "INDEPENDENT_CRITIC_REQUIRED"
+    "current_gate": null
   },
   "block_a_development_gate": "PASS; exact Artifact A+B4 received Independent Critic PASS; awaiting Controller review",
-  "promotion_gate": "STAGING TECHNICAL DEPLOY PASS; AUTHENTICATED UI SMOKE PENDING due external test-harness blocker. Block G development authorized. Production remains blocked until required staging acceptance evidence passes.",
+  "promotion_gate": "Block G Controller PASS. Block H may begin under Issue #54 from Controller-normalized G lineage. Production remains blocked; authenticated staging UI smoke remains pending in Issue #52.",
   "human_gate": {
     "required": true,
     "decision": "OD-1 is now the active Human Gate: validate real-hotel cash ownership / operational responsibility before any F-cash design or implementation.",
@@ -128,7 +128,7 @@
     "attribution": "EXTERNAL_FINDINGS_NOT_REOPENED_BY_THIS_TASK"
   },
   "authorization": {
-    "scope": "BLOCK_G ONLY: GUESTS, REPORTS, HOTEL USER ADMINISTRATION, NETWORK; STAGING SMOKE EXTERNAL TEST-HARNESS BLOCKER PENDING; NO F-CASH, BLOCK H, STAGING ACTION, MAIN, PRODUCTION OR REAL DATA",
+    "scope": "BLOCK_G COMPLETE WITH CONTROLLER PASS; BLOCK_H AUTHORIZED NEXT; F_CASH GATED BY OD-1; STAGING AUTHENTICATED UI SMOKE PENDING; NO MAIN_OR_PRODUCTION",
     "production": false,
     "acceptance_staging": false,
     "main": false,
@@ -161,9 +161,10 @@
     "block_f_cash_authorized": false,
     "block_f_cash_gate": "REAL_HOTEL_CASH_OWNERSHIP_PRODUCT_ACCEPTANCE_HUMAN_GATE_OD-1",
     "block_g_authorized": true,
-    "block_h_authorized": false,
-    "blocks_g_h": false,
-    "block_f_account_completed": true
+    "block_h_authorized": true,
+    "blocks_g_h": true,
+    "block_f_account_completed": true,
+    "block_g_completed": true
   },
   "validated": {
     "f0_1_task": "CLOSED_INTERNAL_EVIDENCE_GATE; NO_STANDALONE_ARTIFACT_OR_EXTERNAL_CRITIC_VERDICT",
@@ -409,7 +410,7 @@
   "block_e_authorized": true,
   "block_f_authorized": true,
   "block_g_authorized": true,
-  "block_h_authorized": false,
+  "block_h_authorized": true,
   "block_d_initial_boundary_b": "ed39c3340db2ed1d429ec4cf1140643073f42bd6",
   "block_d_critic": "PASS: fresh separate read-only follow-up on exact Artifact A 5003ad9655b99337453f87ba64fcc18ea3a1ecb6 + Boundary B2 927d79073f488f9ce7e341f8569451c58ca51cba; initial PASS_WITH_CONDITIONS and its sole LOW finding preserved.",
   "block_d_independent_critic": ".orchestration/evidence/HMS-BLOCK-D-ROOMS-OPERATIONAL-WORKSPACE-001-INDEPENDENT-CRITIC-A-B2.md",
@@ -448,5 +449,6 @@
   "block_e_closure": "B4 is the orchestration-only reconciliation commit immediately following B3. Exact closure is the current branch HEAD and is reported in Issue #51; it is intentionally not self-referenced here.",
   "block_e_development_continuation": false,
   "block_f_account_completed": true,
-  "block_f_completed": false
+  "block_f_completed": false,
+  "block_g_completed": true
 }
