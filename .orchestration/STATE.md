@@ -1,15 +1,14 @@
 # HMS Cloudflare — Orchestration State
 
-## BLOCK F — F-ACCOUNT COMPLETE; AWAITING CONTROLLER REVIEW
+## BLOCK F — F-ACCOUNT CONTROLLER PASS; F-CASH OD-1 HUMAN GATE
 
-- **Authorization:** GitHub Issue #52 latest Controller decision is `CONTROLLER_DECISION: START`, from exact base `39ee0a2b38e7205b8e041e792e16ee469c996241`. Dedicated branch `impl/hms-block-f-account-finance-cash`. F-account implementation Artifact A is `24de78c8f84ca4d1e91057ccca34a98595cf38d6`; orchestration-only Boundary B is `b3f2870bcdf271b3571cf3ed57d3dcc65259a123`.
-- **Frozen Task Contract:** `.orchestration/contracts/HMS-BLOCK-F-ACCOUNT-FINANCE-CASH-001.md`; pre-implementation inventory and requirement/evidence matrix are frozen in `.orchestration/evidence/HMS-BLOCK-F-ACCOUNT-FINANCE-CASH-001-{INVENTORY,EVIDENCE-MATRIX,PRECRITIC}.md`. The final Pre-Critic applies only to F-account and is not an Independent Critic PASS. All 24 registry invariants are classified, and applicable evidence is recorded as PASS.
-- **Scope boundary:** Booking/Stay-grain account, charges, payment history/operations and Receivables presentation. Preserve D11, F0.7 settlement, F0.9 charge recovery, server-owned capabilities and F0.11 authoritative refresh. F-cash is not authorized for implementation: real-hotel cashbox owner validation OD-1 remains its separate Product Acceptance/Human Gate. Do not alter Cash behavior or infer shift semantics.
-- **Budgets:** JS raw 350000 B; JS gzip 100000 B; CSS raw 60000 B; CSS gzip 15000 B. Any active ceiling breach stops at `BUNDLE_BUDGET_GATE_REQUIRED`; no increase is authorized.
-- **Required method:** frozen contract/inventory/evidence matrix/invariants/Pre-Critic → implementation and full evidence → immutable Artifact A → exact orchestration-only Boundary B → fresh Independent Critic → final reconciliation → publish only the dedicated Block F branch → report exact remote SHA/evidence in Issue #52.
-- **Independent Critic:** fresh separate read-only reviewer returned `PASS` on exact A `24de78c8f84ca4d1e91057ccca34a98595cf38d6` + B `b3f2870bcdf271b3571cf3ed57d3dcc65259a123`, with no findings requiring rework. Full disposition: `.orchestration/evidence/HMS-BLOCK-F-ACCOUNT-FINANCE-CASH-001-INDEPENDENT-CRITIC-A-B.md`.
-- **Current phase:** F-account is complete under its frozen contract and awaits Controller review on GitHub Issue #52. Final state reconciliation is this orchestration/evidence-only commit; its SHA is intentionally not self-referenced and is reported in Issue #52. Resume remains disabled while review is required. This does not claim all of Block F complete: F-cash remains gated by OD-1. G–H remain unauthorized.
-- **Issue #52 is the canonical Controller channel; do not use the Human as relay.**
+- **Controller verdict:** F-account Development Gate `PASS`. Exact Artifact A `24de78c8f84ca4d1e91057ccca34a98595cf38d6` + Boundary B `b3f2870bcdf271b3571cf3ed57d3dcc65259a123` received fresh Independent Critic `PASS`; final orchestration closure is `64ca253fd00f96c5673da8950a1a620ad0e2d398`.
+- **Scope accepted:** Booking/Stay-grain account, authoritative total/paid/remaining/credit, charges, payment history/operations, exact same-operation payment retry after ambiguous response, contextual Reception ↔ Account continuity, and Finance/Receivables separation from Cash.
+- **Validation accepted:** full suite 35 files / 175 tests; i18n; Wrangler types; production build; architecture/budget gates; D1 query plans; CF-I06 Worker/D1; integrated Worker/D1/Vite/Playwright recovery/responsive/focus/history; Wrangler dry-runs; diff/syntax/metadata checks. Active budgets remain JS 350000/100000 and CSS 60000/15000 and pass.
+- **F-cash remains NOT authorized:** OD-1 requires real-hotel cash ownership/Product Acceptance/Human Gate. Do not infer cashier/shift/source-of-funds policy and do not change Cash UI/API/schema/accounting semantics before that gate.
+- **Block F overall:** incomplete only because F-cash is gated. `block_f_completed=false` remains correct. G–H remain unauthorized by this review. Promotion remains blocked.
+- **Current phase:** wait at `BLOCK_F_CASH_OD1_HUMAN_GATE`. No technical relay through the user is required; the next user intervention is a genuine product/operational decision for OD-1.
+- **Issue #52 remains the canonical Controller channel and stays open until Block F is fully disposed.**
 
 ## HISTORICAL STATE
 
