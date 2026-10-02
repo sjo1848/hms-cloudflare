@@ -1,18 +1,14 @@
 # HMS Cloudflare — Orchestration State
 
-## CURRENT DISPATCH — ISSUE #52 TRANSACTION-SAFE 0019 DATA PRESERVATION REPAIR
+## CURRENT DISPATCH — ISSUE #52 STAGING PHASE 5 SMOKE EVIDENCE BLOCKED
 
-- **Authority:** latest Controller decision in Issue #52 comment `5945260364`, `CONTROLLER_DECISION: REPAIR_0019_TRANSACTIONAL_DATA_PRESERVATION`.
-- **Authorized base:** `acceptance/staging@0e78050999550d193ff0d352672b233e2f3da472`; dedicated branch/worktree: `staging/d1-sql-splitter-compatibility` / `hms-d1-sql-splitter-compatibility`.
-- **Artifact A:** `c93b5a7379f1bb588b4cf70b705761728f39a4ba` (`fix: preserve payment ledger in 0019 migration`), containing the bounded migration repair, regression, frozen contract and evidence. Base ancestry is verified.
-- **Boundary B:** this orchestration-only commit, the immediate child of Artifact A; it changes only `.orchestration/STATE.md` and `.orchestration/STATUS.json`. Its exact SHA is the branch HEAD and is reported in the Issue #52 handoff; it is not self-referenced here.
-- **Phase 1–3:** PASS. Exact 0018 dependency inventory and fixture were frozen before editing; both isolated 0019 and full 0019–0030 canonical Wrangler disposable-D1 proofs passed. All temporary D1s were deleted.
-- **Phase 4:** PASS. Full test suite 35/35 files, 176/176 tests; TypeScript, production build, architecture/i18n/budgets, D1 query-plan, API/Web Wrangler dry-runs, staging-config dry-runs and mandatory Pre-Critic/invariant gate passed. Bundle result equals baseline; detailed raw/gzip/aggregate/entry values and deltas are in the repair evidence. Captured CLI text whitespace normalization is fully hash-traced.
-- **Independent Critic:** exact Artifact A `c93b5a7379f1bb588b4cf70b705761728f39a4ba` + Boundary B `2a8a8ae07230d40c6e9e37b4d070f0969b7d0279` received `PASS_WITH_CONDITIONS` in Issue #52 comment `5946015121`. Substantive migration/data-preservation review passed; the sole condition was active handoff metadata (`HUMAN_ACTION_REQUIRED` and stale failure label).
-- **Controller disposition:** the sole metadata-only condition is discharged directly; no product, migration, test or evidence rework is required. Phase 5 staging continuation is authorized under the user's existing staging-only authorization.
-- **Current dispatch state:** `READY — PHASE 5 STAGING RESUME AUTHORIZED`; external review is complete and `resume_authorized=true` for staging only.
-- **Next:** verify exact descendant ancestry from current `acceptance/staging`, fast-forward only `acceptance/staging` to the Controller-normalized repair head, run the existing staging workflow, verify both hotel D1s migrate 0019–0030 exactly once with ledger preservation, then complete API/Web deploy, Access fail-closed and authorized smoke tests. On success report `STAGING_DEPLOYED_AWAITING_HUMAN_ACCEPTANCE` in Issue #52.
-- **Forbidden:** main, PR/merge, production, real hotel data and F-cash. Block G remains queued until successful staging handoff; no production promotion is authorized.
+- **Authority:** Controller disposition in Issue #52 comment `5946029814`, `PASS_D1_REPAIR_RESUME_STAGING_PHASE5`; canonical checkpoint `074804329f487c2cfb0a9e5123f1f90b1a0e0252`.
+- **Staging ref/deploy:** `acceptance/staging` was fast-forwarded only to the exact checkpoint. Existing workflow run `36968916971` succeeded on that SHA; API/Web Workers deployed and anonymous web/API returned HTTP 302. Exact evidence and versions: `.orchestration/evidence/HMS-STAGING-PHASE5-001.md`.
+- **D1:** CONTROL_DB stayed at 5 migrations; each hotel DB advanced from 18 to 30 with 0019–0030 once each. Synthetic seed marker/digest remained intact. Invoice, payment and charge original fields were preserved; FK checks were empty and read-only exports passed SQLite integrity checks. Details/hashes are in the Phase 5 evidence.
+- **STOP:** authenticated UI smoke tests are not verified. The supported Browser runtime failed initialization with `Importing module "node:process" is not allowed in node_repl`. Anonymous 302 checks are not functional acceptance. No bypass or alternate browser-control route was used.
+- **Current dispatch state:** `BLOCKED — STAGING_DEPLOY_GATE_REQUIRED`; `resume_authorized=false`; external review/evidence recovery is required.
+- **Next:** restore supported browser automation, complete the authorized authenticated smoke matrix, then report the exact staging acceptance handoff. Do not start Block G until `STAGING_DEPLOYED_AWAITING_HUMAN_ACCEPTANCE` is truthfully reached; Issue #53 requires that prerequisite.
+- **Forbidden:** main, PR/merge, production, real hotel data, F-cash and Block G until its staging prerequisite passes. No such action occurred.
 
 ## BLOCK F — F-ACCOUNT CONTROLLER PASS; F-CASH OD-1 HUMAN GATE
 
