@@ -1,0 +1,79 @@
+[
+  {
+    "results": [
+      {
+        "total_cents": 12750,
+        "amount_cents": 12750,
+        "paid_amount_cents": 2500,
+        "remaining_cents": 10250,
+        "credit_cents": 0,
+        "status": "PENDING",
+        "payment_method": "TRANSFER",
+        "payment_reference": "transfer-900",
+        "charges": 2,
+        "events": 4,
+        "payments": 1
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 4
+    }
+  },
+  {
+    "results": [
+      {
+        "rejected_charge_side_effects": 0
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  },
+  {
+    "results": [
+      {
+        "rejected_event_side_effects": 0
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  },
+  {
+    "results": [
+      {
+        "id": "f09-mismatch",
+        "total_cents": 3000,
+        "amount_cents": 3000,
+        "paid_amount_cents": 500
+      },
+      {
+        "id": "f09-voided",
+        "total_cents": 2000,
+        "amount_cents": 2000,
+        "paid_amount_cents": 0
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 1
+    }
+  },
+  {
+    "results": [
+      {
+        "total_cents": 1000,
+        "amount_cents": 1000,
+        "charges": 1,
+        "events": 0
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  }
+]

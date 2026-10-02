@@ -1,0 +1,128 @@
+
+ ⛅️ wrangler 4.146.0 (update available 4.147.0)
+───────────────────────────────────────────────
+
+Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
+Your Worker has access to the following bindings:
+Binding                                                              Resource                  Mode
+env.CONTROL_DB (hms-control-local)                                   D1 Database               local
+env.HOTEL_DEMO_DB (hms-hotel-demo-local)                             D1 Database               local
+env.HOTEL_SECOND_DB (hms-hotel-second-local)                         D1 Database               local
+env.ENVIRONMENT ("development")                                      Environment Variable      local
+env.ACCESS_TEAM_DOMAIN ("https://example.cloudflareaccess.com")      Environment Variable      local
+env.ACCESS_AUDIENCE ("local-development")                            Environment Variable      local
+env.LOCAL_DEV_AUTH ("(hidden)")                                      Environment Variable      local
+
+⎔ Starting local server...
+Wrangler detected this dev session is running in an AI agent.
+The Local Explorer API is available at http://127.0.0.1:8787/cdn-cgi/local/explorer/api
+Useful routes:
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api/local/workers - local Workers and bindings
+  POST http://127.0.0.1:8787/cdn-cgi/local/explorer/api/local/scheduled?worker=<name> - invoke a Worker's scheduled handler; cron is required (see the OpenAPI schema for the full request)
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api/storage/kv/namespaces - KV namespaces
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api/d1/database - D1 databases
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api/r2/buckets - R2 buckets
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api/workers/durable_objects/namespaces - Durable Object namespaces
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api/workflows - Workflows
+  POST http://127.0.0.1:8787/cdn-cgi/local/explorer/api/local/observability/query - run a read-only SQL query (SELECT/WITH only) over captured request traces and console logs. Tables: spans, logs (read attributes via json(attributes)). Example:
+    curl -X POST http://127.0.0.1:8787/cdn-cgi/local/explorer/api/local/observability/query -H 'Content-Type: application/json' -d '{"sql":"SELECT service, name, outcome, duration_ms FROM spans WHERE parent_id IS NULL LIMIT 20"}'
+  POST http://127.0.0.1:8787/cdn-cgi/local/explorer/api/local/observability/clear - clear all captured traces and logs
+If the routes above don't cover what you need, fetch the full OpenAPI schema (large - use only as a last resort):
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api - OpenAPI schema
+[wrangler:info] Ready on http://127.0.0.1:8787
+[wrangler:info] GET /health 200 OK (1586ms)
+[wrangler:info] GET /health 200 OK (209ms)
+[wrangler:info] GET /api/v1/auth/me 200 OK (439ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (330ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (194ms)
+[wrangler:info] GET /api/v1/guests 200 OK (1063ms)
+[wrangler:info] GET /api/v1/reservation-creation-operations 200 OK (1066ms)
+[wrangler:info] GET /api/v1/front-desk/board 200 OK (1067ms)
+[wrangler:info] GET /api/v1/guests 200 OK (546ms)
+[wrangler:info] GET /api/v1/reservation-creation-operations 200 OK (557ms)
+[wrangler:info] GET /api/v1/front-desk/board 200 OK (554ms)
+[wrangler:info] GET /api/v1/auth/me 200 OK (145ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (169ms)
+[wrangler:info] GET /api/v1/guests 200 OK (809ms)
+[wrangler:info] GET /api/v1/reservation-creation-operations 200 OK (817ms)
+[wrangler:info] GET /api/v1/front-desk/board 200 OK (818ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (660ms)
+[wrangler:info] GET /api/v1/guests 200 OK (501ms)
+[wrangler:info] GET /api/v1/reservation-creation-operations 200 OK (489ms)
+[wrangler:info] GET /api/v1/front-desk/board 200 OK (477ms)
+[wrangler:info] GET /api/v1/bookings/z-priority/invoice 200 OK (202ms)
+[wrangler:info] GET /api/v1/rooms/available 200 OK (277ms)
+[wrangler:info] GET /api/v1/bookings/z-priority/invoice 200 OK (166ms)
+[wrangler:info] GET /api/v1/rooms/available 200 OK (180ms)
+[wrangler:info] POST /api/v1/housekeeping/p01-room-a/maintenance 201 Created (342ms)
+[wrangler:info] POST /api/v1/bookings/z-priority/check-in 409 Conflict (194ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (589ms)
+[wrangler:info] GET /api/v1/guests 200 OK (588ms)
+[wrangler:info] GET /api/v1/reservation-creation-operations 200 OK (588ms)
+[wrangler:info] GET /api/v1/front-desk/board 200 OK (587ms)
+[wrangler:info] GET /api/v1/bookings/z-priority/invoice 200 OK (241ms)
+[wrangler:info] GET /api/v1/bookings 200 OK (768ms)
+[wrangler:info] GET /api/v1/bookings/z-priority/payments 200 OK (772ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (772ms)
+[wrangler:info] GET /api/v1/bookings/z-priority/invoice 200 OK (696ms)
+[wrangler:info] POST /api/v1/housekeeping/p01-room-a/maintenance/33eec324-bb5f-429d-8d1c-e79fd1ee4f2b/resolve 200 OK (365ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (144ms)
+[wrangler:info] GET /api/v1/guests 200 OK (683ms)
+[wrangler:info] GET /api/v1/reservation-creation-operations 200 OK (685ms)
+[wrangler:info] GET /api/v1/front-desk/board 200 OK (685ms)
+[wrangler:info] GET /api/v1/bookings/z-priority/invoice 200 OK (192ms)
+[wrangler:info] POST /api/v1/bookings/z-priority/check-in 200 OK (295ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (159ms)
+[wrangler:info] GET /api/v1/guests 200 OK (710ms)
+[wrangler:info] GET /api/v1/reservation-creation-operations 200 OK (711ms)
+[wrangler:info] GET /api/v1/front-desk/board 200 OK (709ms)
+[wrangler:info] GET /api/v1/bookings/z-priority/invoice 200 OK (414ms)
+[wrangler:info] GET /api/v1/bookings/a-next/invoice 200 OK (384ms)
+[wrangler:info] GET /api/v1/rooms/available 200 OK (513ms)
+[wrangler:info] GET /api/v1/bookings/a-next/invoice 200 OK (179ms)
+[wrangler:info] GET /api/v1/rooms/available 200 OK (197ms)
+[wrangler:info] POST /api/v1/housekeeping/p01-room-b/maintenance/p01-advisory/resolve 200 OK (371ms)
+[wrangler:info] POST /api/v1/housekeeping/p01-room-b/maintenance 201 Created (297ms)
+[wrangler:info] POST /api/v1/bookings/a-next/check-in 409 Conflict (158ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (182ms)
+[wrangler:info] GET /api/v1/guests 200 OK (643ms)
+[wrangler:info] GET /api/v1/reservation-creation-operations 200 OK (627ms)
+[wrangler:info] GET /api/v1/front-desk/board 200 OK (623ms)
+[wrangler:info] GET /api/v1/bookings/a-next/invoice 200 OK (264ms)
+[wrangler:info] POST /api/v1/housekeeping/p01-room-b/maintenance/4a9db1b7-b278-44a5-9371-fd5b24e00f0c/resolve 200 OK (466ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (126ms)
+[wrangler:info] GET /api/v1/guests 200 OK (656ms)
+[wrangler:info] GET /api/v1/reservation-creation-operations 200 OK (665ms)
+[wrangler:info] GET /api/v1/front-desk/board 200 OK (660ms)
+[wrangler:info] GET /api/v1/bookings/a-next/invoice 200 OK (317ms)
+[wrangler:info] POST /api/v1/bookings/a-next/check-in 200 OK (407ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (132ms)
+[wrangler:info] GET /api/v1/guests 200 OK (579ms)
+[wrangler:info] GET /api/v1/reservation-creation-operations 200 OK (580ms)
+[wrangler:info] GET /api/v1/front-desk/board 200 OK (569ms)
+[wrangler:info] GET /api/v1/bookings/a-next/invoice 200 OK (214ms)
+[wrangler:info] GET /api/v1/rooms/available 200 OK (406ms)
+[wrangler:info] GET /api/v1/bookings/m-blocked/invoice 200 OK (617ms)
+[wrangler:info] GET /api/v1/auth/me 200 OK (166ms)
+[wrangler:info] GET /api/v1/auth/me 200 OK (170ms)
+[wrangler:info] GET /api/v1/auth/me 200 OK (170ms)
+[wrangler:info] GET /api/v1/auth/me 200 OK (142ms)
+[wrangler:info] GET /api/v1/auth/me 200 OK (183ms)
+[wrangler:info] GET /api/v1/auth/me 200 OK (300ms)
+[wrangler:info] GET /api/v1/auth/me 200 OK (180ms)
+[wrangler:info] GET /api/v1/auth/me 200 OK (209ms)
+[wrangler:info] GET /api/v1/auth/me 200 OK (194ms)
+[wrangler:info] GET /api/v1/auth/me 200 OK (172ms)
+[wrangler:info] GET /api/v1/auth/me 200 OK (172ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (198ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (206ms)
+[wrangler:info] GET /api/v1/guests 200 OK (1421ms)
+[wrangler:info] GET /api/v1/reservation-creation-operations 200 OK (1412ms)
+[wrangler:info] GET /api/v1/front-desk/board 200 OK (1412ms)
+[wrangler:info] GET /api/v1/housekeeping/board 200 OK (1294ms)
+[wrangler:info] GET /api/v1/rooms 200 OK (1018ms)
+[wrangler:info] GET /api/v1/guests 200 OK (948ms)
+[wrangler:info] GET /api/v1/reservation-creation-operations 200 OK (951ms)
+[wrangler:info] GET /api/v1/front-desk/board 200 OK (950ms)
+[wrangler:info] GET /api/v1/housekeeping/board 200 OK (951ms)
+[wrangler:info] GET /api/v1/reports/occupancy 200 OK (1188ms)

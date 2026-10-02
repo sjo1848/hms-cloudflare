@@ -1,0 +1,699 @@
+
+--- 2026-10-02T22:19:28.964Z debug
+🪵  Writing logs to "/home/sjo1848/.config/.wrangler/logs/wrangler-2026-10-02_22-19-28_239.log"
+---
+
+--- 2026-10-02T22:19:28.964Z debug
+.env file not found at "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/.env". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-02T22:19:28.965Z debug
+.env file not found at "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/.env.local". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-02T22:19:29.026Z log
+
+ ⛅️ wrangler 4.125.0 (update available 4.147.0)
+───────────────────────────────────────────────
+---
+
+--- 2026-10-02T22:19:29.029Z log
+
+Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
+---
+
+--- 2026-10-02T22:19:29.055Z debug
+setting config
+---
+
+--- 2026-10-02T22:19:29.056Z debug
+Updating config... undefined undefined
+---
+
+--- 2026-10-02T22:19:29.067Z debug
+Metrics dispatcher: Posting data {"deviceId":"afd89509-a2dc-4307-b154-a8384478dbf2","event":"wrangler command started","timestamp":1790979569067,"properties":{"amplitude_session_id":1790979569027,"amplitude_event_id":0,"wranglerVersion":"4.125.0","wranglerMajorVersion":4,"wranglerMinorVersion":125,"wranglerPatchVersion":0,"osPlatform":"Linux","osVersion":"#1 SMP PREEMPT_DYNAMIC Debian 6.12.107-1 (2026-08-29)","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","argsUsed":["c","config","ip","local","persistTo","port","var"],"argsCombination":"c, config, ip, local, persistTo, port, var","sanitizedCommand":"dev","sanitizedArgs":{"local":true},"currentAgentSkillsInstalled":false}}
+---
+
+--- 2026-10-02T22:19:29.116Z debug
+local dev variables file not found at "apps/api/.dev.vars". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-02T22:19:29.116Z debug
+.env file not found at "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/apps/api/.env". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-02T22:19:29.116Z debug
+.env file not found at "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/apps/api/.env.local". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-02T22:19:29.119Z log
+Your Worker has access to the following bindings:
+---
+
+--- 2026-10-02T22:19:29.119Z log
+Binding                                                              Resource                  Mode
+---
+
+--- 2026-10-02T22:19:29.119Z log
+env.CONTROL_DB (hms-control-local)                                   D1 Database               local
+---
+
+--- 2026-10-02T22:19:29.119Z log
+env.HOTEL_DEMO_DB (hms-hotel-demo-local)                             D1 Database               local
+---
+
+--- 2026-10-02T22:19:29.120Z log
+env.HOTEL_SECOND_DB (hms-hotel-second-local)                         D1 Database               local
+---
+
+--- 2026-10-02T22:19:29.120Z log
+env.ENVIRONMENT ("development")                                      Environment Variable      local
+---
+
+--- 2026-10-02T22:19:29.120Z log
+env.ACCESS_TEAM_DOMAIN ("https://example.cloudflareaccess.com")      Environment Variable      local
+---
+
+--- 2026-10-02T22:19:29.120Z log
+env.ACCESS_AUDIENCE ("local-development")                            Environment Variable      local
+---
+
+--- 2026-10-02T22:19:29.120Z log
+env.LOCAL_DEV_AUTH ("(hidden)")                                      Environment Variable      local
+---
+
+--- 2026-10-02T22:19:29.120Z log
+
+---
+
+--- 2026-10-02T22:19:29.365Z log
+Wrangler detected this dev session is running in an AI agent.
+The Local Explorer API is available at http://127.0.0.1:8787/cdn-cgi/local/explorer/api
+Useful routes:
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api/local/workers - local Workers and bindings
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api/storage/kv/namespaces - KV namespaces
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api/d1/database - D1 databases
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api/r2/buckets - R2 buckets
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api/workers/durable_objects/namespaces - Durable Object namespaces
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api/workflows - Workflows
+  POST http://127.0.0.1:8787/cdn-cgi/local/explorer/api/local/observability/query - run a read-only SQL query (SELECT/WITH only) over captured request traces and console logs. Tables: spans, logs (read attributes via json(attributes)). Example:
+    curl -X POST http://127.0.0.1:8787/cdn-cgi/local/explorer/api/local/observability/query -H 'Content-Type: application/json' -d '{"sql":"SELECT service, name, outcome, duration_ms FROM spans WHERE parent_id IS NULL LIMIT 20"}'
+If the routes above don't cover what you need, fetch the full OpenAPI schema (large - use only as a last resort):
+  GET http://127.0.0.1:8787/cdn-cgi/local/explorer/api - OpenAPI schema
+---
+
+--- 2026-10-02T22:19:29.622Z debug
+RemoteRuntimeController teardown beginning...
+---
+
+--- 2026-10-02T22:19:29.630Z debug
+RemoteRuntimeController teardown complete
+---
+
+--- 2026-10-02T22:19:29.655Z log
+⎔ Starting local server...
+---
+
+--- 2026-10-02T22:19:29.687Z debug
+[InspectorProxyWorker] handleProxyControllerIncomingMessage {"type":"reloadStart"}
+---
+
+--- 2026-10-02T22:19:30.657Z debug
+[InspectorProxyWorker] handleProxyControllerIncomingMessage {"type":"reloadComplete","proxyData":{"userWorkerUrl":{"protocol":"http:","hostname":"127.0.0.1","port":"35141"},"userWorkerInspectorUrl":{"protocol":"ws:","hostname":"127.0.0.1","port":"46039","pathname":"/core:user:hms-cloudflare-api"},"userWorkerInnerUrlOverrides":{"protocol":"http:"},"headers":{"MF-Proxy-Shared-Secret":"e8f54cdf-4fe0-46e4-8294-2df74415eefc"},"liveReload":false,"proxyLogsToController":false}}
+---
+
+--- 2026-10-02T22:19:30.659Z debug
+[InspectorProxyWorker] reconnectRuntimeWebSocket
+---
+
+--- 2026-10-02T22:19:30.661Z debug
+[InspectorProxyWorker] NEW RUNTIME WEBSOCKET http://127.0.0.1:46039/core:user:hms-cloudflare-api
+---
+
+--- 2026-10-02T22:19:30.663Z debug
+[InspectorProxyWorker] SEND TO RUNTIME {"method":"Runtime.enable","id":100000001}
+---
+
+--- 2026-10-02T22:19:30.665Z debug
+[InspectorProxyWorker] RUNTIME WEBSOCKET OPENED
+---
+
+--- 2026-10-02T22:19:30.668Z debug
+[InspectorProxyWorker] SEND TO DEVTOOLS {"method":"Runtime.executionContextsCleared"}
+---
+
+--- 2026-10-02T22:19:31.557Z debug
+[InspectorProxyWorker] RUNTIME INCOMING MESSAGE {
+  method: 'Runtime.executionContextCreated',
+  params: {
+    context: {
+      id: 355451553,
+      origin: '',
+      name: 'Worker',
+      uniqueId: '-6766150301743581192.-44778847790800056'
+    }
+  }
+}
+---
+
+--- 2026-10-02T22:19:31.560Z debug
+[InspectorProxyWorker] RUNTIME INCOMING MESSAGE { id: 100000001, result: {} }
+---
+
+--- 2026-10-02T22:19:40.667Z debug
+[InspectorProxyWorker] SEND TO RUNTIME {"method":"Runtime.getIsolateId","id":100000002}
+---
+
+--- 2026-10-02T22:19:40.738Z debug
+[InspectorProxyWorker] RUNTIME INCOMING MESSAGE { id: 100000002, result: { id: '3f1b95708d3027cc' } }
+---
+
+--- 2026-10-02T22:19:44.175Z debug
+Error in ProxyController: Error inside ProxyWorker
+ Error
+    at castErrorCause (/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/node_modules/wrangler/wrangler-dist/cli.js:180295:20)
+    at ProxyController2.emitErrorEvent (/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/node_modules/wrangler/wrangler-dist/cli.js:326367:20)
+    at ProxyController2.onProxyWorkerMessage (/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/node_modules/wrangler/wrangler-dist/cli.js:326244:18)
+    at PROXY_CONTROLLER (/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/node_modules/wrangler/wrangler-dist/cli.js:325971:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async #handleLoopbackCustomFetchService (/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/node_modules/miniflare/dist/src/index.js:111715:22)
+    at async #handleLoopback (/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/node_modules/miniflare/dist/src/index.js:112048:20) {
+  cause: {
+    name: 'Error',
+    message: 'Network connection lost.',
+    stack: 'Error: Network connection lost.'
+  }
+}
+---
+
+--- 2026-10-02T22:19:44.190Z debug
+=> Error contextual data: {
+  config: {
+    name: 'hms-cloudflare-api',
+    config: 'apps/api/wrangler.jsonc',
+    compatibilityDate: '2026-08-23',
+    compatibilityFlags: [ 'nodejs_compat' ],
+    complianceRegion: undefined,
+    pythonModules: { exclude: [Array] },
+    entrypoint: '/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/apps/api/src/entrypoint.ts',
+    projectRoot: '/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/apps/api',
+    bindings: {
+      LOCAL_DEV_AUTH: [Object],
+      ENVIRONMENT: [Object],
+      ACCESS_TEAM_DOMAIN: [Object],
+      ACCESS_AUDIENCE: [Object],
+      CONTROL_DB: [Object],
+      HOTEL_DEMO_DB: [Object],
+      HOTEL_SECOND_DB: [Object]
+    },
+    migrations: [],
+    exports: {},
+    sendMetrics: undefined,
+    triggers: [],
+    env: undefined,
+    envFiles: undefined,
+    build: {
+      alias: undefined,
+      additionalModules: [],
+      processEntrypoint: false,
+      bundle: true,
+      findAdditionalModules: undefined,
+      moduleRoot: '/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/apps/api/src',
+      moduleRules: [],
+      minify: undefined,
+      keepNames: undefined,
+      define: {},
+      custom: [Object],
+      format: 'modules',
+      nodejsCompatMode: 'v2',
+      jsxFactory: 'React.createElement',
+      jsxFragment: 'React.Fragment',
+      tsconfig: undefined,
+      exports: [Array]
+    },
+    containers: [],
+    dev: {
+      auth: [AsyncFunction: auth],
+      remote: false,
+      server: [Object],
+      inspector: [Object],
+      origin: [Object],
+      watch: undefined,
+      liveReload: false,
+      testScheduled: false,
+      outboundService: undefined,
+      structuredLogsHandler: undefined,
+      persist: '/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/.hms-local/p0-1-rggwzS/combined',
+      registry: '/home/sjo1848/.config/.wrangler/registry',
+      multiworkerPrimary: undefined,
+      inferOriginFromRoutes: true,
+      routeRequestsByRoutes: false,
+      enableContainers: true,
+      dockerPath: 'docker',
+      containerEngine: undefined,
+      containerBuildId: 'c3809d26',
+      generateTypes: false,
+      tunnel: [Object]
+    },
+    legacy: { site: undefined },
+    unsafe: { capnp: undefined, metadata: undefined },
+    assets: undefined,
+    tailConsumers: [],
+    experimental: {},
+    streamingTailConsumers: [],
+    access: undefined
+  },
+  bundle: {
+    id: 0,
+    entry: {
+      file: '/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/apps/api/src/entrypoint.ts',
+      projectRoot: '/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/apps/api',
+      configPath: 'apps/api/wrangler.jsonc',
+      format: 'modules',
+      moduleRoot: '/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/apps/api/src',
+      exports: [Array],
+      name: 'hms-cloudflare-api'
+    },
+    path: '/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/apps/api/.wrangler/tmp/dev-sfpSva/entrypoint.js',
+    type: 'esm',
+    modules: [],
+    dependencies: {
+      '../../node_modules/hono/dist/compose.js': [Object],
+      '../../node_modules/hono/dist/request/constants.js': [Object],
+      '../../node_modules/hono/dist/utils/buffer.js': [Object],
+      '../../node_modules/hono/dist/utils/body.js': [Object],
+      '../../node_modules/hono/dist/utils/url.js': [Object],
+      '../../node_modules/hono/dist/request.js': [Object],
+      '../../node_modules/hono/dist/utils/html.js': [Object],
+      '../../node_modules/hono/dist/context.js': [Object],
+      '../../node_modules/hono/dist/router.js': [Object],
+      '../../node_modules/hono/dist/utils/constants.js': [Object],
+      '../../node_modules/hono/dist/hono-base.js': [Object],
+      '../../node_modules/hono/dist/router/reg-exp-router/matcher.js': [Object],
+      '../../node_modules/hono/dist/router/reg-exp-router/node.js': [Object],
+      '../../node_modules/hono/dist/router/reg-exp-router/trie.js': [Object],
+      '../../node_modules/hono/dist/router/reg-exp-router/router.js': [Object],
+      '../../node_modules/hono/dist/router/smart-router/router.js': [Object],
+      '../../node_modules/hono/dist/router/trie-router/node.js': [Object],
+      '../../node_modules/hono/dist/router/trie-router/router.js': [Object],
+      '../../node_modules/hono/dist/hono.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/buffer_utils.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/crypto_key.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/invalid_key_input.js': [Object],
+      '../../node_modules/jose/dist/webapi/util/errors.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/is_key_like.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/base64.js': [Object],
+      '../../node_modules/jose/dist/webapi/util/base64url.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/type_checks.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/helpers.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/jwk_to_key.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/jwk_metadata.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/key.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/key_descriptor.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/options.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/signing.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/jws_algorithms.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/jws_verify.js': [Object],
+      '../../node_modules/jose/dist/webapi/lib/jwt_claims_set.js': [Object],
+      '../../node_modules/jose/dist/webapi/jwt/verify.js': [Object],
+      '../../node_modules/jose/dist/webapi/index.js': [Object],
+      '../../node_modules/jose/dist/webapi/jwks/local.js': [Object],
+      '../../node_modules/jose/dist/webapi/jwks/remote.js': [Object],
+      '../../node_modules/jose/dist/webapi/util/decode_jwt.js': [Object],
+      'src/auth/access.ts': [Object],
+      'src/auth/membership.ts': [Object],
+      'src/errors.ts': [Object],
+      'src/validation.ts': [Object],
+      'src/auth/capabilities.ts': [Object],
+      'src/room-availability.ts': [Object],
+      'src/modules/room-state/domain.ts': [Object],
+      'src/modules/room-state/read-model.ts': [Object],
+      'src/routes/inventory.ts': [Object],
+      'src/modules/bookings/d1-booking-repository.ts': [Object],
+      'src/modules/bookings/d1-reservation-creation-repository.ts': [Object],
+      'src/modules/bookings/domain.ts': [Object],
+      'src/routes/bookings.ts': [Object],
+      'src/modules/lifecycle/domain.ts': [Object],
+      'src/modules/billing/pricing-segments.ts': [Object],
+      'src/modules/billing/d1-stay-pricing.ts': [Object],
+      'src/modules/lifecycle/d1-lifecycle-repository.ts': [Object],
+      'src/routes/lifecycle.ts': [Object],
+      'src/time/hotel-time.ts': [Object],
+      'src/routes/housekeeping.ts': [Object],
+      'src/modules/billing/domain.ts': [Object],
+      'src/modules/billing/d1-payment-repository.ts': [Object],
+      'src/routes/billing.ts': [Object],
+      'src/routes/admin.ts': [Object],
+      'src/routing.ts': [Object],
+      'src/modules/analytics/network-metrics.ts': [Object],
+      'src/routes/analytics.ts': [Object],
+      'src/routes/front-desk.ts': [Object],
+      'src/index.ts': [Object],
+      'src/agent-hms-service.ts': [Object],
+      'src/agent-hms-authorization.ts': [Object],
+      'src/modules/inventory/availability.ts': [Object],
+      'src/agent-hms-read-service.ts': [Object],
+      'src/agent-hms-reservation-service.ts': [Object],
+      'src/entrypoint.ts': [Object],
+      '../../node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts': [Object],
+      '../../node_modules/wrangler/templates/middleware/middleware-miniflare3-json-error.ts': [Object],
+      '.wrangler/tmp/bundle-QQ4UQP/middleware-insertion-facade.js': [Object],
+      '../../node_modules/wrangler/templates/middleware/common.ts': [Object],
+      '.wrangler/tmp/bundle-QQ4UQP/middleware-loader.entry.ts': [Object]
+    },
+    sourceMapPath: '.wrangler/tmp/dev-sfpSva/entrypoint.js.map',
+    sourceMapMetadata: {
+      tmpDir: '/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/apps/api/.wrangler/tmp/bundle-QQ4UQP',
+      entryDirectory: '/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/apps/api'
+    },
+    entrypointSource: 'var __defProp = Object.defineProperty;\n' +
+      'var __name = (target, value) => __defProp(target, "name", { value, configurable: true });\n' +
+      '\n' +
+      '// ../../node_modules/hono/dist/compose.js\n' +
+      'var compose = /* @__PURE__ */ __name((middleware, onError, onNotFound) => {\n' +
+      '  return (context, next) => {\n' +
+      '    let index = -1;\n' +
+      '    return dispatch(0);\n' +
+      '    async function dispatch(i) {\n' +
+      '      if (i <= index) {\n' +
+      '        throw new Error("next() called multiple times");\n' +
+      '      }\n' +
+      '      index = i;\n' +
+      '      let res;\n' +
+      '      let isError = false;\n' +
+      '      let handler;\n' +
+      '      if (middleware[i]) {\n' +
+      '        handler = middleware[i][0][0];\n' +
+      '        context.req.routeIndex = i;\n' +
+      '      } else {\n' +
+      '        handler = i === middleware.length && next || void 0;\n' +
+      '      }\n' +
+      '      if (handler) {\n' +
+      '        try {\n' +
+      '          res = await handler(context, () => dispatch(i + 1));\n' +
+      '        } catch (err) {\n' +
+      '          if (err instanceof Error && onError) {\n' +
+      '            context.error = err;\n' +
+      '            res = await onError(err, context);\n' +
+      '            isError = true;\n' +
+      '          } else {\n' +
+      '            throw err;\n' +
+      '          }\n' +
+      '        }\n' +
+      '      } else {\n' +
+      '        if (context.finalized === false && onNotFound) {\n' +
+      '          res = await onNotFound(context);\n' +
+      '        }\n' +
+      '      }\n' +
+      '      if (res && (context.finalized === false || isError)) {\n' +
+      '        context.res = res;\n' +
+      '      }\n' +
+      '      return context;\n' +
+      '    }\n' +
+      '    __name(dispatch, "dispatch");\n' +
+      '  };\n' +
+      '}, "compose");\n' +
+      '\n' +
+      '// ../../node_modules/hono/dist/request/constants.js\n' +
+      'var GET_MATCH_RESULT = /* @__PURE__ */ Symbol();\n' +
+      '\n' +
+      '// ../../node_modules/hono/dist/utils/buffer.js\n' +
+      'var bufferToFormData = /* @__PURE__ */ __name((arrayBuffer, contentType) => {\n' +
+      '  const response = new Response(arrayBuffer, {\n' +
+      '    headers: {\n' +
+      '      // Normalize the media type (case-insensitive) while keeping parameters like the boundary\n' +
+      '      "Content-Type": contentType.replace(/^[^;]+/, (mediaType) => mediaType.toLowerCase())\n' +
+      '    }\n' +
+      '  });\n' +
+      '  return response.formData();\n' +
+      '}, "bufferToFormData");\n' +
+      '\n' +
+      '// ../../node_modules/hono/dist/utils/body.js\n' +
+      'var isRawRequest = /* @__PURE__ */ __name((request) => "headers" in request, "isRawRequest");\n' +
+      'var parseBody = /* @__PURE__ */ __name(async (request, options = /* @__PURE__ */ Object.create(null)) => {\n' +
+      '  const { all = false, dot = false } = options;\n' +
+      '  const headers = isRawRequest(request) ? request.headers : request.raw.headers;\n' +
+      '  const contentType = headers.get("Content-Type");\n' +
+      '  const mediaType = contentType?.split(";")[0].trim().toLowerCase();\n' +
+      '  if (mediaType === "multipart/form-data" || mediaType === "application/x-www-form-urlencoded") {\n' +
+      '    return parseFormData(request, { all, dot });\n' +
+      '  }\n' +
+      '  return {};\n' +
+      '}, "parseBody");\n' +
+      'async function parseFormData(request, options) {\n' +
+      '  if (!isRawRequest(request) && request.bodyCache.formData) {\n' +
+      '    return convertFormDataToBodyData(\n' +
+      '      await request.bodyCache.formData,\n' +
+      '      options\n' +
+      '    );\n' +
+      '  }\n' +
+      '  const headers = isRawRequest(request) ? request.headers : request.raw.headers;\n' +
+      '  const arrayBuffer = await request.arrayBuffer();\n' +
+      '  const formDataPromise = bufferToFormData(arrayBuffer, headers.get("Content-Type") || "");\n' +
+      '  if (!isRawRequest(request)) {\n' +
+      '    request.bodyCache.formData = formDataPromise;\n' +
+      '  }\n' +
+      '  const formData = await formDataPromise;\n' +
+      '  if (formData) {\n' +
+      '    return convertFormDataToBodyData(formData, options);\n' +
+      '  }\n' +
+      '  return {};\n' +
+      '}\n' +
+      '__name(parseFormData, "parseFormData");\n' +
+      'function convertFormDataToBodyData(formData, options) {\n' +
+      '  const form = /* @__PURE__ */ Object.create(null);\n' +
+      '  formData.forEach((value, key) => {\n' +
+      '    const shouldParseAllValues = options.all || key.endsWith("[]");\n' +
+      '    if (!shouldParseAllValues) {\n' +
+      '      form[key] = value;\n' +
+      '    } else {\n' +
+      '      handleParsingAllValues(form, key, value);\n' +
+      '    }\n' +
+      '  });\n' +
+      '  if (options.dot) {\n' +
+      '    Object.entries(form).forEach(([key, value]) => {\n' +
+      '      const shouldParseDotValues = key.includes(".");\n' +
+      '      if (shouldParseDotValues) {\n' +
+      '        handleParsingNestedValues(form, key, value);\n' +
+      '        delete form[key];\n' +
+      '      }\n' +
+      '    });\n' +
+      '  }\n' +
+      '  return form;\n' +
+      '}\n' +
+      '__name(convertFormDataToBodyData, "convertFormDataToBodyData");\n' +
+      'var handleParsingAllValues = /* @__PURE__ */ __name((form, key, value) => {\n' +
+      '  if (form[key] !== void 0) {\n' +
+      '    if (Array.isArray(form[key])) {\n' +
+      '      ;\n' +
+      '      form[key].push(value);\n' +
+      '    } else {\n' +
+      '      form[key] = [form[key], value];\n' +
+      '    }\n' +
+      '  } else {\n' +
+      '    if (!key.endsWith("[]")) {\n' +
+      '      form[key] = value;\n' +
+      '    } else {\n' +
+      '      form[key] = [value];\n' +
+      '    }\n' +
+      '  }\n' +
+      '}, "handleParsingAllValues");\n' +
+      'var handleParsingNestedValues = /* @__PURE__ */ __name((form, key, value) => {\n' +
+      '  if (/(?:^|\\.)__proto__\\./.test(key)) {\n' +
+      '    return;\n' +
+      '  }\n' +
+      '  let nestedForm = form;\n' +
+      '  const keys = key.split(".");\n' +
+      '  keys.forEach((key2, index) => {\n' +
+      '    if (index === keys.length - 1) {\n' +
+      '      nestedForm[key2] = value;\n' +
+      '    } else {\n' +
+      '      if (!nestedForm[key2] || typeof nestedForm[key2] !== "object" || Array.isArray(nestedForm[key2]) || nestedForm[key2] instanceof File) {\n' +
+      '        nestedForm[key2] = /* @__PURE__ */ Object.create(null);\n' +
+      '      }\n' +
+      '      nestedForm = nestedForm[key2];\n' +
+      '    }\n' +
+      '  });\n' +
+      '}, "handleParsingNestedValues");\n' +
+      '\n' +
+      '// ../../node_modules/hono/dist/utils/url.js\n' +
+      'var splitPath = /* @__PURE__ */ __name((path) => {\n' +
+      '  const paths = path.split("/");\n' +
+      '  if (paths[0] === "") {\n' +
+      '    paths.shift();\n' +
+      '  }\n' +
+      '  return paths;\n' +
+      '}, "splitPath");\n' +
+      'var splitRoutingPath = /* @__PURE__ */ __name((routePath) => {\n' +
+      '  const { groups, path } = extractGroupsFromPath(routePath);\n' +
+      '  const paths = splitPath(path);\n' +
+      '  return replaceGroupMarks(paths, groups);\n' +
+      '}, "splitRoutingPath");\n' +
+      'var extractGroupsFromPath = /* @__PURE__ */ __name((path) => {\n' +
+      '  const groups = [];\n' +
+      '  path = path.replace(/\\{[^}]+\\}/g, (match2, index) => {\n' +
+      '    const mark = `@${index}`;\n' +
+      '    groups.push([mark, match2]);\n' +
+      '    return mark;\n' +
+      '  });\n' +
+      '  return { groups, path };\n' +
+      '}, "extractGroupsFromPath");\n' +
+      'var replaceGroupMarks = /* @__PURE__ */ __name((paths, groups) => {\n' +
+      '  for (let i = groups.length - 1; i >= 0; i--) {\n' +
+      '    const [mark] = groups[i];\n' +
+      '    for (let j = paths.length - 1; j >= 0; j--) {\n' +
+      '      if (paths[j].includes(mark)) {\n' +
+      '        paths[j] = paths[j].replace(mark, groups[i][1]);\n' +
+      '        break;\n' +
+      '      }\n' +
+      '    }\n' +
+      '  }\n' +
+      '  return paths;\n' +
+      '}, "replaceGroupMarks");\n' +
+      'var patternCache = {};\n' +
+      'var getPattern = /* @__PURE__ */ __name((label, next) => {\n' +
+      '  if (label === "*") {\n' +
+      '    return "*";\n' +
+      '  }\n' +
+      '  const match2 = label.match(/^\\:([^\\{\\}]+)(?:\\{(.+)\\})?$/);\n' +
+      '  if (match2) {\n' +
+      '    const cacheKey = `${label}#${next}`;\n' +
+      '    if (!patternCache[cacheKey]) {\n' +
+      '      if (match2[2]) {\n' +
+      '        patternCache[cacheKey] = next && next[0] !== ":" && next[0] !== "*" ? [cacheKey, match2[1], new RegExp(`^${match2[2]}(?=/${next})`)] : [label, match2[1], new RegExp(`^${match2[2]}$`)];\n' +
+      '      } else {\n' +
+      '        patternCache[cacheKey] = [label, match2[1], true];\n' +
+      '      }\n' +
+      '    }\n' +
+      '    return patternCache[cacheKey];\n' +
+      '  }\n' +
+      '  return null;\n' +
+      '}, "getPattern");\n' +
+      'var tryDecode = /* @__PURE__ */ __name((str, decoder2) => {\n' +
+      '  try {\n' +
+      '    return decoder2(str);\n' +
+      '  } catch {\n' +
+      '    return str.replace(/(?:%[0-9A-Fa-f]{2})+/g, (match2) => {\n' +
+      '      try {\n' +
+      '        return decoder2(match2);\n' +
+      '      } catch {\n' +
+      '        return match2;\n' +
+      '      }\n' +
+      '    });\n' +
+      '  }\n' +
+      '}, "tryDecode");\n' +
+      'var tryDecodeURI = /* @__PURE__ */ __name((str) => tryDecode(str, decodeURI), "tryDecodeURI");\n' +
+      'var getPath = /* @__PURE__ */ __name((request) => {\n' +
+      '  const url = request.url;\n' +
+      '  const start = url.indexOf("/", url.indexOf(":") + 4);\n' +
+      '  let i = start;\n' +
+      '  for (; i < url.length; i++) {\n' +
+      '    const charCode = url.charCodeAt(i);\n' +
+      '    if (charCode === 37) {\n' +
+      '      const queryIndex = url.indexOf("?", i);\n' +
+      '      const hashIndex = url.indexOf("#", i);\n' +
+      '      const end = queryIndex === -1 ? hashIndex === -1 ? void 0 : hashIndex : hashIndex === -1 ? queryIndex : Math.min(queryIndex, hashIndex);\n' +
+      '      const path = url.slice(start, end);\n' +
+      '      return tryDecodeURI(path.includes("%25") ? path.replace(/%25/g, "%2525") : path);\n' +
+      '    } else if (charCode === 63 || charCode === 35) {\n' +
+      '      break;\n' +
+      '    }\n' +
+      '  }\n' +
+      '  return url.slice(start, i);\n' +
+      '}, "getPath");\n' +
+      'var getPathNoStrict = /* @__PURE__ */ __name((request) => {\n' +
+      '  const result = getPath(request);\n' +
+      '  return result.length > 1 && result.at(-1) === "/" ? result.slice(0, -1) : result;\n' +
+      '}, "getPathNoStrict");\n' +
+      'var mergePath = /* @__PURE__ */ __name((base, sub, ...rest) => {\n' +
+      '  if (rest.length) {\n' +
+      '    sub = mergePath(sub, ...rest);\n' +
+      '  }\n' +
+      '  return `${base?.[0] === "/" ? "" : "/"}${base}${sub === "/" ? "" : `${base?.at(-1) === "/" ? "" : "/"}${sub?.[0] === "/" ? sub.slice(1) : sub}`}`;\n' +
+      '}, "mergePath");\n' +
+      'var checkOptionalParameter = /* @__PURE__ */ __name((path) => {\n' +
+      '  if (path.charCodeAt(path.length - 1) !== 63 || !path.includes(":")) {\n' +
+      '    return null;\n' +
+      '  }\n' +
+      '  const segments = path.split("/");\n' +
+      '  const results = [];\n' +
+      '  let basePath = "";\n' +
+      '  segments.forEach((segment) => {\n' +
+      '    if (segment !== "" && !/\\:/.test(segment)) {\n' +
+      '      basePath += "/" + segment;\n' +
+      '    } else if (/\\:/.test(segment)) {\n' +
+      '      if (segment.charCodeAt(segment.length - 1) === 63) {\n' +
+      '        if (results.length === 0 && basePath === "") {\n' +
+      '          results.push("/");\n' +
+      '        } else {\n' +
+      '          results.push(basePath);\n' +
+      '        }\n' +
+      '        const optionalSegment = segment.slice(0, -1);\n' +
+      '        basePath += "/" + optionalSegment;\n' +
+      '        results.push(basePath);\n' +
+      '      } else {\n' +
+      '        basePath += "/" + segment;\n' +
+      '      }\n' +
+      '    }\n' +
+      '  });\n' +
+      '  return results.filter((v, i, a) => a.indexOf(v) === i);\n' +
+      '}, "checkOptionalParameter");\n' +
+      'var tryDecodeURIComponent = /* @__PURE__ */ __name((str) => str.indexOf("%") !== -1 ? tryDecode(str, decodeURIComponent_) : str, "tryDecodeURIComponent");\n' +
+      'var _decodeURI = /* @__PURE__ */ __name((value) => {\n' +
+      '  if (value.indexOf("+") !== -1) {\n' +
+      '    value = value.replace(/\\+/g, " ");\n' +
+      '  }\n' +
+      '  return tryDecodeURIComponent(value);\n' +
+      '}, "_decodeURI");\n' +
+      'var _getQueryParam = /* @__PURE__ */ __name((url, key, multiple) => {\n' +
+      '  let encoded;\n' +
+      '  if (!multiple && key && key.indexOf("%") === -1 && key.indexOf("+") === -1) {\n' +
+      '    let keyIndex2 = url.indexOf("?", 8);\n' +
+      '    if (keyIndex2 === -1) {\n' +
+      '      return void 0;\n' +
+      '    }\n' +
+      '    if (!url.startsWith(key, keyIndex2 + 1)) {\n' +
+      '      keyIndex2 = url.indexOf(`&${key}`, keyIndex2 + 1);\n' +
+      '    }\n' +
+      '    while (keyIndex2 !== -1) {\n' +
+      '      const trailingKeyCode = url.charCodeAt(keyIndex2 + key.leng'... 322718 more characters
+  }
+}
+---
+
+--- 2026-10-02T22:19:44.197Z log
+
+---
+
+--- 2026-10-02T22:19:44.299Z error
+✘ [ERROR]
+
+
+---
+
+--- 2026-10-02T22:19:44.300Z debug
+Error
+    at castErrorCause (/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/node_modules/wrangler/wrangler-dist/cli.js:180295:20)
+    at ProxyController2.emitErrorEvent (/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/node_modules/wrangler/wrangler-dist/cli.js:326367:20)
+    at ProxyController2.onProxyWorkerMessage (/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/node_modules/wrangler/wrangler-dist/cli.js:326244:18)
+    at PROXY_CONTROLLER (/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/node_modules/wrangler/wrangler-dist/cli.js:325971:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async #handleLoopbackCustomFetchService (/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/node_modules/miniflare/dist/src/index.js:111715:22)
+    at async #handleLoopback (/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening/node_modules/miniflare/dist/src/index.js:112048:20)
+---
+
+--- 2026-10-02T22:19:44.300Z log
+If you think this is a bug then please create an issue at https://github.com/cloudflare/workers-sdk/issues/new/choose
+---
+
+--- 2026-10-02T22:19:44.300Z log
+Note that there is a newer version of Wrangler available (4.147.0). Consider checking whether upgrading resolves this error.
+---
+
+--- 2026-10-02T22:19:44.300Z debug
+Metrics dispatcher: Posting data {"deviceId":"afd89509-a2dc-4307-b154-a8384478dbf2","event":"wrangler command errored","timestamp":1790979584300,"properties":{"amplitude_session_id":1790979569027,"amplitude_event_id":1,"wranglerVersion":"4.125.0","wranglerMajorVersion":4,"wranglerMinorVersion":125,"wranglerPatchVersion":0,"osPlatform":"Linux","osVersion":"#1 SMP PREEMPT_DYNAMIC Debian 6.12.107-1 (2026-08-29)","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","argsUsed":["c","config","ip","local","persistTo","port","var"],"argsCombination":"c, config, ip, local, persistTo, port, var","sanitizedCommand":"dev","sanitizedArgs":{"local":true},"durationMs":15224,"currentAgentSkillsInstalled":false}}
+---
+
+--- 2026-10-02T22:19:44.302Z debug
+Sentry: Reporting disabled - would have sent Error.
+---

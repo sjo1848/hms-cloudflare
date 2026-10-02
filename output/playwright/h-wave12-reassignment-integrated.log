@@ -1,0 +1,197 @@
+### Ran Playwright code
+```js
+await ((page) => (async () => {
+  await page.addInitScript(() => { localStorage.setItem("hms.locale", "en"); localStorage.setItem("hms-local-acceptance-profile", "0"); });
+  await page.setExtraHTTPHeaders({
+    "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000002",
+    "x-local-access-email": "leo-reception@migration.invalid",
+    "x-hotel-id": "10000000-0000-0000-0000-000000000001",
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const responses = [];
+  const payloads = [];
+  page.on("response", async response => {
+    if (response.url().includes("/api/v1/bookings/") || response.url().includes("/api/v1/bookings?") || response.url().includes("/api/v1/housekeeping/") || response.url().includes("/api/v1/rooms/available")) {
+      responses.push({ url: response.url(), status: response.status() });
+    if (response.url().includes("rooms/available") || response.url().includes("housekeeping") || response.url().endsWith("/reassign") || response.url().endsWith("/reassignment-quote") || response.url().includes("/api/v1/bookings?limit=100")) payloads.push({ url: response.url(), status: response.status(), body: await response.text().catch(() => "") });
+    }
+  });
+
+  await page.goto("http://127.0.0.1:4176/bookings");
+  await page.getByRole("heading", { name: "Booking case workspace" }).waitFor();
+  await page.getByRole("button", { name: "All" }).click();
+  await page.getByText("Integrated Reassignment Guest", { exact: true }).first().waitFor({ timeout: 60000 });
+
+  async function openGuest(name, bookingId) {
+    const hotelResponsePromise = page.waitForResponse(response => response.url().endsWith("/api/v1/auth/me"));
+    const availabilityResponsePromise = page.waitForResponse(response => response.url().includes("/api/v1/rooms/available"));
+    if (bookingId && page.viewportSize().width <= 900) {
+      await page.goto(`http://127.0.0.1:4176/bookings?booking_id=${encodeURIComponent(bookingId)}`);
+    } else {
+      await page.getByText(name, { exact: true }).first().click();
+    }
+    await page.getByText("Selected case").waitFor();
+    await page.getByRole("button", { name: "Next action: room reassignment" }).click();
+    const reassignTask = page.locator('form[aria-label="Reassign room"]');
+    await reassignTask.waitFor();
+    if (!(await reassignTask.locator("h4").first().evaluate(element => element === document.activeElement))) throw new Error("Reassignment task did not receive initial keyboard focus");
+    const [hotelResponse, availabilityResponse] = await Promise.all([hotelResponsePromise, availabilityResponsePromise]);
+    const hotel = await hotelResponse.json();
+    const availabilityUrl = availabilityResponse.url();
+    const availabilityStart = availabilityUrl.match(/[?&]start=([^&]+)/)?.[1];
+    const availabilityEnd = availabilityUrl.match(/[?&]end=([^&]+)/)?.[1];
+    const bookingContext = await page.evaluate(async guestName => {
+      const response = await fetch("/api/v1/front-desk/board");
+      if (!response.ok) throw new Error(`front-desk board returned ${response.status}`);
+      const board = await response.json();
+      const item = board.items.find(candidate => candidate.booking.guest_name === guestName);
+      if (!item) throw new Error(`booking missing from authoritative board for ${guestName}`);
+      return { checkIn: item.booking.check_in, checkOut: item.booking.check_out };
+    }, name);
+    const expectedStart = bookingContext.checkIn > hotel.hotel_local_date ? bookingContext.checkIn : hotel.hotel_local_date;
+    if (availabilityStart !== expectedStart || availabilityEnd !== bookingContext.checkOut) {
+      throw new Error(`availability did not use the remaining-stay interval [${expectedStart}, ${bookingContext.checkOut}): ${availabilityUrl}`);
+    }
+    const previewDate = await page.locator(".reassign-date-chip").innerText();
+    const expectedPreviewDate = await page.evaluate(date => {
+      const [year, month, day] = date.split("-").map(Number);
+      return new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" })
+        .format(new Date(Date.UTC(year, month - 1, day)));
+    }, expectedStart);
+    if (previewDate !== expectedPreviewDate) throw new Error(`UI interval preview ${previewDate} did not match effective date ${expectedPreviewDate}`);
+    await page.waitForFunction(() => {
+      const select = document.querySelector('form[aria-label="Reassign room"] select[name="room_id"]');
+      return select && !select.disabled && select.options.length > 1;
+    });
+    return { hotelLocalDate: hotel.hotel_local_date, checkOut: bookingContext.checkOut, effectiveDate: expectedStart, availabilityUrl };
+  }
+
+  const integratedContext = await openGuest("Integrated Reassignment Guest");
+  const form = page.locator('form[aria-label="Reassign room"]');
+  const options = form.getByRole("option");
+  const blocking = options.filter({ hasText: "blocked by maintenance" });
+  const optionState = await options.evaluateAll(items => items.map(item => ({ text: item.textContent, disabled: item.disabled })));
+  const blockingState = optionState.find(item => item.text.includes("blocked by maintenance"));
+  if (!blockingState || !blockingState.disabled) throw new Error(`BLOCKING destination was selectable: ${JSON.stringify(optionState)}`);
+  const successQuotePromise = page.waitForResponse(response => response.url().endsWith("/reassignment-quote"));
+  await form.getByRole("combobox").selectOption("e2e-room-b");
+  const successQuoteResponse = await successQuotePromise;
+  const successQuote = await successQuoteResponse.json();
+  if (successQuoteResponse.status() !== 200 || successQuote.effective_date !== integratedContext.effectiveDate
+    || successQuote.check_out !== integratedContext.checkOut || successQuote.new_total_cents !== 34000
+    || successQuote.delta_cents !== 4000) throw new Error(`integrated quote did not price the same remaining interval: ${JSON.stringify(successQuote)}`);
+  const priceSummary = form.locator(".reassign-price-impact");
+  await priceSummary.waitFor();
+  if (!(await priceSummary.innerText()).includes("New total")) throw new Error(`authoritative price impact missing from UI: ${await priceSummary.innerText()}`);
+  await page.screenshot({ path: "output/playwright/f05-reassignment-authoritative-quote-desktop.png", fullPage: true });
+  const advisory = options.filter({ hasText: "maintenance advisory" });
+  await page.waitForFunction(() => Array.from(document.querySelectorAll('form[aria-label="Reassign room"] option')).some(option => option.textContent?.includes("maintenance advisory")), null, { timeout: 30000 });
+  if (await advisory.count() !== 1 || (await advisory.evaluate(option => option.disabled))) throw new Error(`NON_BLOCKING destination was not selectable: ${JSON.stringify(await options.allTextContents())}; payloads=${JSON.stringify(payloads)}`);
+  const reason = form.locator('input[name="reason"]');
+  await reason.fill("short");
+  if (!(await reason.evaluate(input => input.validity.tooShort))) throw new Error("short reason was not rejected inline");
+  await form.getByRole("button", { name: "Reassign room" }).click();
+  if (responses.some(item => item.url.endsWith("/reassign") && item.status < 500)) throw new Error("short reason reached the API");
+  await reason.fill("Guest requested a quieter room");
+  const reassignResponsePromise = page.waitForResponse(response => response.url().endsWith("/reassign"));
+  const queueRefreshPromise = page.waitForResponse(response => response.url().endsWith("/api/v1/front-desk/board"));
+  await form.getByRole("button", { name: "Reassign room" }).click();
+  const [reassignResponse, queueRefreshResponse] = await Promise.all([reassignResponsePromise, queueRefreshPromise]);
+  if (reassignResponse.status() !== 200) throw new Error(`integrated reassignment returned ${reassignResponse.status()}: ${await reassignResponse.text()}`);
+  const command = await reassignResponse.json();
+  if (command.hotel_local_date !== integratedContext.hotelLocalDate || command.effective_date !== integratedContext.hotelLocalDate
+    || command.remaining_interval.start_date !== integratedContext.hotelLocalDate) throw new Error(`API did not confirm the hotel-local remaining interval: ${JSON.stringify(command)}`);
+  await page.getByRole("status").filter({ hasText: "Room reassigned" }).waitFor({ state: "visible", timeout: 10000 });
+  const refreshedBoard = await queueRefreshResponse.json();
+  const refreshedBooking = refreshedBoard.items.find(item => item.booking.id === "e2e-booking-success")?.booking;
+  if (refreshedBooking?.room_id !== "e2e-room-b") throw new Error(`API refresh did not show destination room: ${JSON.stringify(refreshedBooking)}; payloads=${JSON.stringify(payloads)}`);
+  const refreshedRow = page.getByRole("button", { name: "Integrated Reassignment Guest" });
+  await page.waitForFunction(() => {
+    const row = Array.from(document.querySelectorAll(".reception-queue-row"))
+      .find(element => element.getAttribute("data-booking-id") === "e2e-booking-success");
+    return row?.querySelector(".reception-room-number")?.textContent?.includes("102") ?? false;
+  });
+  if (!(await refreshedRow.innerText()).includes("102")) throw new Error(`refresh did not show destination room: ${await refreshedRow.innerText()}`);
+  await page.screenshot({ path: "output/playwright/f04-reassignment-desktop-success.png", fullPage: true });
+
+  await page.setViewportSize({ width: 375, height: 812 });
+  await openGuest("Stale Reassignment Guest", "e2e-booking-stale");
+  const staleForm = page.locator('form[aria-label="Reassign room"]');
+  const staleQuotePromise = page.waitForResponse(response => response.url().endsWith("/reassignment-quote"));
+  await staleForm.getByRole("combobox").selectOption("e2e-room-e");
+  if ((await staleQuotePromise).status() !== 200) throw new Error("stale fixture did not receive an authoritative quote before the conflict");
+  const adminMutation = await page.evaluate(async () => {
+    const response = await fetch("/api/v1/housekeeping/e2e-room-e/maintenance", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000001",
+        "x-local-access-email": "ana-admin@migration.invalid",
+        "x-hotel-id": "10000000-0000-0000-0000-000000000001",
+      },
+      body: JSON.stringify({ impact: "BLOCKING", priority: "HIGH", reason: "Concurrent room blocker", assigned_to: "ops" }),
+    });
+    return { status: response.status, body: await response.text() };
+  });
+  if (adminMutation.status !== 201) throw new Error(`stale fixture mutation failed: ${adminMutation.status} ${adminMutation.body}`);
+  await staleForm.locator('input[name="reason"]').fill("Guest requested a room change");
+  const conflictResponsePromise = page.waitForResponse(response => response.url().endsWith("/reassign"));
+  const conflictRefreshPromise = page.waitForResponse(response => response.url().endsWith("/api/v1/front-desk/board"));
+  await staleForm.getByRole("button", { name: "Reassign room" }).click();
+  const [conflictResponse, conflictRefreshResponse] = await Promise.all([conflictResponsePromise, conflictRefreshPromise]);
+  if (conflictResponse.status() !== 409) throw new Error(`expected stale HTTP 409, received ${conflictResponse.status()}`);
+  const refreshedConflictBoard = await conflictRefreshResponse.json();
+  if (refreshedConflictBoard.items.find(item => item.booking.id === "e2e-booking-stale")?.booking.room_id !== "e2e-room-c") throw new Error("409 refresh did not preserve the authoritative current room");
+  const conflict = page.getByRole("alert");
+  await conflict.waitFor();
+  if (!(await conflict.innerText()).includes("changed while you were working")) throw new Error(`operational 409 guidance missing: ${await conflict.innerText()}`);
+  if (await staleForm.count() !== 1) throw new Error("409 closed the operator's current reassignment context");
+  const blockedAfterRefresh = await staleForm.getByRole("option").filter({ hasText: "blocked by maintenance" }).evaluateAll(items => items.length > 0 && items.every(option => option.disabled));
+  if (!blockedAfterRefresh) throw new Error("409 refresh did not disable every newly blocked destination");
+  const failed = responses.filter(item => item.status >= 500);
+  if (failed.length) throw new Error(`integrated server failures: ${JSON.stringify(failed)}`);
+  await page.screenshot({ path: "output/playwright/f04-reassignment-mobile-conflict.png", fullPage: true });
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("http://127.0.0.1:4176/bookings?lane=in-house&q=Integrated");
+  const successQueueRow = page.locator('.reception-queue-row[data-booking-id="e2e-booking-success"]');
+  await successQueueRow.waitFor();
+  await successQueueRow.click();
+  await page.waitForFunction(() => new URL(location.href).searchParams.get("booking_id") === "e2e-booking-success");
+  const caseUrl = page.url();
+  await page.getByRole("button", { name: "Next action: room reassignment" }).click();
+  const historyTask = page.locator('form[aria-label="Reassign room"]');
+  await historyTask.waitFor();
+  if (!(await historyTask.locator("h4").first().evaluate(element => element === document.activeElement))) throw new Error("app-opened Reassignment task lost initial focus");
+  await historyTask.getByRole("button", { name: "Return to case" }).click();
+  await historyTask.waitFor({ state: "hidden" });
+  await page.waitForFunction(expected => location.href === expected, caseUrl);
+  await page.goBack();
+  await page.waitForFunction(() => !new URL(location.href).searchParams.has("booking_id"));
+  if (new URL(page.url()).searchParams.has("task")) throw new Error("browser Back reopened the cancelled Reassignment task");
+  await page.goForward();
+  await page.waitForFunction(() => new URL(location.href).searchParams.get("booking_id") === "e2e-booking-success");
+  await page.waitForFunction(() => document.activeElement?.classList.contains("reception-case-title"));
+  if (new URL(page.url()).searchParams.has("task")) throw new Error("browser Forward restored a task instead of the Case");
+  const directTaskUrl = new URL(page.url());
+  directTaskUrl.searchParams.set("task", "reassign");
+  await page.goto(directTaskUrl.toString());
+  await historyTask.waitFor();
+  await page.waitForFunction(() => {
+    const heading = document.querySelector('form[aria-label="Reassign room"] h4');
+    return !!heading && heading === document.activeElement;
+  });
+  await historyTask.getByRole("button", { name: "Return to case" }).click();
+  await historyTask.waitFor({ state: "hidden" });
+  await page.waitForFunction(() => !new URL(location.href).searchParams.has("task"));
+  if (new URL(page.url()).searchParams.get("booking_id") !== "e2e-booking-success") throw new Error("closing a direct Reassignment link did not preserve its Case");
+  console.log("Block C reassignment PASS: Worker/D1 success + stale 409, initial task focus, cancel→Case, browser Back/Forward without task reopen and Case focus, direct deep-link close/context");
+})()
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4176/bookings?lane=in-house&q=Integrated&booking_id=e2e-booking-success
+- Page Title: HMS Elite
+### Events
+- New console entries: .playwright-cli/console-2026-09-30T20-42-29-173Z.log#L1-L8
+Block C integrated reassignment PASS: Worker/D1 mutation and 409 assertions, task entry focus, cancel/back/forward history, Case focus restoration and direct deep-link return; owned Worker/Vite/browser cleanup verified.

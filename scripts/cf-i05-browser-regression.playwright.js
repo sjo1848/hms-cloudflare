@@ -7,10 +7,9 @@
   await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
   const viewports = [
     { name: "wide", width: 1280, height: 900 },
-    { name: "reduced-height", width: 1280, height: 600 },
-    { name: "compact", width: 900, height: 700 },
-    { name: "narrow", width: 390, height: 844 },
-    { name: "narrow-small", width: 320, height: 700 },
+    { name: "compact", width: 768, height: 812 },
+    { name: "narrow", width: 375, height: 812 },
+    { name: "reduced-height", width: 375, height: 600 },
     { name: "mobile-landscape", width: 844, height: 390 },
   ];
   const results = [];

@@ -1,0 +1,216 @@
+### Ran Playwright code
+```js
+await ((page) => (async () => {
+  await page.addInitScript(() => {
+    localStorage.setItem("hms.locale", "en");
+    localStorage.setItem("hms-local-acceptance-profile", "1");
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const offsetDate = days => {
+    const date = new Date();
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
+  };
+  const start = offsetDate(10);
+  const end = offsetDate(12);
+  const createPosts = [];
+  page.on("request", request => { if (request.url().endsWith("/api/v1/reservation-creation-operations") && request.method() === "POST") createPosts.push(request.url()); });
+  await page.goto("http://127.0.0.1:4176/bookings");
+  await page.getByRole("heading", { name: "Booking case workspace" }).waitFor();
+  const clickCreateTrigger = async () => {
+    const trigger = page.getByRole("button", { name: "Create booking" });
+    if (!(await trigger.count())) throw new Error(`Reception create trigger missing: url=${page.url()} body=${await page.locator("body").innerText()}`);
+    await trigger.click();
+  };
+  await page.locator(".reception-create-trigger").click();
+  let form = page.locator("form[aria-label='Create booking']");
+  await form.locator("input[type=checkbox]").check();
+  await form.getByLabel("Full name").fill("F0.8 Integrated Guest");
+  await form.getByLabel("Guest email").fill("f08-integrated@example.test");
+  await form.getByRole("button", { name: "Return to case" }).click();
+  await page.getByRole("alertdialog", { name: "Discard changes?" }).getByRole("button", { name: "Keep editing" }).click();
+  await form.waitFor({ state: "visible" });
+  if (await form.getByLabel("Full name").inputValue() !== "F0.8 Integrated Guest") throw new Error("dismissing dirty-task confirmation discarded the guest draft");
+  await form.getByRole("button", { name: "Return to case" }).click();
+  await page.getByRole("alertdialog", { name: "Discard changes?" }).getByRole("button", { name: "Discard changes" }).click();
+  await form.waitFor({ state: "hidden" });
+  await page.locator(".reception-create-trigger").click();
+  form = page.locator("form[aria-label='Create booking']");
+  await form.locator("input[type=checkbox]").check();
+  await form.getByLabel("Full name").fill("F0.8 Integrated Guest");
+  await form.getByLabel("Guest email").fill("f08-integrated@example.test");
+  await form.locator("input[type=date]").nth(0).fill(start);
+  await form.locator("input[type=date]").nth(1).fill(end);
+  const initialAvailability = page.waitForResponse(response => response.url().includes("/api/v1/rooms/available"), { timeout: 8000 }).catch(async error => { throw new Error(`${error.message}; state=${JSON.stringify(await page.evaluate(() => ({ url: location.href, body: document.querySelector(".reception-focused-task")?.innerText, step: document.querySelector(".reception-task-heading")?.innerText, fields: [...document.querySelectorAll("form[aria-label='Create booking'] input, form[aria-label='Create booking'] select")].map(el => ({ tag: el.tagName, value: el.value, type: el.type, required: el.required, validity: el.validity.valid })), buttons: [...document.querySelectorAll("form[aria-label='Create booking'] button")].map(el => ({ text: el.innerText, type: el.type })) })))};`); });
+  const firstContinueType = await form.getByRole("button", { name: "Continue" }).getAttribute("type");
+  if (firstContinueType !== "button") throw new Error(`first-step Continue is not non-submitting: ${firstContinueType}`);
+  await form.getByRole("button", { name: "Continue" }).click();
+  const initialRooms = await (await initialAvailability).json();
+  if (!initialRooms.some(room => room.id === "e2e-room-a")) throw new Error(`expected destination absent from authoritative availability response: ${JSON.stringify(initialRooms)}`);
+  await form.getByLabel("Room").selectOption("e2e-room-a");
+  const nextContinueType = await form.getByRole("button", { name: "Continue" }).getAttribute("type");
+  if (nextContinueType !== "button" || createPosts.length) throw new Error(`room-step transition submitted the reservation early: ${JSON.stringify({ nextContinueType, createPosts })}`);
+  const createResponse = page.waitForResponse(response => response.url().endsWith("/api/v1/reservation-creation-operations") && response.request().method() === "POST");
+  const createQueueRefresh = page.waitForResponse(response => response.url().endsWith("/api/v1/front-desk/board") && response.request().method() === "GET");
+  await form.getByRole("button", { name: "Continue" }).click();
+  await form.locator(".reception-task-review").waitFor();
+  const createTaskState = await form.evaluate(element => ({ text: element.innerText, buttons: [...element.querySelectorAll("button")].map(button => ({ text: button.innerText, aria: button.getAttribute("aria-label"), disabled: button.disabled, type: button.type })) }));
+  if (!createTaskState.buttons.some(button => button.text === "Create booking") || createTaskState.buttons.at(-1)?.disabled || createPosts.length) throw new Error(`create review step is missing its available submit action: ${JSON.stringify({ createTaskState, createPosts })}`);
+  await form.getByRole("button", { name: "Create booking" }).click();
+  const successfulResponse = await createResponse;
+  if (successfulResponse.status() !== 201) throw new Error(`new guest booking returned ${successfulResponse.status()}: ${await successfulResponse.text()}`);
+  await createQueueRefresh;
+  const created = await successfulResponse.json();
+  if (created.operation.stage !== "BOOKING_CREATED" || created.booking.total_cents !== 20000) throw new Error(`unexpected persisted create result ${JSON.stringify(created)}`);
+  const createdReload = await page.evaluate(async bookingId => {
+    const response = await fetch(`/api/v1/bookings/${bookingId}`, { headers: {
+      "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000002",
+      "x-local-access-email": "leo-reception@migration.invalid",
+      "x-hotel-id": "10000000-0000-0000-0000-000000000001",
+    } });
+    return { status: response.status, booking: await response.json() };
+  }, created.booking.id);
+  if (createdReload.status !== 200 || createdReload.booking.id !== created.booking.id) throw new Error(`authoritative booking reload failed: ${JSON.stringify(createdReload)}`);
+
+  await clickCreateTrigger();
+  if (new URL(page.url()).searchParams.get("task") !== "new-reservation") throw new Error(`focused task identity missing from URL: ${page.url()}`);
+  await page.goBack();
+  await page.getByRole("heading", { name: "F0.8 Integrated Guest" }).waitFor();
+  await page.goForward();
+  await page.getByRole("heading", { name: "New reservation" }).waitFor();
+  await page.locator(".reception-task-form").getByRole("button", { name: "Return to case" }).click();
+  const historyDiscard = page.getByRole("alertdialog", { name: "Discard changes?" });
+  if (await historyDiscard.count()) await historyDiscard.getByRole("button", { name: "Discard changes" }).click();
+  for (const [width, height] of [[900, 700], [390, 844], [320, 700], [1280, 600], [844, 390]]) {
+    await page.setViewportSize({ width, height });
+    await clickCreateTrigger();
+    await page.getByRole("heading", { name: "New reservation" }).waitFor();
+    const dimensions = await page.evaluate(() => ({ width: innerWidth, document: document.documentElement.scrollWidth, task: document.querySelector(".reception-focused-task")?.getBoundingClientRect().toJSON(), actions: document.querySelector(".reception-task-actions")?.getBoundingClientRect().toJSON() }));
+    if (dimensions.document > dimensions.width) throw new Error(`focused task has horizontal overflow at ${width}x${height}: ${JSON.stringify(dimensions)}`);
+    if (!dimensions.task || dimensions.task.width < (width > 900 ? 420 : width * .8) || !dimensions.actions) throw new Error(`focused task or its action footer is missing at ${width}x${height}: ${JSON.stringify(dimensions)}`);
+    await page.locator(".reception-task-form .reception-task-actions").scrollIntoViewIfNeeded();
+    const footerBounds = await page.locator(".reception-task-form .reception-task-actions").evaluate(element => { const rect = element.getBoundingClientRect(); return { top: rect.top, bottom: rect.bottom, height: innerHeight }; });
+    if (footerBounds.top < 0 || footerBounds.bottom > footerBounds.height) throw new Error(`task actions cannot be scrolled into the visual viewport at ${width}x${height}: ${JSON.stringify(footerBounds)}`);
+    await page.screenshot({ path: `output/playwright/block-c-new-reservation-${width}x${height}.png`, fullPage: false });
+    await page.locator(".reception-task-form").getByRole("button", { name: "Return to case" }).click();
+    const responsiveDiscard = page.getByRole("alertdialog", { name: "Discard changes?" });
+    if (await responsiveDiscard.count()) await responsiveDiscard.getByRole("button", { name: "Discard changes" }).click();
+  }
+
+  const recoveryStart = offsetDate(20);
+  const recoveryEnd = offsetDate(22);
+  const staged = await page.evaluate(async ({ recoveryStart, recoveryEnd }) => {
+    const token = crypto.randomUUID();
+    const response = await fetch("/api/v1/reservation-creation-operations", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000002",
+        "x-local-access-email": "leo-reception@migration.invalid",
+        "x-hotel-id": "10000000-0000-0000-0000-000000000001",
+      },
+      body: JSON.stringify({
+        operation_token: token,
+        guest: { full_name: "F0.8 Recovery Guest", email: "f08-recovery@example.test" },
+        booking: { room_id: "e2e-room-blocked", check_in: recoveryStart, check_out: recoveryEnd, notes: "recovery after conflict" },
+      }),
+    });
+    return { token, status: response.status, body: await response.json() };
+  }, { recoveryStart, recoveryEnd });
+  if (staged.status !== 409 || staged.body.operation?.stage !== "GUEST_CREATED") throw new Error(`expected durable recoverable guest stage, got ${JSON.stringify(staged)}`);
+  const recoveryApiList = await page.evaluate(async () => {
+    const response = await fetch("/api/v1/reservation-creation-operations", { headers: {
+      "x-local-access-subject": "source-user:14000000-0000-0000-0000-000000000002",
+      "x-local-access-email": "leo-reception@migration.invalid",
+      "x-hotel-id": "10000000-0000-0000-0000-000000000001",
+    } });
+    return { status: response.status, body: await response.json() };
+  });
+  if (recoveryApiList.status !== 200 || !recoveryApiList.body.some(operation => operation.operation_token === staged.token)) throw new Error(`staged recovery was absent from the authoritative list: ${JSON.stringify({ staged, recoveryApiList })}`);
+
+  await page.reload();
+  await page.getByRole("heading", { name: "Booking case workspace" }).waitFor();
+  await clickCreateTrigger();
+  const recoveryForm = page.locator("form[aria-label='Create booking']");
+  await recoveryForm.locator("input[type=date]").nth(0).fill(recoveryStart);
+  await recoveryForm.locator("input[type=date]").nth(1).fill(recoveryEnd);
+  const recoveryAvailability = page.waitForResponse(response => response.url().includes("/api/v1/rooms/available"));
+  await page.waitForFunction(() => [...document.querySelectorAll("form[aria-label='Create booking'] button")].some(button => button.textContent.trim() === "Continue" && !button.disabled));
+  await recoveryForm.getByRole("button", { name: "Continue" }).click();
+  const recoveryRooms = await (await recoveryAvailability).json();
+  const recoveryItem = page.locator(".reception-recovery-item").filter({ hasText: "F0.8 Recovery Guest" });
+  if (!(await recoveryItem.count())) throw new Error(`recoverable guest missing from task UI: ${JSON.stringify({ recoveryApiList, body: await page.locator(".reception-focused-task").innerText(), errors: await page.locator(".reception-focused-task").getByRole("alert").allTextContents().catch(() => []) })}`);
+  await recoveryItem.waitFor({ state: "visible", timeout: 5000 }).catch(async () => {
+    const diagnostic = await page.evaluate(() => {
+      const item = document.querySelector(".reception-recovery-item");
+      const rect = item?.getBoundingClientRect();
+      const style = item ? getComputedStyle(item) : null;
+      return { url: location.href, step: document.querySelector(".reception-task-heading")?.textContent, text: document.querySelector(".reception-task-fields")?.innerText, itemHtml: item?.outerHTML, itemRect: rect && { x: rect.x, y: rect.y, width: rect.width, height: rect.height }, display: style?.display, visibility: style?.visibility, recoveryError: [...document.querySelectorAll("[role=alert]")].map(node => node.textContent) };
+    });
+    throw new Error(`recovery row did not become visible: ${JSON.stringify(diagnostic)}`);
+  });
+  const resumedAvailability = page.waitForResponse(response => response.url().includes("/api/v1/rooms/available") && response.request().method() === "GET");
+  await recoveryItem.getByRole("button", { name: "Use saved guest" }).click();
+  const resumedForm = page.locator("form[aria-label='Create booking']");
+  const resumedRooms = await (await resumedAvailability).json();
+  if (!resumedRooms.some(room => room.id === "e2e-room-b")) throw new Error(`recovery destination absent from authoritative availability response: ${JSON.stringify(resumedRooms)}`);
+  await resumedForm.getByLabel("Room").selectOption("e2e-room-b");
+  const retryResponse = page.waitForResponse(response => response.url().endsWith("/api/v1/reservation-creation-operations") && response.request().method() === "POST");
+  const recoveryQueueRefresh = page.waitForResponse(response => response.url().endsWith("/api/v1/front-desk/board") && response.request().method() === "GET");
+  const recoveryListRefresh = page.waitForResponse(response => response.url().endsWith("/api/v1/reservation-creation-operations") && response.request().method() === "GET");
+  await resumedForm.getByRole("button", { name: "Continue" }).click();
+  await resumedForm.getByRole("heading", { name: "Review" }).waitFor();
+  await resumedForm.getByRole("button", { name: "Create booking" }).click();
+  const retry = await retryResponse;
+  if (retry.status() !== 201) throw new Error(`recovered guest booking returned ${retry.status()}: ${await retry.text()}`);
+  await recoveryQueueRefresh;
+  const stillPending = await (await recoveryListRefresh).json();
+  if (!stillPending.some(operation => operation.operation_token === staged.token && operation.stage === "GUEST_CREATED" && operation.guest_id === staged.body.operation.guest_id)) throw new Error(`original incomplete operation disappeared after separate booking: ${JSON.stringify(stillPending)}`);
+  await page.locator(".reception-create-trigger").click();
+  const pendingForm = page.locator("form[aria-label='Create booking']");
+  await pendingForm.locator("input[type=date]").nth(0).fill(recoveryStart);
+  await pendingForm.locator("input[type=date]").nth(1).fill(recoveryEnd);
+  const pendingAvailability = page.waitForResponse(response => response.url().includes("/api/v1/rooms/available"));
+  await page.waitForFunction(() => [...document.querySelectorAll("form[aria-label='Create booking'] button")].some(button => button.textContent.trim() === "Continue" && !button.disabled));
+  await pendingForm.getByRole("button", { name: "Continue" }).click();
+  await pendingAvailability;
+  await page.locator(".reception-recovery-item").filter({ hasText: "F0.8 Recovery Guest" }).waitFor();
+  const resumed = await retry.json();
+  if (resumed.operation.stage !== "BOOKING_CREATED" || resumed.operation.guest_id !== staged.body.operation.guest_id) throw new Error(`recovery did not use original guest ${JSON.stringify(resumed)}`);
+  await page.screenshot({ path: "output/playwright/f0-08-reception-recovery-desktop.png", fullPage: true });
+  await pendingForm.getByRole("button", { name: "Return to case" }).click();
+  await page.getByRole("alertdialog", { name: "Discard changes?" }).getByRole("button", { name: "Discard changes" }).click();
+
+  await page.setViewportSize({ width: 375, height: 844 });
+  await clickCreateTrigger();
+  const mobileForm = page.locator("form[aria-label='Create booking']");
+  await mobileForm.waitFor();
+  await mobileForm.locator("input[type=checkbox]").check();
+  await mobileForm.getByLabel("Full name").fill("F0.8 Mobile Guest");
+  await mobileForm.getByLabel("Guest email").fill("f08-mobile@example.test");
+  await mobileForm.locator("input[type=date]").nth(0).fill(offsetDate(30));
+  await mobileForm.locator("input[type=date]").nth(1).fill(offsetDate(32));
+  const mobileAvailable = page.waitForResponse(response => response.url().includes("/api/v1/rooms/available"));
+  await mobileForm.getByRole("button", { name: "Continue" }).click();
+  const mobileRooms = await (await mobileAvailable).json();
+  if (!mobileRooms.some(room => room.id === "e2e-room-a")) throw new Error(`mobile destination absent from authoritative availability response: ${JSON.stringify(mobileRooms)}`);
+  await mobileForm.getByLabel("Room").selectOption("e2e-room-a");
+  const mobileCreate = page.waitForResponse(response => response.url().endsWith("/api/v1/reservation-creation-operations") && response.request().method() === "POST");
+  const mobileQueueRefresh = page.waitForResponse(response => response.url().endsWith("/api/v1/front-desk/board") && response.request().method() === "GET");
+  await mobileForm.getByRole("button", { name: "Continue" }).click();
+  await mobileForm.getByRole("button", { name: "Create booking" }).click();
+  const mobileResponse = await mobileCreate;
+  if (mobileResponse.status() !== 201) throw new Error(`mobile reservation create returned ${mobileResponse.status()}: ${await mobileResponse.text()}`);
+  await mobileQueueRefresh;
+  const mobileResult = await mobileResponse.json();
+  if (mobileResult.operation.stage !== "BOOKING_CREATED") throw new Error(`mobile reservation was not persisted: ${JSON.stringify(mobileResult)}`);
+  await page.screenshot({ path: "output/playwright/f0-08-reception-recovery-mobile.png", fullPage: true });
+  console.log(JSON.stringify({ desktopCreateStatus: successfulResponse.status(), createdBooking: created.booking.id, stagedStatus: staged.status, stagedGuest: staged.body.operation.guest_id, recoveryStatus: retry.status(), recoveredBooking: resumed.booking.id, originalOperationStillRecoverable: true, mobileCreateStatus: mobileResponse.status(), mobileBooking: mobileResult.booking.id, mobile: "375x844" }));
+})()
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4176/bookings?booking_id=97647f7a-e8d2-4e94-8116-8aca14af7c9d
+- Page Title: HMS Elite
+### Events
+- New console entries: .playwright-cli/console-2026-09-30T19-26-39-359Z.log#L1-L4

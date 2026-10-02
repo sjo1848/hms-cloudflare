@@ -1,0 +1,46 @@
+
+  VITE v7.3.6  ready in 303 ms
+
+  ➜  Local:   http://127.0.0.1:4176/
+7:19:44 PM [vite] http proxy error: /api/v1/reservation-creation-operations
+Error: socket hang up
+    at Socket.socketOnEnd (node:_http_client:617:25)
+    at Socket.emit (node:events:521:24)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+7:19:44 PM [vite] http proxy error: /api/v1/guests
+Error: socket hang up
+    at Socket.socketOnEnd (node:_http_client:617:25)
+    at Socket.emit (node:events:521:24)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+7:19:44 PM [vite] http proxy error: /api/v1/front-desk/board
+Error: socket hang up
+    at Socket.socketOnEnd (node:_http_client:617:25)
+    at Socket.emit (node:events:521:24)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+7:19:44 PM [vite] http proxy error: /api/v1/rooms
+Error: socket hang up
+    at Socket.socketOnEnd (node:_http_client:617:25)
+    at Socket.emit (node:events:521:24)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+7:19:44 PM [vite] http proxy error: /api/v1/reservation-creation-operations
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1706:16)
+7:19:44 PM [vite] http proxy error: /api/v1/guests
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1706:16)
+7:20:12 PM [vite] http proxy error: /api/v1/rooms
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1706:16)
+7:20:12 PM [vite] http proxy error: /api/v1/guests
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1706:16)
+7:20:12 PM [vite] http proxy error: /api/v1/reservation-creation-operations
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1706:16)
+7:20:12 PM [vite] http proxy error: /api/v1/front-desk/board
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1706:16)

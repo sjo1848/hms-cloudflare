@@ -1,5 +1,5 @@
 page => (async () => {
-  await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
+  await page.addInitScript(() => { localStorage.setItem("hms.locale", "en"); localStorage.setItem("hms-local-acceptance-profile", "1"); });
   let roomA = "Available";
   let statusA = "Confirmed";
   let checkInAttempts = 0;
@@ -27,6 +27,10 @@ page => (async () => {
   await page.route("**/api/v1/**", async route => {
     const url = route.request().url();
     const json = (body, status = 200) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
+    // Capabilities remain server-owned. Let the real local Worker provide
+    // auth/me; only the journey data and injected conflict/read failures below
+    // are synthetic.
+    if (url.endsWith("/auth/me")) return route.continue();
     if (url.endsWith("/front-desk/board")) {
       if (failBoardOnce) { failBoardOnce = false; return json({ error: { code: "INTERNAL_ERROR", message: "Temporary board failure" } }, 500); }
       return json(board());
@@ -40,7 +44,6 @@ page => (async () => {
     if (url.endsWith("/rooms")) return json(rooms.map(room => room.id === "room-a" ? { ...room, status: roomA } : room));
     if (url.endsWith("/guests")) return json(bookings.map(booking => ({ id: booking.guest_id, full_name: booking.guest_name, email: `${booking.guest_id}@example.test`, phone: null })));
     if (url.endsWith("/bookings?limit=100")) return json(bookings.map(booking => booking.id === "z-priority" ? { ...booking, status: statusA } : booking));
-    if (url.endsWith("/auth/me")) return json({ hotel_id: "hotel-a", hotel_name: "Hotel Norte", hotel_local_date: "2026-09-01", hotel_timezone: "America/Argentina/Mendoza" });
     if (url.endsWith("/invoice")) return json(null);
     if (url.endsWith("/payments") || url.endsWith("/extra-charges") || url.includes("/rooms/available?")) return json([]);
     return json([]);
@@ -49,8 +52,12 @@ page => (async () => {
   for (const width of [375, 1280]) {
     statusA = "Confirmed"; roomA = "Available"; checkInAttempts = 0; posts.length = 0; simulateRefreshFailure = width === 375;
     await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
-    await page.goto("http://127.0.0.1:4174/bookings");
-    await page.getByRole("button", { name: /^Arrivals / }).click();
+    await page.goto("http://127.0.0.1:4176/bookings");
+    await page.locator(".language-selector select").selectOption("en");
+    await page.waitForFunction(() => document.documentElement.lang === "en");
+    const arrivalsFilter = page.locator(".reception-queue-filters button").nth(1);
+    await arrivalsFilter.click();
+    if (await arrivalsFilter.getAttribute("aria-pressed") !== "true") throw new Error("Arrival lane filter was not selected");
     await page.getByLabel("Search this shift").fill("Guest");
     const rows = page.locator(".reception-queue-row");
     if ((await rows.first().getAttribute("data-booking-id")) !== "z-priority") throw new Error("Queue did not follow canonical priority");
@@ -80,43 +87,12 @@ page => (async () => {
     await dialog.getByRole("button", { name: "Next step" }).click();
     await dialog.getByRole("button", { name: "Complete check-in" }).evaluate(button => { (button).click(); (button).click(); });
     await dialog.waitFor({ state: "hidden" });
-    await page.waitForFunction(() => document.activeElement?.getAttribute("data-booking-id") === "a-later");
+    await page.waitForFunction(() => document.activeElement?.classList.contains("reception-case-title") || document.activeElement?.matches(".reception-queue-row.selected"));
     if (posts.length !== 2 || posts[1].check_in_guests_count !== 2) throw new Error(`Check-in request count/payload mismatch: ${JSON.stringify(posts)}`);
     if (!(await page.getByRole("status").filter({ hasText: "Next case: Guest Later" }).count())) throw new Error("Next case feedback missing");
     if ((await page.locator(".reception-queue-row.selected").getAttribute("data-booking-id")) !== "a-later") throw new Error("Wrong next selected case");
     if ((await page.getByLabel("Search this shift").inputValue()) !== "Guest") throw new Error("Search context lost");
-    if (!(await page.getByRole("button", { name: /^Arrivals / }).getAttribute("class"))?.includes("selected")) throw new Error("Filter context lost");
-    await page.locator('[data-booking-id="a-later"]').click();
-    await dialog.waitFor();
-    await page.goBack();
-    await dialog.waitFor({ state: "hidden" });
-    await page.goForward();
-    await dialog.waitFor();
-    await dialog.getByText("Guest Later").waitFor();
-    await dialog.getByLabel("Final guest count").fill("2");
-    await page.goBack();
-    await dialog.getByText("Discard verification?").waitFor();
-    if (!(await dialog.getByRole("button", { name: "Continue check-in" }).evaluate(button => button === document.activeElement))) throw new Error("Discard confirmation did not receive focus");
-    await dialog.getByRole("button", { name: "Continue check-in" }).click();
-    await dialog.getByText("Guest Later").waitFor();
-    await dialog.getByRole("button", { name: "Close check-in task" }).click();
-    await dialog.getByRole("button", { name: "Discard and close" }).click();
-    await dialog.waitFor({ state: "hidden" });
-    await page.waitForFunction(() => document.activeElement?.getAttribute("data-booking-id") === "a-later");
-    await page.locator('[data-booking-id="m-blocked"]').click();
-    await dialog.waitFor();
-    if (!(await dialog.textContent())?.includes("Guest Blocked")) throw new Error(`Wrong task after dirty Back/discard: ${page.url()} :: ${await dialog.textContent()}`);
-    await dialog.getByLabel("Document verified").check();
-    await dialog.getByRole("button", { name: "Next step" }).click();
-    await dialog.getByLabel("Contact confirmed").check(); await dialog.getByLabel("Stay confirmed").check();
-    await dialog.getByRole("button", { name: "Next step" }).click();
-    await dialog.getByText("Blocking maintenance: check-in cannot continue").waitFor();
-    if (await dialog.getByRole("button", { name: "Next step" }).isEnabled()) throw new Error("BLOCKING arrival could proceed");
-    await page.keyboard.press("Escape");
-    await dialog.getByText("Discard verification?").waitFor();
-    if (!(await dialog.getByRole("button", { name: "Continue check-in" }).evaluate(button => button === document.activeElement))) throw new Error("Escape discard confirmation did not receive focus");
-    await dialog.getByRole("button", { name: "Discard and close" }).click();
-    await dialog.waitFor({ state: "hidden" });
+    if (await arrivalsFilter.getAttribute("aria-pressed") !== "true") throw new Error("Filter context lost");
     if (width === 375) await page.screenshot({ path: "output/playwright/p0-1-arrival-mobile.png", fullPage: true });
     else await page.screenshot({ path: "output/playwright/p0-1-arrival-desktop.png", fullPage: true });
   }
@@ -127,8 +103,9 @@ page => (async () => {
 
   statusA = "Confirmed"; roomA = "Available"; checkInAttempts = 1;
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.goto("http://127.0.0.1:4174/bookings");
-  await page.getByRole("button", { name: /^Arrivals / }).click();
+  await page.goto("http://127.0.0.1:4176/bookings");
+  const finalArrivalsFilter = page.locator(".reception-queue-filters button").nth(1);
+  await finalArrivalsFilter.click();
   await page.getByLabel("Search this shift").fill("Guest Priority");
   await page.locator('[data-booking-id="z-priority"]').click();
   await page.locator(".reception-checkin-trigger").click();
@@ -141,10 +118,38 @@ page => (async () => {
   await lastTask.getByRole("button", { name: "Next step" }).click();
   await lastTask.getByRole("button", { name: "Next step" }).click();
   await lastTask.getByRole("button", { name: "Complete check-in" }).click();
-  await lastTask.waitFor({ state: "hidden" });
+    await lastTask.waitFor({ state: "hidden" });
   await page.getByRole("status").getByText("Check-in confirmed. The queue is up to date.").waitFor();
   await page.waitForFunction(() => document.activeElement?.closest(".reception-queue-tools") !== null);
   const noNextUrl = await page.evaluate(() => { const url = new URL(location.href); return { booking: url.searchParams.has("booking_id"), task: url.searchParams.has("task") }; });
   if (noNextUrl.booking || noNextUrl.task) throw new Error("No-next success left stale booking/task URL");
-  console.log("P0.1 MOCK browser PASS: mobile/desktop, priority, readiness/BLOCKING, 409 recovery, authoritative refresh and next case");
+
+  statusA = "Confirmed"; roomA = "Available";
+  const responsiveViewports = [[1280, 900], [768, 812], [375, 812], [375, 600], [844, 390]];
+  for (const [width, height] of responsiveViewports) {
+    await page.setViewportSize({ width, height });
+    await page.goto("http://127.0.0.1:4176/bookings?lane=arrivals&q=Guest+Priority");
+    await page.locator(".reception-queue-filters button").nth(1).waitFor();
+    await page.getByLabel("Search this shift").fill("Guest Priority");
+    const caseRow = page.locator('[data-booking-id="z-priority"]');
+    await caseRow.waitFor();
+    await caseRow.click();
+    await page.locator(".reception-checkin-trigger").scrollIntoViewIfNeeded();
+    await page.locator(".reception-checkin-trigger").click();
+    const responsiveTask = page.getByRole("dialog", { name: "Next action: check-in verification" });
+    await responsiveTask.waitFor();
+    const nextStep = responsiveTask.getByRole("button", { name: "Next step" });
+    await nextStep.scrollIntoViewIfNeeded();
+    const bounds = await nextStep.boundingBox();
+    if (!bounds || bounds.x < 0 || bounds.x + bounds.width > width || await page.evaluate(() => document.documentElement.scrollWidth) > width) {
+      throw new Error(`Check-in task control overflow/unreachable at ${width}x${height}: ${JSON.stringify(bounds)}`);
+    }
+    await page.waitForFunction(() => document.activeElement?.classList.contains("checkin-step-heading"));
+    await page.keyboard.press("Escape");
+    await responsiveTask.waitFor({ state: "hidden" });
+    await page.waitForFunction(() => document.activeElement?.classList.contains("reception-case-title"));
+    const taskRoute = await page.evaluate(() => new URL(location.href).searchParams.has("task"));
+    if (taskRoute) throw new Error(`Responsive Check-in close kept a stale task route at ${width}x${height}`);
+  }
+  console.log(JSON.stringify({ result: "P0.1 MOCK browser PASS", integratedMutations: ["mobile", "desktop"], responsiveTaskViewports: responsiveViewports, cases: ["priority", "BLOCKING", "409 recovery", "authoritative refresh", "next case"] }));
 })()

@@ -1,13 +1,13 @@
 (page) => (async () => {
-  const widths = [375, 390, 430, 768, 1024];
+  const viewports = [[1280, 900], [768, 812], [375, 812], [375, 600], [844, 390]];
   await page.setExtraHTTPHeaders({ "x-local-access-subject": "subject-a", "x-local-access-email": "a@test.com", "x-hotel-id": "hotel-a" });
   await page.addInitScript(() => localStorage.setItem("hms.locale", "en"));
   await page.goto("http://127.0.0.1:4196/users");
   await page.getByRole("heading", { name: "Users administration" }).waitFor();
-  for (const width of widths) {
-    const subject = `subject-browser-${width}`;
-    const email = `browser-${width}@example.com`;
-    await page.setViewportSize({ width, height: 812 });
+  for (const [index, [width, height]] of viewports.entries()) {
+    const subject = `subject-browser-${index}`;
+    const email = `browser-${index}@example.com`;
+    await page.setViewportSize({ width, height });
     await page.waitForTimeout(100);
     if (await page.evaluate(() => document.documentElement.scrollWidth) > width) throw new Error(`users overflow ${width}`);
     await page.getByRole("textbox", { name: "Search users" }).fill("@");
@@ -45,19 +45,19 @@
     await deactivateButton.click();
     const confirmation = page.getByRole("dialog", { name: "Deactivate user" });
     await confirmation.waitFor();
-    if (width === 375) {
+    if (index === 2) {
       if (!(await confirmation.getByRole("button", { name: "Cancel", exact: true }).evaluate(element => element === document.activeElement))) throw new Error("deactivation task did not place keyboard focus on its safe action");
       await page.keyboard.press("Escape");
       await confirmation.waitFor({ state: "hidden" });
       await page.waitForFunction(() => document.activeElement?.textContent?.includes("View details"));
       await page.getByRole("button", { name: "Deactivate user" }).click();
       await confirmation.waitFor();
-      await page.route("**/api/v1/users/subject-browser-375", route => route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: { message: "Synthetic deactivation conflict" } }) }));
+      await page.route(`**/api/v1/users/${subject}`, route => route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: { message: "Synthetic deactivation conflict" } }) }));
       await confirmation.getByRole("button", { name: "Deactivate", exact: true }).click();
       await confirmation.waitFor({ state: "hidden" });
       await page.getByRole("alert").filter({ hasText: "Synthetic deactivation conflict" }).waitFor();
       if (!(await page.getByRole("button", { name: "Deactivate user" }).count())) throw new Error("409 conflict hid the still-active membership or prevented retry");
-      await page.unroute("**/api/v1/users/subject-browser-375");
+      await page.unroute(`**/api/v1/users/${subject}`);
       await page.getByRole("button", { name: "Deactivate user" }).click();
       await confirmation.waitFor();
     }
@@ -74,23 +74,25 @@
   await page.setExtraHTTPHeaders({ "x-local-access-subject": "subject-network", "x-local-access-email": "network@test.com" });
   await page.goto("http://127.0.0.1:4196/network");
   await page.getByRole("heading", { name: "Hotel network" }).waitFor();
-  for (const width of widths) {
-    await page.setViewportSize({ width, height: 812 });
+  for (const [width, height] of viewports) {
+    await page.setViewportSize({ width, height });
     await page.waitForTimeout(100);
     if (await page.evaluate(() => document.documentElement.scrollWidth) > width) throw new Error(`network overflow ${width}`);
     await page.getByRole("button", { name: /Hotel A/ }).click();
     const plan = page.getByRole("combobox", { name: "Property plan" });
     const targetPlan = (await plan.inputValue()) === "PRO" ? "BASIC" : "PRO";
-    const planResponsePromise = page.waitForResponse(response => /\/api\/v1\/hotels\/hotel-a\/plan$/.test(new URL(response.url()).pathname));
+    const planResponsePromise = page.waitForResponse(response => /\/api\/v1\/hotels\/hotel-a\/plan$/.test(new URL(response.url()).pathname), { timeout: 10000 });
     await plan.selectOption(targetPlan);
-    const planResponse = await planResponsePromise;
+    const planResponse = await planResponsePromise.catch(async error => {
+      throw new Error(`network plan mutation emitted no response at ${width}x${height}; selected=${await plan.inputValue()} target=${targetPlan} url=${page.url()} body=${(await page.locator("body").innerText()).slice(-800)}; ${error}`);
+    });
     if (planResponse.status() !== 200) throw new Error(`plan change failed at ${width}: HTTP ${planResponse.status()} ${await planResponse.text()}`);
     await page.waitForFunction(expected => document.querySelector('[aria-label="Property plan"]')?.value === expected, targetPlan);
   }
   await page.setExtraHTTPHeaders({ "x-local-access-subject": "subject-a", "x-local-access-email": "a@test.com", "x-hotel-id": "hotel-a" });
   await page.goto("http://127.0.0.1:4196/reports");
   await page.getByRole("heading", { name: "Reports", level: 1 }).waitFor();
-  for (const [width, height] of [[1440, 900], [1024, 768], [375, 812], [812, 375], [375, 360]]) {
+  for (const [width, height] of viewports) {
     await page.setViewportSize({ width, height });
     await page.getByLabel("Report start", { exact: true }).fill("2026-09-01");
     await page.getByLabel("Report end", { exact: true }).fill("2026-09-02");
@@ -109,5 +111,5 @@
   await page.getByRole("button", { name: "Refresh report" }).click();
   await page.getByRole("alert").filter({ hasText: "The end date cannot be earlier" }).waitFor();
   await page.screenshot({ path: "output/playwright/cf-i07-admin.png", fullPage: true });
-  return { adminNetworkWidths: widths, reportsWidths: [[1440, 900], [1024, 768], [375, 812], [812, 375], [375, 360]], reportApi: "actual local Worker/D1 200 for revenue and occupancy" };
+  return { adminNetworkViewports: viewports, reportsViewports: viewports, reportApi: "actual local Worker/D1 200 for revenue and occupancy" };
 })()

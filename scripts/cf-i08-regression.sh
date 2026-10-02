@@ -2,7 +2,7 @@
 set -euo pipefail
 export WRANGLER_SEND_METRICS=false
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd); cd "$repo_dir"; wrangler="$repo_dir/node_modules/.bin/wrangler"; tmp_dir=$(mktemp -d); worker_pid=""
-run_d1(){ CI=1 timeout 6s "$wrangler" "$@" >/dev/null || { local rc=$?; [[ "$rc" == 124 ]]; }; }
+run_d1(){ CI=1 timeout 30s "$wrangler" "$@" >/dev/null; }
 collect_tree(){ local parent="$1" child; printf '%s\n' "$parent"; while read -r child; do [[ -n "$child" ]] && collect_tree "$child"; done < <(pgrep -P "$parent" || true); }
 cleanup(){ local pid; local -a owned=(); [[ -n "$worker_pid" ]] || return 0; while read -r pid; do owned+=("$pid"); done < <(collect_tree "$worker_pid"); for pid in "${owned[@]}"; do kill -TERM "$pid" 2>/dev/null || true; done; for _ in {1..50}; do local live=0; for pid in "${owned[@]}"; do kill -0 "$pid" 2>/dev/null && live=1; done; (( live == 0 )) && { wait "$worker_pid" 2>/dev/null || true; worker_pid=""; return 0; }; sleep 0.1; done; for pid in "${owned[@]}"; do kill -KILL "$pid" 2>/dev/null || true; done; }
 trap cleanup EXIT

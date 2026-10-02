@@ -9,6 +9,7 @@ api_pid=""
 web_pid=""
 browser_session="ux-checkin-$$"
 browser_owned_pids=""
+browser_preexisting_pids=""
 
 wait_for_owned_browser_exit() {
   for _ in {1..50}; do
@@ -69,22 +70,25 @@ on_exit() {
 trap on_exit EXIT
 
 pwcli="${CODEX_HOME:-$HOME/.codex}/skills/playwright/scripts/playwright_cli.sh"
+wrangler_bin="${WRANGLER_BIN:-./node_modules/.bin/wrangler}"
 
 node scripts/p0-1-seed-local.mjs "$p01_persist"
-setsid ./node_modules/.bin/wrangler dev --local --ip 127.0.0.1 --port 8787 --persist-to "$p01_persist/combined" --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >"$p01_persist/api.log" 2>&1 &
+setsid "$wrangler_bin" dev --local --ip 127.0.0.1 --port 8787 --persist-to "$p01_persist/combined" --var LOCAL_DEV_AUTH:true -c apps/api/wrangler.jsonc >"$p01_persist/api.log" 2>&1 &
 api_pid=$!
-setsid env VITE_LOCAL_ACCEPTANCE_AUTH=true ./node_modules/.bin/vite --host 127.0.0.1 --port 4174 --config apps/web/vite.config.ts >"$p01_persist/web.log" 2>&1 &
+setsid env VITE_LOCAL_ACCEPTANCE_AUTH=true ./node_modules/.bin/vite --host 127.0.0.1 --port 4176 --config apps/web/vite.config.ts >"$p01_persist/web.log" 2>&1 &
 web_pid=$!
 for _ in {1..40}; do
-  if curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1 && curl -fsS http://127.0.0.1:4174/bookings >/dev/null 2>&1; then break; fi
+  if curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1 && curl -fsS http://127.0.0.1:4176/bookings >/dev/null 2>&1; then break; fi
   sleep 1
 done
 curl -fsS http://127.0.0.1:8787/health >/dev/null
-curl -fsS http://127.0.0.1:4174/bookings >/dev/null
+curl -fsS http://127.0.0.1:4176/bookings >/dev/null
+browser_preexisting_pids=$(ps -eo pid,args | awk '(/\/opt\/google\/chrome\/chrome/ && /--user-data-dir=\/tmp\/playwright_chromiumdev_profile-/) || /cliDaemon\.js/ {print $1}' | sort -u | tr '\n' ' ')
 bash "$pwcli" -s "$browser_session" open about:blank >/dev/null
-browser_owned_pids=$(ps -eo pid,args | awk -v session="$browser_session" '(/\/opt\/google\/chrome\/chrome/ && /--user-data-dir=\/tmp\/playwright_chromiumdev_profile-/ || (/cliDaemon\.js/ && index($0,session))) && $0 !~ /awk/ {print $1}' | sort -u | tr '\n' ' ')
+browser_owned_pids=$(ps -eo pid,args | awk -v before=" $browser_preexisting_pids " -v session="$browser_session" '(/\/opt\/google\/chrome\/chrome/ && /--user-data-dir=\/tmp\/playwright_chromiumdev_profile-/ || (/cliDaemon\.js/ && index($0,session))) && $0 !~ /awk/ && index(before," "$1" ")==0 {print $1}' | sort -u | tr '\n' ' ')
 bash "$pwcli" -s "$browser_session" run-code --filename scripts/p0-1-arrival-integrated.playwright.js
 bash "$pwcli" -s "$browser_session" run-code --filename scripts/p0-1-arrival-browser.playwright.js
+bash "$pwcli" -s "$browser_session" run-code --filename scripts/cf-web-arch-browser.playwright.js
 bash "$pwcli" -s "$browser_session" close >/dev/null
 stop_servers
 if kill -0 -- "-$api_pid" 2>/dev/null || kill -0 -- "-$web_pid" 2>/dev/null; then

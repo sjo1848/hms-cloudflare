@@ -25,8 +25,13 @@ page => (async () => {
   const setupPage = async (target, width) => {
     await target.addInitScript(() => { localStorage.setItem("hms.locale", "en"); localStorage.setItem("hms-local-acceptance-profile", "1"); });
     await target.setViewportSize({ width, height: width < 500 ? 812 : 900 });
-    await target.goto("http://127.0.0.1:4174/bookings");
+    await target.goto("http://127.0.0.1:4176/bookings");
     await target.waitForFunction(() => document.querySelector(".header-context")?.textContent?.includes("Hotel Norte") === true && !document.querySelector(".header-context")?.textContent?.includes("Loading"));
+    // The browser CLI can reuse a context whose in-memory locale predates the
+    // init script. Set the app-owned selector after hydration so role names
+    // used by this runner are deterministic.
+    await target.locator(".language-selector select").selectOption("en");
+    await target.waitForFunction(() => document.documentElement.lang === "en");
     await target.getByRole("button", { name: /^Arrivals / }).click();
     await target.getByLabel("Search this shift").fill("Arrival");
     await target.locator(".reception-queue-row").first().waitFor();
@@ -34,9 +39,33 @@ page => (async () => {
 
   const checkInStatuses = [];
   const checkInRequests = [];
+  const recoveryResponses = [];
   page.on("request", request => { if (request.url().endsWith("/bookings/z-priority/check-in")) checkInRequests.push(request); });
   page.on("response", response => { if (response.url().endsWith("/bookings/z-priority/check-in")) checkInStatuses.push(response.status()); });
+  page.on("response", response => { if (/\/api\/v1\/(front-desk\/board|rooms|bookings\/z-priority\/invoice)$/.test(new URL(response.url()).pathname)) recoveryResponses.push({ path: new URL(response.url()).pathname, status: response.status() }); });
   await setupPage(page, 375);
+  const desktop = await page.context().browser().newPage();
+  await setupPage(desktop, 1280);
+  await desktop.locator(".reception-queue-row").first().click();
+  const menuButton = desktop.locator(".reception-more-actions");
+  await menuButton.click();
+  const actions = desktop.locator(".ui-dropdown-menu");
+  const menuItems = actions.locator(".ui-dropdown-menu-item");
+  await menuItems.first().waitFor();
+  if (!/edit|editar/i.test(await menuItems.first().innerText())) throw new Error("First Reception action is not the existing Edit task");
+  await desktop.keyboard.press("ArrowDown");
+  await desktop.keyboard.press("ArrowUp");
+  await desktop.keyboard.press("Tab");
+  if (await actions.count()) throw new Error("Dropdown menu remained open after Tab");
+  if (await menuButton.evaluate(button => button === document.activeElement) || await actions.count()) throw new Error("Dropdown Tab did not advance focus out of the menu");
+  await menuButton.click();
+  await desktop.keyboard.press("Enter");
+  const editTask = desktop.locator("form.reception-task-form").filter({ has: desktop.locator("h4") });
+  await editTask.waitFor();
+  if (!/edit|editar/i.test(await editTask.getAttribute("aria-label") ?? "")) throw new Error("Keyboard menu activation did not open the existing Edit task");
+  await editTask.locator("footer button[type=button]").first().click();
+  await editTask.waitFor({ state: "detached" });
+
   await page.screenshot({ path: "output/playwright/ux-ui-checkin-mobile-reception.png" });
   const rows = page.locator(".reception-queue-row");
   if ((await rows.first().getAttribute("data-booking-id")) !== "z-priority") throw new Error("Real board priority mismatch");
@@ -65,8 +94,8 @@ page => (async () => {
   if (!(await task.evaluate(element => element.contains(document.activeElement)))) throw new Error("Mobile Drawer Tab navigation escaped the task");
   await page.keyboard.press("Escape");
   await task.waitFor({ state: "hidden" });
-  await page.waitForFunction(() => document.activeElement?.getAttribute("data-booking-id") === "z-priority");
-  await page.locator('[data-booking-id="z-priority"]').click();
+  await page.waitForFunction(() => document.activeElement?.classList.contains("reception-case-title"));
+  if (new URL(page.url()).searchParams.has("task")) throw new Error(`Escape did not clear the focused check-in task route: ${page.url()}`);
   await page.locator(".reception-checkin-trigger").click();
   await task.waitFor();
   await page.waitForFunction(() => document.activeElement?.classList.contains("checkin-step-heading"));
@@ -78,7 +107,8 @@ page => (async () => {
   const opened = await adminPost("/housekeeping/p01-room-a/maintenance", { priority: "HIGH", impact: "BLOCKING", reason: "Electrical hazard found during arrival", assigned_to: "ops" });
   await task.getByRole("button", { name: "Next step" }).click();
   await task.getByRole("button", { name: "Complete check-in" }).evaluate(button => { (button).click(); (button).click(); });
-  await task.getByRole("alert").getByText("The booking or room changed").waitFor();
+  try { await task.getByRole("alert").getByText("The booking or room changed").waitFor({ timeout: 10000 }); }
+  catch (error) { throw new Error(`Canonical 409 recovery did not reach its visible alert: responses=${JSON.stringify(recoveryResponses)} body=${(await page.locator("body").innerText()).slice(-1600)} url=${page.url()}; ${error}`); }
   await task.getByText("Blocking maintenance: check-in cannot continue").waitFor();
   if (await task.getByRole("button", { name: "Next step" }).isEnabled()) throw new Error("Stale room allowed retry");
   const conflictSnapshot = await page.evaluate(async () => {
@@ -109,8 +139,6 @@ page => (async () => {
   await page.screenshot({ path: "output/playwright/ux-ui-checkin-mobile-blocking-conflict-detail.png" });
 
   await adminPost(`/housekeeping/p01-room-a/maintenance/${opened.id}/resolve`, { resolution_note: "Electrical hazard repaired and inspected" });
-  await adminPost("/housekeeping/p01-room-a/start", {});
-  await adminPost("/housekeeping/p01-room-a/finish", {});
   await task.getByRole("button", { name: "Refresh status" }).click();
   await task.getByRole("button", { name: "Next step" }).click();
   await task.getByRole("button", { name: "Complete check-in" }).click();
@@ -118,19 +146,17 @@ page => (async () => {
   if (checkInStatuses.join(",") !== "409,200") throw new Error(`Expected one real 409 then success: ${checkInStatuses}`);
   if (checkInRequests.length !== 2) throw new Error(`Expected one initial 409 request and one successful retry, got ${checkInRequests.length}`);
   if ((await page.locator(".reception-queue-row.selected").getAttribute("data-booking-id")) !== "a-next") throw new Error("Real refresh selected wrong next case");
-  await page.waitForFunction(() => document.activeElement?.getAttribute("data-booking-id") === "a-next");
+  await page.waitForFunction(() => document.activeElement?.classList.contains("reception-case-title"));
   const mobileUrl = await page.evaluate(() => { const url = new URL(location.href); return { booking: url.searchParams.get("booking_id"), task: url.searchParams.has("task"), lane: url.searchParams.get("lane") }; });
   if (mobileUrl.booking !== "a-next" || mobileUrl.task || mobileUrl.lane !== "arrivals") throw new Error("Mobile URL did not preserve arrival lane and authoritative next case");
   if ((await page.getByLabel("Search this shift").inputValue()) !== "Arrival") throw new Error("Mobile search context lost");
   await page.screenshot({ path: "output/playwright/ux-ui-checkin-mobile-success-return.png" });
-  await page.locator('[data-booking-id="a-next"]').click();
+  await page.locator(".reception-checkin-trigger").click();
   await enterCheckIn(task);
   await task.getByText("Maintenance advisory").waitFor();
   await page.screenshot({ path: "output/playwright/ux-ui-checkin-mobile-nonblocking-advisory.png" });
 
-  const desktop = await page.context().browser().newPage();
   try {
-    await setupPage(desktop, 1280);
     await desktop.screenshot({ path: "output/playwright/ux-ui-checkin-desktop-reception.png" });
     await desktop.locator('[data-booking-id="a-next"]').click();
     await desktop.locator(".reception-checkin-trigger").click();
@@ -155,21 +181,8 @@ page => (async () => {
     if (!(await desktopTask.evaluate(element => element.contains(document.activeElement)))) throw new Error("Desktop Dialog reverse Tab navigation escaped the task");
     await desktop.keyboard.press("Escape");
     await desktopTask.waitFor({ state: "hidden" });
-    await desktop.waitForFunction(() => document.activeElement?.getAttribute("data-booking-id") === "a-next");
-    await desktop.getByRole("button", { name: "More actions" }).click();
-    const actions = desktop.getByRole("menu", { name: "More actions" });
-    await actions.getByRole("menuitem", { name: "Edit booking" }).waitFor();
-    await desktop.keyboard.press("ArrowDown");
-    await desktop.keyboard.press("ArrowUp");
-    await desktop.keyboard.press("Tab");
-    if (await actions.count()) throw new Error("Dropdown menu remained open after Tab");
-    if (await desktop.getByRole("button", { name: "More actions" }).evaluate(button => button === document.activeElement) || await actions.count()) throw new Error("Dropdown Tab did not advance focus out of the menu");
-    await desktop.getByRole("button", { name: "More actions" }).click();
-    await desktop.keyboard.press("Enter");
-    await desktop.getByRole("form", { name: "Edit booking" }).waitFor();
-    await desktop.getByRole("button", { name: "More actions" }).click();
-    await desktop.getByRole("menuitem", { name: "Close", exact: true }).click();
-    await desktop.getByRole("form", { name: "Edit booking" }).waitFor({ state: "detached" });
+    await desktop.waitForFunction(() => document.activeElement?.classList.contains("reception-case-title"));
+    await desktop.locator('[data-booking-id="a-next"]').click();
     await desktop.locator(".reception-checkin-trigger").click();
     await desktopTask.waitFor();
     await enterCheckIn(desktopTask);
@@ -183,8 +196,6 @@ page => (async () => {
     await desktopTask.getByText("Blocking maintenance: check-in cannot continue").waitFor();
     await desktop.screenshot({ path: "output/playwright/ux-ui-checkin-desktop-conflict.png" });
     await adminPost(`/housekeeping/p01-room-b/maintenance/${desktopOpened.id}/resolve`, { resolution_note: "Electrical hazard repaired and inspected" });
-    await adminPost("/housekeeping/p01-room-b/start", {});
-    await adminPost("/housekeeping/p01-room-b/finish", {});
     await desktopTask.getByRole("button", { name: "Refresh status" }).click();
     await desktopTask.getByRole("button", { name: "Next step" }).click();
     await desktopTask.getByRole("button", { name: "Complete check-in" }).click();
@@ -192,6 +203,8 @@ page => (async () => {
     await desktop.screenshot({ path: "output/playwright/ux-ui-checkin-desktop-success-return.png" });
     if ((await desktop.locator(".reception-queue-row.selected").getAttribute("data-booking-id")) !== "m-blocked") throw new Error("Desktop next case did not follow server priority");
     await desktop.locator('[data-booking-id="m-blocked"]').click();
+    await desktop.locator(".reception-checkin-trigger").click();
+    await desktopTask.waitFor();
     await enterCheckIn(desktopTask);
     await desktopTask.getByText("Blocking maintenance: check-in cannot continue").waitFor();
     if (await desktopTask.getByRole("button", { name: "Next step" }).isEnabled()) throw new Error("Real BLOCKING case allowed check-in");

@@ -1,4 +1,6 @@
-(page) => (async () => {
+### Ran Playwright code
+```js
+await ((page) => (async () => {
   const base = "http://127.0.0.1:4176";
   const hotelA = "10000000-0000-0000-0000-000000000001";
   const hotelB = "20000000-0000-0000-0000-000000000002";
@@ -165,3 +167,11 @@
   if (chargeList.status !== 200 || chargeList.body.length !== 2 || !chargeList.body.some(item => item.id === persisted.charge.id) || !chargeList.body.some(item => item.id === mobileResultBody.charge.id)) throw new Error(`authoritative charge list mismatch: ${JSON.stringify(chargeList)}`);
   console.log(JSON.stringify({ desktop: "1280x900", responsiveViewports, mobile: "375x812", committedThenDroppedPostStatus: committed.status, reloadLookupStatus: lookup.status(), sameTokenReplay: sameReplay.status, changedPayload: changedPayload.status, missingLookup: missing.status, invalidToken: invalid.status, crossTenant: { lookup: foreign.status, mutation: foreignWrite.status }, deniedCapability: { read: deniedRead.status, write: deniedWrite.status }, atomicAuditFailure: auditFailure.status, voidedInvoice: voided.status, ledgerMismatch: mismatch.status, corruptedEventPair: { lookup: corruptLookup.status, replay: corruptReplay.status }, mobileSafeRetry: mobileResult.status, sameRetryToken: mobileResultBody.operation_token === mobilePending.operationToken, authoritativeInvoice: authoritativeInvoice.body }));
 })()
+)(page);
+```
+### Page
+- Page URL: http://127.0.0.1:4176/billing
+- Page Title: HMS Elite
+- Console: 14 errors, 0 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-02T22-09-17-681Z.log#L1-L18

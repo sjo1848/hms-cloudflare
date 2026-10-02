@@ -31,7 +31,13 @@ export function DropdownMenu({ label, children }: { label: string; children: Rea
       const previous = root && [...candidates].reverse().find(element => Boolean(root.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_PRECEDING));
       setOpen(false);
       requestAnimationFrame(() => {
-        const target = event.shiftKey ? previous : following;
+        // The trigger can be the last focusable control in a focused workspace
+        // (for example, the selected Reception case). Keep Tab navigation in
+        // the document by wrapping to the opposite end instead of returning
+        // focus to the trigger and trapping keyboard users in the menu.
+        const target = event.shiftKey
+          ? previous ?? candidates.at(-1)
+          : following ?? candidates[0];
         if (target) target.focus();
         else triggerRef.current?.focus();
       });

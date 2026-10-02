@@ -16,6 +16,8 @@ wrangler_cmd() {
   "$repo_dir/node_modules/.bin/wrangler" "$@" --persist-to "$tmp_dir/wrangler-state"
 }
 hotel_local_date=$(TZ=America/Argentina/Mendoza date +%F)
+checkin_race_date="$hotel_local_date"
+checkin_race_checkout=$(TZ=America/Argentina/Mendoza date -d "$hotel_local_date + 2 days" +%F)
 reassign_check_in=$(TZ=America/Argentina/Mendoza date -d "$hotel_local_date - 8 days" +%F)
 reassign_check_out=$(TZ=America/Argentina/Mendoza date -d "$hotel_local_date + 2 days" +%F)
 reassign_elapsed_last=$(TZ=America/Argentina/Mendoza date -d "$hotel_local_date - 1 day" +%F)
@@ -169,7 +171,7 @@ CI=1 wrangler_cmd d1 execute HOTEL_DEMO_DB --local -c apps/api/wrangler.jsonc --
   UPDATE rooms SET status='AVAILABLE',housekeeping_state='READY',service_state='IN_SERVICE';
   INSERT OR REPLACE INTO rooms (id,room_number,room_type,status,price_cents) VALUES ('room-c','103','STANDARD','AVAILABLE',13000);
 " >/dev/null
-status=$(request -d '{"guest_id":"guest-a","room_id":"room-a","check_in":"2026-10-01","check_out":"2026-10-03"}' "$base/bookings")
+status=$(request -d "{\"guest_id\":\"guest-a\",\"room_id\":\"room-a\",\"check_in\":\"$checkin_race_date\",\"check_out\":\"$checkin_race_checkout\"}" "$base/bookings")
 assert_status "$status" 201
 race_id=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$tmp_dir/response.json')).id)")
 curl -sS -o "$tmp_dir/checkin-1.json" -w '%{http_code}' "${common[@]}" -X POST -d '{"check_in_guests_count":2,"document_verified":true,"contact_confirmed":true,"stay_confirmed":true}' "$base/bookings/$race_id/check-in" >"$tmp_dir/checkin-1.status" & p1=$!

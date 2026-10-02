@@ -334,6 +334,8 @@ function Bookings() {
 
   function openCheckIn(booking: typeof bookings[number]) {
     setFocusedTask(null);
+    setCheckInStep(0);
+    setCheckInData({ count: "1", document: false, contact: false, stay: false });
     if (queueElement) window.history.replaceState({ ...(window.history.state ?? {}), __hmsReceptionQueueScroll: queueElement.scrollTop }, "", window.location.href);
     markReceptionHistoryFocus("case", booking.id);
     selectCase(booking);

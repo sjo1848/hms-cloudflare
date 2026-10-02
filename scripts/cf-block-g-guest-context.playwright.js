@@ -29,7 +29,7 @@
   await contextError.waitFor({ state: "detached" });
   await page.locator(".guest-current-stay").getByText(/101/).waitFor();
 
-  const viewports = [{ width: 1440, height: 900 }, { width: 900, height: 768 }, { width: 375, height: 812 }, { width: 812, height: 375 }];
+  const viewports = [{ width: 1280, height: 900 }, { width: 768, height: 812 }, { width: 375, height: 812 }, { width: 375, height: 600 }, { width: 844, height: 390 }];
   for (const viewport of viewports) {
     await page.setViewportSize(viewport);
     await page.waitForTimeout(75);
