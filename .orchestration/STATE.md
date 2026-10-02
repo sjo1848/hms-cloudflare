@@ -1,6 +1,6 @@
 # HMS Cloudflare — Orchestration State
 
-## CURRENT DISPATCH — BLOCK G ARTIFACT A FROZEN; INDEPENDENT CRITIC REQUIRED
+## CURRENT DISPATCH — BLOCK G INDEPENDENT CRITIC PASS_WITH_CONDITIONS; METADATA CONDITION DISCHARGED
 
 - **Authority:** Controller decision in Issue #52 comment `5946431862`, `STAGING_DEPLOY_PASS_SMOKE_EXTERNAL_BLOCKER`, plus Issue #53 comment `5946432195`, `START_BLOCK_G_WITH_STAGING_SMOKE_PENDING`.
 - **Deployed product checkpoint:** `acceptance/staging@074804329f487c2cfb0a9e5123f1f90b1a0e0252`. Workflow run `36968916971` succeeded on that exact SHA. API/Web Workers deployed and Cloudflare Access remains fail-closed to anonymous web/API requests.
@@ -8,7 +8,9 @@
 - **Authenticated UI smoke:** still pending. The Browser test runtime failed before browser discovery/navigation with `Importing module "node:process" is not allowed in node_repl`. Controller classifies this as `EXTERNAL_TEST_HARNESS_BLOCKER`, not evidence of a product/runtime defect.
 - **Truthful staging state:** `STAGING_DEPLOYED_TECHNICALLY_VERIFIED_UI_SMOKE_PENDING`. Do not claim `STAGING_DEPLOYED_AWAITING_HUMAN_ACCEPTANCE` until authenticated UI smoke is actually completed.
 - **Development decision:** Block G is authorized to start now under Issue #53; this browser-tool limitation does not block unrelated synthetic/local development. F-cash remains separately gated by OD-1.
-- **Next:** complete the exact-pair Block G external review handoff. Issue #52 remains open solely for later authenticated staging smoke completion; it is not G evidence or a Block G dependency.
+- **Independent Critic:** exact Artifact A `66d43fd28d16fd6379b23c22e73d74578533fe57` + Boundary B `c62fd472ac3aca634373147be6eb1dd77f01ef6a` received `PASS_WITH_CONDITIONS` in Issue #53 comment `5955955956`. Substantive Block G review passed; the sole condition was stale orchestration metadata.
+- **Controller metadata disposition:** the sole metadata-only condition is discharged directly. No product/code/test rework is required. Exact reviewed A+B are now the canonical Block G review pair.
+- **Next:** record final Controller PASS for Block G and authorize Block H under Issue #54. Issue #52 remains open solely for later authenticated staging smoke completion; it is not G evidence or a Block G dependency.
 - **Forbidden:** main, PR/merge, production, real hotel data and F-cash. Block H remains gated until Block G Controller PASS.
 
 
