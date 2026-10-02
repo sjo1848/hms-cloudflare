@@ -1,6 +1,6 @@
 # HMS Block H — Invariant Evidence
 
-Artifact candidate: Block H substantive candidate; exact full SHA is recorded by Boundary B and Issue #54.
+Artifact A: `1f4a7f863989792551e78873b4d5bc8ef3cf3bff`; Boundary B is the immediate orchestration-only child whose exact SHA is recorded in Issue #54.
 Task Contract: `.orchestration/contracts/HMS-BLOCK-H-CROSS-MODULE-RESPONSIVE-ACCESSIBILITY-CONTINUITY-001.md`
 Pre-Critic gate: `.orchestration/PRECRITIC-GATE.md`
 Registry: `.orchestration/INVARIANTS.md` (24 invariants)
@@ -22,7 +22,7 @@ Final evidence for the bounded hardening candidate. Successful, failed, integrat
 | INV-EVID-001 | APPLIES | PASS | Results claim→runner/log/D1/capture table separates Worker/D1 from synthetic errors and screenshots; both Wrangler 4.125.0 P0.1 integrated failures are preserved and not counted PASS; Wrangler 4.146.0 P0.1 integrated PASS is separately identified | Integrated, synthetic, API/D1 and diagnostic screenshot claims remain distinct; the runtime version differential does not establish product attribution. |
 | INV-LEGACY-001 | N/A | N/A | Diff audit | No legacy import, backfill, migration or ownership-recovery implementation is in H. |
 | INV-MONEY-001 | APPLIES | PASS | F0.9 executing Worker/D1 integer-cent totals, same-token retry, rollback/audit failure and authoritative invoice/charge final state; no Cash scenario | Existing Booking Account values/operations retain integer-cent and atomic ledger semantics; no Cash scenarios. |
-| INV-STATE-001 | APPLIES | PASS* | Non-circular method: immutable Artifact A is followed by orchestration-only Boundary B recording exact A and review flags; verify exact ancestry/diff before publishing B | Publication must be non-circular and exact A+B must be reviewed. |
+| INV-STATE-001 | APPLIES | PASS | Artifact A `1f4a7f863989792551e78873b4d5bc8ef3cf3bff`; Boundary B is this immediate orchestration-only child, with its exact commit SHA recorded in Issue #54. Boundary verification confirms B is a direct child of A, the exact A tree is unchanged, and B contains only `.orchestration/STATE.md`, `.orchestration/STATUS.json`, and this invariant evidence update. | Publication is non-circular; the exact A+B pair is the requested review target. |
 | INV-CF-I07-001 | APPLIES | PASS | Static canonical-capability scan and CF-I07 protected API/UI route tests; no new authorization implementation | User/network administration has no role-name bypass. |
 | INV-CF-I07-002 | APPLIES | PASS | CF-I07 same-value/no-op role/plan requests assert unchanged state and zero audit rows | Admin no-op does not create false audit activity. |
 | INV-CF-I07-003 | APPLIES | PASS | CF-I07 same-subject privileged request succeeds before downgrade and is denied after it, with unchanged durable state | Downgrade denial is causal and not due to missing identity/routing. |
@@ -58,6 +58,6 @@ Final evidence for the bounded hardening candidate. Successful, failed, integrat
 ## Final invariant status
 
 - All 24 registry invariants remain classified; 23 applicable statuses are PASS/PASS* and INV-LEGACY-001 is N/A with rationale.
-- PASS* on INV-STATE-001 means the two-commit non-circular method is frozen; immediately after Artifact A, Boundary B must record the exact A SHA, contain only orchestration/evidence metadata, and be ancestry/diff checked before external review. If that exact check fails, do not publish the handoff.
+- INV-STATE-001 PASS records the completed exact A/B check: Artifact A is `1f4a7f863989792551e78873b4d5bc8ef3cf3bff`; Boundary B is the immediate orchestration-only child identified by the exact SHA in Issue #54. The verification was run against the committed objects before publication; the handoff must preserve this exact pair.
 - Runtime classification is `LOCAL_RUNTIME_VERSION_DIFFERENTIAL — PRODUCT_ATTRIBUTION_UNPROVEN`: both P0.1 integrated runs on repository-pinned Wrangler 4.125.0 failed from local Miniflare crashes (one after 409, one before Queue-ready); neither is represented as PASS. P0.1 integrated Worker/D1/Vite/Chromium passed on Wrangler 4.146.0 with the same source/config/schema/fixture bytes. `package.json` and `package-lock.json` were unchanged; no Wrangler upgrade occurred. Wrangler 4.125.0 PASSes only the other separately rerun listed gates, not this P0.1 integrated scenario. The Independent Critic must adjudicate claim validity, tooling/runtime limitation attribution, upgrade necessity before Controller PASS, and integrated-versus-synthetic evidence boundaries.
 - No applicable implementation invariant remains unproven; the final publication-method check is performed mechanically at the Boundary B step.
