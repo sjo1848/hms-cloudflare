@@ -1,0 +1,31 @@
+[
+  {
+    "results": [
+      {
+        "booking_total": 12000,
+        "amount_cents": 12000,
+        "paid_amount_cents": 10000,
+        "status": "PENDING",
+        "paid_at": null
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "EWR",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.1672
+      },
+      "duration": 0.1672,
+      "changes": 0,
+      "last_row_id": 3,
+      "changed_db": false,
+      "size_after": 61440,
+      "rows_read": 2,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

@@ -1,0 +1,72 @@
+[
+  {
+    "results": [
+      {
+        "type": "index",
+        "name": "idx_invoices_status",
+        "tbl_name": "invoices",
+        "sql": "CREATE INDEX idx_invoices_status ON invoices(status, created_at)"
+      },
+      {
+        "type": "table",
+        "name": "_cf_KV",
+        "tbl_name": "_cf_KV",
+        "sql": "CREATE TABLE _cf_KV (\n        key TEXT PRIMARY KEY,\n        value BLOB\n      ) WITHOUT ROWID"
+      },
+      {
+        "type": "table",
+        "name": "bookings",
+        "tbl_name": "bookings",
+        "sql": "CREATE TABLE bookings (\n  id TEXT PRIMARY KEY,\n  total_cents INTEGER NOT NULL DEFAULT 10000,\n  updated_at TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "invoices",
+        "tbl_name": "invoices",
+        "sql": "CREATE TABLE \"invoices\" (\n  id TEXT PRIMARY KEY,\n  booking_id TEXT NOT NULL UNIQUE,\n  amount_cents INTEGER NOT NULL CHECK (amount_cents >= 0),\n  paid_amount_cents INTEGER NOT NULL DEFAULT 0 CHECK (paid_amount_cents >= 0),\n  status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PAID', 'VOIDED')),\n  payment_method TEXT NOT NULL DEFAULT 'CASH' CHECK (payment_method IN ('CASH', 'CARD', 'TRANSFER')),\n  payment_reference TEXT,\n  paid_at TEXT,\n  created_at TEXT NOT NULL,\n  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "type": "table",
+        "name": "payment_entries",
+        "tbl_name": "payment_entries",
+        "sql": "CREATE TABLE payment_entries (\n  id TEXT PRIMARY KEY,\n  invoice_id TEXT NOT NULL,\n  amount_cents INTEGER NOT NULL\n)"
+      },
+      {
+        "type": "trigger",
+        "name": "billing_invoice_ledger_guard",
+        "tbl_name": "invoices",
+        "sql": "CREATE TRIGGER billing_invoice_ledger_guard\nBEFORE UPDATE OF paid_amount_cents ON invoices\nWHEN NEW.paid_amount_cents <> (\n  SELECT COALESCE(SUM(p.amount_cents), 0)\n  FROM payment_entries p\n  WHERE p.invoice_id = NEW.id\n)\nBEGIN\n  SELECT RAISE(ABORT, 'D11 paid amount must equal immutable payment ledger');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "billing_reconcile_total_apply",
+        "tbl_name": "bookings",
+        "sql": "CREATE TRIGGER billing_reconcile_total_apply\nAFTER UPDATE OF total_cents ON bookings\nWHEN NEW.total_cents <> OLD.total_cents\n  AND EXISTS (SELECT 1 FROM invoices WHERE booking_id = NEW.id)\nBEGIN\n  UPDATE invoices\n  SET\n    amount_cents = NEW.total_cents,\n    paid_amount_cents = (\n      SELECT COALESCE(SUM(p.amount_cents), 0)\n      FROM payment_entries p\n      WHERE p.invoice_id = invoices.id\n    ),\n    status = CASE\n      WHEN (\n        SELECT COALESCE(SUM(p.amount_cents), 0)\n        FROM payment_entries p\n        WHERE p.invoice_id = invoices.id\n      ) >= NEW.total_cents THEN 'PAID'\n      ELSE 'PENDING'\n    END,\n    paid_at = CASE\n      WHEN status = 'PAID'\n        AND (\n          SELECT COALESCE(SUM(p.amount_cents), 0)\n          FROM payment_entries p\n          WHERE p.invoice_id = invoices.id\n        ) >= NEW.total_cents\n        THEN paid_at\n      WHEN status = 'PENDING'\n        AND (\n          SELECT COALESCE(SUM(p.amount_cents), 0)\n          FROM payment_entries p\n          WHERE p.invoice_id = invoices.id\n        ) >= NEW.total_cents\n        THEN NEW.updated_at\n      ELSE NULL\n    END\n  WHERE booking_id = NEW.id\n    AND status <> 'VOIDED';\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "billing_reconcile_total_guard",
+        "tbl_name": "bookings",
+        "sql": "CREATE TRIGGER billing_reconcile_total_guard\nBEFORE UPDATE OF total_cents ON bookings\nWHEN NEW.total_cents <> OLD.total_cents\n  AND EXISTS (SELECT 1 FROM invoices WHERE booking_id = OLD.id)\nBEGIN\n  SELECT (CASE WHEN EXISTS (\n    SELECT 1 FROM invoices\n    WHERE booking_id = OLD.id AND status = 'VOIDED'\n  ) THEN RAISE(ABORT, 'D11 invoice is voided') END);\n  SELECT (CASE WHEN EXISTS (\n    SELECT 1\n    FROM invoices i\n    WHERE i.booking_id = OLD.id\n      AND i.paid_amount_cents <> (\n        SELECT COALESCE(SUM(p.amount_cents), 0)\n        FROM payment_entries p\n        WHERE p.invoice_id = i.id\n      )\n  ) THEN RAISE(ABORT, 'D11 payment ledger mismatch') END);\nEND"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "EWR",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.3071
+      },
+      "duration": 0.3071,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 61440,
+      "rows_read": 23,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

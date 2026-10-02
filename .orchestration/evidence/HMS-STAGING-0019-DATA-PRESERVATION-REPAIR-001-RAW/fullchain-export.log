@@ -1,0 +1,12 @@
+
+ ⛅️ wrangler 4.125.0 (update available 4.146.0)
+───────────────────────────────────────────────
+Resource location: remote
+
+🌀 Executing on remote database HOTEL_DEMO_DB (ca1482d9-f994-4955-b51f-30be3768cd16):
+├ Creating export
+│
+[temporary presigned export URL omitted]
+├ Downloading SQL to .orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/fullchain-after.sql
+│
+🌀 Downloaded to .orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/fullchain-after.sql successfully!

@@ -1,5 +1,16 @@
 # HMS Cloudflare — Orchestration State
 
+## CURRENT DISPATCH — ISSUE #52 TRANSACTION-SAFE 0019 DATA PRESERVATION REPAIR
+
+- **Authority:** latest Controller decision in Issue #52 comment `5945260364`, `CONTROLLER_DECISION: REPAIR_0019_TRANSACTIONAL_DATA_PRESERVATION`.
+- **Active bounded task:** Freeze immutable Artifact A after Phase 4 validation and Pre-Critic PASS under `.orchestration/contracts/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001.md`. Phases 1–4 have passed with exact evidence. Staging remains untouched pending the required exact-pair external review.
+- **Exact base:** `0e78050999550d193ff0d352672b233e2f3da472`; remote `acceptance/staging` was read-only verified at the same SHA. Dedicated worktree/branch: `hms-d1-sql-splitter-compatibility` / `staging/d1-sql-splitter-compatibility`.
+- **Current dispatch state:** `RUNNING — PHASE 4 / PRE-CRITIC PASS; ARTIFACT A FREEZE IN PROGRESS`. The previous canonical-migration data-loss failure remains preserved as historical evidence. The new repair contract and exact 0018 schema/dependency inventory were frozen before editing 0019. Isolated 0019 and full-chain 0019–0030 disposable proofs both pass; see `.orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-0019-PROOF.md` and `...-FULL-CHAIN-PROOF.md`.
+- **Preservation finding:** original 0018 `payment_entries.invoice_id` references `invoices(id) ON DELETE CASCADE`; 0018 also has booking-scoped unique operation-token index and two lookup indexes. The expanded synthetic fixture is defined in `.orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-FIXTURE.sql`; no real data is used.
+- **Validation:** `npm run check` 35/35 files, 176/176 tests; types, production build, architecture/i18n/budgets, D1 query plan, API/Web Wrangler dry-runs, staging-config dry-runs and Pre-Critic all pass. Bundle and exact baseline/result deltas are recorded in `.orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-BUNDLE.json` and `...-RESULTS.md`.
+- **Next:** finish final scope/diff/metadata audit; commit Artifact A; add an orchestration-only Boundary B with exact A SHA and external review required; publish only this dedicated branch; request fresh read-only Controller/Independent Critic review in Issue #52. Both disposable remote D1s are deleted; `acceptance/staging` remains at the authorized base and untouched.
+- **Forbidden:** modify staging during proof, retry staging before all authorized gates pass, alter policy/toolchain or business semantics, use real hotel data, or touch main/merge/production/F-cash/Blocks G–H.
+
 ## BLOCK F — F-ACCOUNT CONTROLLER PASS; F-CASH OD-1 HUMAN GATE
 
 - **Controller verdict:** F-account Development Gate `PASS`. Exact Artifact A `24de78c8f84ca4d1e91057ccca34a98595cf38d6` + Boundary B `b3f2870bcdf271b3571cf3ed57d3dcc65259a123` received fresh Independent Critic `PASS`; final orchestration closure is `64ca253fd00f96c5673da8950a1a620ad0e2d398`.

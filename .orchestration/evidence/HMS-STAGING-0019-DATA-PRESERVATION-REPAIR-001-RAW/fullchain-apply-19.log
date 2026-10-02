@@ -1,0 +1,22 @@
+
+ ⛅️ wrangler 4.125.0 (update available 4.146.0)
+───────────────────────────────────────────────
+Resource location: remote
+
+Migrations to be applied:
+┌─────────────────────────────────┐
+│ name                            │
+├─────────────────────────────────┤
+│ 0019_billing_reconciliation.sql │
+└─────────────────────────────────┘
+? About to apply 1 migration(s)
+Your database may not be available to serve requests during the migration, continue?
+🤖 Using fallback value in non-interactive context: yes
+🌀 Executing on remote database HOTEL_DEMO_DB (ca1482d9-f994-4955-b51f-30be3768cd16):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 21 commands in 10.30ms
+┌─────────────────────────────────┬────────┐
+│ name                            │ status │
+├─────────────────────────────────┼────────┤
+│ 0019_billing_reconciliation.sql │ ✅     │
+└─────────────────────────────────┴────────┘

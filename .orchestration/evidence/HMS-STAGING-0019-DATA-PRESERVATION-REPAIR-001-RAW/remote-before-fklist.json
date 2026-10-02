@@ -1,0 +1,52 @@
+
+ ⛅️ wrangler 4.125.0 (update available 4.146.0)
+───────────────────────────────────────────────
+Resource location: remote
+
+🌀 Executing on remote database HOTEL_DEMO_DB (4b33c6a1-bbfc-496f-bf71-d646e6405318):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 1 command in 0.17ms
+[
+  {
+    "results": [
+      {
+        "id": 0,
+        "seq": 0,
+        "table": "bookings",
+        "from": "booking_id",
+        "to": "id",
+        "on_update": "NO ACTION",
+        "on_delete": "CASCADE",
+        "match": "NONE"
+      },
+      {
+        "id": 1,
+        "seq": 0,
+        "table": "invoices",
+        "from": "invoice_id",
+        "to": "id",
+        "on_update": "NO ACTION",
+        "on_delete": "CASCADE",
+        "match": "NONE"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "EWR",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.1748
+      },
+      "duration": 0.1748,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 286720,
+      "rows_read": 0,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

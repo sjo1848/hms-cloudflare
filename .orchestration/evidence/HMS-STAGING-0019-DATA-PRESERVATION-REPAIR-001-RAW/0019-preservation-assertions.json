@@ -1,0 +1,17 @@
+{
+  "invoice_rows_exactly_equal": true,
+  "invoice_count": 3,
+  "payment_rows_exactly_equal": true,
+  "payment_count": 3,
+  "payment_schema_indexes_preserved_names": [
+    "idx_payment_entries_booking_operation_token",
+    "idx_payments_booking",
+    "idx_payments_shift",
+    "payment_entries"
+  ],
+  "payment_table_sql_before": "CREATE TABLE payment_entries (\n  id TEXT PRIMARY KEY,\n  invoice_id TEXT NOT NULL,\n  booking_id TEXT NOT NULL,\n  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),\n  payment_method TEXT NOT NULL CHECK (payment_method IN ('CASH', 'CARD', 'TRANSFER')),\n  payment_reference TEXT,\n  note TEXT,\n  received_by_user_id TEXT NOT NULL,\n  received_at TEXT NOT NULL, operation_token TEXT,\n  FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,\n  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE\n)",
+  "payment_table_sql_after": "CREATE TABLE payment_entries (\n  id TEXT PRIMARY KEY,\n  invoice_id TEXT NOT NULL,\n  booking_id TEXT NOT NULL,\n  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),\n  payment_method TEXT NOT NULL CHECK (payment_method IN ('CASH', 'CARD', 'TRANSFER')),\n  payment_reference TEXT,\n  note TEXT,\n  received_by_user_id TEXT NOT NULL,\n  received_at TEXT NOT NULL,\n  operation_token TEXT,\n  FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,\n  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE\n)",
+  "foreign_key_check": [],
+  "migration_ledger_count": 19,
+  "0019_count": 1
+}

@@ -27,6 +27,28 @@ async function applyMigration(db: D1Database, filename: string) {
   for (const statement of statements) await db.prepare(statement).run();
 }
 
+function migrationStatements(filename: string) {
+  const migration = readFileSync(new URL(`../../../schema/hotel-migrations/${filename}`, import.meta.url), "utf8");
+  const statements: string[] = [];
+  let buffer = "";
+  let inTrigger = false;
+  for (const rawLine of migration.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("--")) continue;
+    const startsTrigger = /^CREATE TRIGGER\b/i.test(line);
+    if (startsTrigger) inTrigger = true;
+    buffer += `${rawLine}\n`;
+    const finishesTrigger = inTrigger && (/^END;$/i.test(line) || (startsTrigger && /\bEND;$/i.test(line)));
+    if (finishesTrigger || (!inTrigger && line.endsWith(";"))) {
+      statements.push(buffer.trim());
+      buffer = "";
+      inTrigger = false;
+    }
+  }
+  if (buffer.trim()) throw new Error(`Unterminated migration statement in ${filename}`);
+  return statements;
+}
+
 async function database() {
   const mf = new Miniflare(convertV4MiniflareOptions({
     script: "export default { fetch() { return new Response('ok') } }",
@@ -81,6 +103,75 @@ async function invoice(db: D1Database, bookingId: string) {
 }
 
 describe("D11 reconciliation on executing D1", () => {
+  it("preserves the 0018 payment ledger when 0019 runs as one FK-enabled D1 batch", async () => {
+    const mf = new Miniflare(convertV4MiniflareOptions({
+      script: "export default { fetch() { return new Response('ok') } }",
+      modules: true,
+      d1Databases: { DB: "billing-d11-migration-preservation-proof" },
+    }));
+    activeMiniflares.push(mf);
+    const db = await mf.getD1Database("DB");
+
+    // Minimal exact 0018 dependency topology: invoice→booking, payment→invoice/booking
+    // with ON DELETE CASCADE, all 0018 payment columns, and the 0018 index keys.
+    await db.batch([
+      db.prepare("CREATE TABLE bookings (id TEXT PRIMARY KEY,total_cents INTEGER NOT NULL,updated_at TEXT NOT NULL)"),
+      db.prepare("CREATE TABLE invoices (id TEXT PRIMARY KEY,booking_id TEXT NOT NULL UNIQUE,amount_cents INTEGER NOT NULL CHECK(amount_cents>=0),paid_amount_cents INTEGER NOT NULL DEFAULT 0 CHECK(paid_amount_cents>=0 AND paid_amount_cents<=amount_cents),status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING','PAID','VOIDED')),payment_method TEXT NOT NULL DEFAULT 'CASH' CHECK(payment_method IN ('CASH','CARD','TRANSFER')),payment_reference TEXT,paid_at TEXT,created_at TEXT NOT NULL,FOREIGN KEY(booking_id) REFERENCES bookings(id) ON DELETE CASCADE)"),
+      db.prepare("CREATE TABLE payment_entries (id TEXT PRIMARY KEY,invoice_id TEXT NOT NULL,booking_id TEXT NOT NULL,amount_cents INTEGER NOT NULL CHECK(amount_cents>0),payment_method TEXT NOT NULL CHECK(payment_method IN ('CASH','CARD','TRANSFER')),payment_reference TEXT,note TEXT,received_by_user_id TEXT NOT NULL,received_at TEXT NOT NULL,operation_token TEXT,FOREIGN KEY(invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,FOREIGN KEY(booking_id) REFERENCES bookings(id) ON DELETE CASCADE)"),
+      db.prepare("CREATE TABLE extra_charges (id TEXT PRIMARY KEY,booking_id TEXT NOT NULL,description TEXT NOT NULL,amount_cents INTEGER NOT NULL CHECK(amount_cents>0),category TEXT NOT NULL DEFAULT 'OTHER',created_at TEXT NOT NULL,FOREIGN KEY(booking_id) REFERENCES bookings(id) ON DELETE CASCADE)"),
+      db.prepare("CREATE INDEX idx_invoices_status ON invoices(status,created_at)"),
+      db.prepare("CREATE INDEX idx_payments_shift ON payment_entries(received_at,payment_method)"),
+      db.prepare("CREATE INDEX idx_payments_booking ON payment_entries(booking_id,received_at)"),
+      db.prepare("CREATE UNIQUE INDEX idx_payment_entries_booking_operation_token ON payment_entries(booking_id,operation_token)"),
+      db.prepare("CREATE TRIGGER trg_extra_charge_total AFTER INSERT ON extra_charges BEGIN UPDATE bookings SET total_cents=total_cents+NEW.amount_cents,updated_at=NEW.created_at WHERE id=NEW.booking_id; UPDATE invoices SET amount_cents=amount_cents+NEW.amount_cents WHERE booking_id=NEW.booking_id AND status='PENDING'; END"),
+    ]);
+    await db.batch([
+      db.prepare("INSERT INTO bookings VALUES ('diag-partial',20000,'2026-10-02T00:00:00Z')"),
+      db.prepare("INSERT INTO invoices VALUES ('diag-invoice-partial','diag-partial',20000,7000,'PENDING','CARD','invoice-ref',NULL,'2026-10-02T00:00:00Z')"),
+      db.prepare("INSERT INTO payment_entries VALUES ('diag-payment-cash','diag-invoice-partial','diag-partial',3000,'CASH','cash-ref','cash note','diag-actor','2026-10-02T00:01:00Z','diag-op-cash')"),
+      db.prepare("INSERT INTO payment_entries VALUES ('diag-payment-card','diag-invoice-partial','diag-partial',4000,'CARD',NULL,NULL,'diag-actor','2026-10-02T00:02:00Z',NULL)"),
+      db.prepare("INSERT INTO bookings VALUES ('diag-paid',10000,'2026-10-02T00:00:00Z')"),
+      db.prepare("INSERT INTO invoices VALUES ('diag-invoice-paid','diag-paid',10000,10000,'PAID','TRANSFER','transfer-ref','2026-10-02T00:00:00Z','2026-10-02T00:00:00Z')"),
+      db.prepare("INSERT INTO payment_entries VALUES ('diag-payment-paid','diag-invoice-paid','diag-paid',10000,'TRANSFER','transfer-ref','paid note','diag-actor','2026-10-02T00:03:00Z','diag-op-paid')"),
+    ]);
+
+    const invoicesBefore = (await db.prepare("SELECT * FROM invoices ORDER BY id").all()).results;
+    const paymentsBefore = (await db.prepare("SELECT * FROM payment_entries ORDER BY id").all()).results;
+    const paymentIndexesBefore = (await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='index' AND tbl_name='payment_entries' ORDER BY name").all()).results;
+    const migration = migrationStatements("0019_billing_reconciliation.sql");
+    expect(migration.length).toBeGreaterThan(10);
+    await expect(db.batch([
+      ...migration.map(statement => db.prepare(statement)),
+      db.prepare("SELECT * FROM diag_forced_rollback_missing_table"),
+    ])).rejects.toThrow();
+    expect((await db.prepare("SELECT * FROM invoices ORDER BY id").all()).results).toEqual(invoicesBefore);
+    expect((await db.prepare("SELECT * FROM payment_entries ORDER BY id").all()).results).toEqual(paymentsBefore);
+    expect((await db.prepare("SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'billing_%'").all()).results).toEqual([]);
+
+    await db.batch(migration.map(statement => db.prepare(statement)));
+
+    expect((await db.prepare("SELECT * FROM invoices ORDER BY id").all()).results).toEqual(invoicesBefore);
+    expect((await db.prepare("SELECT * FROM payment_entries ORDER BY id").all()).results).toEqual(paymentsBefore);
+    const paymentIndexesAfter = (await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='index' AND tbl_name='payment_entries' ORDER BY name").all()).results;
+    const normalizeIndexSql = (rows: typeof paymentIndexesBefore) => rows.map(row => ({
+      ...row,
+      sql: row.sql?.replace(/\s+/g, " ").replace(/\s*,\s*/g, ",").trim() ?? null,
+    }));
+    expect(normalizeIndexSql(paymentIndexesAfter)).toEqual(normalizeIndexSql(paymentIndexesBefore));
+    expect((await db.prepare("PRAGMA foreign_key_check").all()).results).toEqual([]);
+
+    await db.prepare("UPDATE bookings SET total_cents=21000,updated_at='2026-10-02T01:00:00Z' WHERE id='diag-partial'").run();
+    expect(await invoice(db, "diag-partial")).toMatchObject({ amount_cents: 21000, paid_amount_cents: 7000, status: "PENDING", remaining_cents: 14000, credit_cents: 0 });
+    await expect(db.prepare("INSERT INTO payment_entries VALUES ('diag-duplicate-token','diag-invoice-paid','diag-paid',1,'CASH',NULL,NULL,'diag-actor','2026-10-02T01:01:00Z','diag-op-paid')").run())
+      .rejects.toThrow(/unique/i);
+    expect((await db.prepare("SELECT id,amount_cents,operation_token FROM payment_entries ORDER BY id").all()).results)
+      .toEqual([
+        { id: "diag-payment-card", amount_cents: 4000, operation_token: null },
+        { id: "diag-payment-cash", amount_cents: 3000, operation_token: "diag-op-cash" },
+        { id: "diag-payment-paid", amount_cents: 10000, operation_token: "diag-op-paid" },
+      ]);
+  });
+
   it("supports upward/downward repricing with credit and deterministic paid_at transitions", async () => {
     const db = await database();
 

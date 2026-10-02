@@ -138,12 +138,12 @@ describe("F0.3 synthetic room-state shadow rehearsal on executing D1", () => {
     const input = { hotel_id: "hotel-synthetic-a", hotel_local_date: date, sellability_range: { start_date: "2026-10-01", end_date: "2026-10-03" }, source_schema_digest: schemaDigest, source_migration_digest: migrationDigest };
     // Pinned against the complete current chain through F0.9; each digest is
     // intentionally recomputed when the forward migration set changes.
-    expect(schemaDigest).toBe("9860115abc7026d395c4b41ad65330ac73fb112b3781d32d95eb495aff2f6a9c");
-    expect(migrationDigest).toBe("e17dfad84766271700b7c845e5a7e834a66360f5ce2ac9ad18fb36d1d3b7894d");
+    expect(schemaDigest).toBe("4658d6ff2ebaf428cac9bcfe83dcefd21d8986bfa277a09200f6bbc0f583c079");
+    expect(migrationDigest).toBe("6e6628bb13ebb6278ed99f80e963f3b1fc64bc6d596f68498f5349cd461ea99b");
     const snapshot = await readLegacyRoomStateSnapshot(db, input);
     const report = await mapLegacyRoomState(snapshot);
-    expect(report.source_digest).toBe("2793c1d9ef13dc08823afec83a0a9ac4bbe9325de37f8c84e5e56a2e72d2929f");
-    expect(report.report_checksum).toBe("65c051291483a531c2abd514cf41adbcc4b7e7af72c9897373b4f2631d14b914");
+    expect(report.source_digest).toBe("16c5573268ff7fca856ded133018eaf7ca0439a33d140cbb549143d5e246933d");
+    expect(report.report_checksum).toBe("ad7b2c5048b2df401a951fca4630f9724e93668d0cd1ba92cc6c48134de554ca");
     expect(report).toMatchObject({ input_room_count: 2, output_room_count: 2, accounted_input_record_count: report.input_record_count });
     expect(report.rows.map(row => [row.room_id, row.classification, row.readiness.state, row.date_range_sellability])).toEqual([
       ["ready-room", "MAPPED", "READY_FOR_ARRIVAL", "SELLABLE"],

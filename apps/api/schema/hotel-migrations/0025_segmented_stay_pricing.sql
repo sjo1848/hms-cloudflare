@@ -30,14 +30,14 @@ CREATE INDEX idx_booking_pricing_segments_interval
 CREATE TRIGGER booking_pricing_segment_insert_guard
 BEFORE INSERT ON booking_pricing_segments
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT (CASE WHEN NOT EXISTS (
     SELECT 1 FROM bookings b JOIN rooms r ON r.id=NEW.room_id
     WHERE b.id=NEW.booking_id AND b.room_id=NEW.room_id
       AND b.check_in<=NEW.effective_start AND NEW.effective_end<=b.check_out
       AND r.pricing_version=NEW.room_pricing_version
       AND b.last_pricing_operation_token=NEW.operation_token
       AND NEW.segment_version=b.pricing_version+1
-  ) THEN RAISE(ABORT,'pricing segment source/version guard failed') END;
+  ) THEN RAISE(ABORT,'pricing segment source/version guard failed') END);
 END;
 
 CREATE TRIGGER booking_pricing_segment_version
@@ -126,7 +126,7 @@ CREATE TRIGGER lifecycle_reassign_total_guard
 BEFORE INSERT ON lifecycle_events
 WHEN NEW.event_type='REASSIGN'
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT (CASE WHEN NOT EXISTS (
     SELECT 1 FROM bookings b
     WHERE b.id=NEW.booking_id
       AND b.total_cents=CAST(json_extract(NEW.details_json,'$.new_total_cents') AS INTEGER)
@@ -139,14 +139,14 @@ BEGIN
           AND CAST(json_extract(f.details_json,'$.new_total_cents') AS INTEGER)=b.total_cents
       )
       AND CAST(json_extract(NEW.details_json,'$.old_total_cents') AS INTEGER)>=0
-  ) THEN RAISE(ABORT,'reassignment price reconciliation event guard failed') END;
+  ) THEN RAISE(ABORT,'reassignment price reconciliation event guard failed') END);
 END;
 
 CREATE TRIGGER lifecycle_reassign_inventory_version_guard
 BEFORE INSERT ON lifecycle_events
 WHEN NEW.event_type='REASSIGN'
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT (CASE WHEN NOT EXISTS (
     SELECT 1 FROM bookings b JOIN rooms old_room ON old_room.id=NEW.from_room_id JOIN rooms new_room ON new_room.id=b.room_id
     WHERE b.id=NEW.booking_id
       AND old_room.inventory_version=CAST(json_extract(NEW.details_json,'$.old_inventory_version_after') AS INTEGER)
@@ -157,14 +157,14 @@ BEGIN
       AND CAST(json_extract(NEW.details_json,'$.new_inventory_version_after') AS INTEGER)
         =CAST(json_extract(NEW.details_json,'$.new_inventory_version_before') AS INTEGER)
           +CAST(julianday((SELECT check_out FROM bookings WHERE id=NEW.booking_id))-julianday(json_extract(NEW.details_json,'$.effective_date')) AS INTEGER)
-  ) THEN RAISE(ABORT,'reassignment inventory generation guard failed') END;
+  ) THEN RAISE(ABORT,'reassignment inventory generation guard failed') END);
 END;
 
 CREATE TRIGGER price_reconciliation_event_guard
 BEFORE INSERT ON financial_events
 WHEN NEW.event_type='PRICE_RECONCILIATION'
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT (CASE WHEN NOT EXISTS (
     SELECT 1 FROM bookings b
     WHERE b.id=NEW.booking_id
       AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id=b.id AND (
@@ -202,5 +202,5 @@ BEGIN
             WHERE s.booking_id=b.id AND s.operation_token=json_extract(NEW.details_json,'$.operation_token'))
         )
       )
-  ) THEN RAISE(ABORT,'price reconciliation event has no winning operation') END;
+  ) THEN RAISE(ABORT,'price reconciliation event has no winning operation') END);
 END;

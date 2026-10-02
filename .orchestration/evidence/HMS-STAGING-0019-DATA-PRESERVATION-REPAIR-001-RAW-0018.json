@@ -1,0 +1,9 @@
+
+ ⛅️ wrangler 4.125.0 (update available 4.146.0)
+───────────────────────────────────────────────
+Resource location: local
+
+Use --remote if you want to access the remote instance.
+
+🌀 Executing on local database HOTEL_DEMO_DB (00000000-0000-0000-0000-000000000099) from ../../../../../tmp/hms-0018-inventory.jzpuqv/state/v3/d1:
+🌀 To execute on your remote database, add a --remote flag to your wrangler command.

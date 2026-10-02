@@ -1,0 +1,21 @@
+
+ ⛅️ wrangler 4.125.0 (update available 4.146.0)
+───────────────────────────────────────────────
+Resource location: remote
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1m⚠️ This process may take some time, during which your D1 database will be unavailable to serve queries.[0m
+
+
+🌀 Executing on remote database HOTEL_DEMO_DB (9c9c7a53-c3ec-4419-8fb7-0a8cad8e3e67):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+Note: if the execution fails to complete, your DB will return to its original state and you can safely retry.
+├ Checking if file needs uploading
+│
+├ 🌀 Uploading 9c9c7a53-c3ec-4419-8fb7-0a8cad8e3e67.037d860f2503602b.sql
+│ 🌀 Uploading complete.
+│
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mD11 payment ledger mismatch: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_TRIGGER)[0m
+
+
+🪵  Logs were written to "/home/sjo1848/.config/.wrangler/logs/wrangler-2026-10-02_03-37-37_344.log"

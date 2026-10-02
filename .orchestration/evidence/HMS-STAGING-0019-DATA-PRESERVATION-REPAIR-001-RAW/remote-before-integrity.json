@@ -1,0 +1,7 @@
+
+ ⛅️ wrangler 4.125.0 (update available 4.146.0)
+───────────────────────────────────────────────
+Resource location: remote
+
+🌀 Executing on remote database HOTEL_DEMO_DB (4b33c6a1-bbfc-496f-bf71-d646e6405318):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.

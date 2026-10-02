@@ -1,0 +1,55 @@
+{
+  "baseline_source": "acceptance/staging@0e78050999550d193ff0d352672b233e2f3da472; web source, package manifest, and lockfile are byte-identical to the tested result",
+  "baseline": {
+    "js_raw": 338266,
+    "js_gzip": 95036,
+    "css_raw": 56587,
+    "css_gzip": 10490,
+    "aggregate_raw": 394853,
+    "aggregate_gzip": 105526,
+    "initial_entry_raw": 395217,
+    "initial_entry_gzip": 105790
+  },
+  "result": {
+    "js_raw": 338266,
+    "js_gzip": 95036,
+    "css_raw": 56587,
+    "css_gzip": 10490,
+    "aggregate_raw": 394853,
+    "aggregate_gzip": 105526,
+    "initial_entry_raw": 395217,
+    "initial_entry_gzip": 105790
+  },
+  "delta": {
+    "js_raw_bytes": 0,
+    "js_raw_percent": 0,
+    "js_gzip_bytes": 0,
+    "js_gzip_percent": 0,
+    "css_raw_bytes": 0,
+    "css_raw_percent": 0,
+    "css_gzip_bytes": 0,
+    "css_gzip_percent": 0,
+    "aggregate_raw_bytes": 0,
+    "aggregate_raw_percent": 0,
+    "aggregate_gzip_bytes": 0,
+    "aggregate_gzip_percent": 0,
+    "initial_entry_raw_bytes": 0,
+    "initial_entry_raw_percent": 0,
+    "initial_entry_gzip_bytes": 0,
+    "initial_entry_gzip_percent": 0
+  },
+  "ceilings": {
+    "js_raw": 350000,
+    "js_gzip": 100000,
+    "css_raw": 60000,
+    "css_gzip": 15000
+  },
+  "static_entry_files": {
+    "index.html": { "raw": 364, "gzip": 264 },
+    "assets/index-BBnGsPmc.js": { "raw": 338266, "gzip": 95036 },
+    "assets/index-DAINbkuI.css": { "raw": 56587, "gzip": 10490 }
+  },
+  "runtime_loading_evidence": "No Web/JavaScript/CSS source changed from the exact base. This bounded repair changes API migration SQL and executing-D1/evidence only; frontend load/evaluation and entry request topology are unchanged.",
+  "build_command": "npm run web:build",
+  "budget_gate": "npm run architecture:fitness; scripts/check-cloudflare-budgets.mjs PASS"
+}

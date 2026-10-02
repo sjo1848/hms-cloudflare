@@ -1,0 +1,756 @@
+[
+  {
+    "results": [
+      {
+        "type": "index",
+        "name": "idx_active_stay_bootstrap_candidate_status",
+        "tbl_name": "active_stay_bootstrap_candidates",
+        "sql": "CREATE INDEX idx_active_stay_bootstrap_candidate_status\n  ON active_stay_bootstrap_candidates(hotel_id, status, booking_id)"
+      },
+      {
+        "type": "index",
+        "name": "idx_agent_mutation_actor",
+        "tbl_name": "agent_mutation_events",
+        "sql": "CREATE INDEX idx_agent_mutation_actor ON agent_mutation_events(actor_id, created_at)"
+      },
+      {
+        "type": "index",
+        "name": "idx_agent_mutation_booking",
+        "tbl_name": "agent_mutation_events",
+        "sql": "CREATE INDEX idx_agent_mutation_booking ON agent_mutation_events(booking_id, created_at)"
+      },
+      {
+        "type": "index",
+        "name": "idx_agent_mutation_trace",
+        "tbl_name": "agent_mutation_events",
+        "sql": "CREATE INDEX idx_agent_mutation_trace ON agent_mutation_events(trace_id)"
+      },
+      {
+        "type": "index",
+        "name": "idx_booking_pricing_segments_interval",
+        "tbl_name": "booking_pricing_segments",
+        "sql": "CREATE INDEX idx_booking_pricing_segments_interval\n  ON booking_pricing_segments(booking_id, effective_start, effective_end, created_at, segment_id)"
+      },
+      {
+        "type": "index",
+        "name": "idx_bookings_dates",
+        "tbl_name": "bookings",
+        "sql": "CREATE INDEX idx_bookings_dates ON bookings (check_in, check_out)"
+      },
+      {
+        "type": "index",
+        "name": "idx_bookings_guest",
+        "tbl_name": "bookings",
+        "sql": "CREATE INDEX idx_bookings_guest ON bookings (guest_id, created_at)"
+      },
+      {
+        "type": "index",
+        "name": "idx_bookings_room",
+        "tbl_name": "bookings",
+        "sql": "CREATE INDEX idx_bookings_room ON bookings (room_id, check_in)"
+      },
+      {
+        "type": "index",
+        "name": "idx_bookings_status",
+        "tbl_name": "bookings",
+        "sql": "CREATE INDEX idx_bookings_status ON bookings (status, check_in)"
+      },
+      {
+        "type": "index",
+        "name": "idx_bookings_status_checkout",
+        "tbl_name": "bookings",
+        "sql": "CREATE INDEX idx_bookings_status_checkout\n  ON bookings (status, check_out)"
+      },
+      {
+        "type": "index",
+        "name": "idx_cash_closures_operation_token",
+        "tbl_name": "cash_closures",
+        "sql": "CREATE UNIQUE INDEX idx_cash_closures_operation_token ON cash_closures(operation_token)"
+      },
+      {
+        "type": "index",
+        "name": "idx_cash_closures_request",
+        "tbl_name": "cash_closures",
+        "sql": "CREATE INDEX idx_cash_closures_request ON cash_closures(request_id)"
+      },
+      {
+        "type": "index",
+        "name": "idx_cash_closures_shift",
+        "tbl_name": "cash_closures",
+        "sql": "CREATE UNIQUE INDEX idx_cash_closures_shift ON cash_closures(opening_time)"
+      },
+      {
+        "type": "index",
+        "name": "idx_extra_charges_booking",
+        "tbl_name": "extra_charges",
+        "sql": "CREATE INDEX idx_extra_charges_booking ON extra_charges(booking_id, created_at)"
+      },
+      {
+        "type": "index",
+        "name": "idx_extra_charges_booking_operation_token",
+        "tbl_name": "extra_charges",
+        "sql": "CREATE UNIQUE INDEX idx_extra_charges_booking_operation_token\n  ON extra_charges(booking_id, operation_token)\n  WHERE operation_token IS NOT NULL"
+      },
+      {
+        "type": "index",
+        "name": "idx_housekeeping_events_room_created",
+        "tbl_name": "housekeeping_events",
+        "sql": "CREATE INDEX idx_housekeeping_events_room_created\n  ON housekeeping_events (room_id, created_at)"
+      },
+      {
+        "type": "index",
+        "name": "idx_invoices_status",
+        "tbl_name": "invoices",
+        "sql": "CREATE INDEX idx_invoices_status ON invoices(status, created_at)"
+      },
+      {
+        "type": "index",
+        "name": "idx_lifecycle_events_booking",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE INDEX idx_lifecycle_events_booking ON lifecycle_events (booking_id, created_at)"
+      },
+      {
+        "type": "index",
+        "name": "idx_lifecycle_events_checkin_once",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE UNIQUE INDEX idx_lifecycle_events_checkin_once\n  ON lifecycle_events (booking_id, event_type) WHERE event_type IN ('CHECK_IN', 'CHECK_OUT')"
+      },
+      {
+        "type": "index",
+        "name": "idx_maintenance_cases_room_status",
+        "tbl_name": "maintenance_cases",
+        "sql": "CREATE INDEX idx_maintenance_cases_room_status\n  ON maintenance_cases (room_id, status, reported_at)"
+      },
+      {
+        "type": "index",
+        "name": "idx_payment_entries_booking_operation_token",
+        "tbl_name": "payment_entries",
+        "sql": "CREATE UNIQUE INDEX idx_payment_entries_booking_operation_token ON payment_entries(booking_id, operation_token)"
+      },
+      {
+        "type": "index",
+        "name": "idx_payments_booking",
+        "tbl_name": "payment_entries",
+        "sql": "CREATE INDEX idx_payments_booking ON payment_entries(booking_id, received_at)"
+      },
+      {
+        "type": "index",
+        "name": "idx_payments_shift",
+        "tbl_name": "payment_entries",
+        "sql": "CREATE INDEX idx_payments_shift ON payment_entries(received_at, payment_method)"
+      },
+      {
+        "type": "index",
+        "name": "idx_reassign_destination_version_winner",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE UNIQUE INDEX idx_reassign_destination_version_winner\nON lifecycle_events (\n  json_extract(details_json,'$.to_room_id'),\n  CAST(json_extract(details_json,'$.new_room_version_after') AS INTEGER)\n)\nWHERE event_type='REASSIGN' AND json_extract(details_json,'$.new_room_version_after') IS NOT NULL"
+      },
+      {
+        "type": "index",
+        "name": "idx_reassign_source_version_winner",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE UNIQUE INDEX idx_reassign_source_version_winner\nON lifecycle_events (\n  from_room_id,\n  CAST(json_extract(details_json,'$.old_room_version_after') AS INTEGER)\n)\nWHERE event_type='REASSIGN' AND json_extract(details_json,'$.old_room_version_after') IS NOT NULL"
+      },
+      {
+        "type": "index",
+        "name": "idx_reservation_creation_events_hotel_time",
+        "tbl_name": "reservation_creation_events",
+        "sql": "CREATE INDEX idx_reservation_creation_events_hotel_time\n  ON reservation_creation_events(hotel_id, created_at)"
+      },
+      {
+        "type": "index",
+        "name": "idx_reservation_creation_incomplete",
+        "tbl_name": "reservation_creation_operations",
+        "sql": "CREATE INDEX idx_reservation_creation_incomplete\n  ON reservation_creation_operations(stage, created_at)\n  WHERE stage <> 'BOOKING_CREATED'"
+      },
+      {
+        "type": "index",
+        "name": "idx_room_holds_room_dates",
+        "tbl_name": "room_holds",
+        "sql": "CREATE INDEX idx_room_holds_room_dates\n  ON room_holds (room_id, start_date, end_date)"
+      },
+      {
+        "type": "index",
+        "name": "idx_room_inventory_nights_booking",
+        "tbl_name": "room_inventory_nights",
+        "sql": "CREATE INDEX idx_room_inventory_nights_booking\n  ON room_inventory_nights (booking_id)"
+      },
+      {
+        "type": "index",
+        "name": "idx_rooms_housekeeping_state",
+        "tbl_name": "rooms",
+        "sql": "CREATE INDEX idx_rooms_housekeeping_state ON rooms(housekeeping_state, room_number)"
+      },
+      {
+        "type": "index",
+        "name": "idx_rooms_service_state",
+        "tbl_name": "rooms",
+        "sql": "CREATE INDEX idx_rooms_service_state ON rooms(service_state, room_number)"
+      },
+      {
+        "type": "index",
+        "name": "ux_maintenance_cases_open_room",
+        "tbl_name": "maintenance_cases",
+        "sql": "CREATE UNIQUE INDEX ux_maintenance_cases_open_room\n  ON maintenance_cases (room_id) WHERE status = 'OPEN'"
+      },
+      {
+        "type": "table",
+        "name": "_cf_KV",
+        "tbl_name": "_cf_KV",
+        "sql": "CREATE TABLE _cf_KV (\n        key TEXT PRIMARY KEY,\n        value BLOB\n      ) WITHOUT ROWID"
+      },
+      {
+        "type": "table",
+        "name": "active_stay_bootstrap_candidate_segments",
+        "tbl_name": "active_stay_bootstrap_candidate_segments",
+        "sql": "CREATE TABLE active_stay_bootstrap_candidate_segments (\n  candidate_id TEXT NOT NULL,\n  segment_order INTEGER NOT NULL CHECK (segment_order > 0),\n  source_ref TEXT NOT NULL,\n  room_id TEXT NOT NULL,\n  effective_start TEXT NOT NULL,\n  effective_end TEXT NOT NULL,\n  rate_cents INTEGER NOT NULL CHECK (rate_cents >= 0),\n  source_rate_version INTEGER NOT NULL CHECK (source_rate_version >= 0),\n  operation_token TEXT NOT NULL UNIQUE,\n  PRIMARY KEY (candidate_id, segment_order),\n  CHECK (effective_start < effective_end),\n  FOREIGN KEY (candidate_id) REFERENCES active_stay_bootstrap_candidates(candidate_id) ON DELETE CASCADE,\n  FOREIGN KEY (room_id) REFERENCES rooms(id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "active_stay_bootstrap_candidates",
+        "tbl_name": "active_stay_bootstrap_candidates",
+        "sql": "CREATE TABLE active_stay_bootstrap_candidates (\n  candidate_id TEXT PRIMARY KEY,\n  run_id TEXT NOT NULL,\n  hotel_id TEXT NOT NULL,\n  booking_id TEXT NOT NULL,\n  classification TEXT NOT NULL CHECK (classification IN (\n    'TRACEABLE_SEGMENTS','TRACEABLE_AGGREGATE_ONLY','ACCOUNT_MISMATCH','VOIDED','ORPHAN_OR_CONFLICT'\n  )),\n  status TEXT NOT NULL CHECK (status IN ('SHADOWED','HELD','ACTIVATING','ACTIVATED')),\n  baseline_source_json TEXT NOT NULL CHECK (json_valid(baseline_source_json)),\n  candidate_json TEXT NOT NULL CHECK (json_valid(candidate_json)),\n  source_digest TEXT NOT NULL,\n  currency_basis TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  FOREIGN KEY (run_id) REFERENCES active_stay_bootstrap_runs(run_id) ON DELETE CASCADE,\n  UNIQUE (run_id, booking_id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "active_stay_bootstrap_heads",
+        "tbl_name": "active_stay_bootstrap_heads",
+        "sql": "CREATE TABLE active_stay_bootstrap_heads (\n  hotel_id TEXT NOT NULL,\n  model_version TEXT NOT NULL,\n  source_digest TEXT NOT NULL,\n  run_id TEXT NOT NULL,\n  updated_at TEXT NOT NULL,\n  PRIMARY KEY (hotel_id, model_version)\n)"
+      },
+      {
+        "type": "table",
+        "name": "active_stay_bootstrap_runs",
+        "tbl_name": "active_stay_bootstrap_runs",
+        "sql": "CREATE TABLE active_stay_bootstrap_runs (\n  run_id TEXT PRIMARY KEY,\n  hotel_id TEXT NOT NULL,\n  source_digest TEXT NOT NULL,\n  model_version TEXT NOT NULL,\n  status TEXT NOT NULL CHECK (status IN ('SHADOWED','ACTIVATING','COMPLETE','BLOCKED')),\n  manifest_json TEXT NOT NULL CHECK (json_valid(manifest_json)),\n  activation_token TEXT,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL,\n  UNIQUE (hotel_id, source_digest, model_version)\n)"
+      },
+      {
+        "type": "table",
+        "name": "active_stay_bootstrap_snapshot_charges",
+        "tbl_name": "active_stay_bootstrap_snapshot_charges",
+        "sql": "CREATE TABLE active_stay_bootstrap_snapshot_charges (\n  candidate_id TEXT NOT NULL,\n  charge_id TEXT NOT NULL,\n  amount_cents INTEGER NOT NULL,\n  description TEXT NOT NULL,\n  category TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  PRIMARY KEY (candidate_id, charge_id),\n  FOREIGN KEY (candidate_id) REFERENCES active_stay_bootstrap_candidates(candidate_id) ON DELETE CASCADE\n)"
+      },
+      {
+        "type": "table",
+        "name": "active_stay_bootstrap_snapshot_inventory",
+        "tbl_name": "active_stay_bootstrap_snapshot_inventory",
+        "sql": "CREATE TABLE active_stay_bootstrap_snapshot_inventory (\n  candidate_id TEXT NOT NULL,\n  room_id TEXT NOT NULL,\n  stay_date TEXT NOT NULL,\n  booking_id TEXT NOT NULL,\n  PRIMARY KEY (candidate_id, room_id, stay_date, booking_id),\n  FOREIGN KEY (candidate_id) REFERENCES active_stay_bootstrap_candidates(candidate_id) ON DELETE CASCADE\n)"
+      },
+      {
+        "type": "table",
+        "name": "active_stay_bootstrap_snapshot_payments",
+        "tbl_name": "active_stay_bootstrap_snapshot_payments",
+        "sql": "CREATE TABLE active_stay_bootstrap_snapshot_payments (\n  candidate_id TEXT NOT NULL,\n  payment_id TEXT NOT NULL,\n  booking_id TEXT NOT NULL,\n  amount_cents INTEGER NOT NULL,\n  payment_method TEXT NOT NULL,\n  payment_reference TEXT,\n  note TEXT,\n  received_by_user_id TEXT NOT NULL,\n  received_at TEXT NOT NULL,\n  operation_token TEXT,\n  PRIMARY KEY (candidate_id, payment_id),\n  FOREIGN KEY (candidate_id) REFERENCES active_stay_bootstrap_candidates(candidate_id) ON DELETE CASCADE\n)"
+      },
+      {
+        "type": "table",
+        "name": "active_stay_bootstrap_snapshot_rooms",
+        "tbl_name": "active_stay_bootstrap_snapshot_rooms",
+        "sql": "CREATE TABLE active_stay_bootstrap_snapshot_rooms (\n  candidate_id TEXT NOT NULL,\n  room_id TEXT NOT NULL,\n  price_cents INTEGER NOT NULL CHECK (price_cents >= 0),\n  pricing_version INTEGER NOT NULL,\n  inventory_version INTEGER NOT NULL,\n  room_state_version INTEGER NOT NULL,\n  PRIMARY KEY (candidate_id, room_id),\n  FOREIGN KEY (candidate_id) REFERENCES active_stay_bootstrap_candidates(candidate_id) ON DELETE CASCADE\n)"
+      },
+      {
+        "type": "table",
+        "name": "agent_mutation_events",
+        "tbl_name": "agent_mutation_events",
+        "sql": "CREATE TABLE agent_mutation_events (\n  id TEXT PRIMARY KEY,\n  booking_id TEXT NOT NULL,\n  action TEXT NOT NULL CHECK (action IN ('CREATE', 'CANCEL')),\n  tenant_id TEXT NOT NULL,\n  hotel_id TEXT NOT NULL,\n  actor_id TEXT NOT NULL,\n  session_id TEXT NOT NULL,\n  trace_id TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  UNIQUE (booking_id, action)\n)"
+      },
+      {
+        "type": "table",
+        "name": "booking_pricing_segments",
+        "tbl_name": "booking_pricing_segments",
+        "sql": "CREATE TABLE booking_pricing_segments (\n  segment_id TEXT PRIMARY KEY,\n  booking_id TEXT NOT NULL,\n  room_id TEXT NOT NULL,\n  effective_start TEXT NOT NULL,\n  effective_end TEXT NOT NULL,\n  rate_cents INTEGER NOT NULL CHECK (rate_cents >= 0),\n  room_pricing_version INTEGER NOT NULL CHECK (room_pricing_version >= 0),\n  segment_version INTEGER NOT NULL CHECK (segment_version > 0),\n  operation_token TEXT NOT NULL UNIQUE,\n  actor_subject TEXT NOT NULL,\n  hotel_id TEXT NOT NULL,\n  request_id TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  CHECK (effective_start < effective_end),\n  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,\n  FOREIGN KEY (room_id) REFERENCES rooms(id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "bookings",
+        "tbl_name": "bookings",
+        "sql": "CREATE TABLE \"bookings\" (\n  id TEXT PRIMARY KEY, guest_id TEXT NOT NULL, room_id TEXT NOT NULL,\n  check_in TEXT NOT NULL, check_out TEXT NOT NULL,\n  status TEXT NOT NULL DEFAULT 'CONFIRMED' CHECK (status IN ('CONFIRMED','CANCELLED','CHECKED_IN','CHECKED_OUT','NO_SHOW')),\n  total_cents INTEGER NOT NULL CHECK (total_cents >= 0), notes TEXT,\n  checked_in_at TEXT, checked_in_by TEXT, checked_out_at TEXT, checked_out_by TEXT,\n  created_at TEXT NOT NULL, updated_at TEXT NOT NULL,\n  check_in_guests_count INTEGER, check_out_payment_policy TEXT, check_out_reference TEXT, check_in_reference TEXT, guest_name_snapshot TEXT, check_in_document_verified INTEGER CHECK (check_in_document_verified IN (0, 1)), check_in_contact_confirmed INTEGER CHECK (check_in_contact_confirmed IN (0, 1)), check_in_stay_confirmed INTEGER CHECK (check_in_stay_confirmed IN (0, 1)), check_out_charges_reviewed INTEGER CHECK (check_out_charges_reviewed IN (0, 1)), check_out_room_release_confirmed INTEGER CHECK (check_out_room_release_confirmed IN (0, 1)), check_out_housekeeping_handoff INTEGER CHECK (check_out_housekeeping_handoff IN (0, 1)), terminal_reason TEXT, terminal_recorded_at TEXT, terminal_recorded_by TEXT, late_arrival_eta TEXT, late_arrival_note TEXT, late_arrival_recorded_at TEXT, late_arrival_recorded_by TEXT, last_reassignment_token TEXT, pricing_version INTEGER NOT NULL DEFAULT 0 CHECK (pricing_version >= 0), last_pricing_operation_token TEXT,\n  FOREIGN KEY (guest_id) REFERENCES guests(id), FOREIGN KEY (room_id) REFERENCES rooms(id), CHECK (check_out > check_in)\n)"
+      },
+      {
+        "type": "table",
+        "name": "cash_closures",
+        "tbl_name": "cash_closures",
+        "sql": "CREATE TABLE cash_closures (\n  id TEXT PRIMARY KEY,\n  actor_subject TEXT NOT NULL,\n  total_amount_cents INTEGER NOT NULL CHECK (total_amount_cents >= 0),\n  cash_amount_cents INTEGER NOT NULL CHECK (cash_amount_cents >= 0),\n  card_amount_cents INTEGER NOT NULL CHECK (card_amount_cents >= 0),\n  payment_count INTEGER NOT NULL CHECK (payment_count >= 0),\n  counted_cash_amount_cents INTEGER NOT NULL CHECK (counted_cash_amount_cents >= 0),\n  cash_difference_cents INTEGER NOT NULL,\n  opening_time TEXT NOT NULL,\n  closing_time TEXT NOT NULL,\n  handoff_to TEXT NOT NULL CHECK (length(trim(handoff_to)) BETWEEN 1 AND 120),\n  notes TEXT\n, request_id TEXT, hotel_id TEXT, operation_token TEXT)"
+      },
+      {
+        "type": "table",
+        "name": "extra_charges",
+        "tbl_name": "extra_charges",
+        "sql": "CREATE TABLE extra_charges (\n  id TEXT PRIMARY KEY,\n  booking_id TEXT NOT NULL,\n  description TEXT NOT NULL CHECK (length(trim(description)) BETWEEN 1 AND 200),\n  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),\n  category TEXT NOT NULL DEFAULT 'OTHER',\n  created_at TEXT NOT NULL, operation_token TEXT,\n  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "type": "table",
+        "name": "financial_events",
+        "tbl_name": "financial_events",
+        "sql": "CREATE TABLE financial_events (\n  id TEXT PRIMARY KEY,\n  event_type TEXT NOT NULL,\n  booking_id TEXT,\n  actor_subject TEXT NOT NULL,\n  request_id TEXT NOT NULL,\n  hotel_id TEXT NOT NULL,\n  details_json TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "type": "table",
+        "name": "guests",
+        "tbl_name": "guests",
+        "sql": "CREATE TABLE guests (\n  id TEXT PRIMARY KEY,\n  full_name TEXT NOT NULL,\n  email TEXT NOT NULL UNIQUE,\n  phone TEXT,\n  created_at TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "housekeeping_events",
+        "tbl_name": "housekeeping_events",
+        "sql": "CREATE TABLE housekeeping_events (\n  id TEXT PRIMARY KEY,\n  room_id TEXT NOT NULL,\n  maintenance_case_id TEXT,\n  event_type TEXT NOT NULL CHECK (event_type IN ('CLEANING_START', 'CLEANING_FINISH', 'MAINTENANCE_OPEN', 'MAINTENANCE_ESCALATE', 'MAINTENANCE_RESOLVE')),\n  from_status TEXT NOT NULL,\n  to_status TEXT NOT NULL,\n  actor_subject TEXT NOT NULL,\n  request_id TEXT NOT NULL,\n  hotel_id TEXT NOT NULL,\n  details_json TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  FOREIGN KEY (room_id) REFERENCES rooms(id),\n  FOREIGN KEY (maintenance_case_id) REFERENCES maintenance_cases(id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "invoices",
+        "tbl_name": "invoices",
+        "sql": "CREATE TABLE \"invoices\" (\n  id TEXT PRIMARY KEY,\n  booking_id TEXT NOT NULL UNIQUE,\n  amount_cents INTEGER NOT NULL CHECK (amount_cents >= 0),\n  paid_amount_cents INTEGER NOT NULL DEFAULT 0 CHECK (paid_amount_cents >= 0),\n  status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PAID', 'VOIDED')),\n  payment_method TEXT NOT NULL DEFAULT 'CASH' CHECK (payment_method IN ('CASH', 'CARD', 'TRANSFER')),\n  payment_reference TEXT,\n  paid_at TEXT,\n  created_at TEXT NOT NULL,\n  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "type": "table",
+        "name": "lifecycle_events",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TABLE lifecycle_events (\n  id TEXT PRIMARY KEY,\n  booking_id TEXT NOT NULL,\n  event_type TEXT NOT NULL CHECK (event_type IN ('CHECK_IN', 'REASSIGN', 'CHECK_OUT')),\n  actor_subject TEXT NOT NULL,\n  request_id TEXT NOT NULL,\n  hotel_id TEXT NOT NULL,\n  details_json TEXT NOT NULL,\n  created_at TEXT NOT NULL, from_room_id TEXT,\n  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "type": "table",
+        "name": "maintenance_cases",
+        "tbl_name": "maintenance_cases",
+        "sql": "CREATE TABLE maintenance_cases (\n  id TEXT PRIMARY KEY,\n  room_id TEXT NOT NULL,\n  status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'RESOLVED')),\n  impact TEXT NOT NULL DEFAULT 'NON_BLOCKING' CHECK (impact IN ('NON_BLOCKING', 'BLOCKING')),\n  priority TEXT NOT NULL DEFAULT 'MEDIUM' CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH', 'URGENT')),\n  reason TEXT NOT NULL,\n  assigned_to TEXT NOT NULL,\n  reported_by_user_id TEXT,\n  reported_at TEXT NOT NULL,\n  resolution_note TEXT,\n  resolved_by_user_id TEXT,\n  resolved_at TEXT,\n  return_status TEXT,\n  FOREIGN KEY (room_id) REFERENCES rooms(id),\n  CHECK (\n    (status = 'OPEN' AND resolution_note IS NULL AND resolved_by_user_id IS NULL AND resolved_at IS NULL AND return_status IS NULL)\n    OR\n    (status = 'RESOLVED' AND resolution_note IS NOT NULL AND resolved_by_user_id IS NOT NULL AND resolved_at IS NOT NULL AND return_status IN ('AVAILABLE', 'OCCUPIED', 'DIRTY', 'CLEANING', 'MAINTENANCE', 'OUT_OF_ORDER'))\n  )\n)"
+      },
+      {
+        "type": "table",
+        "name": "migration_provenance",
+        "tbl_name": "migration_provenance",
+        "sql": "CREATE TABLE migration_provenance (\n  id TEXT PRIMARY KEY,\n  source_table TEXT NOT NULL,\n  source_id TEXT NOT NULL,\n  target_table TEXT NOT NULL,\n  target_id TEXT NOT NULL,\n  actor_subject TEXT NOT NULL,\n  source_timestamp TEXT NOT NULL,\n  imported_at TEXT NOT NULL,\n  reason TEXT NOT NULL\n)"
+      },
+      {
+        "type": "table",
+        "name": "migration_rehearsals",
+        "tbl_name": "migration_rehearsals",
+        "sql": "CREATE TABLE migration_rehearsals (\n  rehearsal_id TEXT PRIMARY KEY,\n  source_baseline TEXT NOT NULL,\n  source_digest TEXT NOT NULL,\n  imported_at TEXT NOT NULL,\n  status TEXT NOT NULL CHECK (status = 'APPLIED')\n)"
+      },
+      {
+        "type": "table",
+        "name": "payment_entries",
+        "tbl_name": "payment_entries",
+        "sql": "CREATE TABLE payment_entries (\n  id TEXT PRIMARY KEY,\n  invoice_id TEXT NOT NULL,\n  booking_id TEXT NOT NULL,\n  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),\n  payment_method TEXT NOT NULL CHECK (payment_method IN ('CASH', 'CARD', 'TRANSFER')),\n  payment_reference TEXT,\n  note TEXT,\n  received_by_user_id TEXT NOT NULL,\n  received_at TEXT NOT NULL, operation_token TEXT,\n  FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,\n  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "type": "table",
+        "name": "reservation_creation_events",
+        "tbl_name": "reservation_creation_events",
+        "sql": "CREATE TABLE reservation_creation_events (\n  id TEXT PRIMARY KEY,\n  operation_token TEXT NOT NULL,\n  event_type TEXT NOT NULL CHECK (event_type IN ('GUEST_CREATED', 'BOOKING_CREATED')),\n  guest_id TEXT NOT NULL,\n  booking_id TEXT NOT NULL,\n  actor_subject TEXT NOT NULL,\n  hotel_id TEXT NOT NULL,\n  request_id TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  UNIQUE (operation_token, event_type),\n  FOREIGN KEY (operation_token) REFERENCES reservation_creation_operations(operation_token),\n  FOREIGN KEY (guest_id) REFERENCES guests(id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "reservation_creation_operations",
+        "tbl_name": "reservation_creation_operations",
+        "sql": "CREATE TABLE reservation_creation_operations (\n  operation_token TEXT PRIMARY KEY,\n  payload_hash TEXT NOT NULL CHECK (length(payload_hash) = 64),\n  guest_id TEXT NOT NULL,\n  booking_id TEXT NOT NULL UNIQUE,\n  guest_source TEXT NOT NULL CHECK (guest_source IN ('NEW', 'EXISTING')),\n  stage TEXT NOT NULL CHECK (stage IN ('GUEST_CREATED', 'EXISTING_GUEST_SELECTED', 'BOOKING_CREATED')),\n  room_id TEXT NOT NULL,\n  check_in TEXT NOT NULL,\n  check_out TEXT NOT NULL,\n  hotel_id TEXT NOT NULL,\n  created_by_subject TEXT NOT NULL,\n  created_request_id TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  updated_at TEXT NOT NULL,\n  booking_created_by_subject TEXT,\n  booking_request_id TEXT,\n  booking_created_at TEXT,\n  CHECK (check_out > check_in),\n  CHECK ((guest_source = 'NEW' AND stage IN ('GUEST_CREATED','BOOKING_CREATED'))\n      OR (guest_source = 'EXISTING' AND stage IN ('EXISTING_GUEST_SELECTED','BOOKING_CREATED'))),\n  CHECK ((stage = 'BOOKING_CREATED') = (booking_created_at IS NOT NULL)),\n  CHECK ((stage = 'BOOKING_CREATED') = (booking_created_by_subject IS NOT NULL)),\n  CHECK ((stage = 'BOOKING_CREATED') = (booking_request_id IS NOT NULL)),\n  FOREIGN KEY (guest_id) REFERENCES guests(id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "room_holds",
+        "tbl_name": "room_holds",
+        "sql": "CREATE TABLE room_holds (\n  id TEXT PRIMARY KEY,\n  room_id TEXT NOT NULL,\n  start_date TEXT NOT NULL,\n  end_date TEXT NOT NULL,\n  hold_type TEXT NOT NULL CHECK (hold_type IN ('Vip', 'Maintenance', 'Owner', 'Compliance', 'Commercial', 'Other')),\n  reason TEXT NOT NULL,\n  created_by_user_id TEXT,\n  created_at TEXT NOT NULL,\n  FOREIGN KEY (room_id) REFERENCES rooms(id)\n)"
+      },
+      {
+        "type": "table",
+        "name": "room_inventory_nights",
+        "tbl_name": "room_inventory_nights",
+        "sql": "CREATE TABLE \"room_inventory_nights\" (\n  room_id TEXT NOT NULL,\n  stay_date TEXT NOT NULL,\n  booking_id TEXT NOT NULL,\n  PRIMARY KEY (room_id, stay_date),\n  FOREIGN KEY (room_id) REFERENCES rooms(id),\n  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "type": "table",
+        "name": "rooms",
+        "tbl_name": "rooms",
+        "sql": "CREATE TABLE rooms (\n  id TEXT PRIMARY KEY,\n  room_number TEXT NOT NULL UNIQUE,\n  status TEXT NOT NULL DEFAULT 'AVAILABLE',\n  price_cents INTEGER NOT NULL CHECK (price_cents >= 0)\n, room_type TEXT NOT NULL DEFAULT 'STANDARD', housekeeping_state TEXT\n  CHECK (housekeeping_state IS NULL OR housekeeping_state IN ('READY', 'DIRTY', 'CLEANING')), service_state TEXT\n  CHECK (service_state IS NULL OR service_state IN ('IN_SERVICE', 'OUT_OF_ORDER')), room_state_version INTEGER NOT NULL DEFAULT 0 CHECK (room_state_version >= 0), pricing_version INTEGER NOT NULL DEFAULT 0 CHECK (pricing_version >= 0), inventory_version INTEGER NOT NULL DEFAULT 0 CHECK (inventory_version >= 0))"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_activation_snapshot_guard",
+        "tbl_name": "active_stay_bootstrap_runs",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_activation_snapshot_guard\nBEFORE UPDATE OF status ON active_stay_bootstrap_runs\nWHEN OLD.status='SHADOWED' AND NEW.status='ACTIVATING'\nBEGIN\n  SELECT RAISE(ABORT,'active-stay bootstrap source digest is no longer current')\n  WHERE NOT EXISTS (\n    SELECT 1 FROM active_stay_bootstrap_heads h\n    WHERE h.hotel_id=NEW.hotel_id AND h.model_version=NEW.model_version\n      AND h.run_id=NEW.run_id AND h.source_digest=NEW.source_digest\n  );\n  SELECT RAISE(ABORT,'active-stay booking snapshot is stale or conflicting')\n  WHERE EXISTS (\n    SELECT 1 FROM active_stay_bootstrap_candidates c\n    JOIN bookings b ON b.id=c.booking_id\n    WHERE c.run_id=NEW.run_id AND c.classification='TRACEABLE_SEGMENTS'\n      AND (\n        b.id<>json_extract(c.baseline_source_json,'$.booking.id')\n        OR b.status<>json_extract(c.baseline_source_json,'$.booking.status')\n        OR b.room_id<>json_extract(c.baseline_source_json,'$.booking.roomId')\n        OR b.check_in<>json_extract(c.baseline_source_json,'$.booking.checkIn')\n        OR b.check_out<>json_extract(c.baseline_source_json,'$.booking.checkOut')\n        OR b.total_cents<>json_extract(c.baseline_source_json,'$.booking.totalCents')\n        OR b.pricing_version<>json_extract(c.baseline_source_json,'$.booking.pricingVersion')\n        OR COALESCE(b.last_pricing_operation_token,'')<>COALESCE(json_extract(c.baseline_source_json,'$.booking.lastPricingOperationToken'),'')\n        OR b.updated_at<>json_extract(c.baseline_source_json,'$.booking.updatedAt')\n        OR (SELECT COUNT(*) FROM active_stay_bootstrap_candidate_segments s WHERE s.candidate_id=c.candidate_id)\n          <>json_array_length(json_extract(c.candidate_json,'$.segments'))\n        OR (SELECT COUNT(*) FROM active_stay_bootstrap_snapshot_rooms s WHERE s.candidate_id=c.candidate_id)\n          <>json_array_length(json_extract(c.baseline_source_json,'$.rooms'))\n        OR (SELECT COUNT(*) FROM active_stay_bootstrap_snapshot_inventory s WHERE s.candidate_id=c.candidate_id)\n          <>json_array_length(json_extract(c.baseline_source_json,'$.inventory'))\n        OR (SELECT COUNT(*) FROM active_stay_bootstrap_snapshot_charges s WHERE s.candidate_id=c.candidate_id)\n          <>json_array_length(json_extract(c.baseline_source_json,'$.charges'))\n        OR (SELECT COUNT(*) FROM active_stay_bootstrap_snapshot_payments s WHERE s.candidate_id=c.candidate_id)\n          <>json_array_length(json_extract(c.baseline_source_json,'$.payments'))\n        OR (SELECT COUNT(*) FROM invoices i WHERE i.booking_id=b.id)<>1\n        OR NOT EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id=b.id\n          AND i.id=json_extract(c.baseline_source_json,'$.invoice.id')\n          AND i.amount_cents=json_extract(c.baseline_source_json,'$.invoice.amountCents')\n          AND i.paid_amount_cents=json_extract(c.baseline_source_json,'$.invoice.paidAmountCents')\n          AND i.status=json_extract(c.baseline_source_json,'$.invoice.status')\n          AND i.payment_method=json_extract(c.baseline_source_json,'$.invoice.paymentMethod')\n          AND COALESCE(i.payment_reference,'')=COALESCE(json_extract(c.baseline_source_json,'$.invoice.paymentReference'),'')\n          AND COALESCE(i.paid_at,'')=COALESCE(json_extract(c.baseline_source_json,'$.invoice.paidAt'),'')\n          AND i.created_at=json_extract(c.baseline_source_json,'$.invoice.createdAt'))\n        OR (SELECT COUNT(*) FROM extra_charges a WHERE a.booking_id=b.id)\n          <>(SELECT COUNT(*) FROM active_stay_bootstrap_snapshot_charges s WHERE s.candidate_id=c.candidate_id)\n        OR EXISTS (SELECT 1 FROM active_stay_bootstrap_snapshot_charges s\n          WHERE s.candidate_id=c.candidate_id AND NOT EXISTS (SELECT 1 FROM extra_charges a WHERE a.booking_id=b.id\n            AND a.id=s.charge_id AND a.amount_cents=s.amount_cents AND a.description=s.description\n            AND a.category=s.category AND a.created_at=s.created_at))\n        OR EXISTS (SELECT 1 FROM extra_charges a WHERE a.booking_id=b.id AND NOT EXISTS (\n          SELECT 1 FROM active_stay_bootstrap_snapshot_charges s WHERE s.candidate_id=c.candidate_id\n            AND s.charge_id=a.id AND s.amount_cents=a.amount_cents AND s.description=a.description\n            AND s.category=a.category AND s.created_at=a.created_at))\n        OR (SELECT COUNT(*) FROM payment_entries p WHERE p.invoice_id=(SELECT i.id FROM invoices i WHERE i.booking_id=b.id))\n          <>(SELECT COUNT(*) FROM active_stay_bootstrap_snapshot_payments s WHERE s.candidate_id=c.candidate_id)\n        OR EXISTS (SELECT 1 FROM active_stay_bootstrap_snapshot_payments s\n          WHERE s.candidate_id=c.candidate_id AND NOT EXISTS (SELECT 1 FROM payment_entries p\n            WHERE p.invoice_id=(SELECT i.id FROM invoices i WHERE i.booking_id=b.id)\n              AND p.id=s.payment_id AND p.booking_id=s.booking_id AND p.amount_cents=s.amount_cents\n              AND p.payment_method=s.payment_method AND COALESCE(p.payment_reference,'')=COALESCE(s.payment_reference,'')\n              AND COALESCE(p.note,'')=COALESCE(s.note,'') AND p.received_by_user_id=s.received_by_user_id\n              AND p.received_at=s.received_at AND COALESCE(p.operation_token,'')=COALESCE(s.operation_token,'')))\n        OR EXISTS (SELECT 1 FROM payment_entries p WHERE p.invoice_id=(SELECT i.id FROM invoices i WHERE i.booking_id=b.id)\n          AND NOT EXISTS (SELECT 1 FROM active_stay_bootstrap_snapshot_payments s WHERE s.candidate_id=c.candidate_id\n            AND s.payment_id=p.id AND s.booking_id=p.booking_id AND s.amount_cents=p.amount_cents\n            AND s.payment_method=p.payment_method AND COALESCE(s.payment_reference,'')=COALESCE(p.payment_reference,'')\n            AND COALESCE(s.note,'')=COALESCE(p.note,'') AND s.received_by_user_id=p.received_by_user_id\n            AND s.received_at=p.received_at AND COALESCE(s.operation_token,'')=COALESCE(p.operation_token,'')))\n        OR (SELECT COUNT(*) FROM room_inventory_nights n JOIN active_stay_bootstrap_snapshot_rooms s\n          ON s.candidate_id=c.candidate_id AND s.room_id=n.room_id\n          WHERE n.stay_date>=b.check_in AND n.stay_date<b.check_out)\n          <>(SELECT COUNT(*) FROM active_stay_bootstrap_snapshot_inventory s WHERE s.candidate_id=c.candidate_id)\n        OR EXISTS (SELECT 1 FROM active_stay_bootstrap_snapshot_inventory s\n          WHERE s.candidate_id=c.candidate_id AND NOT EXISTS (SELECT 1 FROM room_inventory_nights n\n            WHERE n.booking_id=s.booking_id AND n.room_id=s.room_id AND n.stay_date=s.stay_date))\n        OR EXISTS (SELECT 1 FROM room_inventory_nights n JOIN active_stay_bootstrap_snapshot_rooms sr\n          ON sr.candidate_id=c.candidate_id AND sr.room_id=n.room_id\n          WHERE n.stay_date>=b.check_in AND n.stay_date<b.check_out AND NOT EXISTS (\n            SELECT 1 FROM active_stay_bootstrap_snapshot_inventory s WHERE s.candidate_id=c.candidate_id\n              AND s.booking_id=n.booking_id AND s.room_id=n.room_id AND s.stay_date=n.stay_date))\n        OR (SELECT COUNT(*) FROM active_stay_bootstrap_snapshot_rooms s WHERE s.candidate_id=c.candidate_id)\n          <>(SELECT COUNT(*) FROM rooms r JOIN active_stay_bootstrap_snapshot_rooms s\n            ON s.candidate_id=c.candidate_id AND s.room_id=r.id)\n        OR EXISTS (SELECT 1 FROM active_stay_bootstrap_snapshot_rooms s\n          WHERE s.candidate_id=c.candidate_id AND NOT EXISTS (SELECT 1 FROM rooms r WHERE r.id=s.room_id\n            AND r.price_cents=s.price_cents AND r.pricing_version=s.pricing_version AND r.inventory_version=s.inventory_version\n            AND r.room_state_version=s.room_state_version))\n      )\n  );\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_candidate_activation_guard",
+        "tbl_name": "active_stay_bootstrap_candidates",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_candidate_activation_guard\nBEFORE UPDATE OF status ON active_stay_bootstrap_candidates\nWHEN NEW.status='ACTIVATING' AND OLD.status='SHADOWED'\nBEGIN\n  SELECT RAISE(ABORT,'active-stay bootstrap activation is not current')\n  WHERE NOT EXISTS (SELECT 1 FROM active_stay_bootstrap_runs r\n    JOIN active_stay_bootstrap_heads h ON h.hotel_id=r.hotel_id AND h.model_version=r.model_version\n    WHERE r.run_id=NEW.run_id AND r.status='ACTIVATING' AND r.source_digest=NEW.source_digest\n      AND h.run_id=r.run_id AND h.source_digest=r.source_digest);\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_candidate_complete_guard",
+        "tbl_name": "active_stay_bootstrap_candidates",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_candidate_complete_guard\nBEFORE UPDATE OF status ON active_stay_bootstrap_candidates\nWHEN NEW.status='ACTIVATED' AND OLD.status='ACTIVATING'\nBEGIN\n  SELECT RAISE(ABORT,'active-stay bootstrap canonical segment set is incomplete')\n  WHERE (SELECT COUNT(*) FROM active_stay_bootstrap_candidate_segments s WHERE s.candidate_id=NEW.candidate_id)\n    <>json_array_length(json_extract(NEW.candidate_json,'$.segments'))\n    OR EXISTS (SELECT 1 FROM active_stay_bootstrap_candidate_segments s\n      WHERE s.candidate_id=NEW.candidate_id AND NOT EXISTS (\n        SELECT 1 FROM booking_pricing_segments p WHERE p.booking_id=NEW.booking_id\n          AND p.room_id=s.room_id AND p.effective_start=s.effective_start AND p.effective_end=s.effective_end\n          AND p.rate_cents=s.rate_cents AND p.room_pricing_version=s.source_rate_version\n          AND p.operation_token=s.operation_token));\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_candidate_insert_guard",
+        "tbl_name": "active_stay_bootstrap_candidates",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_candidate_insert_guard\nBEFORE INSERT ON active_stay_bootstrap_candidates\nWHEN NOT EXISTS (\n  SELECT 1 FROM active_stay_bootstrap_runs r\n  WHERE r.run_id=NEW.run_id AND r.hotel_id=NEW.hotel_id AND r.source_digest=NEW.source_digest\n    AND json_extract(NEW.candidate_json,'$.bookingId')=NEW.booking_id\n    AND json_extract(NEW.candidate_json,'$.classification')=NEW.classification\n    AND json_extract(NEW.candidate_json,'$.currencyBasis')=NEW.currency_basis\n    AND json_extract(NEW.candidate_json,'$.baselineDigest') IS NOT NULL\n    AND json(NEW.baseline_source_json)=json_extract(NEW.candidate_json,'$.sourceSnapshot')\n    AND EXISTS (SELECT 1 FROM json_each(r.manifest_json,'$.candidates') x\n      WHERE json_extract(x.value,'$.bookingId')=NEW.booking_id\n        AND json_extract(x.value,'$.classification')=NEW.classification\n        AND json_extract(x.value,'$.baselineDigest')=json_extract(NEW.candidate_json,'$.baselineDigest')\n        AND json_extract(x.value,'$.currencyBasis')=NEW.currency_basis)\n    AND NEW.status=CASE WHEN NEW.classification='TRACEABLE_SEGMENTS' THEN 'SHADOWED' ELSE 'HELD' END\n)\nBEGIN\n  SELECT RAISE(ABORT,'active-stay bootstrap candidate is not bound to its manifest');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_candidate_segment_insert_guard",
+        "tbl_name": "active_stay_bootstrap_candidate_segments",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_candidate_segment_insert_guard\nBEFORE INSERT ON active_stay_bootstrap_candidate_segments\nWHEN NOT EXISTS (\n  SELECT 1 FROM active_stay_bootstrap_candidates c\n  WHERE c.candidate_id=NEW.candidate_id AND c.status='SHADOWED'\n    AND c.classification='TRACEABLE_SEGMENTS'\n    AND json_extract(c.candidate_json,'$.segments['||(NEW.segment_order-1)||'].sourceRef')=NEW.source_ref\n    AND json_extract(c.candidate_json,'$.segments['||(NEW.segment_order-1)||'].roomId')=NEW.room_id\n    AND json_extract(c.candidate_json,'$.segments['||(NEW.segment_order-1)||'].effectiveStart')=NEW.effective_start\n    AND json_extract(c.candidate_json,'$.segments['||(NEW.segment_order-1)||'].effectiveEnd')=NEW.effective_end\n    AND json_extract(c.candidate_json,'$.segments['||(NEW.segment_order-1)||'].rateCents')=NEW.rate_cents\n    AND json_extract(c.candidate_json,'$.segments['||(NEW.segment_order-1)||'].sourceRateVersion')=NEW.source_rate_version\n    AND NEW.operation_token=c.run_id||':'||c.booking_id||':'||NEW.segment_order\n)\nBEGIN\n  SELECT RAISE(ABORT,'active-stay bootstrap shadow segment is not candidate-backed');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_candidate_segment_no_delete",
+        "tbl_name": "active_stay_bootstrap_candidate_segments",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_candidate_segment_no_delete\nBEFORE DELETE ON active_stay_bootstrap_candidate_segments\nBEGIN\n  SELECT RAISE(ABORT,'active-stay bootstrap shadow segment is immutable');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_candidate_segment_no_update",
+        "tbl_name": "active_stay_bootstrap_candidate_segments",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_candidate_segment_no_update\nBEFORE UPDATE ON active_stay_bootstrap_candidate_segments\nBEGIN\n  SELECT RAISE(ABORT,'active-stay bootstrap shadow segment is immutable');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_candidate_update_guard",
+        "tbl_name": "active_stay_bootstrap_candidates",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_candidate_update_guard\nBEFORE UPDATE ON active_stay_bootstrap_candidates\nWHEN NEW.candidate_id<>OLD.candidate_id OR NEW.run_id<>OLD.run_id OR NEW.hotel_id<>OLD.hotel_id\n  OR NEW.booking_id<>OLD.booking_id OR NEW.classification<>OLD.classification\n  OR NEW.baseline_source_json<>OLD.baseline_source_json OR NEW.candidate_json<>OLD.candidate_json\n  OR NEW.source_digest<>OLD.source_digest OR NEW.currency_basis<>OLD.currency_basis\n  OR NEW.created_at<>OLD.created_at\n  OR (NEW.status<>OLD.status AND NOT (\n    (OLD.status='SHADOWED' AND NEW.status='ACTIVATING')\n    OR (OLD.status='ACTIVATING' AND NEW.status='ACTIVATED')\n  ))\nBEGIN\n  SELECT RAISE(ABORT,'active-stay bootstrap candidate is immutable');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_pricing_segment_snapshot_guard",
+        "tbl_name": "active_stay_bootstrap_runs",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_pricing_segment_snapshot_guard\nBEFORE UPDATE OF status ON active_stay_bootstrap_runs\nWHEN OLD.status='SHADOWED' AND NEW.status='ACTIVATING'\nBEGIN\n  SELECT RAISE(ABORT,'active-stay bootstrap canonical pricing segment snapshot is stale')\n  WHERE EXISTS (\n    SELECT 1 FROM active_stay_bootstrap_candidates c\n    WHERE c.run_id=NEW.run_id AND c.classification='TRACEABLE_SEGMENTS'\n      AND (\n        COALESCE(json_type(c.baseline_source_json,'$.pricingSegments'),'')<>'array'\n        OR (SELECT COUNT(*) FROM booking_pricing_segments s WHERE s.booking_id=c.booking_id)\n          <>json_array_length(json_extract(c.baseline_source_json,'$.pricingSegments'))\n        OR EXISTS (\n          SELECT 1 FROM booking_pricing_segments s\n          WHERE s.booking_id=c.booking_id AND NOT EXISTS (\n            SELECT 1 FROM json_each(c.baseline_source_json,'$.pricingSegments') j\n            WHERE json_extract(j.value,'$.segmentId')=s.segment_id\n              AND json_extract(j.value,'$.bookingId')=s.booking_id\n              AND json_extract(j.value,'$.roomId')=s.room_id\n              AND json_extract(j.value,'$.effectiveStart')=s.effective_start\n              AND json_extract(j.value,'$.effectiveEnd')=s.effective_end\n              AND json_extract(j.value,'$.rateCents')=s.rate_cents\n              AND json_extract(j.value,'$.roomPricingVersion')=s.room_pricing_version\n              AND json_extract(j.value,'$.segmentVersion')=s.segment_version\n              AND json_extract(j.value,'$.operationToken')=s.operation_token\n              AND json_extract(j.value,'$.actorSubject')=s.actor_subject\n              AND json_extract(j.value,'$.hotelId')=s.hotel_id\n              AND json_extract(j.value,'$.requestId')=s.request_id\n              AND json_extract(j.value,'$.createdAt')=s.created_at\n          )\n        )\n        OR EXISTS (\n          SELECT 1 FROM json_each(c.baseline_source_json,'$.pricingSegments') j\n          WHERE NOT EXISTS (\n            SELECT 1 FROM booking_pricing_segments s\n            WHERE s.booking_id=c.booking_id\n              AND s.segment_id=json_extract(j.value,'$.segmentId')\n              AND s.booking_id=json_extract(j.value,'$.bookingId')\n              AND s.room_id=json_extract(j.value,'$.roomId')\n              AND s.effective_start=json_extract(j.value,'$.effectiveStart')\n              AND s.effective_end=json_extract(j.value,'$.effectiveEnd')\n              AND s.rate_cents=json_extract(j.value,'$.rateCents')\n              AND s.room_pricing_version=json_extract(j.value,'$.roomPricingVersion')\n              AND s.segment_version=json_extract(j.value,'$.segmentVersion')\n              AND s.operation_token=json_extract(j.value,'$.operationToken')\n              AND s.actor_subject=json_extract(j.value,'$.actorSubject')\n              AND s.hotel_id=json_extract(j.value,'$.hotelId')\n              AND s.request_id=json_extract(j.value,'$.requestId')\n              AND s.created_at=json_extract(j.value,'$.createdAt')\n          )\n        )\n      )\n  );\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_run_complete_guard",
+        "tbl_name": "active_stay_bootstrap_runs",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_run_complete_guard\nBEFORE UPDATE OF status ON active_stay_bootstrap_runs\nWHEN NEW.status='COMPLETE' AND OLD.status IN ('SHADOWED','ACTIVATING')\nBEGIN\n  SELECT RAISE(ABORT,'active-stay bootstrap activation is incomplete')\n  WHERE (SELECT COUNT(*) FROM active_stay_bootstrap_candidates c WHERE c.run_id=NEW.run_id)\n      <>json_array_length(json_extract(NEW.manifest_json,'$.candidates'))\n    OR EXISTS (SELECT 1 FROM active_stay_bootstrap_candidates c\n      WHERE c.run_id=NEW.run_id AND c.classification='TRACEABLE_SEGMENTS' AND c.status<>'ACTIVATED');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_run_update_guard",
+        "tbl_name": "active_stay_bootstrap_runs",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_run_update_guard\nBEFORE UPDATE ON active_stay_bootstrap_runs\nWHEN NEW.run_id<>OLD.run_id OR NEW.hotel_id<>OLD.hotel_id OR NEW.source_digest<>OLD.source_digest\n  OR NEW.model_version<>OLD.model_version OR NEW.manifest_json<>OLD.manifest_json\n  OR NEW.created_at<>OLD.created_at\n  OR (NEW.status<>OLD.status AND NOT (\n    (OLD.status='SHADOWED' AND NEW.status IN ('ACTIVATING','COMPLETE','BLOCKED'))\n    OR (OLD.status='ACTIVATING' AND NEW.status IN ('COMPLETE','BLOCKED'))\n  ))\n  OR (OLD.activation_token IS NOT NULL AND COALESCE(NEW.activation_token,'')<>OLD.activation_token)\n  OR (NEW.activation_token IS NOT NULL AND NEW.status<>'ACTIVATING' AND OLD.status<>'ACTIVATING')\n  OR (NEW.status='ACTIVATING' AND COALESCE(NEW.activation_token,'')<>NEW.run_id)\nBEGIN\n  SELECT RAISE(ABORT,'active-stay bootstrap run identity/state is immutable');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_snapshot_no_delete",
+        "tbl_name": "active_stay_bootstrap_snapshot_rooms",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_snapshot_no_delete\nBEFORE DELETE ON active_stay_bootstrap_snapshot_rooms\nBEGIN SELECT RAISE(ABORT,'active-stay bootstrap snapshot is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_snapshot_no_delete_charges",
+        "tbl_name": "active_stay_bootstrap_snapshot_charges",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_snapshot_no_delete_charges\nBEFORE DELETE ON active_stay_bootstrap_snapshot_charges\nBEGIN SELECT RAISE(ABORT,'active-stay bootstrap snapshot is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_snapshot_no_delete_inventory",
+        "tbl_name": "active_stay_bootstrap_snapshot_inventory",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_snapshot_no_delete_inventory\nBEFORE DELETE ON active_stay_bootstrap_snapshot_inventory\nBEGIN SELECT RAISE(ABORT,'active-stay bootstrap snapshot is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_snapshot_no_delete_payments",
+        "tbl_name": "active_stay_bootstrap_snapshot_payments",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_snapshot_no_delete_payments\nBEFORE DELETE ON active_stay_bootstrap_snapshot_payments\nBEGIN SELECT RAISE(ABORT,'active-stay bootstrap snapshot is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_snapshot_no_update",
+        "tbl_name": "active_stay_bootstrap_snapshot_rooms",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_snapshot_no_update\nBEFORE UPDATE ON active_stay_bootstrap_snapshot_rooms\nBEGIN SELECT RAISE(ABORT,'active-stay bootstrap snapshot is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_snapshot_no_update_charges",
+        "tbl_name": "active_stay_bootstrap_snapshot_charges",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_snapshot_no_update_charges\nBEFORE UPDATE ON active_stay_bootstrap_snapshot_charges\nBEGIN SELECT RAISE(ABORT,'active-stay bootstrap snapshot is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_snapshot_no_update_inventory",
+        "tbl_name": "active_stay_bootstrap_snapshot_inventory",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_snapshot_no_update_inventory\nBEFORE UPDATE ON active_stay_bootstrap_snapshot_inventory\nBEGIN SELECT RAISE(ABORT,'active-stay bootstrap snapshot is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "active_stay_bootstrap_snapshot_no_update_payments",
+        "tbl_name": "active_stay_bootstrap_snapshot_payments",
+        "sql": "CREATE TRIGGER active_stay_bootstrap_snapshot_no_update_payments\nBEFORE UPDATE ON active_stay_bootstrap_snapshot_payments\nBEGIN SELECT RAISE(ABORT,'active-stay bootstrap snapshot is immutable'); END"
+      },
+      {
+        "type": "trigger",
+        "name": "billing_invoice_ledger_guard",
+        "tbl_name": "invoices",
+        "sql": "CREATE TRIGGER billing_invoice_ledger_guard\nBEFORE UPDATE OF paid_amount_cents ON invoices\nWHEN NEW.paid_amount_cents <> (\n  SELECT COALESCE(SUM(p.amount_cents), 0)\n  FROM payment_entries p\n  WHERE p.invoice_id = NEW.id\n)\nBEGIN\n  SELECT RAISE(ABORT, 'D11 paid amount must equal immutable payment ledger');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "billing_reconcile_total_apply",
+        "tbl_name": "bookings",
+        "sql": "CREATE TRIGGER billing_reconcile_total_apply\nAFTER UPDATE OF total_cents ON bookings\nWHEN NEW.total_cents <> OLD.total_cents\n  AND EXISTS (SELECT 1 FROM invoices WHERE booking_id = NEW.id)\nBEGIN\n  UPDATE invoices\n  SET\n    amount_cents = NEW.total_cents,\n    paid_amount_cents = (\n      SELECT COALESCE(SUM(p.amount_cents), 0)\n      FROM payment_entries p\n      WHERE p.invoice_id = invoices.id\n    ),\n    status = CASE\n      WHEN (\n        SELECT COALESCE(SUM(p.amount_cents), 0)\n        FROM payment_entries p\n        WHERE p.invoice_id = invoices.id\n      ) >= NEW.total_cents THEN 'PAID'\n      ELSE 'PENDING'\n    END,\n    paid_at = CASE\n      WHEN status = 'PAID'\n        AND (\n          SELECT COALESCE(SUM(p.amount_cents), 0)\n          FROM payment_entries p\n          WHERE p.invoice_id = invoices.id\n        ) >= NEW.total_cents\n        THEN paid_at\n      WHEN status = 'PENDING'\n        AND (\n          SELECT COALESCE(SUM(p.amount_cents), 0)\n          FROM payment_entries p\n          WHERE p.invoice_id = invoices.id\n        ) >= NEW.total_cents\n        THEN NEW.updated_at\n      ELSE NULL\n    END\n  WHERE booking_id = NEW.id\n    AND status <> 'VOIDED';\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "billing_reconcile_total_guard",
+        "tbl_name": "bookings",
+        "sql": "CREATE TRIGGER billing_reconcile_total_guard\nBEFORE UPDATE OF total_cents ON bookings\nWHEN NEW.total_cents <> OLD.total_cents\n  AND EXISTS (SELECT 1 FROM invoices WHERE booking_id = OLD.id)\nBEGIN\n  SELECT CASE WHEN EXISTS (\n    SELECT 1 FROM invoices\n    WHERE booking_id = OLD.id AND status = 'VOIDED'\n  ) THEN RAISE(ABORT, 'D11 invoice is voided') END;\n  SELECT CASE WHEN EXISTS (\n    SELECT 1\n    FROM invoices i\n    WHERE i.booking_id = OLD.id\n      AND i.paid_amount_cents <> (\n        SELECT COALESCE(SUM(p.amount_cents), 0)\n        FROM payment_entries p\n        WHERE p.invoice_id = i.id\n      )\n  ) THEN RAISE(ABORT, 'D11 payment ledger mismatch') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "booking_pricing_segment_immutable_delete",
+        "tbl_name": "booking_pricing_segments",
+        "sql": "CREATE TRIGGER booking_pricing_segment_immutable_delete\nBEFORE DELETE ON booking_pricing_segments\nWHEN EXISTS (SELECT 1 FROM bookings WHERE id=OLD.booking_id)\nBEGIN\n  SELECT RAISE(ABORT,'booking pricing segments are immutable');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "booking_pricing_segment_immutable_update",
+        "tbl_name": "booking_pricing_segments",
+        "sql": "CREATE TRIGGER booking_pricing_segment_immutable_update\nBEFORE UPDATE ON booking_pricing_segments\nBEGIN\n  SELECT RAISE(ABORT,'booking pricing segments are immutable');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "booking_pricing_segment_insert_guard",
+        "tbl_name": "booking_pricing_segments",
+        "sql": "CREATE TRIGGER booking_pricing_segment_insert_guard\nBEFORE INSERT ON booking_pricing_segments\nWHEN NOT EXISTS (\n  SELECT 1 FROM bookings b JOIN rooms r ON r.id=NEW.room_id\n  WHERE b.id=NEW.booking_id AND b.room_id=NEW.room_id\n    AND b.check_in<=NEW.effective_start AND NEW.effective_end<=b.check_out\n    AND r.pricing_version=NEW.room_pricing_version\n    AND b.last_pricing_operation_token=NEW.operation_token\n    AND NOT EXISTS (SELECT 1 FROM active_stay_bootstrap_candidate_segments s WHERE s.operation_token=NEW.operation_token)\n    AND NEW.segment_version=b.pricing_version+1\n)\nAND NOT EXISTS (\n  SELECT 1\n  FROM active_stay_bootstrap_candidate_segments s\n  JOIN active_stay_bootstrap_candidates c ON c.candidate_id=s.candidate_id\n  JOIN active_stay_bootstrap_runs r ON r.run_id=c.run_id\n  JOIN active_stay_bootstrap_heads h ON h.hotel_id=r.hotel_id AND h.model_version=r.model_version\n  JOIN bookings b ON b.id=c.booking_id\n  WHERE c.booking_id=NEW.booking_id AND c.classification='TRACEABLE_SEGMENTS'\n    AND c.status='ACTIVATING' AND r.status='ACTIVATING'\n    AND r.activation_token=r.run_id\n    AND h.run_id=r.run_id AND h.source_digest=r.source_digest\n    AND s.room_id=NEW.room_id AND s.effective_start=NEW.effective_start AND s.effective_end=NEW.effective_end\n    AND s.rate_cents=NEW.rate_cents AND s.source_rate_version=NEW.room_pricing_version\n    AND s.operation_token=NEW.operation_token\n    AND NEW.segment_version=b.pricing_version+1\n    AND b.last_pricing_operation_token=NEW.operation_token\n)\nBEGIN\n  SELECT RAISE(ABORT,'pricing segment source/version guard failed');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "booking_pricing_segment_version",
+        "tbl_name": "booking_pricing_segments",
+        "sql": "CREATE TRIGGER booking_pricing_segment_version\nAFTER INSERT ON booking_pricing_segments\nBEGIN\n  UPDATE bookings SET pricing_version=NEW.segment_version\n  WHERE id=NEW.booking_id AND last_pricing_operation_token=NEW.operation_token;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "bookings_migrated_snapshot_insert_guard",
+        "tbl_name": "bookings",
+        "sql": "CREATE TRIGGER bookings_migrated_snapshot_insert_guard\nBEFORE INSERT ON bookings\nBEGIN\n  SELECT (CASE\n    WHEN (NEW.terminal_reason IS NULL) <> (NEW.terminal_recorded_at IS NULL)\n      OR (NEW.terminal_reason IS NULL) <> (NEW.terminal_recorded_by IS NULL)\n    THEN RAISE(ABORT, 'incomplete terminal booking provenance')\n  END);\n  SELECT (CASE\n    WHEN NEW.late_arrival_eta IS NOT NULL\n      AND (NEW.late_arrival_note IS NULL OR NEW.late_arrival_recorded_at IS NULL OR NEW.late_arrival_recorded_by IS NULL)\n    THEN RAISE(ABORT, 'incomplete late-arrival provenance')\n  END);\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "extra_charge_legacy_identity_immutable",
+        "tbl_name": "extra_charges",
+        "sql": "CREATE TRIGGER extra_charge_legacy_identity_immutable\nBEFORE UPDATE OF operation_token ON extra_charges\nWHEN OLD.operation_token IS NULL AND NEW.operation_token IS NOT NULL\nBEGIN\n  SELECT RAISE(ABORT, 'legacy extra charge operation identity is immutable');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "extra_charge_operation_immutable",
+        "tbl_name": "extra_charges",
+        "sql": "CREATE TRIGGER extra_charge_operation_immutable\nBEFORE UPDATE ON extra_charges\nWHEN OLD.operation_token IS NOT NULL\n  AND (NEW.id IS NOT OLD.id\n    OR NEW.booking_id IS NOT OLD.booking_id\n    OR NEW.description IS NOT OLD.description\n    OR NEW.amount_cents IS NOT OLD.amount_cents\n    OR NEW.category IS NOT OLD.category\n    OR NEW.created_at IS NOT OLD.created_at\n    OR NEW.operation_token IS NOT OLD.operation_token)\nBEGIN\n  SELECT RAISE(ABORT, 'extra charge operation identity and payload are immutable');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "extra_charge_operation_token_validate",
+        "tbl_name": "extra_charges",
+        "sql": "CREATE TRIGGER extra_charge_operation_token_validate\nBEFORE INSERT ON extra_charges\nWHEN NEW.operation_token IS NOT NULL\n  AND (length(trim(NEW.operation_token)) < 8 OR length(trim(NEW.operation_token)) > 120)\nBEGIN\n  SELECT RAISE(ABORT, 'extra charge operation token is invalid');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "housekeeping_event_state_guard",
+        "tbl_name": "housekeeping_events",
+        "sql": "CREATE TRIGGER housekeeping_event_state_guard\nBEFORE INSERT ON housekeeping_events\nBEGIN\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM rooms r\n    WHERE r.id = NEW.room_id AND r.status = NEW.to_status\n      AND r.room_state_version = CAST(json_extract(NEW.details_json, '$.room_state_version_after') AS INTEGER)\n      AND CAST(json_extract(NEW.details_json, '$.room_state_version_before') AS INTEGER) + 1 = r.room_state_version\n  ) THEN RAISE(ABORT, 'room command version guard failed') END;\n\n  SELECT CASE WHEN NEW.event_type = 'CLEANING_START' AND NOT EXISTS (\n    SELECT 1 FROM rooms r WHERE r.id = NEW.room_id AND NEW.from_status = 'DIRTY' AND NEW.to_status = 'CLEANING'\n      AND r.housekeeping_state = 'CLEANING'\n      AND json_extract(NEW.details_json, '$.occupancy_before') = 'VACANT'\n      AND json_extract(NEW.details_json, '$.occupancy_after') = 'VACANT'\n      AND (SELECT COUNT(*) FROM bookings b WHERE b.room_id=r.id AND b.status='CHECKED_IN') = 0\n      AND COALESCE(r.service_state, '__UNRESOLVED__') = COALESCE(json_extract(NEW.details_json, '$.service_state_after'), '__UNRESOLVED__')\n      AND COALESCE(json_extract(NEW.details_json, '$.service_state_before'), '__UNRESOLVED__') = COALESCE(json_extract(NEW.details_json, '$.service_state_after'), '__UNRESOLVED__')\n      AND CAST(json_extract(NEW.details_json, '$.maintenance_open_case_count') AS INTEGER) = (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id = r.id AND mc.status = 'OPEN')\n      AND json_extract(NEW.details_json, '$.maintenance_impact_before') = json_extract(NEW.details_json, '$.maintenance_impact_after')\n      AND json_extract(NEW.details_json, '$.maintenance_impact_after') = CASE\n        WHEN EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN' AND mc.impact='BLOCKING') THEN 'BLOCKING'\n        WHEN EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN' AND mc.impact='NON_BLOCKING') THEN 'NON_BLOCKING'\n        ELSE 'NONE' END\n  ) THEN RAISE(ABORT, 'invalid cleaning start dimensions') END;\n\n  SELECT CASE WHEN NEW.event_type = 'CLEANING_FINISH' AND NOT EXISTS (\n    SELECT 1 FROM rooms r WHERE r.id = NEW.room_id AND NEW.from_status = 'CLEANING' AND NEW.to_status IN ('AVAILABLE', 'MAINTENANCE', 'OUT_OF_ORDER')\n      AND r.housekeeping_state = 'READY'\n      AND json_extract(NEW.details_json, '$.occupancy_before') = 'VACANT'\n      AND json_extract(NEW.details_json, '$.occupancy_after') = 'VACANT'\n      AND (SELECT COUNT(*) FROM bookings b WHERE b.room_id=r.id AND b.status='CHECKED_IN') = 0\n      AND COALESCE(r.service_state, '__UNRESOLVED__') = COALESCE(json_extract(NEW.details_json, '$.service_state_after'), '__UNRESOLVED__')\n      AND COALESCE(json_extract(NEW.details_json, '$.service_state_before'), '__UNRESOLVED__') = COALESCE(json_extract(NEW.details_json, '$.service_state_after'), '__UNRESOLVED__')\n      AND CAST(json_extract(NEW.details_json, '$.maintenance_open_case_count') AS INTEGER) = (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id = r.id AND mc.status = 'OPEN')\n      AND json_extract(NEW.details_json, '$.maintenance_impact_before') = json_extract(NEW.details_json, '$.maintenance_impact_after')\n      AND json_extract(NEW.details_json, '$.maintenance_impact_after') = CASE\n        WHEN EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN' AND mc.impact='BLOCKING') THEN 'BLOCKING'\n        WHEN EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN' AND mc.impact='NON_BLOCKING') THEN 'NON_BLOCKING'\n        ELSE 'NONE' END\n  ) THEN RAISE(ABORT, 'invalid cleaning finish dimensions') END;\n\n  SELECT CASE WHEN NEW.event_type IN ('MAINTENANCE_OPEN', 'MAINTENANCE_ESCALATE', 'MAINTENANCE_RESOLVE') AND NOT EXISTS (\n    SELECT 1 FROM maintenance_cases mc WHERE mc.id = NEW.maintenance_case_id AND mc.room_id = NEW.room_id\n      AND ((NEW.event_type = 'MAINTENANCE_OPEN' AND mc.status = 'OPEN' AND mc.impact = json_extract(NEW.details_json, '$.impact'))\n        OR (NEW.event_type = 'MAINTENANCE_ESCALATE' AND mc.status = 'OPEN' AND mc.impact = 'BLOCKING' AND json_extract(NEW.details_json, '$.impact_after') = 'BLOCKING')\n        OR (NEW.event_type = 'MAINTENANCE_RESOLVE' AND mc.status = 'RESOLVED' AND mc.return_status = NEW.to_status))\n  ) THEN RAISE(ABORT, 'maintenance case identity guard failed') END;\n\n  SELECT CASE WHEN NEW.event_type IN ('MAINTENANCE_OPEN', 'MAINTENANCE_ESCALATE', 'MAINTENANCE_RESOLVE') AND NOT EXISTS (\n    SELECT 1 FROM rooms r WHERE r.id=NEW.room_id\n      AND r.housekeeping_state IS json_extract(NEW.details_json, '$.housekeeping_state_after')\n      AND r.service_state IS json_extract(NEW.details_json, '$.service_state_after')\n      AND json_extract(NEW.details_json, '$.occupancy_before') = CASE\n        WHEN (SELECT COUNT(*) FROM bookings b WHERE b.room_id=r.id AND b.status='CHECKED_IN')=0 THEN 'VACANT'\n        WHEN (SELECT COUNT(*) FROM bookings b WHERE b.room_id=r.id AND b.status='CHECKED_IN')=1 THEN 'OCCUPIED'\n        ELSE 'UNRESOLVED' END\n      AND json_extract(NEW.details_json, '$.occupancy_after') = CASE\n        WHEN (SELECT COUNT(*) FROM bookings b WHERE b.room_id=r.id AND b.status='CHECKED_IN')=0 THEN 'VACANT'\n        WHEN (SELECT COUNT(*) FROM bookings b WHERE b.room_id=r.id AND b.status='CHECKED_IN')=1 THEN 'OCCUPIED'\n        ELSE 'UNRESOLVED' END\n      AND json_extract(NEW.details_json, '$.maintenance_impact_after') = CASE\n        WHEN EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN' AND mc.impact='BLOCKING') THEN 'BLOCKING'\n        WHEN EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN' AND mc.impact='NON_BLOCKING') THEN 'NON_BLOCKING'\n        ELSE 'NONE' END\n  ) THEN RAISE(ABORT, 'maintenance changed an unrelated room dimension') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_checkin_guest_count_guard",
+        "tbl_name": "bookings",
+        "sql": "CREATE TRIGGER lifecycle_checkin_guest_count_guard BEFORE UPDATE OF status ON bookings WHEN NEW.status = 'CHECKED_IN' BEGIN SELECT (CASE WHEN NEW.check_in_guests_count IS NULL OR NEW.check_in_guests_count < 1 THEN RAISE(ABORT, 'check-in guest count required') END); END"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_checkin_state_guard",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TRIGGER lifecycle_checkin_state_guard\nBEFORE INSERT ON lifecycle_events\nWHEN NEW.event_type = 'CHECK_IN'\nBEGIN\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM bookings b JOIN rooms r ON r.id = b.room_id\n    WHERE b.id = NEW.booking_id AND b.status = 'CHECKED_IN' AND r.id = NEW.from_room_id\n      AND r.status = 'OCCUPIED' AND r.housekeeping_state = 'READY'\n      AND r.service_state = 'IN_SERVICE'\n      AND json_extract(NEW.details_json, '$.occupancy_before') = 'VACANT'\n      AND json_extract(NEW.details_json, '$.occupancy_after') = 'OCCUPIED'\n      AND json_extract(NEW.details_json, '$.housekeeping_state_before') = r.housekeeping_state\n      AND json_extract(NEW.details_json, '$.housekeeping_state_after') = r.housekeeping_state\n      AND json_extract(NEW.details_json, '$.service_state_before') = r.service_state\n      AND json_extract(NEW.details_json, '$.service_state_after') = r.service_state\n      AND json_extract(NEW.details_json, '$.maintenance_impact_before') = CASE WHEN EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=r.id AND mc.status='OPEN' AND mc.impact='NON_BLOCKING') THEN 'NON_BLOCKING' ELSE 'NONE' END\n      AND json_extract(NEW.details_json, '$.maintenance_impact_after') = json_extract(NEW.details_json, '$.maintenance_impact_before')\n      AND r.room_state_version = CAST(json_extract(NEW.details_json, '$.room_state_version_after') AS INTEGER)\n      AND CAST(json_extract(NEW.details_json, '$.room_state_version_before') AS INTEGER) + 1 = r.room_state_version\n      AND NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id = r.id AND mc.status = 'OPEN' AND mc.impact = 'BLOCKING')\n      AND (SELECT COUNT(*) FROM bookings active WHERE active.room_id = r.id AND active.status = 'CHECKED_IN') = 1\n  ) THEN RAISE(ABORT, 'check-in room dimension guard failed') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_checkout_atomic_guard",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TRIGGER lifecycle_checkout_atomic_guard\nBEFORE INSERT ON lifecycle_events\nWHEN NEW.event_type = 'CHECK_OUT'\nBEGIN\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM bookings b JOIN rooms r ON r.id = b.room_id\n    WHERE b.id = NEW.booking_id AND b.status = 'CHECKED_OUT' AND r.id = NEW.from_room_id\n      AND r.housekeeping_state = 'DIRTY'\n      AND json_extract(NEW.details_json, '$.occupancy_before') = 'OCCUPIED'\n      AND json_extract(NEW.details_json, '$.occupancy_after') = 'VACANT'\n      AND json_extract(NEW.details_json, '$.housekeeping_state_after') = 'DIRTY'\n      AND r.room_state_version = CAST(json_extract(NEW.details_json, '$.room_state_version_after') AS INTEGER)\n      AND CAST(json_extract(NEW.details_json, '$.room_state_version_before') AS INTEGER) + 1 = r.room_state_version\n      AND COALESCE(r.service_state, '__UNRESOLVED__') = COALESCE(json_extract(NEW.details_json, '$.service_state_before'), '__UNRESOLVED__')\n      AND COALESCE(r.service_state, '__UNRESOLVED__') = COALESCE(json_extract(NEW.details_json, '$.service_state_after'), '__UNRESOLVED__')\n      AND (SELECT COUNT(*) FROM bookings active WHERE active.room_id = r.id AND active.status = 'CHECKED_IN') = 0\n      AND (SELECT COUNT(*) FROM maintenance_cases mc WHERE mc.room_id = r.id AND mc.status = 'OPEN') = CAST(json_extract(NEW.details_json, '$.maintenance_open_case_count_before') AS INTEGER)\n      AND CAST(json_extract(NEW.details_json, '$.maintenance_open_case_count_before') AS INTEGER) = CAST(json_extract(NEW.details_json, '$.maintenance_open_case_count_after') AS INTEGER)\n  ) THEN RAISE(ABORT, 'checkout room dimension guard failed') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_checkout_event_account_guard",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TRIGGER lifecycle_checkout_event_account_guard\nBEFORE INSERT ON lifecycle_events\nWHEN NEW.event_type = 'CHECK_OUT'\nBEGIN\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM bookings b\n    LEFT JOIN invoices i ON i.booking_id = b.id\n    WHERE b.id = NEW.booking_id AND b.status = 'CHECKED_OUT'\n      AND json_extract(NEW.details_json, '$.booking_total_cents') = b.total_cents\n      AND json_extract(NEW.details_json, '$.invoice_id') IS i.id\n      AND json_extract(NEW.details_json, '$.invoice_status') IS i.status\n      AND json_extract(NEW.details_json, '$.invoice_amount_cents') = COALESCE(i.amount_cents, b.total_cents)\n      AND json_extract(NEW.details_json, '$.paid_amount_cents') = COALESCE(i.paid_amount_cents, 0)\n      AND json_extract(NEW.details_json, '$.paid_at') IS i.paid_at\n      AND json_extract(NEW.details_json, '$.ledger_paid_cents') = COALESCE((SELECT SUM(p.amount_cents) FROM payment_entries p WHERE p.invoice_id = i.id), 0)\n      AND json_extract(NEW.details_json, '$.remaining_cents') = MAX(COALESCE(i.amount_cents, b.total_cents) - COALESCE(i.paid_amount_cents, 0), 0)\n      AND json_extract(NEW.details_json, '$.credit_cents') = MAX(COALESCE(i.paid_amount_cents, 0) - COALESCE(i.amount_cents, b.total_cents), 0)\n  ) THEN RAISE(ABORT, 'checkout event account snapshot mismatch') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_checkout_settlement_guard",
+        "tbl_name": "bookings",
+        "sql": "CREATE TRIGGER lifecycle_checkout_settlement_guard\nBEFORE UPDATE OF status ON bookings\nWHEN NEW.status = 'CHECKED_OUT' AND OLD.status = 'CHECKED_IN'\nBEGIN\n  SELECT CASE WHEN NEW.check_out_payment_policy NOT IN ('settled', 'pending-approved')\n    THEN RAISE(ABORT, 'checkout policy invalid') END;\n\n  SELECT CASE WHEN EXISTS (\n    SELECT 1 FROM invoices i\n    WHERE i.booking_id = OLD.id\n      AND (i.status = 'VOIDED'\n        OR i.amount_cents <> NEW.total_cents\n        OR i.paid_amount_cents <> (SELECT COALESCE(SUM(p.amount_cents), 0) FROM payment_entries p WHERE p.invoice_id = i.id)\n        OR i.status <> CASE WHEN i.paid_amount_cents >= i.amount_cents THEN 'PAID' ELSE 'PENDING' END)\n  ) THEN RAISE(ABORT, 'checkout account is inconsistent') END;\n\n  SELECT CASE WHEN NEW.check_out_payment_policy = 'settled' AND NOT (\n    (NOT EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id = OLD.id) AND NEW.total_cents = 0)\n    OR EXISTS (\n      SELECT 1 FROM invoices i\n      WHERE i.booking_id = OLD.id AND i.status <> 'VOIDED'\n        AND i.amount_cents = NEW.total_cents\n        AND i.paid_amount_cents = (SELECT COALESCE(SUM(p.amount_cents), 0) FROM payment_entries p WHERE p.invoice_id = i.id)\n        AND i.paid_amount_cents >= i.amount_cents\n    )\n  ) THEN RAISE(ABORT, 'checkout account is not settled') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_reassign_billing_guard",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TRIGGER lifecycle_reassign_billing_guard\nBEFORE INSERT ON lifecycle_events\nWHEN NEW.event_type = 'REASSIGN'\nBEGIN\n  SELECT CASE WHEN EXISTS (\n    SELECT 1 FROM invoices i WHERE i.booking_id=NEW.booking_id AND (\n      i.status='VOIDED' OR i.paid_amount_cents<>(\n        SELECT COALESCE(SUM(p.amount_cents),0) FROM payment_entries p WHERE p.invoice_id=i.id\n      )\n    )\n  ) THEN RAISE(ABORT,'reassignment billing eligibility changed') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_reassign_date_guard",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TRIGGER lifecycle_reassign_date_guard\nBEFORE INSERT ON lifecycle_events\nWHEN NEW.event_type = 'REASSIGN'\nBEGIN\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM bookings b WHERE b.id=NEW.booking_id AND b.check_out>json_extract(NEW.details_json,'$.hotel_local_date')\n      AND length(trim(COALESCE(json_extract(NEW.details_json,'$.reason'),''))) BETWEEN 6 AND 250\n      AND (\n        (b.check_in>json_extract(NEW.details_json,'$.hotel_local_date')\n          AND json_extract(NEW.details_json,'$.effective_date')=b.check_in)\n        OR\n        (b.check_in<=json_extract(NEW.details_json,'$.hotel_local_date')\n          AND json_extract(NEW.details_json,'$.effective_date')=json_extract(NEW.details_json,'$.hotel_local_date'))\n      )\n  ) THEN RAISE(ABORT,'reassignment date/reason guard failed') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_reassign_history_guard",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TRIGGER lifecycle_reassign_history_guard\nBEFORE INSERT ON lifecycle_events\nWHEN NEW.event_type = 'REASSIGN'\nBEGIN\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM bookings b WHERE b.id=NEW.booking_id\n      AND json_extract(NEW.details_json,'$.assignment_start_date')=COALESCE((\n        SELECT json_extract(e.details_json,'$.effective_date') FROM lifecycle_events e\n        WHERE e.booking_id=b.id AND e.event_type='REASSIGN'\n          AND json_extract(e.details_json,'$.to_room_id')=NEW.from_room_id\n        ORDER BY e.created_at DESC,e.rowid DESC LIMIT 1),b.check_in)\n  ) THEN RAISE(ABORT,'reassignment assignment-history guard failed') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_reassign_identity_guard",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TRIGGER lifecycle_reassign_identity_guard\nBEFORE INSERT ON lifecycle_events\nWHEN NEW.event_type = 'REASSIGN'\nBEGIN\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM bookings b WHERE b.id=NEW.booking_id AND b.status='CHECKED_IN'\n      AND b.room_id=json_extract(NEW.details_json,'$.to_room_id')\n      AND b.last_reassignment_token=json_extract(NEW.details_json,'$.operation_token')\n      AND NEW.from_room_id=json_extract(NEW.details_json,'$.from_room_id') AND b.room_id<>NEW.from_room_id\n  ) THEN RAISE(ABORT,'reassignment booking identity guard failed') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_reassign_inventory_guard",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TRIGGER lifecycle_reassign_inventory_guard\nBEFORE INSERT ON lifecycle_events\nWHEN NEW.event_type = 'REASSIGN'\nBEGIN\n  SELECT CASE WHEN (\n    SELECT COUNT(*) FROM room_inventory_nights n\n    WHERE n.booking_id=NEW.booking_id AND n.room_id=NEW.from_room_id\n      AND n.stay_date>=json_extract(NEW.details_json,'$.assignment_start_date')\n      AND n.stay_date<json_extract(NEW.details_json,'$.effective_date')\n  ) <> CAST(julianday(json_extract(NEW.details_json,'$.effective_date'))-julianday(json_extract(NEW.details_json,'$.assignment_start_date')) AS INTEGER)\n    THEN RAISE(ABORT,'reassignment elapsed claim set mismatch') END;\n\n  SELECT CASE WHEN EXISTS (\n    SELECT 1 FROM room_inventory_nights n\n    WHERE n.booking_id=NEW.booking_id AND n.room_id=NEW.from_room_id\n      AND n.stay_date>=json_extract(NEW.details_json,'$.assignment_start_date')\n      AND n.stay_date<json_extract(NEW.details_json,'$.effective_date')\n      AND NOT EXISTS (SELECT 1 FROM json_each(json_extract(NEW.details_json,'$.expected_elapsed_claim_dates')) expected WHERE expected.value=n.stay_date)\n  ) OR EXISTS (\n    SELECT 1 FROM json_each(json_extract(NEW.details_json,'$.expected_elapsed_claim_dates')) expected\n    WHERE NOT EXISTS (SELECT 1 FROM room_inventory_nights n\n      WHERE n.booking_id=NEW.booking_id AND n.room_id=NEW.from_room_id AND n.stay_date=expected.value)\n  ) THEN RAISE(ABORT,'reassignment elapsed claim dates mismatch') END;\n\n  SELECT CASE WHEN EXISTS (\n    SELECT 1 FROM room_inventory_nights n\n    WHERE n.booking_id=NEW.booking_id AND n.room_id=NEW.from_room_id\n      AND n.stay_date>=json_extract(NEW.details_json,'$.effective_date')\n      AND n.stay_date<(SELECT check_out FROM bookings WHERE id=NEW.booking_id)\n  ) THEN RAISE(ABORT,'reassignment old remaining claims remain') END;\n\n  SELECT CASE WHEN EXISTS (\n    SELECT 1 FROM room_inventory_nights n\n    WHERE n.booking_id=NEW.booking_id AND n.room_id<>NEW.from_room_id\n      AND n.stay_date>=json_extract(NEW.details_json,'$.assignment_start_date')\n      AND n.stay_date<(SELECT check_out FROM bookings WHERE id=NEW.booking_id)\n      AND n.room_id<>json_extract(NEW.details_json,'$.to_room_id')\n  ) THEN RAISE(ABORT,'reassignment stray active claims exist') END;\n\n  SELECT CASE WHEN (\n    SELECT COUNT(*) FROM room_inventory_nights n\n    WHERE n.booking_id=NEW.booking_id AND n.room_id=json_extract(NEW.details_json,'$.to_room_id')\n      AND n.stay_date>=json_extract(NEW.details_json,'$.effective_date')\n      AND n.stay_date<(SELECT check_out FROM bookings WHERE id=NEW.booking_id)\n  ) <> CAST(julianday((SELECT check_out FROM bookings WHERE id=NEW.booking_id))-julianday(json_extract(NEW.details_json,'$.effective_date')) AS INTEGER)\n    THEN RAISE(ABORT,'reassignment destination claim set mismatch') END;\n\n  SELECT CASE WHEN EXISTS (\n    SELECT 1 FROM room_inventory_nights n\n    WHERE n.booking_id=NEW.booking_id AND n.room_id=json_extract(NEW.details_json,'$.to_room_id')\n      AND n.stay_date>=json_extract(NEW.details_json,'$.effective_date')\n      AND n.stay_date<(SELECT check_out FROM bookings WHERE id=NEW.booking_id)\n      AND NOT EXISTS (SELECT 1 FROM json_each(json_extract(NEW.details_json,'$.expected_remaining_claim_dates')) expected WHERE expected.value=n.stay_date)\n  ) OR EXISTS (\n    SELECT 1 FROM json_each(json_extract(NEW.details_json,'$.expected_remaining_claim_dates')) expected\n    WHERE NOT EXISTS (SELECT 1 FROM room_inventory_nights n\n      WHERE n.booking_id=NEW.booking_id AND n.room_id=json_extract(NEW.details_json,'$.to_room_id') AND n.stay_date=expected.value)\n  ) THEN RAISE(ABORT,'reassignment destination claim dates mismatch') END;\n\n  SELECT CASE WHEN EXISTS (\n    SELECT 1 FROM room_holds h\n    WHERE h.room_id=json_extract(NEW.details_json,'$.to_room_id')\n      AND h.start_date<(SELECT check_out FROM bookings WHERE id=NEW.booking_id)\n      AND h.end_date>json_extract(NEW.details_json,'$.effective_date')\n  ) THEN RAISE(ABORT,'reassignment destination hold conflict') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_reassign_inventory_version_guard",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TRIGGER lifecycle_reassign_inventory_version_guard\nBEFORE INSERT ON lifecycle_events\nWHEN NEW.event_type='REASSIGN'\nBEGIN\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM bookings b JOIN rooms old_room ON old_room.id=NEW.from_room_id JOIN rooms new_room ON new_room.id=b.room_id\n    WHERE b.id=NEW.booking_id\n      AND old_room.inventory_version=CAST(json_extract(NEW.details_json,'$.old_inventory_version_after') AS INTEGER)\n      AND new_room.inventory_version=CAST(json_extract(NEW.details_json,'$.new_inventory_version_after') AS INTEGER)\n      AND CAST(json_extract(NEW.details_json,'$.old_inventory_version_after') AS INTEGER)\n        =CAST(json_extract(NEW.details_json,'$.old_inventory_version_before') AS INTEGER)\n          +CAST(julianday((SELECT check_out FROM bookings WHERE id=NEW.booking_id))-julianday(json_extract(NEW.details_json,'$.effective_date')) AS INTEGER)\n      AND CAST(json_extract(NEW.details_json,'$.new_inventory_version_after') AS INTEGER)\n        =CAST(json_extract(NEW.details_json,'$.new_inventory_version_before') AS INTEGER)\n          +CAST(julianday((SELECT check_out FROM bookings WHERE id=NEW.booking_id))-julianday(json_extract(NEW.details_json,'$.effective_date')) AS INTEGER)\n  ) THEN RAISE(ABORT,'reassignment inventory generation guard failed') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_reassign_maintenance_guard",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TRIGGER lifecycle_reassign_maintenance_guard\nBEFORE INSERT ON lifecycle_events\nWHEN NEW.event_type = 'REASSIGN'\nBEGIN\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM bookings b\n    JOIN rooms old_room ON old_room.id=NEW.from_room_id\n    JOIN rooms new_room ON new_room.id=b.room_id\n    WHERE b.id=NEW.booking_id AND b.status='CHECKED_IN'\n      AND (\n        (json_extract(NEW.details_json,'$.old_maintenance_impact_after')='BLOCKING'\n          AND EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=old_room.id AND mc.status='OPEN' AND mc.impact='BLOCKING'))\n        OR\n        (json_extract(NEW.details_json,'$.old_maintenance_impact_after')='NON_BLOCKING'\n          AND NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=old_room.id AND mc.status='OPEN' AND mc.impact='BLOCKING')\n          AND EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=old_room.id AND mc.status='OPEN' AND mc.impact='NON_BLOCKING'))\n        OR\n        (json_extract(NEW.details_json,'$.old_maintenance_impact_after')='NONE'\n          AND NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=old_room.id AND mc.status='OPEN'))\n      )\n      AND json_extract(NEW.details_json,'$.old_maintenance_impact_before')=json_extract(NEW.details_json,'$.old_maintenance_impact_after')\n      AND (\n        (json_extract(NEW.details_json,'$.new_maintenance_impact_before')='BLOCKING'\n          AND EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=new_room.id AND mc.status='OPEN' AND mc.impact='BLOCKING'))\n        OR\n        (json_extract(NEW.details_json,'$.new_maintenance_impact_before')='NON_BLOCKING'\n          AND NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=new_room.id AND mc.status='OPEN' AND mc.impact='BLOCKING')\n          AND EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=new_room.id AND mc.status='OPEN' AND mc.impact='NON_BLOCKING'))\n        OR\n        (json_extract(NEW.details_json,'$.new_maintenance_impact_before')='NONE'\n          AND NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=new_room.id AND mc.status='OPEN'))\n      )\n      AND json_extract(NEW.details_json,'$.new_maintenance_impact_after')=json_extract(NEW.details_json,'$.new_maintenance_impact_before')\n      AND json_extract(NEW.details_json,'$.new_maintenance_impact_before') IN ('NONE','NON_BLOCKING')\n      AND NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=new_room.id AND mc.status='OPEN' AND mc.impact='BLOCKING')\n  ) THEN RAISE(ABORT,'reassignment maintenance guard failed') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_reassign_room_guard",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TRIGGER lifecycle_reassign_room_guard\nBEFORE INSERT ON lifecycle_events\nWHEN NEW.event_type = 'REASSIGN'\nBEGIN\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM bookings b\n    JOIN rooms old_room ON old_room.id=NEW.from_room_id\n    JOIN rooms new_room ON new_room.id=b.room_id\n    WHERE b.id=NEW.booking_id AND b.status='CHECKED_IN'\n      AND (\n        (EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=old_room.id AND mc.status='OPEN' AND mc.impact='BLOCKING')\n          AND old_room.status='MAINTENANCE')\n        OR\n        (NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=old_room.id AND mc.status='OPEN' AND mc.impact='BLOCKING')\n          AND old_room.service_state='OUT_OF_ORDER' AND old_room.status='OUT_OF_ORDER')\n        OR\n        (NOT EXISTS (SELECT 1 FROM maintenance_cases mc WHERE mc.room_id=old_room.id AND mc.status='OPEN' AND mc.impact='BLOCKING')\n          AND (old_room.service_state IS NULL OR old_room.service_state<>'OUT_OF_ORDER') AND old_room.status='DIRTY')\n      )\n      AND old_room.housekeeping_state='DIRTY'\n      AND CAST(json_extract(NEW.details_json,'$.old_room_version_after') AS INTEGER)=old_room.room_state_version\n      AND CAST(json_extract(NEW.details_json,'$.old_room_version_before') AS INTEGER)+1=old_room.room_state_version\n      AND json_extract(NEW.details_json,'$.old_occupancy_before')='OCCUPIED'\n      AND json_extract(NEW.details_json,'$.old_occupancy_after')='VACANT'\n      AND (json_extract(NEW.details_json,'$.old_housekeeping_state_before') IS NULL\n        OR json_extract(NEW.details_json,'$.old_housekeeping_state_before') IN ('READY','DIRTY','CLEANING'))\n      AND json_extract(NEW.details_json,'$.old_housekeeping_state_after')='DIRTY'\n      AND (json_extract(NEW.details_json,'$.old_service_state_before') IS NULL\n        OR json_extract(NEW.details_json,'$.old_service_state_before') IN ('IN_SERVICE','OUT_OF_ORDER'))\n      AND old_room.service_state IS json_extract(NEW.details_json,'$.old_service_state_after')\n      AND old_room.service_state IS json_extract(NEW.details_json,'$.old_service_state_before')\n      AND new_room.status='OCCUPIED' AND new_room.housekeeping_state='READY' AND new_room.service_state='IN_SERVICE'\n      AND CAST(json_extract(NEW.details_json,'$.new_room_version_after') AS INTEGER)=new_room.room_state_version\n      AND CAST(json_extract(NEW.details_json,'$.new_room_version_before') AS INTEGER)+1=new_room.room_state_version\n      AND json_extract(NEW.details_json,'$.new_occupancy_before')='VACANT'\n      AND json_extract(NEW.details_json,'$.new_occupancy_after')='OCCUPIED'\n      AND json_extract(NEW.details_json,'$.new_housekeeping_state_before')=new_room.housekeeping_state\n      AND json_extract(NEW.details_json,'$.new_housekeeping_state_after')=new_room.housekeeping_state\n      AND json_extract(NEW.details_json,'$.new_service_state_before')=new_room.service_state\n      AND json_extract(NEW.details_json,'$.new_service_state_after')=new_room.service_state\n      AND (SELECT COUNT(*) FROM bookings active WHERE active.room_id=old_room.id AND active.status='CHECKED_IN')=0\n      AND (SELECT COUNT(*) FROM bookings active WHERE active.room_id=new_room.id AND active.status='CHECKED_IN')=1\n  ) THEN RAISE(ABORT,'reassignment room dimension/version guard failed') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_reassign_total_guard",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TRIGGER lifecycle_reassign_total_guard\nBEFORE INSERT ON lifecycle_events\nWHEN NEW.event_type='REASSIGN'\nBEGIN\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM bookings b\n    WHERE b.id=NEW.booking_id\n      AND b.total_cents=CAST(json_extract(NEW.details_json,'$.new_total_cents') AS INTEGER)\n      AND b.last_reassignment_token=json_extract(NEW.details_json,'$.operation_token')\n      AND EXISTS (\n        SELECT 1 FROM financial_events f\n        WHERE f.booking_id=b.id AND f.event_type='PRICE_RECONCILIATION'\n          AND json_extract(f.details_json,'$.operation_token')=json_extract(NEW.details_json,'$.operation_token')\n          AND CAST(json_extract(f.details_json,'$.old_total_cents') AS INTEGER)=CAST(json_extract(NEW.details_json,'$.old_total_cents') AS INTEGER)\n          AND CAST(json_extract(f.details_json,'$.new_total_cents') AS INTEGER)=b.total_cents\n      )\n      AND CAST(json_extract(NEW.details_json,'$.old_total_cents') AS INTEGER)>=0\n  ) THEN RAISE(ABORT,'reassignment price reconciliation event guard failed') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "lifecycle_reassign_version_pair_guard",
+        "tbl_name": "lifecycle_events",
+        "sql": "CREATE TRIGGER lifecycle_reassign_version_pair_guard\nBEFORE INSERT ON lifecycle_events\nWHEN NEW.event_type = 'REASSIGN'\nBEGIN\n  SELECT CASE WHEN EXISTS (\n    SELECT 1 FROM lifecycle_events e\n    WHERE e.event_type='REASSIGN'\n      AND e.from_room_id=NEW.from_room_id\n      AND json_extract(e.details_json,'$.to_room_id')=json_extract(NEW.details_json,'$.to_room_id')\n      AND CAST(json_extract(e.details_json,'$.old_room_version_after') AS INTEGER)=CAST(json_extract(NEW.details_json,'$.old_room_version_after') AS INTEGER)\n      AND CAST(json_extract(e.details_json,'$.new_room_version_after') AS INTEGER)=CAST(json_extract(NEW.details_json,'$.new_room_version_after') AS INTEGER)\n  ) THEN RAISE(ABORT,'reassignment room-version winner already recorded') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "price_reconciliation_event_guard",
+        "tbl_name": "financial_events",
+        "sql": "CREATE TRIGGER price_reconciliation_event_guard\nBEFORE INSERT ON financial_events\nWHEN NEW.event_type='PRICE_RECONCILIATION'\nBEGIN\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM bookings b\n    WHERE b.id=NEW.booking_id\n      AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.booking_id=b.id AND (\n        i.status='VOIDED' OR i.paid_amount_cents<>(SELECT COALESCE(SUM(p.amount_cents),0) FROM payment_entries p WHERE p.invoice_id=i.id)\n      ))\n      AND (\n        (\n          json_extract(NEW.details_json,'$.reason')='EXTRA_CHARGE'\n          AND b.total_cents=CAST(json_extract(NEW.details_json,'$.new_amount_cents') AS INTEGER)\n          AND CAST(json_extract(NEW.details_json,'$.new_amount_cents') AS INTEGER)\n            >CAST(json_extract(NEW.details_json,'$.old_amount_cents') AS INTEGER)\n          AND EXISTS (SELECT 1 FROM financial_events e\n            WHERE e.id=json_extract(NEW.details_json,'$.cause_event_id')\n              AND e.booking_id=b.id AND e.event_type='EXTRA_CHARGE'\n              AND e.actor_subject=NEW.actor_subject AND e.request_id=NEW.request_id AND e.hotel_id=NEW.hotel_id\n              AND CAST(json_extract(e.details_json,'$.amount_cents') AS INTEGER)\n                =CAST(json_extract(NEW.details_json,'$.new_amount_cents') AS INTEGER)\n                  -CAST(json_extract(NEW.details_json,'$.old_amount_cents') AS INTEGER)\n              AND EXISTS (SELECT 1 FROM extra_charges c\n                WHERE c.id=json_extract(NEW.details_json,'$.charge_id')\n                  AND c.booking_id=b.id\n                  AND c.amount_cents=CAST(json_extract(e.details_json,'$.amount_cents') AS INTEGER)))\n          AND NOT EXISTS (SELECT 1 FROM financial_events prior\n            WHERE prior.event_type='PRICE_RECONCILIATION'\n              AND (json_extract(prior.details_json,'$.cause_event_id')=json_extract(NEW.details_json,'$.cause_event_id')\n                OR json_extract(prior.details_json,'$.charge_id')=json_extract(NEW.details_json,'$.charge_id')))\n        )\n        OR\n        (\n          b.status='CHECKED_IN'\n          AND b.last_reassignment_token=json_extract(NEW.details_json,'$.operation_token')\n          AND b.total_cents=CAST(json_extract(NEW.details_json,'$.new_total_cents') AS INTEGER)\n          AND CAST(json_extract(NEW.details_json,'$.old_total_cents') AS INTEGER)>=0\n          AND EXISTS (SELECT 1 FROM booking_pricing_segments s\n            WHERE s.booking_id=b.id AND s.operation_token=json_extract(NEW.details_json,'$.operation_token'))\n        )\n      )\n  ) THEN RAISE(ABORT,'price reconciliation event has no winning operation') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "reservation_creation_completion_provenance_immutable",
+        "tbl_name": "reservation_creation_operations",
+        "sql": "CREATE TRIGGER reservation_creation_completion_provenance_immutable\nBEFORE UPDATE ON reservation_creation_operations\nWHEN OLD.stage = 'BOOKING_CREATED'\n  AND (NEW.booking_created_by_subject <> OLD.booking_created_by_subject\n    OR NEW.booking_request_id <> OLD.booking_request_id\n    OR NEW.booking_created_at <> OLD.booking_created_at)\nBEGIN\n  SELECT RAISE(ABORT, 'reservation completion provenance is immutable');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "reservation_creation_event_guard",
+        "tbl_name": "reservation_creation_events",
+        "sql": "CREATE TRIGGER reservation_creation_event_guard\nBEFORE INSERT ON reservation_creation_events\nBEGIN\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM reservation_creation_operations o\n    WHERE o.operation_token = NEW.operation_token\n      AND o.guest_id = NEW.guest_id AND o.booking_id = NEW.booking_id\n      AND o.hotel_id = NEW.hotel_id\n      AND (\n        (NEW.event_type = 'GUEST_CREATED' AND o.guest_source = 'NEW'\n          AND o.stage IN ('GUEST_CREATED', 'BOOKING_CREATED')\n          AND NEW.actor_subject = o.created_by_subject\n          AND NEW.request_id = o.created_request_id\n          AND NEW.created_at = o.created_at)\n        OR\n        (NEW.event_type = 'BOOKING_CREATED' AND o.stage = 'BOOKING_CREATED'\n          AND NEW.actor_subject = o.booking_created_by_subject\n          AND NEW.request_id = o.booking_request_id\n          AND NEW.created_at = o.booking_created_at)\n      )\n  ) THEN RAISE(ABORT, 'reservation creation event lacks winning operation stage') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "reservation_creation_event_immutable_delete",
+        "tbl_name": "reservation_creation_events",
+        "sql": "CREATE TRIGGER reservation_creation_event_immutable_delete\nBEFORE DELETE ON reservation_creation_events\nBEGIN\n  SELECT RAISE(ABORT, 'reservation creation events are immutable');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "reservation_creation_event_immutable_update",
+        "tbl_name": "reservation_creation_events",
+        "sql": "CREATE TRIGGER reservation_creation_event_immutable_update\nBEFORE UPDATE ON reservation_creation_events\nBEGIN\n  SELECT RAISE(ABORT, 'reservation creation events are immutable');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "reservation_creation_identity_immutable",
+        "tbl_name": "reservation_creation_operations",
+        "sql": "CREATE TRIGGER reservation_creation_identity_immutable\nBEFORE UPDATE ON reservation_creation_operations\nWHEN NEW.operation_token <> OLD.operation_token\n  OR NEW.payload_hash <> OLD.payload_hash\n  OR NEW.guest_id <> OLD.guest_id\n  OR NEW.booking_id <> OLD.booking_id\n  OR NEW.guest_source <> OLD.guest_source\n  OR NEW.room_id <> OLD.room_id\n  OR NEW.check_in <> OLD.check_in\n  OR NEW.check_out <> OLD.check_out\n  OR NEW.hotel_id <> OLD.hotel_id\n  OR NEW.created_by_subject <> OLD.created_by_subject\n  OR NEW.created_request_id <> OLD.created_request_id\n  OR NEW.created_at <> OLD.created_at\nBEGIN\n  SELECT RAISE(ABORT, 'reservation creation identity is immutable');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "reservation_creation_stage_guard",
+        "tbl_name": "reservation_creation_operations",
+        "sql": "CREATE TRIGGER reservation_creation_stage_guard\nBEFORE UPDATE OF stage ON reservation_creation_operations\nWHEN NEW.stage <> OLD.stage\nBEGIN\n  SELECT CASE WHEN OLD.stage NOT IN ('GUEST_CREATED', 'EXISTING_GUEST_SELECTED')\n    OR NEW.stage <> 'BOOKING_CREATED'\n  THEN RAISE(ABORT, 'invalid reservation creation stage transition') END;\n\n  -- The booking row, pricing segment and exact [check_in, check_out) inventory\n  -- set must all exist before the durable operation can claim completion.\n  SELECT CASE WHEN NOT EXISTS (\n    SELECT 1 FROM bookings b\n    WHERE b.id = OLD.booking_id\n      AND b.guest_id = OLD.guest_id\n      AND b.room_id = OLD.room_id\n      AND b.check_in = OLD.check_in\n      AND b.check_out = OLD.check_out\n      AND b.status = 'CONFIRMED'\n      AND b.last_pricing_operation_token = 'reservation-create:' || OLD.booking_id\n      AND (SELECT COUNT(*) FROM room_inventory_nights n WHERE n.booking_id = b.id)\n        = CAST(julianday(b.check_out) - julianday(b.check_in) AS INTEGER)\n      AND NOT EXISTS (\n        SELECT 1 FROM room_inventory_nights n\n        WHERE n.booking_id = b.id\n          AND (n.room_id <> b.room_id OR n.stay_date < b.check_in OR n.stay_date >= b.check_out)\n      )\n      AND EXISTS (\n        SELECT 1 FROM booking_pricing_segments s\n        WHERE s.booking_id = b.id AND s.room_id = b.room_id\n          AND s.effective_start = b.check_in AND s.effective_end = b.check_out\n          AND s.operation_token = b.last_pricing_operation_token\n          AND s.segment_version = b.pricing_version\n      )\n  ) THEN RAISE(ABORT, 'reservation creation completion lacks exact booking state') END;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "room_hold_inventory_version_delete",
+        "tbl_name": "room_holds",
+        "sql": "CREATE TRIGGER room_hold_inventory_version_delete\nAFTER DELETE ON room_holds\nBEGIN\n  UPDATE rooms SET inventory_version=inventory_version+1 WHERE id=OLD.room_id;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "room_hold_inventory_version_insert",
+        "tbl_name": "room_holds",
+        "sql": "CREATE TRIGGER room_hold_inventory_version_insert\nAFTER INSERT ON room_holds\nBEGIN\n  UPDATE rooms SET inventory_version=inventory_version+1 WHERE id=NEW.room_id;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "room_hold_inventory_version_update",
+        "tbl_name": "room_holds",
+        "sql": "CREATE TRIGGER room_hold_inventory_version_update\nAFTER UPDATE OF room_id,start_date,end_date ON room_holds\nWHEN NEW.room_id<>OLD.room_id OR NEW.start_date<>OLD.start_date OR NEW.end_date<>OLD.end_date\nBEGIN\n  UPDATE rooms SET inventory_version=inventory_version+1 WHERE id=OLD.room_id;\n  UPDATE rooms SET inventory_version=inventory_version+1 WHERE id=NEW.room_id AND NEW.room_id<>OLD.room_id;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "room_inventory_priced_claim_guard",
+        "tbl_name": "room_inventory_nights",
+        "sql": "CREATE TRIGGER room_inventory_priced_claim_guard\nBEFORE INSERT ON room_inventory_nights\nWHEN EXISTS (SELECT 1 FROM bookings b WHERE b.id=NEW.booking_id AND b.last_pricing_operation_token IS NOT NULL)\n  AND NOT EXISTS (SELECT 1 FROM booking_pricing_segments s\n    WHERE s.booking_id=NEW.booking_id AND s.room_id=NEW.room_id AND s.operation_token=(\n      SELECT last_pricing_operation_token FROM bookings WHERE id=NEW.booking_id\n    ))\nBEGIN\n  SELECT RAISE(ABORT,'booking inventory claim requires its pricing segment');\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "room_inventory_version_delete",
+        "tbl_name": "room_inventory_nights",
+        "sql": "CREATE TRIGGER room_inventory_version_delete\nAFTER DELETE ON room_inventory_nights\nBEGIN\n  UPDATE rooms SET inventory_version=inventory_version+1 WHERE id=OLD.room_id;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "room_inventory_version_insert",
+        "tbl_name": "room_inventory_nights",
+        "sql": "CREATE TRIGGER room_inventory_version_insert\nAFTER INSERT ON room_inventory_nights\nBEGIN\n  UPDATE rooms SET inventory_version=inventory_version+1 WHERE id=NEW.room_id;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "room_inventory_version_update",
+        "tbl_name": "room_inventory_nights",
+        "sql": "CREATE TRIGGER room_inventory_version_update\nAFTER UPDATE OF room_id,stay_date ON room_inventory_nights\nWHEN NEW.room_id<>OLD.room_id OR NEW.stay_date<>OLD.stay_date\nBEGIN\n  UPDATE rooms SET inventory_version=inventory_version+1 WHERE id=OLD.room_id;\n  UPDATE rooms SET inventory_version=inventory_version+1 WHERE id=NEW.room_id AND NEW.room_id<>OLD.room_id;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "room_pricing_version_advance",
+        "tbl_name": "rooms",
+        "sql": "CREATE TRIGGER room_pricing_version_advance\nAFTER UPDATE OF price_cents ON rooms\nWHEN NEW.price_cents<>OLD.price_cents\nBEGIN\n  UPDATE rooms SET pricing_version=OLD.pricing_version+1\n  WHERE id=NEW.id AND pricing_version=OLD.pricing_version;\nEND"
+      },
+      {
+        "type": "trigger",
+        "name": "trg_cash_closure_audit",
+        "tbl_name": "cash_closures",
+        "sql": "CREATE TRIGGER trg_cash_closure_audit\nAFTER INSERT ON cash_closures\nBEGIN\n  INSERT INTO financial_events (id,event_type,booking_id,actor_subject,request_id,hotel_id,details_json,created_at)\n  VALUES (lower(hex(randomblob(16))), 'CASH_CLOSURE', NULL, NEW.actor_subject, NEW.request_id, NEW.hotel_id,\n    json_object('total_amount_cents', NEW.total_amount_cents, 'cash_amount_cents', NEW.cash_amount_cents,\n      'card_amount_cents', NEW.card_amount_cents, 'payment_count', NEW.payment_count,\n      'counted_cash_amount_cents', NEW.counted_cash_amount_cents, 'opening_time', NEW.opening_time), NEW.closing_time);\nEND"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "MIA",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 1.2227
+      },
+      "duration": 1.2227,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 516096,
+      "rows_read": 281,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

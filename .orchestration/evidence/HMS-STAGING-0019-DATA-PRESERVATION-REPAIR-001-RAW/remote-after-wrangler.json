@@ -1,0 +1,482 @@
+
+ ⛅️ wrangler 4.125.0 (update available 4.146.0)
+───────────────────────────────────────────────
+Resource location: remote
+
+🌀 Executing on remote database HOTEL_DEMO_DB (4b33c6a1-bbfc-496f-bf71-d646e6405318):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 7 commands in 0.97ms
+[
+  {
+    "results": [
+      {
+        "id": "diag-invoice-paid",
+        "booking_id": "diag-booking-paid",
+        "amount_cents": 10000,
+        "paid_amount_cents": 10000,
+        "status": "PAID",
+        "payment_method": "TRANSFER",
+        "payment_reference": "diag-invoice-ref-paid",
+        "paid_at": "2026-10-02T00:03:00Z",
+        "created_at": "2026-10-02T00:03:00Z"
+      },
+      {
+        "id": "diag-invoice-partial",
+        "booking_id": "diag-booking-partial",
+        "amount_cents": 20000,
+        "paid_amount_cents": 7000,
+        "status": "PENDING",
+        "payment_method": "CARD",
+        "payment_reference": "diag-invoice-ref-partial",
+        "paid_at": null,
+        "created_at": "2026-10-02T00:02:00Z"
+      },
+      {
+        "id": "diag-invoice-unpaid",
+        "booking_id": "diag-booking-unpaid",
+        "amount_cents": 12000,
+        "paid_amount_cents": 0,
+        "status": "PENDING",
+        "payment_method": "CASH",
+        "payment_reference": null,
+        "paid_at": null,
+        "created_at": "2026-10-02T00:01:00Z"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "EWR",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.1677
+      },
+      "duration": 0.1677,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 290816,
+      "rows_read": 3,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  },
+  {
+    "results": [
+      {
+        "id": "diag-payment-paid",
+        "invoice_id": "diag-invoice-paid",
+        "booking_id": "diag-booking-paid",
+        "amount_cents": 10000,
+        "payment_method": "TRANSFER",
+        "payment_reference": "diag-ref-transfer-001",
+        "note": "settled synthetic invoice",
+        "received_by_user_id": "diag-actor",
+        "received_at": "2026-10-02T00:12:00Z",
+        "operation_token": "diag-op-paid-transfer"
+      },
+      {
+        "id": "diag-payment-partial-card",
+        "invoice_id": "diag-invoice-partial",
+        "booking_id": "diag-booking-partial",
+        "amount_cents": 4000,
+        "payment_method": "CARD",
+        "payment_reference": null,
+        "note": null,
+        "received_by_user_id": "diag-actor",
+        "received_at": "2026-10-02T00:11:00Z",
+        "operation_token": null
+      },
+      {
+        "id": "diag-payment-partial-cash",
+        "invoice_id": "diag-invoice-partial",
+        "booking_id": "diag-booking-partial",
+        "amount_cents": 3000,
+        "payment_method": "CASH",
+        "payment_reference": "diag-ref-cash-001",
+        "note": "first partial payment",
+        "received_by_user_id": "diag-actor",
+        "received_at": "2026-10-02T00:10:00Z",
+        "operation_token": "diag-op-partial-cash"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "EWR",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.1409
+      },
+      "duration": 0.1409,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 290816,
+      "rows_read": 3,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  },
+  {
+    "results": [
+      {
+        "id": "diag-booking-paid",
+        "guest_id": "diag-guest-paid",
+        "room_id": "diag-room-paid",
+        "check_in": "2026-10-12",
+        "check_out": "2026-10-14",
+        "status": "CONFIRMED",
+        "total_cents": 10000,
+        "notes": "synthetic paid preservation fixture",
+        "checked_in_at": null,
+        "checked_in_by": null,
+        "checked_out_at": null,
+        "checked_out_by": null,
+        "created_at": "2026-10-02T00:03:00Z",
+        "updated_at": "2026-10-02T00:03:00Z",
+        "check_in_guests_count": null,
+        "check_out_payment_policy": null,
+        "check_out_reference": null,
+        "check_in_reference": null,
+        "guest_name_snapshot": "Diagnostic Paid",
+        "check_in_document_verified": null,
+        "check_in_contact_confirmed": null,
+        "check_in_stay_confirmed": null,
+        "check_out_charges_reviewed": null,
+        "check_out_room_release_confirmed": null,
+        "check_out_housekeeping_handoff": null,
+        "terminal_reason": null,
+        "terminal_recorded_at": null,
+        "terminal_recorded_by": null,
+        "late_arrival_eta": null,
+        "late_arrival_note": null,
+        "late_arrival_recorded_at": null,
+        "late_arrival_recorded_by": null
+      },
+      {
+        "id": "diag-booking-partial",
+        "guest_id": "diag-guest-partial",
+        "room_id": "diag-room-partial",
+        "check_in": "2026-10-11",
+        "check_out": "2026-10-13",
+        "status": "CONFIRMED",
+        "total_cents": 20000,
+        "notes": "synthetic partial preservation fixture",
+        "checked_in_at": null,
+        "checked_in_by": null,
+        "checked_out_at": null,
+        "checked_out_by": null,
+        "created_at": "2026-10-02T00:02:00Z",
+        "updated_at": "2026-10-02T00:02:00Z",
+        "check_in_guests_count": null,
+        "check_out_payment_policy": null,
+        "check_out_reference": null,
+        "check_in_reference": null,
+        "guest_name_snapshot": "Diagnostic Partial",
+        "check_in_document_verified": null,
+        "check_in_contact_confirmed": null,
+        "check_in_stay_confirmed": null,
+        "check_out_charges_reviewed": null,
+        "check_out_room_release_confirmed": null,
+        "check_out_housekeeping_handoff": null,
+        "terminal_reason": null,
+        "terminal_recorded_at": null,
+        "terminal_recorded_by": null,
+        "late_arrival_eta": null,
+        "late_arrival_note": null,
+        "late_arrival_recorded_at": null,
+        "late_arrival_recorded_by": null
+      },
+      {
+        "id": "diag-booking-unpaid",
+        "guest_id": "diag-guest-unpaid",
+        "room_id": "diag-room-unpaid",
+        "check_in": "2026-10-10",
+        "check_out": "2026-10-12",
+        "status": "CONFIRMED",
+        "total_cents": 12000,
+        "notes": "synthetic unpaid preservation fixture",
+        "checked_in_at": null,
+        "checked_in_by": null,
+        "checked_out_at": null,
+        "checked_out_by": null,
+        "created_at": "2026-10-02T00:01:00Z",
+        "updated_at": "2026-10-02T00:01:00Z",
+        "check_in_guests_count": null,
+        "check_out_payment_policy": null,
+        "check_out_reference": null,
+        "check_in_reference": null,
+        "guest_name_snapshot": "Diagnostic Unpaid",
+        "check_in_document_verified": null,
+        "check_in_contact_confirmed": null,
+        "check_in_stay_confirmed": null,
+        "check_out_charges_reviewed": null,
+        "check_out_room_release_confirmed": null,
+        "check_out_housekeeping_handoff": null,
+        "terminal_reason": null,
+        "terminal_recorded_at": null,
+        "terminal_recorded_by": null,
+        "late_arrival_eta": null,
+        "late_arrival_note": null,
+        "late_arrival_recorded_at": null,
+        "late_arrival_recorded_by": null
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "EWR",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.2242
+      },
+      "duration": 0.2242,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 290816,
+      "rows_read": 3,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  },
+  {
+    "results": [
+      {
+        "name": "idx_extra_charges_booking",
+        "sql": "CREATE INDEX idx_extra_charges_booking ON extra_charges(booking_id, created_at)"
+      },
+      {
+        "name": "idx_invoices_status",
+        "sql": "CREATE INDEX idx_invoices_status ON invoices(status, created_at)"
+      },
+      {
+        "name": "idx_payment_entries_booking_operation_token",
+        "sql": "CREATE UNIQUE INDEX idx_payment_entries_booking_operation_token\n  ON payment_entries(booking_id, operation_token)"
+      },
+      {
+        "name": "idx_payments_booking",
+        "sql": "CREATE INDEX idx_payments_booking\n  ON payment_entries(booking_id, received_at)"
+      },
+      {
+        "name": "idx_payments_shift",
+        "sql": "CREATE INDEX idx_payments_shift\n  ON payment_entries(received_at, payment_method)"
+      },
+      {
+        "name": "sqlite_autoindex_extra_charges_1",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_invoices_1",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_invoices_2",
+        "sql": null
+      },
+      {
+        "name": "sqlite_autoindex_payment_entries_1",
+        "sql": null
+      },
+      {
+        "name": "extra_charges",
+        "sql": "CREATE TABLE extra_charges (\n  id TEXT PRIMARY KEY,\n  booking_id TEXT NOT NULL,\n  description TEXT NOT NULL CHECK (length(trim(description)) BETWEEN 1 AND 200),\n  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),\n  category TEXT NOT NULL DEFAULT 'OTHER',\n  created_at TEXT NOT NULL,\n  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "name": "invoices",
+        "sql": "CREATE TABLE \"invoices\" (\n  id TEXT PRIMARY KEY,\n  booking_id TEXT NOT NULL UNIQUE,\n  amount_cents INTEGER NOT NULL CHECK (amount_cents >= 0),\n  paid_amount_cents INTEGER NOT NULL DEFAULT 0 CHECK (paid_amount_cents >= 0),\n  status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PAID', 'VOIDED')),\n  payment_method TEXT NOT NULL DEFAULT 'CASH' CHECK (payment_method IN ('CASH', 'CARD', 'TRANSFER')),\n  payment_reference TEXT,\n  paid_at TEXT,\n  created_at TEXT NOT NULL,\n  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "name": "payment_entries",
+        "sql": "CREATE TABLE payment_entries (\n  id TEXT PRIMARY KEY,\n  invoice_id TEXT NOT NULL,\n  booking_id TEXT NOT NULL,\n  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),\n  payment_method TEXT NOT NULL CHECK (payment_method IN ('CASH', 'CARD', 'TRANSFER')),\n  payment_reference TEXT,\n  note TEXT,\n  received_by_user_id TEXT NOT NULL,\n  received_at TEXT NOT NULL,\n  operation_token TEXT,\n  FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,\n  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "name": "billing_invoice_ledger_guard",
+        "sql": "CREATE TRIGGER billing_invoice_ledger_guard\nBEFORE UPDATE OF paid_amount_cents ON invoices\nWHEN NEW.paid_amount_cents <> (\n  SELECT COALESCE(SUM(p.amount_cents), 0)\n  FROM payment_entries p\n  WHERE p.invoice_id = NEW.id\n)\nBEGIN\n  SELECT RAISE(ABORT, 'D11 paid amount must equal immutable payment ledger');\nEND"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "EWR",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.193
+      },
+      "duration": 0.193,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 290816,
+      "rows_read": 85,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  },
+  {
+    "results": [
+      {
+        "id": 0,
+        "seq": 0,
+        "table": "bookings",
+        "from": "booking_id",
+        "to": "id",
+        "on_update": "NO ACTION",
+        "on_delete": "CASCADE",
+        "match": "NONE"
+      },
+      {
+        "id": 1,
+        "seq": 0,
+        "table": "invoices",
+        "from": "invoice_id",
+        "to": "id",
+        "on_update": "NO ACTION",
+        "on_delete": "CASCADE",
+        "match": "NONE"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "EWR",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.0659
+      },
+      "duration": 0.0659,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 290816,
+      "rows_read": 0,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  },
+  {
+    "results": [],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "EWR",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.094
+      },
+      "duration": 0.094,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 290816,
+      "rows_read": 16,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  },
+  {
+    "results": [
+      {
+        "id": 1,
+        "name": "0001_foundation.sql"
+      },
+      {
+        "id": 2,
+        "name": "0002_rooms_guests_holds.sql"
+      },
+      {
+        "id": 3,
+        "name": "0003_bookings.sql"
+      },
+      {
+        "id": 4,
+        "name": "0004_booking_claim_fk.sql"
+      },
+      {
+        "id": 5,
+        "name": "0005_reception_lifecycle.sql"
+      },
+      {
+        "id": 6,
+        "name": "0006_lifecycle_transition_guards.sql"
+      },
+      {
+        "id": 7,
+        "name": "0007_lifecycle_atomic_guards.sql"
+      },
+      {
+        "id": 8,
+        "name": "0008_lifecycle_domain_parity.sql"
+      },
+      {
+        "id": 9,
+        "name": "0009_housekeeping_maintenance.sql"
+      },
+      {
+        "id": 10,
+        "name": "0010_billing.sql"
+      },
+      {
+        "id": 11,
+        "name": "0011_cash_closure_audit.sql"
+      },
+      {
+        "id": 12,
+        "name": "0012_cash_closure_operation_token.sql"
+      },
+      {
+        "id": 13,
+        "name": "0013_noshow_reporting_parity.sql"
+      },
+      {
+        "id": 14,
+        "name": "0014_migration_source_parity.sql"
+      },
+      {
+        "id": 15,
+        "name": "0015_payment_operation_token.sql"
+      },
+      {
+        "id": 16,
+        "name": "0016_payment_operation_token_scope.sql"
+      },
+      {
+        "id": 17,
+        "name": "0017_reporting_indexes.sql"
+      },
+      {
+        "id": 18,
+        "name": "0018_agent_mutation_provenance.sql"
+      },
+      {
+        "id": 19,
+        "name": "0019_billing_reconciliation.sql"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "EWR",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.0829
+      },
+      "duration": 0.0829,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 290816,
+      "rows_read": 19,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

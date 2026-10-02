@@ -1,0 +1,342 @@
+
+ ⛅️ wrangler 4.125.0 (update available 4.146.0)
+───────────────────────────────────────────────
+Resource location: remote
+
+Migrations to be applied:
+┌───────────────────────────────────────────────────────┐
+│ name                                                  │
+├───────────────────────────────────────────────────────┤
+│ 0020_maintenance_impact.sql                           │
+├───────────────────────────────────────────────────────┤
+│ 0021_reassignment_remaining_nights.sql                │
+├───────────────────────────────────────────────────────┤
+│ 0022_room_state_dimensions.sql                        │
+├───────────────────────────────────────────────────────┤
+│ 0023_room_state_command_guards.sql                    │
+├───────────────────────────────────────────────────────┤
+│ 0024_reassignment_interval_room_versions.sql          │
+├───────────────────────────────────────────────────────┤
+│ 0025_segmented_stay_pricing.sql                       │
+├───────────────────────────────────────────────────────┤
+│ 0026_active_stay_pricing_bootstrap_shadow.sql         │
+├───────────────────────────────────────────────────────┤
+│ 0027_active_stay_bootstrap_segment_snapshot_guard.sql │
+├───────────────────────────────────────────────────────┤
+│ 0028_checkout_settlement_guard.sql                    │
+├───────────────────────────────────────────────────────┤
+│ 0029_reservation_creation_recovery.sql                │
+├───────────────────────────────────────────────────────┤
+│ 0030_extra_charge_operation_identity.sql              │
+└───────────────────────────────────────────────────────┘
+? About to apply 11 migration(s)
+Your database may not be available to serve requests during the migration, continue?
+🤖 Using fallback value in non-interactive context: yes
+🌀 Executing on remote database HOTEL_DEMO_DB (ca1482d9-f994-4955-b51f-30be3768cd16):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 19 commands in 8.83ms
+┌───────────────────────────────────────────────────────┬────────┐
+│ name                                                  │ status │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0020_maintenance_impact.sql                           │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0021_reassignment_remaining_nights.sql                │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0022_room_state_dimensions.sql                        │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0023_room_state_command_guards.sql                    │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0024_reassignment_interval_room_versions.sql          │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0025_segmented_stay_pricing.sql                       │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0026_active_stay_pricing_bootstrap_shadow.sql         │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0027_active_stay_bootstrap_segment_snapshot_guard.sql │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0028_checkout_settlement_guard.sql                    │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0029_reservation_creation_recovery.sql                │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0030_extra_charge_operation_identity.sql              │ 🕒️    │
+└───────────────────────────────────────────────────────┴────────┘
+🌀 Executing on remote database HOTEL_DEMO_DB (ca1482d9-f994-4955-b51f-30be3768cd16):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 3 commands in 1.08ms
+┌───────────────────────────────────────────────────────┬────────┐
+│ name                                                  │ status │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0020_maintenance_impact.sql                           │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0021_reassignment_remaining_nights.sql                │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0022_room_state_dimensions.sql                        │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0023_room_state_command_guards.sql                    │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0024_reassignment_interval_room_versions.sql          │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0025_segmented_stay_pricing.sql                       │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0026_active_stay_pricing_bootstrap_shadow.sql         │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0027_active_stay_bootstrap_segment_snapshot_guard.sql │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0028_checkout_settlement_guard.sql                    │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0029_reservation_creation_recovery.sql                │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0030_extra_charge_operation_identity.sql              │ 🕒️    │
+└───────────────────────────────────────────────────────┴────────┘
+🌀 Executing on remote database HOTEL_DEMO_DB (ca1482d9-f994-4955-b51f-30be3768cd16):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 5 commands in 4.49ms
+┌───────────────────────────────────────────────────────┬────────┐
+│ name                                                  │ status │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0020_maintenance_impact.sql                           │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0021_reassignment_remaining_nights.sql                │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0022_room_state_dimensions.sql                        │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0023_room_state_command_guards.sql                    │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0024_reassignment_interval_room_versions.sql          │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0025_segmented_stay_pricing.sql                       │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0026_active_stay_pricing_bootstrap_shadow.sql         │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0027_active_stay_bootstrap_segment_snapshot_guard.sql │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0028_checkout_settlement_guard.sql                    │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0029_reservation_creation_recovery.sql                │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0030_extra_charge_operation_identity.sql              │ 🕒️    │
+└───────────────────────────────────────────────────────┴────────┘
+🌀 Executing on remote database HOTEL_DEMO_DB (ca1482d9-f994-4955-b51f-30be3768cd16):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 7 commands in 7.91ms
+┌───────────────────────────────────────────────────────┬────────┐
+│ name                                                  │ status │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0020_maintenance_impact.sql                           │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0021_reassignment_remaining_nights.sql                │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0022_room_state_dimensions.sql                        │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0023_room_state_command_guards.sql                    │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0024_reassignment_interval_room_versions.sql          │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0025_segmented_stay_pricing.sql                       │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0026_active_stay_pricing_bootstrap_shadow.sql         │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0027_active_stay_bootstrap_segment_snapshot_guard.sql │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0028_checkout_settlement_guard.sql                    │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0029_reservation_creation_recovery.sql                │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0030_extra_charge_operation_identity.sql              │ 🕒️    │
+└───────────────────────────────────────────────────────┴────────┘
+🌀 Executing on remote database HOTEL_DEMO_DB (ca1482d9-f994-4955-b51f-30be3768cd16):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 23 commands in 8.40ms
+┌───────────────────────────────────────────────────────┬────────┐
+│ name                                                  │ status │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0020_maintenance_impact.sql                           │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0021_reassignment_remaining_nights.sql                │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0022_room_state_dimensions.sql                        │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0023_room_state_command_guards.sql                    │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0024_reassignment_interval_room_versions.sql          │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0025_segmented_stay_pricing.sql                       │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0026_active_stay_pricing_bootstrap_shadow.sql         │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0027_active_stay_bootstrap_segment_snapshot_guard.sql │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0028_checkout_settlement_guard.sql                    │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0029_reservation_creation_recovery.sql                │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0030_extra_charge_operation_identity.sql              │ 🕒️    │
+└───────────────────────────────────────────────────────┴────────┘
+🌀 Executing on remote database HOTEL_DEMO_DB (ca1482d9-f994-4955-b51f-30be3768cd16):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 23 commands in 17.33ms
+┌───────────────────────────────────────────────────────┬────────┐
+│ name                                                  │ status │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0020_maintenance_impact.sql                           │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0021_reassignment_remaining_nights.sql                │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0022_room_state_dimensions.sql                        │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0023_room_state_command_guards.sql                    │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0024_reassignment_interval_room_versions.sql          │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0025_segmented_stay_pricing.sql                       │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0026_active_stay_pricing_bootstrap_shadow.sql         │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0027_active_stay_bootstrap_segment_snapshot_guard.sql │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0028_checkout_settlement_guard.sql                    │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0029_reservation_creation_recovery.sql                │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0030_extra_charge_operation_identity.sql              │ 🕒️    │
+└───────────────────────────────────────────────────────┴────────┘
+🌀 Executing on remote database HOTEL_DEMO_DB (ca1482d9-f994-4955-b51f-30be3768cd16):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 30 commands in 7.21ms
+┌───────────────────────────────────────────────────────┬────────┐
+│ name                                                  │ status │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0020_maintenance_impact.sql                           │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0021_reassignment_remaining_nights.sql                │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0022_room_state_dimensions.sql                        │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0023_room_state_command_guards.sql                    │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0024_reassignment_interval_room_versions.sql          │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0025_segmented_stay_pricing.sql                       │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0026_active_stay_pricing_bootstrap_shadow.sql         │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0027_active_stay_bootstrap_segment_snapshot_guard.sql │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0028_checkout_settlement_guard.sql                    │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0029_reservation_creation_recovery.sql                │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0030_extra_charge_operation_identity.sql              │ 🕒️    │
+└───────────────────────────────────────────────────────┴────────┘
+🌀 Executing on remote database HOTEL_DEMO_DB (ca1482d9-f994-4955-b51f-30be3768cd16):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 2 commands in 0.86ms
+┌───────────────────────────────────────────────────────┬────────┐
+│ name                                                  │ status │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0020_maintenance_impact.sql                           │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0021_reassignment_remaining_nights.sql                │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0022_room_state_dimensions.sql                        │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0023_room_state_command_guards.sql                    │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0024_reassignment_interval_room_versions.sql          │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0025_segmented_stay_pricing.sql                       │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0026_active_stay_pricing_bootstrap_shadow.sql         │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0027_active_stay_bootstrap_segment_snapshot_guard.sql │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0028_checkout_settlement_guard.sql                    │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0029_reservation_creation_recovery.sql                │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0030_extra_charge_operation_identity.sql              │ 🕒️    │
+└───────────────────────────────────────────────────────┴────────┘
+🌀 Executing on remote database HOTEL_DEMO_DB (ca1482d9-f994-4955-b51f-30be3768cd16):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 5 commands in 1.12ms
+┌───────────────────────────────────────────────────────┬────────┐
+│ name                                                  │ status │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0020_maintenance_impact.sql                           │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0021_reassignment_remaining_nights.sql                │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0022_room_state_dimensions.sql                        │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0023_room_state_command_guards.sql                    │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0024_reassignment_interval_room_versions.sql          │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0025_segmented_stay_pricing.sql                       │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0026_active_stay_pricing_bootstrap_shadow.sql         │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0027_active_stay_bootstrap_segment_snapshot_guard.sql │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0028_checkout_settlement_guard.sql                    │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0029_reservation_creation_recovery.sql                │ 🕒️    │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0030_extra_charge_operation_identity.sql              │ 🕒️    │
+└───────────────────────────────────────────────────────┴────────┘
+🌀 Executing on remote database HOTEL_DEMO_DB (ca1482d9-f994-4955-b51f-30be3768cd16):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 12 commands in 2.79ms
+┌───────────────────────────────────────────────────────┬────────┐
+│ name                                                  │ status │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0020_maintenance_impact.sql                           │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0021_reassignment_remaining_nights.sql                │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0022_room_state_dimensions.sql                        │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0023_room_state_command_guards.sql                    │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0024_reassignment_interval_room_versions.sql          │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0025_segmented_stay_pricing.sql                       │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0026_active_stay_pricing_bootstrap_shadow.sql         │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0027_active_stay_bootstrap_segment_snapshot_guard.sql │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0028_checkout_settlement_guard.sql                    │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0029_reservation_creation_recovery.sql                │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0030_extra_charge_operation_identity.sql              │ 🕒️    │
+└───────────────────────────────────────────────────────┴────────┘
+🌀 Executing on remote database HOTEL_DEMO_DB (ca1482d9-f994-4955-b51f-30be3768cd16):
+🌀 To execute on your local development database, remove the --remote flag from your wrangler command.
+🚣 Executed 6 commands in 6.65ms
+┌───────────────────────────────────────────────────────┬────────┐
+│ name                                                  │ status │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0020_maintenance_impact.sql                           │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0021_reassignment_remaining_nights.sql                │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0022_room_state_dimensions.sql                        │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0023_room_state_command_guards.sql                    │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0024_reassignment_interval_room_versions.sql          │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0025_segmented_stay_pricing.sql                       │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0026_active_stay_pricing_bootstrap_shadow.sql         │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0027_active_stay_bootstrap_segment_snapshot_guard.sql │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0028_checkout_settlement_guard.sql                    │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0029_reservation_creation_recovery.sql                │ ✅     │
+├───────────────────────────────────────────────────────┼────────┤
+│ 0030_extra_charge_operation_identity.sql              │ ✅     │
+└───────────────────────────────────────────────────────┴────────┘

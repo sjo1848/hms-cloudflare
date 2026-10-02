@@ -1,0 +1,125 @@
+{
+  "purpose": "Whitespace-only canonicalization of captured text evidence so repository diff hygiene is machine-checkable. No non-whitespace content changed.",
+  "files": [
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/expected-d11-invalid-update.log",
+      "original_sha256": "6583866e5f529adbd771cee80bc352ef509a6a284dfe80d0fbda47bf0f66f7d5",
+      "normalized_sha256": "dccbdf2bb5a8d2f196f18b64557200f0378409fe2e64cb27b4729312c0b19c3f",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/expected-token-duplicate.log",
+      "original_sha256": "8bedb16939f75b39178fa9a48984a70224fd2ee3414baa3e1f5de4c4729552cf",
+      "normalized_sha256": "335e10bde231a7d1e351c8230a641fa72e22e61e0965b5494441ba7e6ef5e169",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/fullchain-after-fkcheck.json",
+      "original_sha256": "3b3e5ff1d78fa1d54505e9e044df98463c839eaad5f3a74ed853cff83e627592",
+      "normalized_sha256": "0566b02dc35122fdde724244626459ba87d4efa87d6d7e2fc8cea04efd2ac34d",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/fullchain-after-wrangler.json",
+      "original_sha256": "328f1cfc2cbdcca0f76922f273c088680affb5125e938bbdac1be8f2b752ce13",
+      "normalized_sha256": "beac6927c923efb5d2001e3dcde523af6bcfa947411cca5540bccabc7c95af31",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/fullchain-apply-19.log",
+      "original_sha256": "3fa0c01ba70a4ab70b418ccafb38b4abf6b74ef5acea6071548b1f7703784232",
+      "normalized_sha256": "ab11575f52993cb87d413aeb7892f78a2544e9a3187534f97b3a6da3f733718e",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/fullchain-apply-20-30.log",
+      "original_sha256": "de83ca0b00aff4e68c84b4d3ddb12ea9e16286c95e17d44008a950a39eda7d1b",
+      "normalized_sha256": "8860efcb3ed3e1d8858a120ef968c68e5577fadda8976fcbf2efd1f48e383fd0",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/fullchain-before-0019.json",
+      "original_sha256": "e54aac3bf4fd323a981841d78e8e70e55e96ba8f7ab951008300cfdedba3c67a",
+      "normalized_sha256": "35b014a939b9ff4f4bd6ccae25b81fdd9dabb403ee95bca06b6051228d4e54bb",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/fullchain-export.log",
+      "original_sha256": "06416de80bc47502bd9c19983b79c7b0c017ceadebddb95ca68f2f54da4f735d",
+      "normalized_sha256": "190f29d078209a7819335fe0c058cdbcff433441c7680c994360abd875962eb8",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/fullchain-post19-credit.json",
+      "original_sha256": "6cfeed4d242b3fef3ba2e55844fffcfe8645ed41421a1d1318df79f7bb48f25a",
+      "normalized_sha256": "31495c04db12fd57e48674df7a2b456ed4a314f6215c2a870eaee4395e7cae98",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/remote-0019-migrations-apply.log",
+      "original_sha256": "fe639c6c04f18bfd4f9d9e471dc7d2ab962344d38f2c27ca68f97c8e2a2e23cf",
+      "normalized_sha256": "9620b6cf9a66e6c5d1a57d3d75c80abeb787c21c48d6bd003ca4c2ffd98318ea",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/remote-after-wrangler.json",
+      "original_sha256": "5b203af7c7ca107f76d2a655888e1f1cee9cc2147b854c0ee19da9b86127cbc1",
+      "normalized_sha256": "49ee7326127764c21599863752b73b45b882bf247027b1a9f0dacf7a77d46bf5",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/remote-before-fkcheck.json",
+      "original_sha256": "58ac93f3188bbb3c5d2e49acc45368b9f212c44c16c7c51824513c4f0c2cd71a",
+      "normalized_sha256": "3e63c9ef0f3d718ea152405fefcae351fad3a55c39fd24d9c8d642c80ab3a3d7",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/remote-before-fklist.json",
+      "original_sha256": "c4753c2927153d5adae80e8b49e027e20fb25f65508021adf2f59e3a135328c8",
+      "normalized_sha256": "d249589140a3f7866067b30af8e5eb23cf17da47fc5b43df0ad1073d7b518ec0",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/remote-before-integrity.json",
+      "original_sha256": "af72a60914dbd37524a20c913fb61f32ae4d59b5b2a328bacfbabc6eb7cc6634",
+      "normalized_sha256": "c54e3460db730f71cccef11add4a584ef31ad660447d0adea9a88062d26321ca",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/remote-before-wrangler.json",
+      "original_sha256": "3edc3e9a84204e47d5edf0499d649ed56b01facc635b2e4be8a06d4f6b0b5831",
+      "normalized_sha256": "12653d3f99819099a87be81a5703f74f19763776a26d44057561d22ad3e465bb",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/remote-d11-final.json",
+      "original_sha256": "3e71b6899762fff8ecdae51bcc22e08bcfad76f951ea8e105210a17137d304f4",
+      "normalized_sha256": "f16ef2b416212b1b5ad8bb25a89b6f6f0351f7cc2819b5007b80dca4cc5f3307",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW/remote-d11-reconcile.json",
+      "original_sha256": "b55c78cc37cb4c6b81ad71f85c715756c3ca8b79abc02499a61b6906ea3de6bf",
+      "normalized_sha256": "2906d5786e893bc484d4982d702efd1d5fa38fd36c9128f1c7957fd58bc7a5af",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-0019-DATA-PRESERVATION-REPAIR-001-RAW-0018.json",
+      "original_sha256": "c11dd533f5a4daf370abacfc5fa688f98da3f8e6f4be67fc4e9a25f360510aa6",
+      "normalized_sha256": "3d4815dbd39dcd1ef7d82503c661656053622b022f4cf1beac90b429cf2aa234",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-D1-SQL-SPLITTER-COMPAT-001-RAW/chain-original-account-update.log",
+      "original_sha256": "c4c5ca192ceea151e37c946402aff86c9c153a4b126a423cfa6d42aefdd5b276",
+      "normalized_sha256": "ef2dc1aa4bc91da0b995c177f2380657158ae36626697e1707dd3631d50cdbaf",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    },
+    {
+      "path": ".orchestration/evidence/HMS-STAGING-D1-SQL-SPLITTER-COMPAT-001-RAW/chain-repaired-account-update.log",
+      "original_sha256": "a3d006c5b599b5343077ae33f2a97cad62f1ffaf6452d8c5201900d50ad3e092",
+      "normalized_sha256": "edc8afad0d09c887fc6e19468a3aa4255af98e4edc00cddd5fc4f3b2b3bc3663",
+      "normalization": "trim trailing horizontal whitespace per line; remove trailing blank lines; preserve all non-whitespace text"
+    }
+  ]
+}

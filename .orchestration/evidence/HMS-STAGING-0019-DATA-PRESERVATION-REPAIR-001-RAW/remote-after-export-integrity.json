@@ -1,0 +1,9 @@
+{
+  "dump_sha256": "e685d8552f5c58e540b4195309b77fd71505d91e930ac2d56c263ff59b6a98dd",
+  "foreign_key_check": [],
+  "integrity_check": [
+    "ok"
+  ],
+  "invoice_count": 3,
+  "payment_count": 3
+}

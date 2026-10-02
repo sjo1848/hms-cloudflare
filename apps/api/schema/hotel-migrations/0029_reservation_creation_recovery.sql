@@ -85,13 +85,13 @@ CREATE TRIGGER reservation_creation_stage_guard
 BEFORE UPDATE OF stage ON reservation_creation_operations
 WHEN NEW.stage <> OLD.stage
 BEGIN
-  SELECT CASE WHEN OLD.stage NOT IN ('GUEST_CREATED', 'EXISTING_GUEST_SELECTED')
+  SELECT (CASE WHEN OLD.stage NOT IN ('GUEST_CREATED', 'EXISTING_GUEST_SELECTED')
     OR NEW.stage <> 'BOOKING_CREATED'
-  THEN RAISE(ABORT, 'invalid reservation creation stage transition') END;
+  THEN RAISE(ABORT, 'invalid reservation creation stage transition') END);
 
   -- The booking row, pricing segment and exact [check_in, check_out) inventory
   -- set must all exist before the durable operation can claim completion.
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT (CASE WHEN NOT EXISTS (
     SELECT 1 FROM bookings b
     WHERE b.id = OLD.booking_id
       AND b.guest_id = OLD.guest_id
@@ -114,13 +114,13 @@ BEGIN
           AND s.operation_token = b.last_pricing_operation_token
           AND s.segment_version = b.pricing_version
       )
-  ) THEN RAISE(ABORT, 'reservation creation completion lacks exact booking state') END;
+  ) THEN RAISE(ABORT, 'reservation creation completion lacks exact booking state') END);
 END;
 
 CREATE TRIGGER reservation_creation_event_guard
 BEFORE INSERT ON reservation_creation_events
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT (CASE WHEN NOT EXISTS (
     SELECT 1 FROM reservation_creation_operations o
     WHERE o.operation_token = NEW.operation_token
       AND o.guest_id = NEW.guest_id AND o.booking_id = NEW.booking_id
@@ -137,7 +137,7 @@ BEGIN
           AND NEW.request_id = o.booking_request_id
           AND NEW.created_at = o.booking_created_at)
       )
-  ) THEN RAISE(ABORT, 'reservation creation event lacks winning operation stage') END;
+  ) THEN RAISE(ABORT, 'reservation creation event lacks winning operation stage') END);
 END;
 
 CREATE TRIGGER reservation_creation_event_immutable_update

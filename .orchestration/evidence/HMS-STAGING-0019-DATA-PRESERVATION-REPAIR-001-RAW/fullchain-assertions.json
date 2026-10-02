@@ -1,0 +1,26 @@
+{
+  "baseline_invoices": 3,
+  "final_invoices": 3,
+  "baseline_payment_entries": 3,
+  "final_payment_entries": 3,
+  "baseline_extra_charges": 1,
+  "final_extra_charges": 1,
+  "payments_exact": true,
+  "charge_original_columns_exact": true,
+  "credit_case": {
+    "amount_cents": 8000,
+    "paid_amount_cents": 10000,
+    "credit_cents": 2000,
+    "status": "PAID"
+  },
+  "ledger_rows": 30,
+  "migrations_0019_through_0030_each_once": true,
+  "non_wranger_schema_objects": 122,
+  "schema_matches_prior_original_direct_import": true,
+  "fk_check": [],
+  "integrity_check": [
+    "ok"
+  ],
+  "export_sha256": "6a9ae241ffc7cf488aabfec4545a53a238e1521ad3c04ee3e503522ceb904295",
+  "schema_differences": []
+}
