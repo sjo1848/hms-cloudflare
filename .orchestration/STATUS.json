@@ -3,22 +3,22 @@
   "project": "HMS Cloudflare",
   "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-d1-sql-splitter-compatibility",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "STAGING_DEPLOYED_UI_SMOKE_PENDING_BLOCK_G_AUTHORIZED",
-  "resume_authorized": true,
-  "runtime_status": "READY",
-  "active_task": "Begin Block G under Issue #53 while Issue #52 retains the external authenticated-browser smoke evidence gate for staging acceptance.",
+  "phase": "BLOCK_G_IMPLEMENTATION",
+  "resume_authorized": false,
+  "runtime_status": "RUNNING",
+  "active_task": "HMS-BLOCK-G-GUESTS-REPORTS-ADMIN-NETWORK-001: implement the frozen Guests, Reports, hotel administration and Network contract with local synthetic evidence.",
   "last_completed_task": "Staging deploy/migrations/data preservation/Workers/Access PASS at 074804329f487c2cfb0a9e5123f1f90b1a0e0252; authenticated UI smoke pending only because Browser test runtime failed before navigation.",
   "last_completed_head": "d2afef78e8f04f5bfce52ff424535620e4dc817d",
-  "work_branch": "staging/d1-sql-splitter-compatibility",
+  "work_branch": "impl/hms-block-g-guests-reports-admin-network",
   "pr": null,
   "wave": "BLOCK F — F-ACCOUNT ONLY",
   "status_label": "STAGING_DEPLOYED_TECHNICALLY_VERIFIED_UI_SMOKE_PENDING",
-  "next_action": "Start Block G from the Controller-normalized lineage under Issue #53. Keep Issue #52 open and complete authenticated staging UI smoke later when a supported browser-capable runtime or human acceptance session is available.",
+  "next_action": "Implement only frozen Block G requirements; run targeted executing-D1/API/browser evidence and preserve all scope and budget gates.",
   "stop_reason": null,
   "event": {
-    "seq": 285,
-    "id": "HMS-STAGING-PHASE5-EXTERNAL-SMOKE-BLOCKER-CLASSIFIED",
-    "type": "STAGING_TECHNICAL_DEPLOY_PASS_BLOCK_G_AUTHORIZED"
+    "seq": 286,
+    "id": "HMS-BLOCK-G-IMPLEMENTATION-START-001",
+    "type": "BLOCK_G_IMPLEMENTATION_AUTHORIZED"
   },
   "external_review": {
     "required": false,
@@ -354,7 +354,11 @@
     "f0_12_independent_critic": "PASS: Parfit, fresh independent read-only/adversarial GPT-6 Luna Medium; exact A2+B2; independently regenerated and matched outputs to committed manifest; .orchestration/evidence/HMS-F0-12-INDEPENDENT-CRITIC-A2-B2.md",
     "f0_12_manifest_sha256": "26f6d2d42dab9b6ce028dcc454b9573cd34b2d3e70a2e322e87866486d3099e7; input index f47b482a3bd4a7a455ab8b43043db7e85d7ac018932eca149dcfe4ea3552ad75; 64 evidence files/24 criteria/16 validations/7 synthetic rows",
     "f0_12_development_gate": "PASS after exact A2+B2 Independent Critic PASS; Foundation 0 complete only for F0.1-F0.12 and awaiting Controller review",
-    "foundation_0_complete": "FOUNDATION_0_COMPLETE_AWAITING_CONTROLLER_REVIEW; no Blocks A-H authorization; no real/customer data access or mutation"
+    "foundation_0_complete": "FOUNDATION_0_COMPLETE_AWAITING_CONTROLLER_REVIEW; no Blocks A-H authorization; no real/customer data access or mutation",
+    "block_g_task_contract": "FROZEN: .orchestration/contracts/HMS-BLOCK-G-GUESTS-REPORTS-ADMIN-NETWORK-001.md",
+    "block_g_inventory_matrix": "FROZEN: .orchestration/evidence/HMS-BLOCK-G-GUESTS-REPORTS-ADMIN-NETWORK-001-INVENTORY-EVIDENCE-MATRIX.md",
+    "block_g_invariants": "All 24 classified; applicable runtime evidence pending implementation.",
+    "block_g_precritic": "PASS TO BEGIN CONTRACTED IMPLEMENTATION; final artifact gate pending."
   },
   "method": {
     "human_routine_relay_forbidden": true,

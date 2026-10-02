@@ -1,6 +1,6 @@
 # HMS Cloudflare — Orchestration State
 
-## CURRENT DISPATCH — STAGING DEPLOYED; AUTHENTICATED UI SMOKE PENDING; BLOCK G AUTHORIZED
+## CURRENT DISPATCH — BLOCK G AUTHORIZED; STAGING AUTHENTICATED UI SMOKE PENDING
 
 - **Authority:** Controller decision in Issue #52 comment `5946431862`, `STAGING_DEPLOY_PASS_SMOKE_EXTERNAL_BLOCKER`, plus Issue #53 comment `5946432195`, `START_BLOCK_G_WITH_STAGING_SMOKE_PENDING`.
 - **Deployed product checkpoint:** `acceptance/staging@074804329f487c2cfb0a9e5123f1f90b1a0e0252`. Workflow run `36968916971` succeeded on that exact SHA. API/Web Workers deployed and Cloudflare Access remains fail-closed to anonymous web/API requests.
@@ -10,6 +10,16 @@
 - **Development decision:** Block G is authorized to start now under Issue #53; this browser-tool limitation does not block unrelated synthetic/local development. F-cash remains separately gated by OD-1.
 - **Next:** begin Block G from this Controller-normalized lineage while Issue #52 remains open for later authenticated staging smoke completion. If later smoke reveals a material upstream defect, stop the affected dependency and reconcile it before promotion.
 - **Forbidden:** main, PR/merge, production, real hotel data and F-cash. Block H remains gated until Block G Controller PASS.
+
+
+## BLOCK G — ACTIVE CONTRACTING
+
+- **Task:** `HMS-BLOCK-G-GUESTS-REPORTS-ADMIN-NETWORK-001`.
+- **Base:** Controller-normalized `d9ff3325709633d7760dd236977b90f582b1b144`; worktree branch `impl/hms-block-g-guests-reports-admin-network`.
+- **Authority:** Issue #53 comments `5946432195` and `5946441901`; authenticated staging UI smoke remains an `EXTERNAL_TEST_HARNESS_BLOCKER` in Issue #52, not a Block G prerequisite.
+- **Scope:** Guests, Reports, hotel-user administration and Network only. F-cash and Block H are prohibited. No main, PR/merge, production, real hotel data or redeploy.
+- **Current step:** freeze Task Contract, inspected surface inventory, evidence matrix, invariant mapping and Pre-Critic before product changes.
+- **Bundle ceilings:** JS raw/gzip `350000/100000 B`; CSS raw/gzip `60000/15000 B`; no increase authorized.
 
 ## BLOCK F — F-ACCOUNT CONTROLLER PASS; F-CASH OD-1 HUMAN GATE
 
