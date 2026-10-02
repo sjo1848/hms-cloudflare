@@ -8,9 +8,11 @@
 - **Boundary B:** this orchestration-only commit, the immediate child of Artifact A; it changes only `.orchestration/STATE.md` and `.orchestration/STATUS.json`. Its exact SHA is the branch HEAD and is reported in the Issue #52 handoff; it is not self-referenced here.
 - **Phase 1–3:** PASS. Exact 0018 dependency inventory and fixture were frozen before editing; both isolated 0019 and full 0019–0030 canonical Wrangler disposable-D1 proofs passed. All temporary D1s were deleted.
 - **Phase 4:** PASS. Full test suite 35/35 files, 176/176 tests; TypeScript, production build, architecture/i18n/budgets, D1 query-plan, API/Web Wrangler dry-runs, staging-config dry-runs and mandatory Pre-Critic/invariant gate passed. Bundle result equals baseline; detailed raw/gzip/aggregate/entry values and deltas are in the repair evidence. Captured CLI text whitespace normalization is fully hash-traced.
-- **Current dispatch state:** `HUMAN_ACTION_REQUIRED — FRESH READ-ONLY CONTROLLER / INDEPENDENT CRITIC REVIEW`. External review is required; `resume_authorized=false`.
-- **Next:** Controller reviews exact Artifact A plus Boundary B on Issue #52. Do not move `acceptance/staging` until the review disposition is recorded. The conditional staging authorization remains unused; staging refs/resources/workflow were not mutated in this handoff.
-- **Forbidden:** main, PR/merge, production, real hotel data, F-cash and Blocks G–H. No staging deploy or promotion has occurred.
+- **Independent Critic:** exact Artifact A `c93b5a7379f1bb588b4cf70b705761728f39a4ba` + Boundary B `2a8a8ae07230d40c6e9e37b4d070f0969b7d0279` received `PASS_WITH_CONDITIONS` in Issue #52 comment `5946015121`. Substantive migration/data-preservation review passed; the sole condition was active handoff metadata (`HUMAN_ACTION_REQUIRED` and stale failure label).
+- **Controller disposition:** the sole metadata-only condition is discharged directly; no product, migration, test or evidence rework is required. Phase 5 staging continuation is authorized under the user's existing staging-only authorization.
+- **Current dispatch state:** `READY — PHASE 5 STAGING RESUME AUTHORIZED`; external review is complete and `resume_authorized=true` for staging only.
+- **Next:** verify exact descendant ancestry from current `acceptance/staging`, fast-forward only `acceptance/staging` to the Controller-normalized repair head, run the existing staging workflow, verify both hotel D1s migrate 0019–0030 exactly once with ledger preservation, then complete API/Web deploy, Access fail-closed and authorized smoke tests. On success report `STAGING_DEPLOYED_AWAITING_HUMAN_ACCEPTANCE` in Issue #52.
+- **Forbidden:** main, PR/merge, production, real hotel data and F-cash. Block G remains queued until successful staging handoff; no production promotion is authorized.
 
 ## BLOCK F — F-ACCOUNT CONTROLLER PASS; F-CASH OD-1 HUMAN GATE
 
