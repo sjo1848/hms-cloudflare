@@ -1,24 +1,24 @@
 {
   "schema_version": 1,
   "project": "HMS Cloudflare",
-  "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-g-guests-reports-admin-network",
+  "working_directory": "/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening",
   "canonical_repository_root": "/home/sjo1848/dev/hms-elite-cloudflare/hms-cloudflare",
-  "phase": "BLOCK_G_CONTROLLER_PASS",
-  "resume_authorized": true,
-  "runtime_status": "READY",
-  "active_task": "Block G has Controller PASS. Prepare Block H under Issue #54 from the Controller-normalized Block G lineage.",
-  "last_completed_task": "Block G exact Artifact A + Boundary B reviewed; substantive PASS, sole orchestration metadata condition discharged.",
-  "last_completed_head": "c62fd472ac3aca634373147be6eb1dd77f01ef6a",
-  "work_branch": "impl/hms-block-g-guests-reports-admin-network",
+  "phase": "BLOCK_H_HARDENING",
+  "resume_authorized": false,
+  "runtime_status": "RUNNING",
+  "active_task": "Execute frozen Block H cross-module responsive, accessibility and continuity scenario matrix",
+  "last_completed_task": "Block G received final Controller PASS; exact normalized Block H base authorized",
+  "last_completed_head": "9141f8a90d46fa8d8d91baa306d72ae0327b2bbd",
+  "work_branch": "impl/hms-block-h-cross-module-hardening",
   "pr": null,
-  "wave": "BLOCK G — GUESTS, REPORTS, HOTEL ADMINISTRATION & NETWORK",
-  "status_label": "BLOCK_G_CONTROLLER_PASS",
-  "next_action": "Close Issue #53 and begin Block H under Issue #54 from the final Controller-normalized Block G checkpoint.",
+  "wave": "BLOCK H — CROSS-MODULE RESPONSIVE, ACCESSIBILITY & CONTINUITY",
+  "status_label": "BLOCK_H_HARDENING",
+  "next_action": "Run and extend the frozen H scenario matrix; repair bounded accepted-scope findings, then complete integrated validation and final Pre-Critic",
   "stop_reason": null,
   "event": {
-    "seq": 290,
-    "id": "HMS-BLOCK-G-CONTROLLER-PASS-001",
-    "type": "BLOCK_G_CONTROLLER_PASS_METADATA_CONDITION_DISCHARGED"
+    "seq": 291,
+    "id": "HMS-BLOCK-H-ADMISSION-FROZEN-001",
+    "type": "BLOCK_H_AUTHORIZED_AND_ADMISSION_FROZEN"
   },
   "external_review": {
     "required": false,
@@ -128,7 +128,7 @@
     "attribution": "EXTERNAL_FINDINGS_NOT_REOPENED_BY_THIS_TASK"
   },
   "authorization": {
-    "scope": "BLOCK_G COMPLETE WITH CONTROLLER PASS; BLOCK_H AUTHORIZED NEXT; F_CASH GATED BY OD-1; STAGING AUTHENTICATED UI SMOKE PENDING; NO MAIN_OR_PRODUCTION",
+    "scope": "BLOCK H AUTHORIZED: cross-module A–G hardening; F-cash excluded by OD-1; staging/authenticated smoke separate; no Block I+, main, merge, production or real data",
     "production": false,
     "acceptance_staging": false,
     "main": false,
@@ -164,7 +164,8 @@
     "block_h_authorized": true,
     "blocks_g_h": true,
     "block_f_account_completed": true,
-    "block_g_completed": true
+    "block_g_completed": true,
+    "block_h_completed": false
   },
   "validated": {
     "f0_1_task": "CLOSED_INTERNAL_EVIDENCE_GATE; NO_STANDALONE_ARTIFACT_OR_EXTERNAL_CRITIC_VERDICT",
@@ -450,5 +451,10 @@
   "block_e_development_continuation": false,
   "block_f_account_completed": true,
   "block_f_completed": false,
-  "block_g_completed": true
+  "block_g_completed": true,
+  "block_h_base": "9141f8a90d46fa8d8d91baa306d72ae0327b2bbd",
+  "block_h_task_contract": ".orchestration/contracts/HMS-BLOCK-H-CROSS-MODULE-RESPONSIVE-ACCESSIBILITY-CONTINUITY-001.md",
+  "block_h_inventory_evidence_matrix": ".orchestration/evidence/HMS-BLOCK-H-CROSS-MODULE-RESPONSIVE-ACCESSIBILITY-CONTINUITY-001-INVENTORY-EVIDENCE-MATRIX.md",
+  "block_h_invariants": ".orchestration/evidence/HMS-BLOCK-H-CROSS-MODULE-RESPONSIVE-ACCESSIBILITY-CONTINUITY-001-INVARIANTS.md",
+  "block_h_admission_precritic": ".orchestration/evidence/HMS-BLOCK-H-CROSS-MODULE-RESPONSIVE-ACCESSIBILITY-CONTINUITY-001-ADMISSION-PRECRITIC.md"
 }

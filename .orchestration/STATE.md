@@ -1,29 +1,27 @@
 # HMS Cloudflare — Orchestration State
 
-## CURRENT DISPATCH — BLOCK G INDEPENDENT CRITIC PASS_WITH_CONDITIONS; METADATA CONDITION DISCHARGED
+## CURRENT DISPATCH — BLOCK H AUTHORIZED; ADMISSION FROZEN; HARDENING ACTIVE
 
-- **Authority:** Controller decision in Issue #52 comment `5946431862`, `STAGING_DEPLOY_PASS_SMOKE_EXTERNAL_BLOCKER`, plus Issue #53 comment `5946432195`, `START_BLOCK_G_WITH_STAGING_SMOKE_PENDING`.
-- **Deployed product checkpoint:** `acceptance/staging@074804329f487c2cfb0a9e5123f1f90b1a0e0252`. Workflow run `36968916971` succeeded on that exact SHA. API/Web Workers deployed and Cloudflare Access remains fail-closed to anonymous web/API requests.
-- **D1:** CONTROL_DB is current; both hotel D1s advanced 0019–0030 exactly once. Financial rows were preserved, FK checks were empty, and read-only exports passed SQLite integrity checks. Evidence: `.orchestration/evidence/HMS-STAGING-PHASE5-001.md`.
-- **Authenticated UI smoke:** still pending. The Browser test runtime failed before browser discovery/navigation with `Importing module "node:process" is not allowed in node_repl`. Controller classifies this as `EXTERNAL_TEST_HARNESS_BLOCKER`, not evidence of a product/runtime defect.
-- **Truthful staging state:** `STAGING_DEPLOYED_TECHNICALLY_VERIFIED_UI_SMOKE_PENDING`. Do not claim `STAGING_DEPLOYED_AWAITING_HUMAN_ACCEPTANCE` until authenticated UI smoke is actually completed.
-- **Development decision:** Block G is authorized to start now under Issue #53; this browser-tool limitation does not block unrelated synthetic/local development. F-cash remains separately gated by OD-1.
-- **Independent Critic:** exact Artifact A `66d43fd28d16fd6379b23c22e73d74578533fe57` + Boundary B `c62fd472ac3aca634373147be6eb1dd77f01ef6a` received `PASS_WITH_CONDITIONS` in Issue #53 comment `5955955956`. Substantive Block G review passed; the sole condition was stale orchestration metadata.
-- **Controller metadata disposition:** the sole metadata-only condition is discharged directly. No product/code/test rework is required. Exact reviewed A+B are now the canonical Block G review pair.
-- **Next:** record final Controller PASS for Block G and authorize Block H under Issue #54. Issue #52 remains open solely for later authenticated staging smoke completion; it is not G evidence or a Block G dependency.
-- **Forbidden:** main, PR/merge, production, real hotel data and F-cash. Block H remains gated until Block G Controller PASS.
+- **Authority:** Issue #54 body and latest Controller decision `START_BLOCK_H` comment `5956017495`; it records Block G final Controller PASS and authorizes H at exact normalized base `9141f8a90d46fa8d8d91baa306d72ae0327b2bbd`. Block G exact Artifact A `66d43fd28d16fd6379b23c22e73d74578533fe57` and Boundary B `c62fd472ac3aca634373147be6eb1dd77f01ef6a` are accepted in the ancestry.
+- **Dedicated worktree:** `/home/sjo1848/dev/hms-elite-cloudflare/hms-block-h-cross-module-hardening`, branch `impl/hms-block-h-cross-module-hardening`, based exactly on `9141f8a90d46fa8d8d91baa306d72ae0327b2bbd`. The dirty `impl/hms-foundation-0` worktree was left untouched.
+- **Frozen admission artifacts:** `.orchestration/contracts/HMS-BLOCK-H-CROSS-MODULE-RESPONSIVE-ACCESSIBILITY-CONTINUITY-001.md`, `.orchestration/evidence/HMS-BLOCK-H-CROSS-MODULE-RESPONSIVE-ACCESSIBILITY-CONTINUITY-001-INVENTORY-EVIDENCE-MATRIX.md`, `...-INVARIANTS.md`, and `...-ADMISSION-PRECRITIC.md`. The admission Pre-Critic passes for bounded hardening only; final invariant evidence/Pre-Critic remain required.
+- **Scope:** cross-module A–G journeys, responsive layouts, keyboard/focus/accessibility, navigation continuity, loading/error/retry, delayed/out-of-order reads and canonical conflicts, integrated local Worker/D1 as claimed, final build/budgets. F-cash/Cash workflows, staging, production, real data, main, PR/merge and Block I+ remain excluded.
+- **External staging gate:** Issue #52 authenticated UI smoke remains `EXTERNAL_TEST_HARNESS_BLOCKER`; it is separate and does not block local/synthetic Block H work.
+- **Exact-base bundle:** JS raw/gzip `339914/95371 B`, CSS raw/gzip `57024/10564 B`; active ceilings remain `350000/100000` and `60000/15000 B`. Build and architecture/i18n/budget gates pass at this base. No increase is authorized.
+- **Next:** execute the frozen scenario matrix, repair only bounded accepted-scope defects, complete full integrated validation and final Pre-Critic, freeze Artifact A, create orchestration-only Boundary B, request a fresh Independent Critic, then await Controller review through Issue #54.
+- **Forbidden:** F-cash, staging/deploy/promotion, production, real hotel data, main, PR/merge and Block I+.
 
 
-## BLOCK G — IMPLEMENTATION AND FINAL VALIDATION
+## HISTORICAL — BLOCK G IMPLEMENTATION AND FINAL VALIDATION
 
 - **Task:** `HMS-BLOCK-G-GUESTS-REPORTS-ADMIN-NETWORK-001`.
 - **Base:** Controller-normalized `d9ff3325709633d7760dd236977b90f582b1b144`; worktree branch `impl/hms-block-g-guests-reports-admin-network`.
 - **Authority:** Issue #53 comments `5946432195` and `5946441901`; authenticated staging UI smoke remains an `EXTERNAL_TEST_HARNESS_BLOCKER` in Issue #52, not a Block G prerequisite.
 - **Scope:** Guests, Reports, hotel-user administration and Network only. F-cash and Block H are prohibited. No main, PR/merge, production, real hotel data or redeploy.
-- **Admission is complete:** Task Contract, exact inventory/evidence matrix, all 24 invariant classifications and admission Pre-Critic were frozen before product changes; admission checkpoint is `74be2f2c8bf37b3aecb3f7cc3929d451238a1e07`. Final validation and mandatory Pre-Critic passed. Artifact A is frozen at `66d43fd28d16fd6379b23c22e73d74578533fe57`. Boundary B is orchestration-only and this exact A+B pair now awaits a fresh separate read-only Independent Critic through Issue #53. Block H remains unauthorized until Controller PASS.
+- **Admission and review are complete:** Task Contract, exact inventory/evidence matrix, all 24 invariant classifications and admission Pre-Critic were frozen before product changes; admission checkpoint was `74be2f2c8bf37b3aecb3f7cc3929d451238a1e07`. Artifact A `66d43fd28d16fd6379b23c22e73d74578533fe57` and Boundary B `c62fd472ac3aca634373147be6eb1dd77f01ef6a` received Independent Critic `PASS_WITH_CONDITIONS`; its metadata-only condition was discharged in the accepted base. Controller granted final PASS and authorized Block H in Issue #54. This history is closed; no G rework is active.
 - **Bundle ceilings:** JS raw/gzip `350000/100000 B`; CSS raw/gzip `60000/15000 B`; no increase authorized.
 - **Implementation evidence in progress:** Guest booking-context partial failure/retry is distinguished; user deactivation is a focused accessible dialog with safe keyboard cancel/focus behavior; reports/admin/network integrated Worker/D1 browser coverage is extended. Detailed results and bundle baseline/delta: `.orchestration/evidence/HMS-BLOCK-G-GUESTS-REPORTS-ADMIN-NETWORK-001-RESULTS.md`. Final invariant statuses: `.orchestration/evidence/HMS-BLOCK-G-GUESTS-REPORTS-ADMIN-NETWORK-001-INVARIANTS.md`.
-- **Latest local evidence:** full suite 35 files / 176 tests (final run 116.07 s); typecheck, API/Web Wrangler types, architecture/i18n/budgets, query plan, CF-I07/CF-I08 Worker/D1, integrated responsive browser, Guest failure/retry browser, inherited CF-I05 browser, API/Web dry-runs all PASS. Candidate bundle remains within unchanged ceilings.
+- **Latest accepted evidence:** full suite 35 files / 176 tests; typecheck, API/Web Wrangler types, architecture/i18n/budgets, query plan, CF-I07/CF-I08 Worker/D1, integrated responsive browser, Guest failure/retry browser, inherited CF-I05 browser, API/Web dry-runs all PASS. Accepted bundle was JS raw/gzip `339914/95371 B`, CSS raw/gzip `57024/10564 B`; ceilings unchanged.
 
 ## BLOCK F — F-ACCOUNT CONTROLLER PASS; F-CASH OD-1 HUMAN GATE
 
