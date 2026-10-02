@@ -1,14 +1,15 @@
 # HMS Cloudflare — Orchestration State
 
-## CURRENT DISPATCH — ISSUE #52 STAGING PHASE 5 SMOKE EVIDENCE BLOCKED
+## CURRENT DISPATCH — STAGING DEPLOYED; AUTHENTICATED UI SMOKE PENDING; BLOCK G AUTHORIZED
 
-- **Authority:** Controller disposition in Issue #52 comment `5946029814`, `PASS_D1_REPAIR_RESUME_STAGING_PHASE5`; canonical checkpoint `074804329f487c2cfb0a9e5123f1f90b1a0e0252`.
-- **Staging ref/deploy:** `acceptance/staging` was fast-forwarded only to the exact checkpoint. Existing workflow run `36968916971` succeeded on that SHA; API/Web Workers deployed and anonymous web/API returned HTTP 302. Exact evidence and versions: `.orchestration/evidence/HMS-STAGING-PHASE5-001.md`.
-- **D1:** CONTROL_DB stayed at 5 migrations; each hotel DB advanced from 18 to 30 with 0019–0030 once each. Synthetic seed marker/digest remained intact. Invoice, payment and charge original fields were preserved; FK checks were empty and read-only exports passed SQLite integrity checks. Details/hashes are in the Phase 5 evidence.
-- **STOP:** authenticated UI smoke tests are not verified. The supported Browser runtime failed initialization with `Importing module "node:process" is not allowed in node_repl`. Anonymous 302 checks are not functional acceptance. No bypass or alternate browser-control route was used.
-- **Current dispatch state:** `BLOCKED — STAGING_DEPLOY_GATE_REQUIRED`; `resume_authorized=false`; external review/evidence recovery is required.
-- **Next:** restore supported browser automation, complete the authorized authenticated smoke matrix, then report the exact staging acceptance handoff. Do not start Block G until `STAGING_DEPLOYED_AWAITING_HUMAN_ACCEPTANCE` is truthfully reached; Issue #53 requires that prerequisite.
-- **Forbidden:** main, PR/merge, production, real hotel data, F-cash and Block G until its staging prerequisite passes. No such action occurred.
+- **Authority:** Controller decision in Issue #52 comment `5946431862`, `STAGING_DEPLOY_PASS_SMOKE_EXTERNAL_BLOCKER`, plus Issue #53 comment `5946432195`, `START_BLOCK_G_WITH_STAGING_SMOKE_PENDING`.
+- **Deployed product checkpoint:** `acceptance/staging@074804329f487c2cfb0a9e5123f1f90b1a0e0252`. Workflow run `36968916971` succeeded on that exact SHA. API/Web Workers deployed and Cloudflare Access remains fail-closed to anonymous web/API requests.
+- **D1:** CONTROL_DB is current; both hotel D1s advanced 0019–0030 exactly once. Financial rows were preserved, FK checks were empty, and read-only exports passed SQLite integrity checks. Evidence: `.orchestration/evidence/HMS-STAGING-PHASE5-001.md`.
+- **Authenticated UI smoke:** still pending. The Browser test runtime failed before browser discovery/navigation with `Importing module "node:process" is not allowed in node_repl`. Controller classifies this as `EXTERNAL_TEST_HARNESS_BLOCKER`, not evidence of a product/runtime defect.
+- **Truthful staging state:** `STAGING_DEPLOYED_TECHNICALLY_VERIFIED_UI_SMOKE_PENDING`. Do not claim `STAGING_DEPLOYED_AWAITING_HUMAN_ACCEPTANCE` until authenticated UI smoke is actually completed.
+- **Development decision:** Block G is authorized to start now under Issue #53; this browser-tool limitation does not block unrelated synthetic/local development. F-cash remains separately gated by OD-1.
+- **Next:** begin Block G from this Controller-normalized lineage while Issue #52 remains open for later authenticated staging smoke completion. If later smoke reveals a material upstream defect, stop the affected dependency and reconcile it before promotion.
+- **Forbidden:** main, PR/merge, production, real hotel data and F-cash. Block H remains gated until Block G Controller PASS.
 
 ## BLOCK F — F-ACCOUNT CONTROLLER PASS; F-CASH OD-1 HUMAN GATE
 
