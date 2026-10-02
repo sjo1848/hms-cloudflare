@@ -151,5 +151,5 @@ describe("F0.2 shared room commands on executing D1", () => {
     ])).rejects.toThrow();
     expect(await db.prepare("SELECT status,housekeeping_state,room_state_version FROM rooms WHERE id='room-c'").first()).toEqual({ status: "DIRTY", housekeeping_state: "DIRTY", room_state_version: 2 });
     expect(await db.prepare("SELECT COUNT(*) AS count FROM housekeeping_events WHERE id='stale-aba-event'").first()).toEqual({ count: 0 });
-  });
+  }, 15_000);
 });

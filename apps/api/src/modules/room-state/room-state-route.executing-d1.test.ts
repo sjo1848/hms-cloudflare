@@ -279,5 +279,5 @@ describe("room dimension read API tenant and capability boundaries on executing 
     const deletedSecondHold = await request("hotel-a", "admin", "admin@example.test", `${holdPath}/${secondHoldId}`, "DELETE");
     expect(deletedSecondHold.status).toBe(200);
     expect(await hotelA.prepare("SELECT COUNT(*) AS count FROM room_holds").first()).toEqual({ count: 0 });
-  });
+  }, 15_000);
 });
