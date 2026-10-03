@@ -7,26 +7,26 @@
   "resume_authorized": false,
   "runtime_status": "WAITING_EXTERNAL_REVIEW",
   "active_task": "Controller review of the A–H Product Acceptance admission package and separate authorization decision for any staging promotion.",
-  "last_completed_task": "Product Acceptance admission audit, contract, evidence matrix, all-24 invariant classification and admission Pre-Critic completed; ready to request promotion authorization only.",
-  "last_completed_head": "106b4e98faceaf53a1a0e69650124fff863a9157",
+  "last_completed_task": "Product Acceptance admission package frozen and published; exact admission evidence commit 62bd1fcf8557c0d46febd1a2312f3bc05dac182e.",
+  "last_completed_head": "62bd1fcf8557c0d46febd1a2312f3bc05dac182e",
   "work_branch": "acceptance/hms-a-h-product-acceptance-prep",
   "pr": null,
   "wave": "PRODUCT ACCEPTANCE — A–H INTEGRATED STAGING CANDIDATE",
   "status_label": "A_H_STAGING_PROMOTION_READY_AWAITING_CONTROLLER_AUTHORIZATION",
-  "next_action": "Await Controller decision in Issue #56. Do not move acceptance/staging, run the staging workflow, mutate remote D1, or start the authenticated smoke until separately authorized.",
-  "stop_reason": "CONTROLLER_AUTHORIZATION_REQUIRED: this admission is preparation only; staging promotion/deployment and any remote D1 mutation are not authorized.",
+  "next_action": "Await Controller decision in Issue #56. Do not move acceptance/staging, run the staging workflow, mutate remote D1, or start authenticated smoke until separately authorized.",
+  "stop_reason": "CONTROLLER_AUTHORIZATION_REQUIRED: admission is complete; staging promotion/deployment and remote D1 mutation are not authorized.",
   "event": {
-    "seq": 295,
-    "id": "HMS-A-H-PRODUCT-ACCEPTANCE-ADMISSION-READY-001",
-    "type": "READY_TO_REQUEST_STAGING_PROMOTION_AUTHORIZATION"
+    "seq": 296,
+    "id": "HMS-A-H-PRODUCT-ACCEPTANCE-HANDOFF-PUBLISHED-001",
+    "type": "A_H_STAGING_PROMOTION_READY_AWAITING_CONTROLLER_AUTHORIZATION"
   },
   "external_review": {
     "required": true,
     "artifact_head": null,
     "boundary_head": null,
     "last_audited_head": "106b4e98faceaf53a1a0e69650124fff863a9157",
-    "last_verdict": "Admission Pre-Critic PASS: READY TO REQUEST STAGING PROMOTION AUTHORIZATION only. Awaiting Controller review/decision; no promotion authorized.",
-    "review_path": "GitHub Issue #56 — Product Acceptance — A–H Integrated Staging Candidate.",
+    "last_verdict": "Admission Pre-Critic PASS; preparation branch published with exact handoff tip in Issue #56. Awaiting Controller authorization; no promotion authorized.",
+    "review_path": "GitHub Issue #56 — Product Acceptance — A–H Integrated Staging Candidate; exact published branch SHA is in latest handoff comment.",
     "prior_block_e_review": {
       "required": true,
       "artifact_head": "56b67732979e09cafda80316b28f2a3bfc849747",
@@ -473,6 +473,7 @@
   "product_acceptance_admission_authorized": true,
   "staging_promotion_authorized": false,
   "product_acceptance_proposed_staging_head": "106b4e98faceaf53a1a0e69650124fff863a9157",
-  "product_acceptance_preparation_head": "THIS ORCHESTRATION-ONLY ADMISSION CHECKPOINT; exact SHA recorded in Issue #56",
-  "block_h_closure": "106b4e98faceaf53a1a0e69650124fff863a9157; accepted final Controller closure, Issue #54 comment 5963443020"
+  "product_acceptance_preparation_head": "Current branch handoff tip; exact remote SHA recorded in Issue #56",
+  "block_h_closure": "106b4e98faceaf53a1a0e69650124fff863a9157; accepted final Controller closure, Issue #54 comment 5963443020",
+  "product_acceptance_admission_commit": "62bd1fcf8557c0d46febd1a2312f3bc05dac182e"
 }
